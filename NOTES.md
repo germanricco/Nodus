@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Fases 1 a 4 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). La página de Cuentas ya funciona: patrimonio en pesos y en dólares, lista de cuentas activas y archivadas, y diálogo para crear y editar. Ya existen los componentes que van a reutilizar las próximas fases: `FormDialog`, `AmountInput` (montos en formato argentino), `Card` y `Stat`. 146 tests en verde. Sigue la fase 5: página de Categorías.
+Fases 1 a 5 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Ya funcionan las páginas de Cuentas y de Categorías (gastos e ingresos, subcategorías, colores, borrado con confirmación). 158 tests en verde. Sigue la fase 6: transacciones (tabla con filtros y diálogo Gasto/Ingreso/Transferencia), que también conecta el botón "Agregar transacción".
 
 ## Decisiones
 
@@ -25,6 +25,8 @@ Fases 1 a 4 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). La págin
 - **2026-11-05 — Montos como se escriben en Argentina.** `parse_amount` toma la coma como separador decimal y el punto como separador de miles ("1.234,56"). Un punto solo seguido de uno o dos dígitos se toma como decimal ("12.50"), porque mucha gente lo escribe así.
 - **2026-11-05 — Patrimonio sin cuentas archivadas.** `NetWorthService` suma solo las cuentas activas. Si hace falta convertir y no hay cotización, muestra "Sin cotización" en lugar de un número inventado.
 - **2026-11-05 — Errores dentro del diálogo.** `FormDialog` muestra el mensaje de error en el propio diálogo y lo deja abierto, para que el usuario corrija sin volver a escribir todo.
+- **2026-11-05 — Orden alfabético en Python, no en SQLite.** `name_sort_key` ignora mayúsculas y tildes; la intercalación NOCASE de SQLite solo pliega ASCII y mandaba al final los nombres que empiezan con tilde ("Árbol").
+- **2026-11-05 — Confirmar antes de borrar.** `confirm()` deja "Cancelar" como botón por defecto, y el aviso dice cuántas transacciones pasan a «Otros».
 - **2026-11-05 — Entorno con venv + pip y gráficos con QtCharts.** venv viene con Python 3.11.9 y QtCharts está incluido en PySide6, así que no suman dependencias.
 
 ## Preguntas abiertas
@@ -36,4 +38,4 @@ Fases 1 a 4 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). La págin
 ## Registro de sesiones
 
 ### 2026-11-05
-Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 4 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).
+Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 5 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).

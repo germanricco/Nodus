@@ -8,6 +8,7 @@ from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.accounts_page import AccountsPage
+from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.page import Page, PlaceholderPage
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.sidebar import Sidebar
@@ -33,6 +34,7 @@ class MainWindow(QMainWindow):
             page_id: PlaceholderPage(page_id.label) for page_id in PageId
         }
         self._pages[PageId.ACCOUNTS] = AccountsPage(services, event_bus)
+        self._pages[PageId.CATEGORIES] = CategoriesPage(services, event_bus)
         for page in self._pages.values():
             self._stack.addWidget(page)
 

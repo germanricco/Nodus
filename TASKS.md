@@ -12,7 +12,7 @@ Plan: `docs/plans/001-v0.1-mvp.md`. Se usa desde el código fuente.
 - [x] 2. Dominio y datos: modelos, repositorios, categorías por defecto, servicios (cuentas, categorías, transacciones y transferencias, cotizaciones)
 - [x] 3. Interfaz base: tema claro/oscuro, ventana con barra lateral, `EventBus`, script de capturas
 - [x] 4. Cuentas (ARS y USD)
-- [ ] 5. Categorías de gasto y de ingreso: set predeterminado corto, alta, edición y borrado por el usuario
+- [x] 5. Categorías de gasto y de ingreso: set predeterminado corto, alta, edición y borrado por el usuario
 - [ ] 6. Transacciones: tabla con filtros, Gasto/Ingreso/Transferencia
 - [ ] 7. Ajustes: tema, cotización manual con historial, ubicación de los datos
 - [ ] 8. Dashboard: patrimonio ARS/USD, flujo del mes, gastos por categoría, últimas transacciones

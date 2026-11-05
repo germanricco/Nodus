@@ -2,6 +2,7 @@
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.models.transaction import TransactionType
 
 ACCOUNT_TYPE_LABELS = {
     AccountType.BANK: "Cuenta bancaria",
@@ -14,4 +15,9 @@ ACCOUNT_TYPE_LABELS = {
 CURRENCY_LABELS = {
     Currency.ARS: "Pesos (ARS)",
     Currency.USD: "Dólares (USD)",
+}
+
+TRANSACTION_TYPE_LABELS = {
+    TransactionType.EXPENSE: "Gasto",
+    TransactionType.INCOME: "Ingreso",
 }

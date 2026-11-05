@@ -1,0 +1,140 @@
+"""Categories section: expense and income categories with their subcategories."""
+
+from __future__ import annotations
+
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
+
+from nodus.models.category import Category
+from nodus.models.transaction import TransactionType
+from nodus.services.container import Services
+from nodus.ui.dialogs.category_dialog import CategoryDialog
+from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.event_bus import EventBus
+from nodus.ui.pages.page import Page
+from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.color import ColorDot
+from nodus.ui.widgets.style import clear_layout, set_style_property
+
+SECTION_TITLES = {TransactionType.EXPENSE: "Gastos", TransactionType.INCOME: "Ingresos"}
+SYSTEM_HINT = "Recibe las transacciones de las categorías que se eliminan"
+
+
+class CategoryRow(QWidget):
+    """One category: color, name and the actions it allows.
+
+    Subcategories are indented. "Otros" offers no actions, since it cannot change.
+    """
+
+    edit_requested = Signal(object)  # Category
+    delete_requested = Signal(object)  # Category
+    add_subcategory_requested = Signal(object)  # Category
+
+    INDENT = 28
+
+    def __init__(self, category: Category) -> None:
+        super().__init__()
+        self.category = category
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(self.INDENT if category.is_subcategory else 0, 4, 0, 4)
+        layout.setSpacing(10)
+        layout.addWidget(ColorDot(category.color))
+        name = QLabel(category.name)
+        name.setObjectName("RowTitle")
+        layout.addWidget(name)
+        if category.is_system:
+            hint = QLabel(SYSTEM_HINT)
+            set_style_property(hint, "muted", True)
+            layout.addWidget(hint)
+        layout.addStretch()
+
+        self.buttons: dict[str, QPushButton] = {}
+        if category.is_system:
+            return
+        if not category.is_subcategory:
+            self._add_button(layout, "+ Subcategoría", self.add_subcategory_requested)
+        self._add_button(layout, "Editar", self.edit_requested)
+        self._add_button(layout, "Eliminar", self.delete_requested)
+
+    def _add_button(self, layout: QHBoxLayout, text: str, signal: Signal) -> None:
+        button = QPushButton(text)
+        button.setObjectName("SmallButton")
+        button.clicked.connect(lambda: signal.emit(self.category))
+        layout.addWidget(button)
+        self.buttons[text] = button
+
+
+class CategoriesPage(Page):
+    """Two cards, expenses then incomes, each listing categories with their subcategories."""
+
+    def __init__(self, services: Services, event_bus: EventBus) -> None:
+        super().__init__("Categorías")
+        self._services = services
+        self._event_bus = event_bus
+        self.create_button = self.add_header_button("Nueva categoría", primary=True)
+        self.create_button.clicked.connect(lambda: self.open_category_dialog())
+
+        container = QWidget()
+        self._sections = QVBoxLayout(container)
+        self._sections.setContentsMargins(0, 0, 0, 0)
+        self._sections.setSpacing(16)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(container)
+        self.content_layout.addWidget(scroll)
+
+        event_bus.categories_changed.connect(self.refresh)
+
+    def refresh(self) -> None:
+        clear_layout(self._sections)
+        for kind, title in SECTION_TITLES.items():
+            self._sections.addWidget(self._section(kind, title))
+        self._sections.addStretch()
+
+    def open_category_dialog(
+        self,
+        category: Category | None = None,
+        kind: TransactionType = TransactionType.EXPENSE,
+        parent_id: int | None = None,
+    ) -> None:
+        CategoryDialog(
+            self._services, self._event_bus, category, kind, parent_id, parent=self.window()
+        ).exec()
+
+    def delete_category(self, category: Category) -> None:
+        if not confirm(self.window(), "Eliminar categoría", self._delete_warning(category)):
+            return
+        self._services.categories.delete(category.id)
+        self._event_bus.categories_changed.emit()
+        self._event_bus.transactions_changed.emit()
+
+    def _section(self, kind: TransactionType, title: str) -> Card:
+        card = Card(title)
+        for node in self._services.categories.category_tree(kind):
+            for category in [node.category, *node.children]:
+                card.body.addWidget(self._row(category))
+        return card
+
+    def _row(self, category: Category) -> CategoryRow:
+        row = CategoryRow(category)
+        row.edit_requested.connect(self.open_category_dialog)
+        row.delete_requested.connect(self.delete_category)
+        row.add_subcategory_requested.connect(
+            lambda parent: self.open_category_dialog(kind=parent.kind, parent_id=parent.id)
+        )
+        return row
+
+    def _delete_warning(self, category: Category) -> str:
+        has_children = any(
+            node.category.id == category.id and node.children
+            for node in self._services.categories.category_tree(category.kind)
+        )
+        subject = f"«{category.name}»" + (" y sus subcategorías" if has_children else "")
+        count = self._services.categories.transaction_count(category.id)
+        if count == 0:
+            consequence = "No tiene transacciones."
+        elif count == 1:
+            consequence = "Su única transacción pasa a «Otros»."
+        else:
+            consequence = f"Sus {count} transacciones pasan a «Otros»."
+        return f"Se va a eliminar {subject}. {consequence}"

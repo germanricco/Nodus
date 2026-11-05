@@ -60,7 +60,7 @@ class AccountRepository(Repository):
         sql = "SELECT * FROM accounts"
         if not include_archived:
             sql += " WHERE is_archived = 0"
-        rows = self._fetch_all(sql + " ORDER BY name COLLATE NOCASE")
+        rows = self._fetch_all(sql)
         return [self._from_row(row) for row in rows]
 
     def balances_cents(self) -> dict[int, int]:

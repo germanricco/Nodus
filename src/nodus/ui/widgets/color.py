@@ -1,0 +1,69 @@
+"""Category colors: a dot to show one and a picker to choose one."""
+
+from __future__ import annotations
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
+
+# Preset colors offered when creating a category; the default categories use these too.
+PALETTE = [
+    "#e74c3c", "#e67e22", "#f39c12", "#f1c40f", "#2ecc71", "#27ae60",
+    "#1abc9c", "#16a085", "#3498db", "#2980b9", "#8e44ad", "#95a5a6",
+]  # fmt: skip
+
+
+class ColorDot(QLabel):
+    """A small filled circle in a category's color."""
+
+    def __init__(self, color: str, size: int = 12, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setFixedSize(size, size)
+        self.setStyleSheet(f"background: {color}; border-radius: {size // 2}px;")
+
+
+class ColorPicker(QWidget):
+    """A grid of round swatches; exactly one is selected.
+
+    A color outside the palette (set with ``set_color``) gets its own swatch, so editing
+    never silently changes a category's color.
+    """
+
+    SWATCH_SIZE = 26
+    COLUMNS = 6
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._grid = QGridLayout(self)
+        self._grid.setContentsMargins(0, 0, 0, 0)
+        self._grid.setSpacing(8)
+        self._group = QButtonGroup(self)
+        self._swatches: dict[str, QPushButton] = {}
+        for color in PALETTE:
+            self._add_swatch(color)
+        self.set_color(PALETTE[0])
+
+    def color(self) -> str:
+        return self._group.checkedButton().property("color")
+
+    def set_color(self, color: str) -> None:
+        color = color.lower()
+        if color not in self._swatches:
+            self._add_swatch(color)
+        self._swatches[color].setChecked(True)
+
+    def _add_swatch(self, color: str) -> None:
+        swatch = QPushButton()
+        swatch.setCheckable(True)
+        swatch.setFixedSize(self.SWATCH_SIZE, self.SWATCH_SIZE)
+        swatch.setCursor(Qt.CursorShape.PointingHandCursor)
+        swatch.setProperty("color", color)
+        swatch.setToolTip(color)
+        radius = self.SWATCH_SIZE // 2
+        swatch.setStyleSheet(
+            f"QPushButton {{ background: {color}; border-radius: {radius}px; border: none; }}"
+            f"QPushButton:checked {{ border: 3px solid palette(window-text); }}"
+        )
+        index = len(self._swatches)
+        self._grid.addWidget(swatch, index // self.COLUMNS, index % self.COLUMNS)
+        self._group.addButton(swatch)
+        self._swatches[color] = swatch

@@ -10,6 +10,7 @@ from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.services.errors import ValidationError, clean_name, require_found
+from nodus.services.sorting import name_sort_key
 
 
 class AccountService:
@@ -48,7 +49,8 @@ class AccountService:
         return require_found(self._accounts.get(account_id), "La cuenta no existe.")
 
     def list_accounts(self, include_archived: bool = False) -> list[Account]:
-        return self._accounts.list(include_archived)
+        """Accounts in alphabetical order."""
+        return sorted(self._accounts.list(include_archived), key=lambda a: name_sort_key(a.name))
 
     def balances(self) -> dict[int, Money]:
         """Current balance of every account (archived included), keyed by account id."""

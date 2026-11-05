@@ -25,6 +25,7 @@ from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 from nodus.database.database import Database  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
 from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
+from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
 from nodus.ui.navigation import PageId  # noqa: E402
@@ -37,6 +38,9 @@ from demo_data import load_demo_data  # noqa: E402
 # Dialogs to capture, built over the demo data: name -> factory(services, event_bus, window).
 DIALOGS = {
     "account-dialog": lambda services, event_bus, window: AccountDialog(
+        services, event_bus, parent=window
+    ),
+    "category-dialog": lambda services, event_bus, window: CategoryDialog(
         services, event_bus, parent=window
     ),
 }

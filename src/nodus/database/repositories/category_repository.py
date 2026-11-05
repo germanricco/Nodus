@@ -36,13 +36,12 @@ class CategoryRepository(Repository):
         return self._from_row(row) if row else None
 
     def list(self, kind: TransactionType | None = None) -> list[Category]:
-        """Categories ordered by name, with "Otros" last since it is the fallback."""
         sql = "SELECT * FROM categories"
         params: tuple = ()
         if kind is not None:
             sql += " WHERE kind = ?"
             params = (kind.value,)
-        rows = self._fetch_all(sql + " ORDER BY is_system, name COLLATE NOCASE", params)
+        rows = self._fetch_all(sql, params)
         return [self._from_row(row) for row in rows]
 
     def get_system(self, kind: TransactionType) -> Category:
@@ -55,6 +54,14 @@ class CategoryRepository(Repository):
     def subcategory_ids(self, parent_id: int) -> list[int]:
         rows = self._fetch_all("SELECT id FROM categories WHERE parent_id = ?", (parent_id,))
         return [row["id"] for row in rows]
+
+    def count_transactions(self, category_ids: list[int]) -> int:
+        placeholders = ", ".join("?" * len(category_ids))
+        row = self._fetch_one(
+            f"SELECT COUNT(*) AS total FROM transactions WHERE category_id IN ({placeholders})",
+            category_ids,
+        )
+        return row["total"]
 
     def reassign_transactions(self, from_category_id: int, to_category_id: int) -> None:
         self._execute(
