@@ -1,0 +1,123 @@
+from decimal import Decimal
+
+import pytest
+from factories import TODAY, ars, usd
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLabel
+
+from nodus.models.account import AccountType
+from nodus.models.currency import Currency
+from nodus.ui.dialogs.account_dialog import AccountDialog
+from nodus.ui.pages.accounts_page import AccountRow, AccountsPage
+
+
+@pytest.fixture
+def page(qtbot, services, event_bus) -> AccountsPage:
+    accounts_page = AccountsPage(services, event_bus)
+    qtbot.addWidget(accounts_page)
+    accounts_page.refresh()
+    return accounts_page
+
+
+def texts(widget) -> list[str]:
+    return [label.text() for label in widget.findChildren(QLabel)]
+
+
+def rows(page) -> list[AccountRow]:
+    """Current rows; rows of a replaced card linger hidden until Qt deletes them."""
+    return [row for row in page.findChildren(AccountRow) if row.isVisibleTo(page)]
+
+
+class TestAccountDialog:
+    def make(self, qtbot, services, event_bus, account=None) -> AccountDialog:
+        dialog = AccountDialog(services, event_bus, account)
+        qtbot.addWidget(dialog)
+        return dialog
+
+    def test_creates_account_and_announces_it(self, qtbot, services, event_bus):
+        dialog = self.make(qtbot, services, event_bus)
+        dialog.name_input.setText("Dólares")
+        dialog.type_input.setCurrentIndex(dialog.type_input.findData(AccountType.SAVINGS))
+        dialog.currency_input.setCurrentIndex(dialog.currency_input.findData(Currency.USD))
+        dialog.balance_input.line_edit.setText("1.500,50")
+
+        with qtbot.waitSignal(event_bus.accounts_changed):
+            qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+        [account] = services.accounts.list_accounts()
+        assert (account.name, account.type, account.initial_balance) == (
+            "Dólares", AccountType.SAVINGS, usd("1500.50"),
+        )  # fmt: skip
+        assert dialog.result() == AccountDialog.DialogCode.Accepted
+
+    def test_validation_error_is_shown_and_dialog_stays_open(self, qtbot, services, event_bus):
+        dialog = self.make(qtbot, services, event_bus)
+        dialog.show()
+        dialog.balance_input.line_edit.setText("100")
+
+        qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+        assert dialog.isVisible()
+        assert dialog.error_label.text() == "El nombre no puede estar vacío."
+        assert services.accounts.list_accounts() == []
+
+    def test_invalid_amount_is_reported(self, qtbot, services, event_bus):
+        dialog = self.make(qtbot, services, event_bus)
+        dialog.name_input.setText("Caja")
+        dialog.balance_input.line_edit.setText("mil")
+
+        qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+        assert "no es un monto válido" in dialog.error_label.text()
+
+    def test_edit_loads_values_and_locks_currency(self, qtbot, services, event_bus, dollars):
+        dialog = self.make(qtbot, services, event_bus, dollars)
+
+        assert dialog.name_input.text() == "Ahorro"
+        assert dialog.balance_input.line_edit.text() == "500,00"
+        assert not dialog.currency_input.isEnabled()
+
+        dialog.name_input.setText("Ahorro MEP")
+        qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+        assert services.accounts.get(dollars.id).name == "Ahorro MEP"
+
+
+class TestAccountsPage:
+    def test_empty_state(self, page):
+        assert "Todavía no hay cuentas" in texts(page)
+
+    def test_lists_accounts_and_net_worth(self, services, page, pesos, dollars):
+        services.exchange_rates.set_rate(TODAY, Decimal("1000"))
+
+        page.refresh()
+
+        assert [row.account.name for row in rows(page)] == ["Ahorro", "Banco"]
+        shown = texts(page)
+        assert "$ 600.000,00" in shown
+        assert "US$ 600,00" in shown
+
+    def test_shows_missing_rate_instead_of_inventing_totals(self, page, pesos, dollars):
+        page.refresh()
+
+        assert texts(page).count("Sin cotización") == 2
+
+    def test_archive_moves_account_to_archived_section(
+        self, qtbot, services, event_bus, page, pesos, dollars
+    ):
+        page.refresh()
+        row = next(r for r in rows(page) if r.account.id == dollars.id)
+
+        qtbot.mouseClick(row.archive_button, Qt.MouseButton.LeftButton)
+
+        assert services.accounts.get(dollars.id).is_archived
+        assert "ARCHIVADAS" in texts(page)
+        archived_row = next(r for r in rows(page) if r.account.id == dollars.id)
+        assert archived_row.archive_button.text() == "Desarchivar"
+
+    def test_refreshes_when_accounts_change(self, services, event_bus, page):
+        services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("10"))
+
+        event_bus.accounts_changed.emit()
+
+        assert [row.account.name for row in rows(page)] == ["Efectivo"]

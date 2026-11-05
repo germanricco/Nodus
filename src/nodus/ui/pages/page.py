@@ -1,7 +1,7 @@
 """Base class for the main sections."""
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 
 class Page(QWidget):
@@ -15,12 +15,22 @@ class Page(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
+        self._header = QHBoxLayout()
         title_label = QLabel(title)
         title_label.setObjectName("PageTitle")
-        layout.addWidget(title_label)
+        self._header.addWidget(title_label)
+        self._header.addStretch()
+        layout.addLayout(self._header)
         self.content_layout = QVBoxLayout()
         self.content_layout.setSpacing(16)
         layout.addLayout(self.content_layout, stretch=1)
+
+    def add_header_button(self, text: str, primary: bool = False) -> QPushButton:
+        """Adds a button to the right of the title, for the page's main actions."""
+        button = QPushButton(text)
+        button.setObjectName("PrimaryButton" if primary else "SecondaryButton")
+        self._header.addWidget(button)
+        return button
 
     def refresh(self) -> None:
         """Reloads the page's data. Pages that show stored data override it."""

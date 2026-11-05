@@ -81,6 +81,45 @@ QMainWindow, #ContentArea, #PageStack {
     border-radius: 12px;
 }
 
+#CardTitle, #StatCaption {
+    color: $text_muted;
+    font-size: 8pt;
+    font-weight: 600;
+}
+
+#StatValue {
+    font-size: 13pt;
+    font-weight: 600;
+}
+
+#StatValueLarge {
+    font-size: 20pt;
+    font-weight: 600;
+}
+
+#Badge {
+    background: $accent_soft;
+    color: $accent;
+    border-radius: 16px;
+    min-width: 32px;
+    max-width: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    font-size: 8pt;
+    font-weight: 600;
+    qproperty-alignment: AlignCenter;
+}
+
+#RowTitle {
+    font-weight: 600;
+}
+
+#RowAmount {
+    font-size: 11pt;
+    font-weight: 600;
+    padding-right: 8px;
+}
+
 #EmptyState {
     color: $text_muted;
     font-size: 11pt;
@@ -99,6 +138,71 @@ QPushButton#PrimaryButton {
 
 QPushButton#PrimaryButton:hover {
     background: $accent_hover;
+}
+
+QPushButton#SecondaryButton, QPushButton#SmallButton {
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: 8px;
+    padding: 8px 16px;
+}
+
+QPushButton#SmallButton {
+    padding: 4px 10px;
+    font-size: 9pt;
+}
+
+QPushButton#SecondaryButton:hover, QPushButton#SmallButton:hover {
+    background: $hover;
+}
+
+/* Dialogs and form fields */
+
+QDialog {
+    background: $surface;
+}
+
+#DialogTitle {
+    font-size: 15pt;
+    font-weight: 600;
+}
+
+#ErrorLabel {
+    color: $expense;
+}
+
+#FieldHint {
+    color: $text_muted;
+    font-size: 9pt;
+}
+
+#AmountSymbol {
+    color: $text_muted;
+    font-weight: 600;
+    min-width: 28px;
+}
+
+QLineEdit, QComboBox, QDateEdit {
+    background: $background;
+    border: 1px solid $border;
+    border-radius: 6px;
+    padding: 6px 8px;
+    min-height: 20px;
+}
+
+QLineEdit:focus, QComboBox:focus, QDateEdit:focus {
+    border: 1px solid $accent;
+}
+
+QLineEdit:disabled, QComboBox:disabled {
+    color: $text_muted;
+}
+
+QComboBox QAbstractItemView {
+    background: $surface;
+    border: 1px solid $border;
+    selection-background-color: $accent_soft;
+    selection-color: $text;
 }
 
 /* Amounts: MoneyLabel sets the "tone" property */

@@ -20,10 +20,11 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 if sys.platform == "win32":
     os.environ.setdefault("QT_QPA_FONTDIR", str(Path(os.environ["WINDIR"]) / "Fonts"))
 
-from PySide6.QtWidgets import QApplication  # noqa: E402
+from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
+from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
 from nodus.ui.navigation import PageId  # noqa: E402
@@ -33,22 +34,39 @@ from nodus.ui.theme.theme_manager import ThemeManager  # noqa: E402
 sys.path.insert(0, str(Path(__file__).parent))
 from demo_data import load_demo_data  # noqa: E402
 
+# Dialogs to capture, built over the demo data: name -> factory(services, event_bus, window).
+DIALOGS = {
+    "account-dialog": lambda services, event_bus, window: AccountDialog(
+        services, event_bus, parent=window
+    ),
+}
+
 
 def render_pages(app: QApplication, services: Services, args: argparse.Namespace) -> None:
     if args.demo:
         load_demo_data(services, args.today)
     theme_manager = ThemeManager(app, ThemeMode.LIGHT)
-    window = MainWindow(services, EventBus(), theme_manager)
+    event_bus = EventBus()
+    window = MainWindow(services, event_bus, theme_manager)
     window.show()
     for mode in (ThemeMode.LIGHT, ThemeMode.DARK):
         theme_manager.set_mode(mode)
         for page_id in PageId:
             window.show_page(page_id)
             app.processEvents()
-            path = args.out / f"{page_id.name.lower()}-{mode.value}.png"
-            window.grab().save(str(path))
-            print(path)
+            save(window, args.out / f"{page_id.name.lower()}-{mode.value}.png")
+        for name, build_dialog in DIALOGS.items():
+            dialog = build_dialog(services, event_bus, window)
+            dialog.show()
+            app.processEvents()
+            save(dialog, args.out / f"{name}-{mode.value}.png")
+            dialog.close()
     window.close()
+
+
+def save(widget: QWidget, path: Path) -> None:
+    widget.grab().save(str(path))
+    print(path)
 
 
 def main() -> int:

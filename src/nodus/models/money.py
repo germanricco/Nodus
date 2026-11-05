@@ -74,10 +74,20 @@ class Money:
 
     def format(self) -> str:
         """Formats in Argentine style: "$ 1.234,56", "-US$ 10,00"."""
-        sign = "-" if self.is_negative else ""
+        return f"{self._sign}{self.currency.symbol} {self._unsigned_number()}"
+
+    def format_number(self) -> str:
+        """The number alone, without symbol: "1.234,56", "-10,00"."""
+        return f"{self._sign}{self._unsigned_number()}"
+
+    @property
+    def _sign(self) -> str:
+        return "-" if self.is_negative else ""
+
+    def _unsigned_number(self) -> str:
         units, cents = divmod(abs(self.cents), CENTS_PER_UNIT)
         grouped_units = f"{units:,}".replace(",", ".")
-        return f"{sign}{self.currency.symbol} {grouped_units},{cents:02d}"
+        return f"{grouped_units},{cents:02d}"
 
     def __str__(self) -> str:
         return self.format()

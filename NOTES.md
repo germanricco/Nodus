@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Fases 1 a 3 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). La app abre una ventana al estilo MoneyMatter: barra lateral con navegación y cuentas con sus saldos, barra superior con "Agregar transacción" (todavía sin acción) y tema claro/oscuro que sigue al sistema. Las páginas son provisorias (`PlaceholderPage`). 114 tests en verde. Sigue la fase 4: página de Cuentas.
+Fases 1 a 4 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). La página de Cuentas ya funciona: patrimonio en pesos y en dólares, lista de cuentas activas y archivadas, y diálogo para crear y editar. Ya existen los componentes que van a reutilizar las próximas fases: `FormDialog`, `AmountInput` (montos en formato argentino), `Card` y `Stat`. 146 tests en verde. Sigue la fase 5: página de Categorías.
 
 ## Decisiones
 
@@ -22,6 +22,9 @@ Fases 1 a 3 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). La app ab
 - **2026-11-05 — Íconos propios en lugar de Lucide.** Íconos de línea simples dibujados para Nodus (`ui/icons/`), sin depender de descargas ni de otra licencia. Se colorean según el tema reemplazando `currentColor`.
 - **2026-11-05 — Tema con tokens.** Una sola hoja de estilos (`ui/theme/stylesheet.qss`) con nombres de color (`$accent`, `$text`…) que `ThemeManager` completa con la paleta clara u oscura. También se ajusta la `QPalette`, para que los widgets que la hoja no cubre respeten el tema. Se usa el estilo Fusion, que aplica las hojas de estilo igual en todos los sistemas.
 - **2026-11-05 — `EventBus` para refrescar pantallas.** Quien guarda un cambio emite una señal (`accounts_changed`, `transactions_changed`…) y cada pantalla que muestra esos datos se actualiza sola.
+- **2026-11-05 — Montos como se escriben en Argentina.** `parse_amount` toma la coma como separador decimal y el punto como separador de miles ("1.234,56"). Un punto solo seguido de uno o dos dígitos se toma como decimal ("12.50"), porque mucha gente lo escribe así.
+- **2026-11-05 — Patrimonio sin cuentas archivadas.** `NetWorthService` suma solo las cuentas activas. Si hace falta convertir y no hay cotización, muestra "Sin cotización" en lugar de un número inventado.
+- **2026-11-05 — Errores dentro del diálogo.** `FormDialog` muestra el mensaje de error en el propio diálogo y lo deja abierto, para que el usuario corrija sin volver a escribir todo.
 - **2026-11-05 — Entorno con venv + pip y gráficos con QtCharts.** venv viene con Python 3.11.9 y QtCharts está incluido en PySide6, así que no suman dependencias.
 
 ## Preguntas abiertas
@@ -33,4 +36,4 @@ Fases 1 a 3 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). La app ab
 ## Registro de sesiones
 
 ### 2026-11-05
-Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 3 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).
+Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 4 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).

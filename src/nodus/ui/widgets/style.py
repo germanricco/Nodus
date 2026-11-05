@@ -18,6 +18,8 @@ def clear_layout(layout: QLayout) -> None:
     while layout.count():
         item = layout.takeAt(0)
         if item.widget() is not None:
+            # deleteLater waits for the event loop; hiding now keeps stale widgets out of sight.
+            item.widget().hide()
             item.widget().deleteLater()
         elif item.layout() is not None:
             clear_layout(item.layout())
