@@ -9,7 +9,7 @@
 Plan: `docs/plans/001-v0.1-mvp.md`. Se usa desde el código fuente.
 
 - [x] 1. Entorno y cimientos: venv, `pyproject.toml`, ventana vacía, `Database` con migraciones, `Money`
-- [ ] 2. Dominio y datos: modelos, repositorios, categorías por defecto, servicios (cuentas, categorías, transacciones y transferencias, cotizaciones)
+- [x] 2. Dominio y datos: modelos, repositorios, categorías por defecto, servicios (cuentas, categorías, transacciones y transferencias, cotizaciones)
 - [ ] 3. Interfaz base: tema claro/oscuro, ventana con barra lateral, `EventBus`, script de capturas
 - [ ] 4. Cuentas (ARS y USD)
 - [ ] 5. Categorías de gasto y de ingreso: set predeterminado corto, alta, edición y borrado por el usuario

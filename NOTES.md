@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Plan de la v0.1 aprobado (`docs/plans/001-v0.1-mvp.md`). Fase 1 terminada: entorno `.venv` con PySide6 6.12, `python -m nodus` abre una ventana provisoria, `Database` crea y migra el esquema completo de la v0.1 (`001_initial.sql`), y `Money`/`Currency` están probados (38 tests). Sigue la fase 2: modelos, repositorios, categorías predeterminadas y servicios.
+Fases 1 y 2 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Ya existen los modelos, los repositorios y los servicios de cuentas, categorías, transacciones y transferencias, y cotizaciones, reunidos en `Services` (`services/container.py`), con 98 tests en verde. Todavía no hay interfaz real: la ventana es provisoria. Sigue la fase 3: tema claro/oscuro, ventana con barra lateral y `EventBus`.
 
 ## Decisiones
 
@@ -16,6 +16,9 @@ Plan de la v0.1 aprobado (`docs/plans/001-v0.1-mvp.md`). Fase 1 terminada: entor
 - **2026-11-05 — Multimoneda ARS/USD desde la v0.1.** El usuario hoy maneja en Excel cuentas en pesos y en dólares, y ve el patrimonio en ambas monedas. Cada cuenta tiene su moneda y las transferencias entre monedas guardan los dos montos, como en MoneyMatter.
 - **2026-11-05 — Cotización manual con historial.** La cotización que importa en Argentina (MEP, blue) no es la oficial, y la carga manual funciona sin internet. La automática (DolarApi) queda para después.
 - **2026-11-05 — Dinero en centavos (INTEGER) y saldos calculados.** Como en MoneyMatter: sin errores de redondeo, y los saldos nunca quedan desincronizados.
+- **2026-11-05 — Categorías predeterminadas dentro de `001_initial.sql`.** Se cargan con INSERT en la migración inicial en lugar de un `seed.py`, para que se creen una sola vez y en la misma transacción que el esquema.
+- **2026-11-05 — Servicios con "borradores".** `TransactionDraft` y `TransferDraft` agrupan lo que el usuario completa en un formulario, para no pasar siete parámetros sueltos. Los repositorios nunca hacen commit: cada servicio envuelve su operación en `Database.transaction()`, así una transferencia nunca queda guardada a medias.
+- **2026-11-05 — Reglas de transferencias.** Entre cuentas de la misma moneda, el monto que entra es igual al que sale. Entre ARS y USD, el usuario indica los dos montos. Borrar una pata borra la transferencia completa. Las cuentas archivadas no aceptan transacciones nuevas.
 - **2026-11-05 — Entorno con venv + pip y gráficos con QtCharts.** venv viene con Python 3.11.9 y QtCharts está incluido en PySide6, así que no suman dependencias.
 
 ## Preguntas abiertas
@@ -26,4 +29,4 @@ Plan de la v0.1 aprobado (`docs/plans/001-v0.1-mvp.md`). Fase 1 terminada: entor
 ## Registro de sesiones
 
 ### 2026-11-05
-Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fase 1 implementada y verificada (tests, ruff, app abierta contra una carpeta de prueba).
+Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 y 2 implementadas y verificadas (tests, ruff, app abierta contra una carpeta de prueba).

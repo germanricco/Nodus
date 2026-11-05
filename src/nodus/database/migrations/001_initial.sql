@@ -65,3 +65,21 @@ CREATE TABLE settings (
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+
+-- Default categories. Users add, rename or delete their own; the two "Otros" are system
+-- categories that receive the transactions of deleted ones.
+INSERT INTO categories (name, kind, color, is_system) VALUES
+    ('Supermercado y comida', 'expense', '#e74c3c', 0),
+    ('Vivienda',              'expense', '#e67e22', 0),
+    ('Servicios',             'expense', '#2980b9', 0),
+    ('Transporte',            'expense', '#95a5a6', 0),
+    ('Salud',                 'expense', '#2ecc71', 0),
+    ('Educación',             'expense', '#8e44ad', 0),
+    ('Proyectos',             'expense', '#16a085', 0),
+    ('Ocio',                  'expense', '#f39c12', 0),
+    ('Ropa',                  'expense', '#3498db', 0),
+    ('Otros',                 'expense', '#7f8c8d', 1),
+    ('Sueldo',                'income',  '#f1c40f', 0),
+    ('Trabajo freelance',     'income',  '#27ae60', 0),
+    ('Reembolsos',            'income',  '#1abc9c', 0),
+    ('Otros',                 'income',  '#7f8c8d', 1);

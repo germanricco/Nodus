@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -62,6 +64,16 @@ class Database:
     @property
     def connection(self) -> sqlite3.Connection:
         return self._connection
+
+    @contextmanager
+    def transaction(self) -> Iterator[sqlite3.Connection]:
+        """Groups writes so they are all saved together or not at all.
+
+        Repositories never commit on their own; services wrap each operation in this block,
+        so a multi-step change (like the two legs of a transfer) cannot be half-saved.
+        """
+        with self._connection:
+            yield self._connection
 
     @property
     def schema_version(self) -> int:

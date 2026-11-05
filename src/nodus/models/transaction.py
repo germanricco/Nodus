@@ -1,0 +1,62 @@
+"""Money movements: income, expenses and transfers between accounts."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import date
+from enum import Enum
+
+from nodus.models.money import Money
+
+
+class TransactionType(Enum):
+    """Direction of a transaction. Categories reuse it to say which transactions they apply to."""
+
+    INCOME = "income"
+    EXPENSE = "expense"
+
+
+@dataclass(frozen=True)
+class Transaction:
+    """One movement in one account.
+
+    ``amount`` is always positive; ``type`` gives the direction. Its currency is the
+    account's currency. A transaction with a ``transfer_id`` is one leg of a transfer and
+    has no category; every other transaction has one.
+    """
+
+    id: int | None
+    account_id: int
+    type: TransactionType
+    amount: Money
+    occurred_on: date
+    category_id: int | None
+    note: str = ""
+    transfer_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.amount.cents <= 0:
+            raise ValueError("Transaction amount must be positive")
+        if self.is_transfer == (self.category_id is not None):
+            raise ValueError("A transaction has either a category or a transfer_id, not both")
+
+    @property
+    def is_transfer(self) -> bool:
+        return self.transfer_id is not None
+
+    @property
+    def signed_amount(self) -> Money:
+        """Amount with its effect on the account balance: negative for expenses."""
+        return self.amount if self.type is TransactionType.INCOME else -self.amount
+
+
+@dataclass(frozen=True)
+class Transfer:
+    """A movement between two of the user's accounts, stored as two linked transactions."""
+
+    outgoing: Transaction
+    incoming: Transaction
+
+    @property
+    def id(self) -> str:
+        return self.outgoing.transfer_id

@@ -27,6 +27,7 @@ nodus = ["database/migrations/*.sql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]
 qt_api = "pyside6"
 
 [tool.ruff]
