@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-v0.1 terminada (plan `docs/plans/001-v0.1-mvp.md`, versión `0.1.0`): Dashboard, Cuentas, Transacciones, Categorías y Ajustes, con 197 tests en verde (incluida la prueba de punta a punta) y el README completo (las capturas se suman en una versión posterior). Ahora el usuario la prueba con sus datos reales. Lo que surja de esa prueba se corrige antes de seguir; después viene la v0.2 (ejecutable, GitHub Actions y aviso de actualizaciones), que necesita su plan `002`. Pendiente: elegir la licencia.
+v0.1 terminada (plan `docs/plans/001-v0.1-mvp.md`, versión `0.1.0`): Dashboard, Cuentas, Transacciones, Categorías y Ajustes, con 197 tests en verde (incluida la prueba de punta a punta) y el README completo (las capturas se suman en una versión posterior). Ahora el usuario la prueba con sus datos reales. Lo que surja de esa prueba se corrige antes de seguir; después viene la v0.2 (ejecutable, GitHub Actions y aviso de actualizaciones), que necesita su plan `002`.
 
 Desde la v0.1.0, el esquema ya no se cambia editando `001_initial.sql`: cada cambio va en una migración nueva.
 
@@ -38,6 +38,7 @@ Desde la v0.1.0, el esquema ya no se cambia editando `001_initial.sql`: cada cam
 - **2026-11-05 — Entorno con venv + pip.** venv viene con Python 3.11.9, así que no suma dependencias.
 - **2026-11-05 — Gráficos dibujados con QPainter.** El anillo de gastos y la barra de flujo (`ui/widgets/charts.py`) se pintan a mano en lugar de usar QtCharts: son pocas líneas, toman los colores del tema directamente y permiten el total en el centro del anillo. QtCharts queda como opción para gráficos más complejos (evolución del saldo).
 - **2026-11-05 — Flujo del mes en pesos.** `DashboardService` suma ingresos y gastos convirtiendo los movimientos en dólares con la cotización de su día. Los que no tienen cotización se dejan fuera y el dashboard lo avisa, en lugar de mostrar un total equivocado. Las transferencias no cuentan como ingreso ni gasto, y los gastos se agrupan por categoría principal.
+- **2026-11-05 — Licencia MIT.** El proyecto es open source y al autor solo le importa que se cite el repositorio: MIT lo exige a través del aviso de copyright (que incluye la URL) sin más restricciones. Es compatible con PySide6 (LGPL) también al empaquetar con PyInstaller.
 - **2026-11-05 — Dashboard con layout fijo.** No se implementa el botón de MoneyMatter para cambiar el tamaño de las tarjetas: para un uso personal no aporta y complica la interfaz.
 - **2026-11-05 — Dashboard limpio.** Debe mostrar solo lo que importa a simple vista. De las 9 tarjetas de MoneyMatter se toman las importantes. Quedan fuera Progreso FIRE, utilización de crédito y tasa de impuestos promedio, y la lista de seguimiento de categorías se reconsidera junto con Presupuestos.
 - **2026-11-05 — Próximos pagos en el dashboard, en versión compacta.** Mostrará solo los cobros recurrentes de los próximos 14 días y los vencidos, y se oculta si no hay suscripciones. MoneyMatter la trae en su layout por defecto (`subscriptions-overview`) porque es la única tarjeta que mira hacia adelante («qué me va a salir de la cuenta pronto»). Además, una app de escritorio no puede avisar mientras está cerrada, así que el dashboard, lo primero que se ve al abrirla, es el aviso más confiable. Las notificaciones complementan la tarjeta, no la reemplazan.
@@ -47,7 +48,6 @@ Desde la v0.1.0, el esquema ya no se cambia editando `001_initial.sql`: cada cam
 
 - Tipografía: por ahora Segoe UI (la del sistema); evaluar incluir Inter, como MoneyMatter.
 - Las capturas en modo sin ventana necesitan `QT_QPA_FONTDIR` en Windows para encontrar las fuentes (ya está en `scripts/screenshot.py` y en `tests/conftest.py`).
-- Licencia del proyecto.
 
 ## Registro de sesiones
 

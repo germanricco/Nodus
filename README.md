@@ -71,4 +71,4 @@ Las funciones y el diseño de la interfaz de Nodus se inspiran en [MoneyMatter](
 
 ## Licencia
 
-Pendiente de definir.
+Nodus es software libre bajo la [licencia MIT](LICENSE): puedes usarlo, modificarlo y redistribuirlo, incluso con fines comerciales, siempre que conserves el aviso de copyright con la referencia a este repositorio.
