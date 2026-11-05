@@ -23,7 +23,7 @@ version = { attr = "nodus.__version__" }
 where = ["src"]
 
 [tool.setuptools.package-data]
-nodus = ["database/migrations/*.sql"]
+nodus = ["database/migrations/*.sql", "ui/icons/*.svg", "ui/theme/*.qss"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

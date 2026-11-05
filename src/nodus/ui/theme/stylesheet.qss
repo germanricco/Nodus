@@ -1,0 +1,146 @@
+/* Nodus stylesheet. Words starting with a dollar sign are theme tokens (see theme.py),
+   filled in by ThemeManager. */
+
+QWidget {
+    font-family: "Segoe UI";
+    font-size: 10pt;
+    color: $text;
+}
+
+QMainWindow, #ContentArea, #PageStack {
+    background: $background;
+}
+
+/* Sidebar */
+
+#Sidebar {
+    background: $sidebar;
+    border-right: 1px solid $border;
+}
+
+#SidebarLogo {
+    font-size: 16pt;
+    font-weight: 600;
+    padding: 4px 8px 12px 8px;
+}
+
+#NavButton {
+    text-align: left;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+}
+
+#NavButton:hover {
+    background: $hover;
+}
+
+#NavButton:checked {
+    background: $accent_soft;
+    color: $accent;
+    font-weight: 600;
+}
+
+#SectionLabel {
+    color: $text_muted;
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 16px 8px 4px 8px;
+}
+
+#SidebarAccounts {
+    background: transparent;
+}
+
+#SidebarItem {
+    padding-left: 8px;
+}
+
+#SidebarFooter {
+    color: $text_muted;
+    font-size: 8pt;
+    padding: 8px;
+}
+
+/* Top bar and pages */
+
+#TopBar {
+    background: $background;
+    border-bottom: 1px solid $border;
+}
+
+#PageTitle {
+    font-size: 20pt;
+    font-weight: 600;
+}
+
+#Card {
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: 12px;
+}
+
+#EmptyState {
+    color: $text_muted;
+    font-size: 11pt;
+}
+
+/* Buttons */
+
+QPushButton#PrimaryButton {
+    background: $accent;
+    color: $on_accent;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 600;
+}
+
+QPushButton#PrimaryButton:hover {
+    background: $accent_hover;
+}
+
+/* Amounts: MoneyLabel sets the "tone" property */
+
+QLabel[tone="positive"] {
+    color: $income;
+}
+
+QLabel[tone="negative"] {
+    color: $expense;
+}
+
+QLabel[muted="true"] {
+    color: $text_muted;
+}
+
+/* Scrollbars */
+
+QScrollArea {
+    background: transparent;
+    border: none;
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical {
+    background: $border;
+    border-radius: 3px;
+    min-height: 24px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+QToolTip {
+    background: $surface;
+    color: $text;
+    border: 1px solid $border;
+    padding: 4px;
+}

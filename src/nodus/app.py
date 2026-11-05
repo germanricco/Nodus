@@ -6,7 +6,10 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from nodus.config.paths import AppPaths
 from nodus.database.database import Database, DatabaseError
+from nodus.services.container import Services
+from nodus.ui.event_bus import EventBus
 from nodus.ui.main_window import MainWindow
+from nodus.ui.theme.theme_manager import ThemeManager
 
 
 class NodusApp:
@@ -31,7 +34,8 @@ class NodusApp:
             )
             return 1
         try:
-            window = MainWindow()
+            theme_manager = ThemeManager(self._qt_app)
+            window = MainWindow(Services.create(database), EventBus(), theme_manager)
             window.show()
             return self._qt_app.exec()
         finally:

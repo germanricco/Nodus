@@ -30,6 +30,9 @@ dist/
 *.qmlc
 *.jsc
 
+# Capturas generadas por scripts/screenshot.py
+screenshots/
+
 # Editores y sistema operativo
 .vscode/
 .idea/

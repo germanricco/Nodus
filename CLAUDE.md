@@ -68,6 +68,7 @@ Todo se ejecuta con el Python del entorno virtual `.venv` (Python 3.11). En Git 
 - Abrir con datos de prueba: definir `NODUS_DATA_DIR` con una carpeta de prueba antes de abrirla. Usar siempre esta variable al probar, para no tocar los datos reales en `%APPDATA%/Nodus`.
 - Tests: `.venv/Scripts/python -m pytest`
 - Lint y formato: `.venv/Scripts/python -m ruff check .` y `.venv/Scripts/python -m ruff format .`
+- Capturas de todas las pantallas, en tema claro y oscuro: `.venv/Scripts/python scripts/screenshot.py --demo --out screenshots`. Corren sobre una base temporal con datos de demostración (`scripts/demo_data.py`). Después de cambiar la interfaz, generar las capturas y revisarlas antes de dar la tarea por terminada.
 
 ## Base de datos y migraciones
 

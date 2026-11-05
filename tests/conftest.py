@@ -1,11 +1,14 @@
 """Shared test setup."""
 
 import os
+import sys
 
 import pytest
 
 # Render Qt widgets without a visible window, so tests run headless and in CI.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+if sys.platform == "win32":
+    os.environ.setdefault("QT_QPA_FONTDIR", os.path.join(os.environ["WINDIR"], "Fonts"))
 
 from factories import ars, usd  # noqa: E402
 
