@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Base de trabajo commiteada (`8456e41`). Plan de la v0.1 escrito en `docs/plans/001-v0.1-mvp.md`, pendiente de revisión del usuario. Todavía no hay código; lo siguiente es la fase 1 (entorno y cimientos).
+Plan de la v0.1 aprobado (`docs/plans/001-v0.1-mvp.md`). Fase 1 terminada: entorno `.venv` con PySide6 6.12, `python -m nodus` abre una ventana provisoria, `Database` crea y migra el esquema completo de la v0.1 (`001_initial.sql`), y `Money`/`Currency` están probados (38 tests). Sigue la fase 2: modelos, repositorios, categorías predeterminadas y servicios.
 
 ## Decisiones
 
@@ -26,4 +26,4 @@ Base de trabajo commiteada (`8456e41`). Plan de la v0.1 escrito en `docs/plans/0
 ## Registro de sesiones
 
 ### 2026-11-05
-Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD.
+Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fase 1 implementada y verificada (tests, ruff, app abierta contra una carpeta de prueba).

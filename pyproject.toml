@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nodus"
+dynamic = ["version"]
+description = "Aplicación de escritorio de finanzas personales, local-first."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["PySide6>=6.8"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.7"]
+
+[project.gui-scripts]
+nodus = "nodus.app:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "nodus.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+nodus = ["database/migrations/*.sql"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+qt_api = "pyside6"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "N"]

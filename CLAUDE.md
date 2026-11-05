@@ -38,11 +38,17 @@ El repositorio vive en GitHub y el README es la primera impresión del proyecto,
 
 ## Estructura del repositorio
 
+- `src/nodus/`: el paquete de la aplicación, en capas que solo dependen hacia abajo: `ui` → `services` → `database` → `models`. La interfaz nunca ejecuta SQL ni calcula saldos.
+  - `app.py`: punto de entrada (`NodusApp`); verifica y migra la base antes de abrir la ventana.
+  - `config/`: rutas de datos (`AppPaths`).
+  - `models/`: dominio puro, sin Qt ni SQL (`Money`, `Currency`…).
+  - `database/`: conexión, migraciones y repositorios.
+  - `services/`: reglas de negocio.
+  - `ui/`: ventanas, páginas, diálogos y tema.
+- `tests/`: espeja la estructura de `src/nodus/`.
 - `docs/`: especificación y planes (`docs/plans/`).
 - `CLAUDE.md`, `NOTES.md`, `TASKS.md`: reglas, memoria entre sesiones y backlog.
 - `referencias/`: repos de referencia clonados; ignorados por git.
-
-El código irá en un único paquete, con módulos separados para interfaz, base de datos y modelos, y un punto de entrada que verifica o crea la base de datos antes de abrir la interfaz. El árbol concreto se define en el plan 001.
 
 ## Referencia: MoneyMatter
 
@@ -55,4 +61,14 @@ El código irá en un único paquete, con módulos separados para interfaz, base
 
 ## Comandos
 
-Se completa cuando definamos el entorno (plan 001).
+Todo se ejecuta con el Python del entorno virtual `.venv` (Python 3.11). En Git Bash, la ruta es `.venv/Scripts/python`.
+
+- Instalar: `python -m venv .venv` y luego `.venv/Scripts/python -m pip install -e ".[dev]"`
+- Abrir la app: `.venv/Scripts/python -m nodus`
+- Abrir con datos de prueba: definir `NODUS_DATA_DIR` con una carpeta de prueba antes de abrirla. Usar siempre esta variable al probar, para no tocar los datos reales en `%APPDATA%/Nodus`.
+- Tests: `.venv/Scripts/python -m pytest`
+- Lint y formato: `.venv/Scripts/python -m ruff check .` y `.venv/Scripts/python -m ruff format .`
+
+## Base de datos y migraciones
+
+El esquema vive en `src/nodus/database/migrations/NNN_nombre.sql` y se aplica con `PRAGMA user_version`. Mientras no se publique la v0.1.0, los cambios de esquema se hacen editando `001_initial.sql`, porque nadie tiene todavía datos que migrar. Después de publicada, cada cambio va en un archivo nuevo con el número siguiente: una migración ya publicada nunca se edita, porque las bases de los usuarios ya la aplicaron.
