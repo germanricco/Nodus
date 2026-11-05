@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Entornos virtuales y variables locales
+.venv/
+venv/
+.env
+
+# PyInstaller (si creamos un .spec propio, se agrega con una excepción !nodus.spec)
+build/
+dist/
+*.spec
+
+# Bases de datos locales: contienen datos financieros reales, nunca van al repo
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*-wal
+*-shm
+
+# Qt / QML compilado
+*.qmlc
+*.jsc
+
+# Editores y sistema operativo
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Claude Code (configuración personal)
+.claude/settings.local.json
+
+# Repositorios de referencia clonados localmente
+referencias/
