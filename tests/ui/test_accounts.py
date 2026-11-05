@@ -1,13 +1,14 @@
 from decimal import Decimal
 
 import pytest
-from factories import TODAY, ars, usd
+from factories import TODAY, ars, expense_draft, usd
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.ui.dialogs.account_dialog import AccountDialog
+from nodus.ui.pages import accounts_page
 from nodus.ui.pages.accounts_page import AccountRow, AccountsPage
 
 
@@ -121,3 +122,32 @@ class TestAccountsPage:
         event_bus.accounts_changed.emit()
 
         assert [row.account.name for row in rows(page)] == ["Efectivo"]
+
+    def test_delete_after_confirmation_warns_about_movements(
+        self, qtbot, monkeypatch, services, event_bus, page, pesos
+    ):
+        services.transactions.create(expense_draft(services, pesos.id, ars("10")))
+        page.refresh()
+        warnings = []
+        monkeypatch.setattr(
+            accounts_page, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+        )
+
+        with qtbot.waitSignal(event_bus.accounts_changed):
+            qtbot.mouseClick(rows(page)[0].delete_button, Qt.MouseButton.LeftButton)
+
+        assert warnings == [
+            "Se va a eliminar la cuenta «Banco». Su única transacción también se elimina."
+            " Para conservar el historial, archívala en su lugar."
+        ]
+        assert services.accounts.list_accounts(include_archived=True) == []
+
+    def test_delete_is_cancelled_when_not_confirmed(
+        self, qtbot, monkeypatch, services, page, pesos
+    ):
+        page.refresh()
+        monkeypatch.setattr(accounts_page, "confirm", lambda *_args: False)
+
+        qtbot.mouseClick(rows(page)[0].delete_button, Qt.MouseButton.LeftButton)
+
+        assert services.accounts.list_accounts() == [pesos]

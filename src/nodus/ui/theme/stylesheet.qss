@@ -209,6 +209,12 @@ QComboBox::down-arrow, QDateEdit::down-arrow {
     height: 14px;
 }
 
+/* A plain list below the box: Fusion would otherwise open it over the box, aligned to
+   the current item, so it could jump up or down. */
+QComboBox {
+    combobox-popup: 0;
+}
+
 QComboBox QAbstractItemView {
     background: $surface;
     border: 1px solid $border;
@@ -279,6 +285,46 @@ QHeaderView::section {
 QCalendarWidget QWidget {
     background: $surface;
     alternate-background-color: $background;
+}
+
+/* The calendar grid is a table too: without this it inherits the table padding and
+   two-digit days no longer fit ("..."). */
+QCalendarWidget QTableView::item {
+    padding: 0;
+    border: none;
+}
+
+QCalendarWidget QToolButton {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-weight: 600;
+}
+
+QCalendarWidget QToolButton:hover {
+    background: $hover;
+}
+
+QCalendarWidget QToolButton#qt_calendar_prevmonth {
+    qproperty-icon: url($icons/chevron-left.svg);
+}
+
+QCalendarWidget QToolButton#qt_calendar_nextmonth {
+    qproperty-icon: url($icons/chevron-right.svg);
+}
+
+QCalendarWidget QToolButton#qt_calendar_monthbutton {
+    padding-right: 22px;
+}
+
+QCalendarWidget QToolButton::menu-indicator {
+    image: url($icons/chevron-down.svg);
+    subcontrol-origin: padding;
+    subcontrol-position: right center;
+    right: 4px;
+    width: 12px;
+    height: 12px;
 }
 
 /* Amounts: MoneyLabel sets the "tone" property */

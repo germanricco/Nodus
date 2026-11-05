@@ -11,6 +11,7 @@ from nodus.models.account import Account
 from nodus.models.money import Money
 from nodus.services.container import Services
 from nodus.ui.dialogs.account_dialog import AccountDialog
+from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.pages.page import Page
@@ -25,6 +26,7 @@ class AccountRow(QWidget):
 
     edit_requested = Signal(object)  # Account
     archive_toggled = Signal(object)  # Account
+    delete_requested = Signal(object)  # Account
 
     def __init__(self, account: Account, balance: Money) -> None:
         super().__init__()
@@ -57,8 +59,10 @@ class AccountRow(QWidget):
             "Desarchivar" if account.is_archived else "Archivar"
         )
         self.archive_button.clicked.connect(lambda: self.archive_toggled.emit(account))
-        layout.addWidget(self.edit_button)
-        layout.addWidget(self.archive_button)
+        self.delete_button = self._small_button("Eliminar")
+        self.delete_button.clicked.connect(lambda: self.delete_requested.emit(account))
+        for button in (self.edit_button, self.archive_button, self.delete_button):
+            layout.addWidget(button)
 
     @staticmethod
     def _small_button(text: str) -> QPushButton:
@@ -124,12 +128,41 @@ class AccountsPage(Page):
             row = AccountRow(account, balances[account.id])
             row.edit_requested.connect(self.open_account_dialog)
             row.archive_toggled.connect(self._toggle_archived)
+            row.delete_requested.connect(self.delete_account)
             card.body.addWidget(row)
         return card
 
     def _toggle_archived(self, account: Account) -> None:
         self._services.accounts.set_archived(account.id, not account.is_archived)
         self._event_bus.accounts_changed.emit()
+
+    def delete_account(self, account: Account) -> None:
+        if not confirm(self.window(), "Eliminar cuenta", self._delete_warning(account)):
+            return
+        self._services.accounts.delete(account.id)
+        self._event_bus.accounts_changed.emit()
+        self._event_bus.transactions_changed.emit()
+
+    def _delete_warning(self, account: Account) -> str:
+        movements, transfers = self._services.accounts.transaction_count(account.id)
+        sentences = [f"Se va a eliminar la cuenta «{account.name}»."]
+        if movements == 0:
+            sentences.append("No tiene transacciones.")
+        elif movements == 1:
+            sentences.append("Su única transacción también se elimina.")
+        else:
+            sentences.append(f"Sus {movements} transacciones también se eliminan.")
+        if transfers == 1:
+            sentences.append(
+                "Incluye una transferencia, así que cambia el saldo de la otra cuenta."
+            )
+        elif transfers > 1:
+            sentences.append(
+                f"Incluye {transfers} transferencias, así que cambia el saldo de las otras cuentas."
+            )
+        if movements:
+            sentences.append("Para conservar el historial, archívala en su lugar.")
+        return " ".join(sentences)
 
     def _empty_state(self) -> Card:
         card = Card()

@@ -1,9 +1,10 @@
 import pytest
-from factories import ars, expense_draft, income_draft, usd
+from factories import TODAY, ars, expense_draft, income_draft, usd
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.services.errors import NotFoundError, ValidationError
+from nodus.services.transaction_service import TransferDraft
 
 
 def test_create_trims_name_and_assigns_id(services):
@@ -56,3 +57,22 @@ def test_archived_accounts_are_hidden_but_kept(services, pesos, dollars):
 def test_get_missing_account_raises(services):
     with pytest.raises(NotFoundError):
         services.accounts.get(999)
+
+
+def test_delete_takes_movements_and_whole_transfers(services, pesos, dollars):
+    services.transactions.create(expense_draft(services, dollars.id, usd("20")))
+    services.transactions.create_transfer(
+        TransferDraft(pesos.id, dollars.id, ars("120000"), TODAY, amount_in=usd("100"))
+    )
+    assert services.accounts.transaction_count(dollars.id) == (2, 1)
+
+    services.accounts.delete(dollars.id)
+
+    assert [a.id for a in services.accounts.list_accounts(include_archived=True)] == [pesos.id]
+    # The peso leg of the transfer is gone too, so the balance is back to the initial one.
+    assert services.accounts.balance(pesos.id) == ars("100000")
+
+
+def test_delete_unknown_account_raises(services):
+    with pytest.raises(NotFoundError):
+        services.accounts.delete(999)

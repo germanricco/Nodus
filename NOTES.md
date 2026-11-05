@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-v0.1 terminada (plan `docs/plans/001-v0.1-mvp.md`, versión `0.1.0`): Dashboard, Cuentas, Transacciones, Categorías y Ajustes, con 197 tests en verde (incluida la prueba de punta a punta) y el README completo (las capturas se suman en una versión posterior). Ahora el usuario la prueba con sus datos reales. Lo que surja de esa prueba se corrige antes de seguir; después viene la v0.2 (ejecutable, GitHub Actions y aviso de actualizaciones), que necesita su plan `002`.
+v0.1 terminada (plan `docs/plans/001-v0.1-mvp.md`, versión `0.1.0`): Dashboard, Cuentas, Transacciones, Categorías y Ajustes, con 197 tests en verde (incluida la prueba de punta a punta) y el README completo (las capturas se suman en una versión posterior). La prueba con datos reales dio lugar a la v0.1.1 (plan `002`, arreglos de interfaz, borrar cuentas y la ruta de datos con el Python de la Store). Después viene la v0.2 (ejecutable, GitHub Actions y aviso de actualizaciones), con su plan `003`.
 
 Desde la v0.1.0, el esquema ya no se cambia editando `001_initial.sql`: cada cambio va en una migración nueva.
 
@@ -43,6 +43,10 @@ Desde la v0.1.0, el esquema ya no se cambia editando `001_initial.sql`: cada cam
 - **2026-11-05 — Dashboard limpio.** Debe mostrar solo lo que importa a simple vista. De las 9 tarjetas de MoneyMatter se toman las importantes. Quedan fuera Progreso FIRE, utilización de crédito y tasa de impuestos promedio, y la lista de seguimiento de categorías se reconsidera junto con Presupuestos.
 - **2026-11-05 — Próximos pagos en el dashboard, en versión compacta.** Mostrará solo los cobros recurrentes de los próximos 14 días y los vencidos, y se oculta si no hay suscripciones. MoneyMatter la trae en su layout por defecto (`subscriptions-overview`) porque es la única tarjeta que mira hacia adelante («qué me va a salir de la cuenta pronto»). Además, una app de escritorio no puede avisar mientras está cerrada, así que el dashboard, lo primero que se ve al abrirla, es el aviso más confiable. Las notificaciones complementan la tarjeta, no la reemplazan.
 - **2026-11-05 — Selector de período con seis opciones rápidas.** Mes actual, últimos 3, 6 y 12 meses, este año y año anterior, sin rango libre, para mantener la interfaz simple.
+
+- **2026-11-05 — Borrar una cuenta borra sus transferencias completas.** Dejar la pata de la otra cuenta la convertiría en un ingreso o gasto suelto que nunca existió. El aviso lo explica y sugiere archivar para conservar el historial.
+- **2026-11-05 — Python de python.org, no de la Microsoft Store.** El de la Store desvía lo que se escribe en `AppData` a una carpeta privada de su paquete: el Explorador no ve los datos y el ejecutable de la v0.2 no los encontraría. `visible_path` muestra la ruta real en Ajustes por si alguien lo usa igual.
+- **2026-11-05 — Listas desplegables debajo del control.** Fusion abre la lista encima del control, alineada con el ítem actual; `combobox-popup: 0` la abre siempre debajo, como en la web.
 
 ## Preguntas abiertas
 

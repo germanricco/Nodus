@@ -24,9 +24,9 @@ Nodus nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta ti
 
 El **dashboard** responde de un vistazo las tres preguntas de siempre: cuánto tienes, cuánto entró y salió este mes, y en qué se fue. Muestra el patrimonio en pesos y en dólares, el ahorro del mes con la proporción entre ingresos y gastos, un anillo con los gastos por categoría y los últimos movimientos. Con las flechas de arriba recorres los meses anteriores.
 
-En **Cuentas** registras cada lugar donde tienes dinero, con su saldo inicial y su moneda: el banco, el efectivo, los ahorros en dólares, una tarjeta de crédito. Los saldos se calculan siempre a partir de los movimientos, así que nunca quedan desfasados, y las cuentas que ya no usas se archivan sin perder su historia.
+En **Cuentas** registras cada lugar donde tienes dinero, con su saldo inicial y su moneda: el banco, el efectivo, los ahorros en dólares, una tarjeta de crédito. Los saldos se calculan siempre a partir de los movimientos, así que nunca quedan desfasados. Las cuentas que ya no usas se archivan sin perder su historia, y las que creaste por error se eliminan.
 
-**Transacciones** reúne los movimientos de cada mes en una tabla que puedes filtrar por cuenta, categoría, tipo o texto de la nota. Un mismo formulario sirve para gastos, ingresos y transferencias. Cuando la transferencia es entre pesos y dólares, Nodus pide los dos montos y te muestra la cotización que realmente obtuviste.
+**Transacciones** reúne los movimientos de cada mes en una tabla que puedes filtrar por cuenta, categoría, tipo o texto de la nota, y volver a ver completa con un clic. Un mismo formulario sirve para gastos, ingresos y transferencias. Cuando la transferencia es entre pesos y dólares, Nodus pide los dos montos y te muestra la cotización que realmente obtuviste.
 
 Las **categorías** vienen con un set corto pensado para el día a día, separado en gastos e ingresos, y puedes crear las tuyas con su color o abrir subcategorías dentro de una existente. Si borras una categoría, sus movimientos pasan a «Otros» en lugar de perderse.
 
@@ -38,7 +38,7 @@ La versión **v0.1** es la primera usable: cubre cuentas en pesos y dólares, in
 
 ## Instalación
 
-Nodus necesita Python 3.11. Desde una terminal, en la carpeta del proyecto:
+Nodus necesita Python 3.11. En Windows, conviene instalarlo desde [python.org](https://www.python.org/downloads/) y no desde la Microsoft Store: esa versión guarda los archivos de `AppData` en una carpeta privada, donde el Explorador no los encuentra. Desde una terminal, en la carpeta del proyecto:
 
 ```bash
 python -m venv .venv

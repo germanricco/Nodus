@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
-from PySide6.QtCore import QDate
-from PySide6.QtWidgets import QDateEdit, QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
 
 from nodus.models.account import Account
 from nodus.models.currency import Currency
@@ -19,6 +17,7 @@ from nodus.services.transaction_service import TransactionDraft, TransferDraft
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.amount_input import AmountInput
+from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
 
@@ -58,10 +57,7 @@ class TransactionDialog(FormDialog):
         self.rate_hint = QLabel()
         self.rate_hint.setObjectName("FieldHint")
         self.category_input = CategoryComboBox()
-        self.date_input = QDateEdit()
-        self.date_input.setCalendarPopup(True)
-        self.date_input.setDisplayFormat("dd/MM/yyyy")
-        self.date_input.setDate(_to_qdate(date.today()))
+        self.date_input = DateInput()
         self.note_input = QLineEdit()
         self.note_input.setPlaceholderText("Opcional. Ej.: Supermercado del sábado")
 
@@ -117,7 +113,7 @@ class TransactionDialog(FormDialog):
             self.mode_input.set_segment_enabled(TRANSFER_MODE, False)
             self.account_input.select(transaction.account_id)
             self.amount_input.set_money(transaction.amount)
-        self.date_input.setDate(_to_qdate(transaction.occurred_on))
+        self.date_input.set_day(transaction.occurred_on)
         self.note_input.setText(transaction.note)
 
     def _legs(self, transaction: Transaction) -> list[Transaction]:
@@ -199,7 +195,7 @@ class TransactionDialog(FormDialog):
             account_id=self._required_account(self.account_input).id,
             type=_MODE_TYPES[self.mode_input.index()],
             amount=self.amount_input.money(),
-            occurred_on=self.date_input.date().toPython(),
+            occurred_on=self.date_input.day(),
             category_id=category_id,
             note=self.note_input.text(),
         )
@@ -215,7 +211,7 @@ class TransactionDialog(FormDialog):
             from_account_id=source.id,
             to_account_id=destination.id,
             amount_out=self.amount_input.money(),
-            occurred_on=self.date_input.date().toPython(),
+            occurred_on=self.date_input.day(),
             amount_in=(
                 self.amount_in_input.money() if _currencies_differ(source, destination) else None
             ),
@@ -236,7 +232,3 @@ class TransactionDialog(FormDialog):
 
 def _currencies_differ(first: Account | None, second: Account | None) -> bool:
     return bool(first and second and first.currency is not second.currency)
-
-
-def _to_qdate(day: date) -> QDate:
-    return QDate(day.year, day.month, day.day)

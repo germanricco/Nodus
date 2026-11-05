@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QWidget
 
 from nodus.models.period import Month
 from nodus.ui.formatting import format_month
@@ -29,6 +29,8 @@ class MonthSelector(QWidget):
         layout.addWidget(self.previous_button)
         layout.addWidget(self._label)
         layout.addWidget(self.next_button)
+        # Never squeezed by its neighbours, or the month name gets cut off.
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         self.previous_button.clicked.connect(lambda: self.set_month(self._month.previous()))
         self.next_button.clicked.connect(lambda: self.set_month(self._month.next()))

@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import QDate, Qt, QUrl, Signal
+from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
-    QDateEdit,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -29,6 +28,7 @@ from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
@@ -129,9 +129,7 @@ class SettingsPage(Page):
         self.current_rate_label.setObjectName("RowTitle")
         card.body.addWidget(self.current_rate_label)
 
-        self.rate_date_input = QDateEdit()
-        self.rate_date_input.setCalendarPopup(True)
-        self.rate_date_input.setDisplayFormat("dd/MM/yyyy")
+        self.rate_date_input = DateInput()
         self.rate_value_input = AmountInput(Currency.ARS)
         self.rate_value_input.line_edit.setPlaceholderText("Pesos por dólar")
         self.rate_value_input.setFixedWidth(200)
@@ -170,7 +168,7 @@ class SettingsPage(Page):
     def save_rate(self) -> None:
         try:
             value = self.rate_value_input.money().to_decimal()
-            self._services.exchange_rates.set_rate(self.rate_date_input.date().toPython(), value)
+            self._services.exchange_rates.set_rate(self.rate_date_input.day(), value)
         except ValidationError as error:
             self.rate_error_label.setText(str(error))
             self.rate_error_label.show()
@@ -181,7 +179,7 @@ class SettingsPage(Page):
     def _refresh_rates(self) -> None:
         today = date.today()
         self.rate_error_label.hide()
-        self.rate_date_input.setDate(QDate(today.year, today.month, today.day))
+        self.rate_date_input.set_day(today)
         current = self._services.exchange_rates.rate_on(today)
         self.current_rate_label.setText(
             f"Vigente hoy: {format_rate(current)} (del {format_date(current.rate_date)})"

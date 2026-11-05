@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLineEdit,
+    QPushButton,
     QTableView,
 )
 
@@ -120,26 +121,31 @@ class TransactionsPage(Page):
         self._event_bus = event_bus
         self._builder = TransactionListBuilder(services)
 
+        # The month goes in the header, as on the dashboard, to leave the row to the filters.
+        self.month_selector = MonthSelector()
+        self.add_header_widget(self.month_selector)
         self.edit_button = self.add_header_button("Editar")
         self.delete_button = self.add_header_button("Eliminar")
         self.edit_button.clicked.connect(self.edit_selected)
         self.delete_button.clicked.connect(self.delete_selected)
 
-        self.month_selector = MonthSelector()
         self.account_filter = AccountComboBox()
         self.category_filter = CategoryComboBox()
         self.type_filter = QComboBox()
         self.type_filter.addItems(list(TYPE_FILTERS))
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Buscar en la nota…")
+        self.search_input.setMinimumWidth(140)
         self.search_input.setClearButtonEnabled(True)
+        self.clear_filters_button = QPushButton("Limpiar filtros")
+        self.clear_filters_button.setObjectName("SecondaryButton")
+        self.clear_filters_button.clicked.connect(self.clear_filters)
         filters = QHBoxLayout()
         filters.setSpacing(8)
-        filters.addWidget(self.month_selector)
-        filters.addSpacing(8)
         for widget in (self.account_filter, self.category_filter, self.type_filter):
             filters.addWidget(widget)
         filters.addWidget(self.search_input, stretch=1)
+        filters.addWidget(self.clear_filters_button)
         self.content_layout.addLayout(filters)
 
         self.model = TransactionTableModel(theme_manager.theme)
@@ -189,6 +195,23 @@ class TransactionsPage(Page):
         self.table.setVisible(has_rows)
         self.empty_label.setVisible(not has_rows)
         self._update_actions()
+        self.clear_filters_button.setEnabled(self._has_filters())
+
+    def clear_filters(self) -> None:
+        """Back to every movement of the month shown; the month itself is kept."""
+        inputs = (self.account_filter, self.category_filter, self.type_filter, self.search_input)
+        for widget in inputs:  # one reload at the end instead of one per filter
+            widget.blockSignals(True)
+        for combo in inputs[:3]:
+            combo.setCurrentIndex(0)
+        self.search_input.clear()
+        for widget in inputs:
+            widget.blockSignals(False)
+        self.reload()
+
+    def _has_filters(self) -> bool:
+        combos = (self.account_filter, self.category_filter, self.type_filter)
+        return any(combo.currentIndex() > 0 for combo in combos) or bool(self.search_input.text())
 
     def current_filter(self) -> TransactionFilter:
         month = self.month_selector.month()

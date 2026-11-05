@@ -63,6 +63,26 @@ class AccountRepository(Repository):
         rows = self._fetch_all(sql)
         return [self._from_row(row) for row in rows]
 
+    def count_transactions(self, account_id: int) -> tuple[int, int]:
+        """(movements, transfers) recorded in the account; a transfer counts in both."""
+        row = self._fetch_one(
+            "SELECT COUNT(*) AS movements, COUNT(transfer_id) AS transfers"
+            " FROM transactions WHERE account_id = ?",
+            (account_id,),
+        )
+        return row["movements"], row["transfers"]
+
+    def delete(self, account_id: int) -> None:
+        """Deletes the account with all its movements. Transfers go whole, other leg
+        included, so no account is left with half a transfer."""
+        self._execute(
+            "DELETE FROM transactions WHERE transfer_id IN"
+            " (SELECT transfer_id FROM transactions WHERE account_id = ?)",
+            (account_id,),
+        )
+        self._execute("DELETE FROM transactions WHERE account_id = ?", (account_id,))
+        self._execute("DELETE FROM accounts WHERE id = ?", (account_id,))
+
     def balances_cents(self) -> dict[int, int]:
         """Current balance of every account, in cents of the account's own currency."""
         return {row["id"]: row["balance_cents"] for row in self._fetch_all(_BALANCES_SQL)}

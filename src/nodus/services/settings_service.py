@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from nodus.config.paths import visible_path
 from nodus.database.database import Database
 from nodus.database.repositories.settings_repository import SettingsRepository
 
@@ -23,8 +24,8 @@ class SettingsService:
 
     @property
     def data_file(self) -> Path:
-        """The SQLite file that holds all of the user's data."""
-        return self._database.path
+        """The SQLite file that holds all of the user's data, where the user can find it."""
+        return visible_path(self._database.path)
 
     def theme_preference(self) -> str | None:
         """The saved theme ("light", "dark" or "system"), or None if never chosen."""

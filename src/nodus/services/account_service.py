@@ -45,6 +45,17 @@ class AccountService:
         with self._database.transaction():
             self._accounts.update(updated)
 
+    def transaction_count(self, account_id: int) -> tuple[int, int]:
+        """(movements, transfers) that deleting the account would take with it."""
+        return self._accounts.count_transactions(self.get(account_id).id)
+
+    def delete(self, account_id: int) -> None:
+        """Deletes the account and its movements. Transfers are deleted whole, so the
+        other account's balance changes too; archiving is the way to keep the history."""
+        account = self.get(account_id)
+        with self._database.transaction():
+            self._accounts.delete(account.id)
+
     def get(self, account_id: int) -> Account:
         return require_found(self._accounts.get(account_id), "La cuenta no existe.")
 

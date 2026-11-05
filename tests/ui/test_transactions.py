@@ -202,6 +202,21 @@ class TestTransactionsPage:
         page.month_selector.set_month(NOVEMBER.previous())
         assert column(page, AMOUNT) == ["-$ 99,00"]
 
+    def test_clear_filters_keeps_month_and_shows_everything(self, services, page, pesos, dollars):
+        populate(services, pesos, dollars)
+        page.refresh()
+        assert not page.clear_filters_button.isEnabled()
+        page.account_filter.select(dollars.id)
+        page.type_filter.setCurrentText("Transferencias")
+        page.search_input.setText("nada")
+        assert page.clear_filters_button.isEnabled()
+
+        page.clear_filters_button.click()
+
+        assert page.current_filter() == TransactionFilter(start=NOVEMBER.start, end=NOVEMBER.end)
+        assert len(column(page, AMOUNT)) == 3
+        assert not page.clear_filters_button.isEnabled()
+
     def test_account_filter_still_shows_both_ends_of_transfer(self, services, page, pesos, dollars):
         populate(services, pesos, dollars)
         page.refresh()

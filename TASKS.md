@@ -18,6 +18,18 @@ Plan: `docs/plans/001-v0.1-mvp.md`. Se usa desde el código fuente.
 - [x] 8. Dashboard: patrimonio ARS/USD, flujo del mes, gastos por categoría, últimas transacciones
 - [x] 9. Cierre: prueba de punta a punta, README completo, etiqueta `v0.1.0`
 
+## v0.1.1 — Arreglos tras la prueba con datos reales
+
+Plan: `docs/plans/002-v0.1.1-arreglos.md`.
+
+- [x] Cuentas: poder eliminar una cuenta, con confirmación que avise cuántas transacciones se borran con ella
+- [x] Ajustes: el segmento «Según el sistema» del tema se ve con el texto recortado al estar seleccionado
+- [x] Ajustes: «Abrir carpeta» de la ubicación de los datos muestra un error de que no está disponible. Causa: el `.venv` usa el Python de la Microsoft Store, que desvía lo que se escribe en `AppData\Roaming` a `AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\Roaming\Nodus`, y el Explorador no ve ese desvío. Arreglo: recrear el `.venv` con Python de python.org y mover el archivo de datos a la ruta real (antes de la v0.2, porque el ejecutable no tendrá el desvío y no encontraría los datos); detectar la Store y mostrar o abrir la ruta real; indicar en el README que se instale Python desde python.org
+- [x] Ajustes: en el calendario de la fecha de la cotización, los días de dos dígitos se ven como «...»
+- [x] Ajustes: en el calendario, la flecha del menú del mes queda pegada al texto
+- [x] Transacciones: las listas desplegables de los filtros (cuenta, categoría, tipo) no siempre se abren hacia abajo y alineadas con el control
+- [x] Transacciones: botón «Limpiar filtros»
+
 ## v0.2 — Distribución
 
 - [ ] Ejecutable con PyInstaller y logo incrustado
