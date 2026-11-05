@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
 
 # Preset colors offered when creating a category; the default categories use these too.
@@ -10,6 +11,19 @@ PALETTE = [
     "#e74c3c", "#e67e22", "#f39c12", "#f1c40f", "#2ecc71", "#27ae60",
     "#1abc9c", "#16a085", "#3498db", "#2980b9", "#8e44ad", "#95a5a6",
 ]  # fmt: skip
+
+
+def color_icon(color: str, size: int = 12) -> QIcon:
+    """A filled circle in ``color``, for item views and combo boxes that take icons."""
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(QColor(color))
+    painter.drawEllipse(0, 0, size, size)
+    painter.end()
+    return QIcon(pixmap)
 
 
 class ColorDot(QLabel):

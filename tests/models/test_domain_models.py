@@ -6,8 +6,9 @@ from factories import ars, usd
 
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
-from nodus.models.exchange_rate import ExchangeRate
+from nodus.models.exchange_rate import ExchangeRate, implied_ars_per_usd
 from nodus.models.money import Money
+from nodus.models.period import Month
 from nodus.models.transaction import Transaction, TransactionType
 
 DAY = date(2026, 11, 5)
@@ -61,3 +62,32 @@ class TestTransaction:
 def test_account_initial_balance_must_match_currency():
     with pytest.raises(ValueError):
         Account(None, "Caja", AccountType.CASH, Currency.ARS, usd("1"))
+
+
+class TestMonth:
+    def test_bounds(self):
+        assert Month(2026, 2).start == date(2026, 2, 1)
+        assert Month(2026, 2).end == date(2026, 2, 28)
+        assert Month(2028, 2).end == date(2028, 2, 29)
+
+    def test_navigation_crosses_years(self):
+        assert Month(2026, 12).next() == Month(2027, 1)
+        assert Month(2026, 1).previous() == Month(2025, 12)
+        assert Month.of(date(2026, 11, 5)) == Month(2026, 11)
+
+    def test_rejects_invalid_month(self):
+        with pytest.raises(ValueError):
+            Month(2026, 13)
+
+
+@pytest.mark.parametrize(
+    ("first", "second", "expected"),
+    [
+        (ars("243100"), usd("200"), Decimal("1215.5")),
+        (usd("200"), ars("243100"), Decimal("1215.5")),
+        (ars("1"), ars("1"), None),
+        (ars("1"), usd("0"), None),
+    ],
+)
+def test_implied_ars_per_usd(first, second, expected):
+    assert implied_ars_per_usd(first, second) == expected

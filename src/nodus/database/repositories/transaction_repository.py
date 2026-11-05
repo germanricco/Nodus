@@ -21,6 +21,7 @@ class TransactionFilter:
     """Criteria for listing transactions. Unset fields do not filter.
 
     ``category_id`` also matches the category's subcategories, and ``text`` searches the note.
+    ``is_transfer`` keeps only transfer legs (True) or only income and expenses (False).
     Dates are inclusive.
     """
 
@@ -30,6 +31,7 @@ class TransactionFilter:
     category_id: int | None = None
     type: TransactionType | None = None
     text: str | None = None
+    is_transfer: bool | None = None
     limit: int | None = None
 
 
@@ -99,6 +101,10 @@ class TransactionRepository(Repository):
         if criteria.type is not None:
             conditions.append("t.type = ?")
             params.append(criteria.type.value)
+        if criteria.is_transfer is not None:
+            conditions.append(
+                "t.transfer_id IS NOT NULL" if criteria.is_transfer else "t.transfer_id IS NULL"
+            )
         if criteria.text:
             conditions.append("t.note LIKE ?")
             params.append(f"%{criteria.text}%")

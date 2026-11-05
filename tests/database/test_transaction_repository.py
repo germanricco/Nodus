@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-from factories import ars, category_id, expense_draft, income_draft
+from factories import ars, category_id, expense_draft, income_draft, usd
 
 from nodus.database.repositories.transaction_repository import (
     TransactionFilter,
@@ -10,6 +10,7 @@ from nodus.database.repositories.transaction_repository import (
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.transaction import TransactionType
+from nodus.services.transaction_service import TransferDraft
 
 EXPENSE = TransactionType.EXPENSE
 
@@ -71,3 +72,14 @@ def test_by_text_in_note(database, history):
 
 def test_limit(database, history):
     assert notes(database, limit=2) == ["kiosco", "expensas"]
+
+
+def test_by_transfer_flag(database, services, pesos, dollars, history):
+    services.transactions.create_transfer(
+        TransferDraft(pesos.id, dollars.id, ars("1200"), date(2026, 11, 5), amount_in=usd("1"),
+                      note="dólares")
+    )  # fmt: skip
+
+    assert notes(database, is_transfer=True) == ["dólares", "dólares"]
+    assert "dólares" not in notes(database, is_transfer=False)
+    assert len(notes(database, is_transfer=False)) == 5

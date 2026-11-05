@@ -13,7 +13,7 @@ Plan: `docs/plans/001-v0.1-mvp.md`. Se usa desde el código fuente.
 - [x] 3. Interfaz base: tema claro/oscuro, ventana con barra lateral, `EventBus`, script de capturas
 - [x] 4. Cuentas (ARS y USD)
 - [x] 5. Categorías de gasto y de ingreso: set predeterminado corto, alta, edición y borrado por el usuario
-- [ ] 6. Transacciones: tabla con filtros, Gasto/Ingreso/Transferencia
+- [x] 6. Transacciones: tabla con filtros, Gasto/Ingreso/Transferencia
 - [ ] 7. Ajustes: tema, cotización manual con historial, ubicación de los datos
 - [ ] 8. Dashboard: patrimonio ARS/USD, flujo del mes, gastos por categoría, últimas transacciones
 - [ ] 9. Cierre: prueba de punta a punta, README con capturas, etiqueta `v0.1.0`
@@ -32,6 +32,8 @@ Plan: `docs/plans/001-v0.1-mvp.md`. Se usa desde el código fuente.
 - [ ] Cotización automática (DolarApi: oficial, MEP, blue)
 - [ ] Más monedas además de ARS y USD
 - [ ] Gráfico de evolución del saldo
+- [ ] Filtro de transacciones por rango libre de fechas
+- [ ] Recordar la última cuenta usada en el diálogo de transacción
 - [ ] Reembolsos vinculados al gasto original (gasto neto)
 - [ ] Beneficiarios (payees)
 - [ ] Grupos de cuentas

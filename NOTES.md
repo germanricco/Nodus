@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Fases 1 a 5 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Ya funcionan las páginas de Cuentas y de Categorías (gastos e ingresos, subcategorías, colores, borrado con confirmación). 158 tests en verde. Sigue la fase 6: transacciones (tabla con filtros y diálogo Gasto/Ingreso/Transferencia), que también conecta el botón "Agregar transacción".
+Fases 1 a 6 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Ya funcionan Cuentas, Categorías y Transacciones: la tabla del mes con filtros por cuenta, categoría, tipo y nota, y el diálogo de Gasto/Ingreso/Transferencia (con cotización implícita entre pesos y dólares), al que lleva también el botón "Agregar transacción". 181 tests en verde. Sigue la fase 7: Ajustes (tema, cotización del dólar con historial y ubicación de los datos).
 
 ## Decisiones
 
@@ -27,6 +27,10 @@ Fases 1 a 5 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Ya funcio
 - **2026-11-05 — Errores dentro del diálogo.** `FormDialog` muestra el mensaje de error en el propio diálogo y lo deja abierto, para que el usuario corrija sin volver a escribir todo.
 - **2026-11-05 — Orden alfabético en Python, no en SQLite.** `name_sort_key` ignora mayúsculas y tildes; la intercalación NOCASE de SQLite solo pliega ASCII y mandaba al final los nombres que empiezan con tilde ("Árbol").
 - **2026-11-05 — Confirmar antes de borrar.** `confirm()` deja "Cancelar" como botón por defecto, y el aviso dice cuántas transacciones pasan a «Otros».
+- **2026-11-05 — Una transferencia, una fila.** En las listas, las dos patas de una transferencia se muestran como un solo movimiento ("Banco → Ahorro", "$ 243.100 → US$ 200"), aunque el filtro por cuenta devuelva una sola pata. Lo arma `TransactionListBuilder` (`ui/transaction_list.py`), que también usará el dashboard.
+- **2026-11-05 — Transacciones por mes.** La página de Transacciones filtra por mes con un selector ‹ mes › en lugar de un rango libre de fechas: cubre el uso habitual con menos controles. El rango libre queda en el backlog.
+- **2026-11-05 — Al editar, una transferencia sigue siendo transferencia.** Un gasto puede pasar a ingreso y viceversa, pero no a transferencia ni al revés, porque se guardan distinto. Para cambiarlo se borra y se vuelve a cargar.
+- **2026-11-05 — Imágenes en la hoja de estilos.** `ThemeManager` completa también `$icons`, la carpeta de íconos del paquete, para que la hoja cargue la flecha de las listas desplegables (`chevron-down.svg`, en un gris que sirve en ambos temas).
 - **2026-11-05 — Entorno con venv + pip y gráficos con QtCharts.** venv viene con Python 3.11.9 y QtCharts está incluido en PySide6, así que no suman dependencias.
 
 ## Preguntas abiertas
@@ -38,4 +42,4 @@ Fases 1 a 5 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Ya funcio
 ## Registro de sesiones
 
 ### 2026-11-05
-Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 5 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).
+Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 6 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).

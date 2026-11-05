@@ -28,7 +28,7 @@ class FormDialog(QDialog):
         self.setWindowTitle(title)
         self.setMinimumWidth(460)
 
-        layout = QVBoxLayout(self)
+        layout = self._layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 20, 24, 20)
         layout.setSpacing(16)
 
@@ -58,6 +58,10 @@ class FormDialog(QDialog):
         buttons.addWidget(cancel)
         buttons.addWidget(self.save_button)
         layout.addLayout(buttons)
+
+    def add_above_form(self, widget: QWidget) -> None:
+        """Places ``widget`` between the title and the form, e.g. a mode selector."""
+        self._layout.insertWidget(1, widget)
 
     def save(self) -> None:
         """Validates the fields and stores the result. Raise ValidationError to keep it open."""

@@ -26,6 +26,7 @@ from nodus.database.database import Database  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
 from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
+from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
 from nodus.ui.navigation import PageId  # noqa: E402
@@ -43,7 +44,24 @@ DIALOGS = {
     "category-dialog": lambda services, event_bus, window: CategoryDialog(
         services, event_bus, parent=window
     ),
+    "transaction-dialog": lambda services, event_bus, window: TransactionDialog(
+        services, event_bus, parent=window
+    ),
+    "transfer-dialog": lambda services, event_bus, window: transfer_dialog(
+        services, event_bus, window
+    ),
 }
+
+
+def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
+    """A transfer from pesos to dollars, to show the implied exchange rate."""
+    dialog = TransactionDialog(services, event_bus, parent=window)
+    dialog.mode_input.set_index(TRANSFER_MODE)
+    dialog.account_input.setCurrentIndex(dialog.account_input.findText("Banco"))
+    dialog.amount_input.line_edit.setText("121.550")
+    dialog.to_account_input.setCurrentIndex(dialog.to_account_input.findText("Ahorro en dólares"))
+    dialog.amount_in_input.line_edit.setText("100")
+    return dialog
 
 
 def render_pages(app: QApplication, services: Services, args: argparse.Namespace) -> None:

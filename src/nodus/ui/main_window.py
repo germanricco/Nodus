@@ -2,14 +2,23 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QStackedWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QMainWindow,
+    QMessageBox,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from nodus.services.container import Services
+from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.page import Page, PlaceholderPage
+from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.sidebar import Sidebar
 from nodus.ui.widgets.top_bar import TopBar
@@ -22,6 +31,8 @@ class MainWindow(QMainWindow):
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
         super().__init__()
+        self._services = services
+        self._event_bus = event_bus
         self.setWindowTitle("Nodus")
         self.setMinimumSize(1100, 700)
         self.resize(1280, 800)
@@ -35,6 +46,7 @@ class MainWindow(QMainWindow):
         }
         self._pages[PageId.ACCOUNTS] = AccountsPage(services, event_bus)
         self._pages[PageId.CATEGORIES] = CategoriesPage(services, event_bus)
+        self._pages[PageId.TRANSACTIONS] = TransactionsPage(services, event_bus, theme_manager)
         for page in self._pages.values():
             self._stack.addWidget(page)
 
@@ -55,6 +67,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
 
         self.sidebar.page_requested.connect(self.show_page)
+        self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
         self.show_page(PageId.DASHBOARD)
 
     @property
@@ -69,3 +82,16 @@ class MainWindow(QMainWindow):
         page.refresh()
         self._stack.setCurrentWidget(page)
         self.sidebar.select(page_id)
+
+    def open_new_transaction(self) -> None:
+        """Opens the transaction dialog, or leads to Cuentas when there is nowhere to record it."""
+        if not self._services.accounts.list_accounts():
+            QMessageBox.information(
+                self,
+                "Primero, una cuenta",
+                "Para registrar transacciones necesitas al menos una cuenta activa."
+                " Crea una en Cuentas y vuelve a intentarlo.",
+            )
+            self.show_page(PageId.ACCOUNTS)
+            return
+        TransactionDialog(self._services, self._event_bus, parent=self).exec()

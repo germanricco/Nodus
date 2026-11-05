@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from importlib import resources
+from pathlib import Path
 from string import Template
 
 from PySide6.QtCore import QObject, Qt, Signal
@@ -28,6 +29,8 @@ class ThemeManager(QObject):
         self._template = Template(
             resources.files("nodus.ui.theme").joinpath("stylesheet.qss").read_text("utf-8")
         )
+        # The stylesheet loads images by file path, e.g. the arrow of drop-down fields.
+        self._icons_dir = Path(str(resources.files("nodus.ui.icons"))).as_posix()
         # Fusion renders stylesheets the same on every OS, unlike the native Windows style.
         app.setStyle("Fusion")
         app.styleHints().colorSchemeChanged.connect(self._on_system_scheme_changed)
@@ -65,7 +68,9 @@ class ThemeManager(QObject):
 
     def _apply(self) -> None:
         self._app.setPalette(self._palette(self._theme))
-        self._app.setStyleSheet(self._template.substitute(self._theme.tokens()))
+        self._app.setStyleSheet(
+            self._template.substitute(self._theme.tokens(), icons=self._icons_dir)
+        )
 
     @staticmethod
     def _palette(theme: Theme) -> QPalette:
