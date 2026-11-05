@@ -1,6 +1,5 @@
 """Base class for the main sections."""
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 
@@ -29,19 +28,12 @@ class Page(QWidget):
         """Adds a button to the right of the title, for the page's main actions."""
         button = QPushButton(text)
         button.setObjectName("PrimaryButton" if primary else "SecondaryButton")
-        self._header.addWidget(button)
+        self.add_header_widget(button)
         return button
+
+    def add_header_widget(self, widget: QWidget) -> None:
+        """Adds a control to the right of the title, e.g. a month selector."""
+        self._header.addWidget(widget)
 
     def refresh(self) -> None:
         """Reloads the page's data. Pages that show stored data override it."""
-
-
-class PlaceholderPage(Page):
-    """Stand-in for a section whose screen is not built yet."""
-
-    def __init__(self, title: str) -> None:
-        super().__init__(title)
-        message = QLabel("Esta sección se está construyendo.")
-        message.setObjectName("EmptyState")
-        message.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.content_layout.addWidget(message, stretch=1)

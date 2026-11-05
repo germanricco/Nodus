@@ -11,13 +11,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.models.period import Month
 from nodus.services.container import Services
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.categories_page import CategoriesPage
-from nodus.ui.pages.page import Page, PlaceholderPage
+from nodus.ui.pages.dashboard_page import DashboardPage
+from nodus.ui.pages.page import Page
 from nodus.ui.pages.settings_page import SettingsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -42,13 +44,16 @@ class MainWindow(QMainWindow):
         self.top_bar = TopBar(theme_manager)
         self._stack = QStackedWidget()
         self._stack.setObjectName("PageStack")
+        dashboard = DashboardPage(services, event_bus, theme_manager)
+        dashboard.navigate_requested.connect(self.show_page)
+        dashboard.transactions_requested.connect(self.show_transactions)
         self._pages: dict[PageId, Page] = {
-            page_id: PlaceholderPage(page_id.label) for page_id in PageId
+            PageId.DASHBOARD: dashboard,
+            PageId.ACCOUNTS: AccountsPage(services, event_bus),
+            PageId.TRANSACTIONS: TransactionsPage(services, event_bus, theme_manager),
+            PageId.CATEGORIES: CategoriesPage(services, event_bus),
+            PageId.SETTINGS: SettingsPage(services, event_bus, theme_manager),
         }
-        self._pages[PageId.ACCOUNTS] = AccountsPage(services, event_bus)
-        self._pages[PageId.CATEGORIES] = CategoriesPage(services, event_bus)
-        self._pages[PageId.TRANSACTIONS] = TransactionsPage(services, event_bus, theme_manager)
-        self._pages[PageId.SETTINGS] = SettingsPage(services, event_bus, theme_manager)
         for page in self._pages.values():
             self._stack.addWidget(page)
 
@@ -84,6 +89,11 @@ class MainWindow(QMainWindow):
         page.refresh()
         self._stack.setCurrentWidget(page)
         self.sidebar.select(page_id)
+
+    def show_transactions(self, month: Month) -> None:
+        """Opens the transactions page on ``month``."""
+        self._pages[PageId.TRANSACTIONS].month_selector.set_month(month)
+        self.show_page(PageId.TRANSACTIONS)
 
     def open_new_transaction(self) -> None:
         """Opens the transaction dialog, or leads to Cuentas when there is nowhere to record it."""

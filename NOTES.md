@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Fases 1 a 7 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Funcionan Cuentas, Categorías, Transacciones (tabla del mes con filtros y diálogo de Gasto/Ingreso/Transferencia) y Ajustes (tema guardado, cotización del dólar con historial y ubicación del archivo de datos). 189 tests en verde. Sigue la fase 8: el Dashboard, la última página que queda como "en construcción".
+Fases 1 a 8 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Todas las pantallas funcionan: Dashboard (patrimonio, flujo del mes, anillo de gastos por categoría, últimas transacciones y bienvenida sin cuentas), Cuentas, Transacciones, Categorías y Ajustes. 196 tests en verde. Sigue la fase 9, el cierre de la v0.1: prueba de punta a punta, README completo con capturas y tag `v0.1.0`.
 
 ## Decisiones
 
@@ -32,7 +32,9 @@ Fases 1 a 7 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Funcionan
 - **2026-11-05 — Al editar, una transferencia sigue siendo transferencia.** Un gasto puede pasar a ingreso y viceversa, pero no a transferencia ni al revés, porque se guardan distinto. Para cambiarlo se borra y se vuelve a cargar.
 - **2026-11-05 — Imágenes en la hoja de estilos.** `ThemeManager` completa también `$icons`, la carpeta de íconos del paquete, para que la hoja cargue la flecha de las listas desplegables (`chevron-down.svg`, en un gris que sirve en ambos temas).
 - **2026-11-05 — Preferencias dentro de la base del usuario.** El tema se guarda en la tabla `settings` (`SettingsService`), así viaja con los datos si el archivo se copia a otra computadora. Un valor desconocido vuelve a "Según el sistema".
-- **2026-11-05 — Entorno con venv + pip y gráficos con QtCharts.** venv viene con Python 3.11.9 y QtCharts está incluido en PySide6, así que no suman dependencias.
+- **2026-11-05 — Entorno con venv + pip.** venv viene con Python 3.11.9, así que no suma dependencias.
+- **2026-11-05 — Gráficos dibujados con QPainter.** El anillo de gastos y la barra de flujo (`ui/widgets/charts.py`) se pintan a mano en lugar de usar QtCharts: son pocas líneas, toman los colores del tema directamente y permiten el total en el centro del anillo. QtCharts queda como opción para gráficos más complejos (evolución del saldo).
+- **2026-11-05 — Flujo del mes en pesos.** `DashboardService` suma ingresos y gastos convirtiendo los movimientos en dólares con la cotización de su día. Los que no tienen cotización se dejan fuera y el dashboard lo avisa, en lugar de mostrar un total equivocado. Las transferencias no cuentan como ingreso ni gasto, y los gastos se agrupan por categoría principal.
 
 ## Preguntas abiertas
 
@@ -43,4 +45,4 @@ Fases 1 a 7 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Funcionan
 ## Registro de sesiones
 
 ### 2026-11-05
-Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 7 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).
+Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 8 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).

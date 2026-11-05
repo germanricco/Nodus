@@ -12,6 +12,7 @@ from nodus.database.repositories.settings_repository import SettingsRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
 from nodus.services.account_service import AccountService
 from nodus.services.category_service import CategoryService
+from nodus.services.dashboard_service import DashboardService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.net_worth_service import NetWorthService
 from nodus.services.settings_service import SettingsService
@@ -32,6 +33,7 @@ class Services:
     exchange_rates: ExchangeRateService
     net_worth: NetWorthService
     settings: SettingsService
+    dashboard: DashboardService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -39,13 +41,16 @@ class Services:
         category_repository = CategoryRepository(database)
         accounts = AccountService(database, account_repository)
         exchange_rates = ExchangeRateService(database, ExchangeRateRepository(database))
+        categories = CategoryService(database, category_repository)
+        transactions = TransactionService(
+            database, TransactionRepository(database), account_repository, category_repository
+        )
         return cls(
             accounts=accounts,
-            categories=CategoryService(database, category_repository),
-            transactions=TransactionService(
-                database, TransactionRepository(database), account_repository, category_repository
-            ),
+            categories=categories,
+            transactions=transactions,
             exchange_rates=exchange_rates,
             net_worth=NetWorthService(accounts, exchange_rates),
             settings=SettingsService(database, SettingsRepository(database)),
+            dashboard=DashboardService(transactions, categories, exchange_rates),
         )

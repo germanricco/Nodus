@@ -8,17 +8,15 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 
 from nodus.models.account import Account
-from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.services.container import Services
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.formatting import format_date
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.pages.page import Page
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.money_label import MoneyLabel
-from nodus.ui.widgets.stat import Stat
+from nodus.ui.widgets.net_worth_card import NetWorthCard
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 
@@ -105,7 +103,7 @@ class AccountsPage(Page):
         balances = self._services.accounts.balances()
         active = [a for a in accounts if not a.is_archived]
         archived = [a for a in accounts if a.is_archived]
-        self._sections.addWidget(self._summary_card())
+        self._sections.addWidget(NetWorthCard(self._services, date.today()))
         self._sections.addWidget(self._accounts_card("Cuentas activas", active, balances))
         if archived:
             self._sections.addWidget(self._accounts_card("Archivadas", archived, balances))
@@ -113,30 +111,6 @@ class AccountsPage(Page):
 
     def open_account_dialog(self, account: Account | None = None) -> None:
         AccountDialog(self._services, self._event_bus, account, parent=self.window()).exec()
-
-    def _summary_card(self) -> Card:
-        today = date.today()
-        net_worth = self._services.net_worth.net_worth(today)
-        card = Card()
-        stats = QHBoxLayout()
-        stats.setSpacing(40)
-        stats.addWidget(Stat("Patrimonio en pesos", net_worth.total_in[Currency.ARS], large=True))
-        stats.addWidget(Stat("Patrimonio en dólares", net_worth.total_in[Currency.USD], large=True))
-        stats.addStretch()
-        stats.addWidget(Stat("En cuentas en pesos", net_worth.by_currency[Currency.ARS]))
-        stats.addWidget(Stat("En cuentas en dólares", net_worth.by_currency[Currency.USD]))
-        card.body.addLayout(stats)
-        note = QLabel(self._rate_note(today))
-        set_style_property(note, "muted", True)
-        card.body.addWidget(note)
-        return card
-
-    def _rate_note(self, today: date) -> str:
-        rate = self._services.exchange_rates.rate_on(today)
-        if rate is None:
-            return "Carga una cotización del dólar en Ajustes para ver el patrimonio convertido."
-        value = Money.from_decimal(rate.rate, Currency.ARS).format()
-        return f"Cotización usada: US$ 1 = {value} (del {format_date(rate.rate_date)})"
 
     def _accounts_card(
         self, title: str, accounts: list[Account], balances: dict[int, Money]
