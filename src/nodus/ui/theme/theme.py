@@ -13,6 +13,14 @@ class ThemeMode(Enum):
     DARK = "dark"
     SYSTEM = "system"
 
+    @classmethod
+    def from_setting(cls, value: str | None) -> ThemeMode:
+        """The saved preference; SYSTEM when none was saved or the value is unknown."""
+        try:
+            return cls(value)
+        except ValueError:
+            return cls.SYSTEM
+
 
 @dataclass(frozen=True)
 class Theme:

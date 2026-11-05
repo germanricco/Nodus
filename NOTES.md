@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Fases 1 a 6 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Ya funcionan Cuentas, Categorías y Transacciones: la tabla del mes con filtros por cuenta, categoría, tipo y nota, y el diálogo de Gasto/Ingreso/Transferencia (con cotización implícita entre pesos y dólares), al que lleva también el botón "Agregar transacción". 181 tests en verde. Sigue la fase 7: Ajustes (tema, cotización del dólar con historial y ubicación de los datos).
+Fases 1 a 7 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Funcionan Cuentas, Categorías, Transacciones (tabla del mes con filtros y diálogo de Gasto/Ingreso/Transferencia) y Ajustes (tema guardado, cotización del dólar con historial y ubicación del archivo de datos). 189 tests en verde. Sigue la fase 8: el Dashboard, la última página que queda como "en construcción".
 
 ## Decisiones
 
@@ -31,6 +31,7 @@ Fases 1 a 6 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Ya funcio
 - **2026-11-05 — Transacciones por mes.** La página de Transacciones filtra por mes con un selector ‹ mes › en lugar de un rango libre de fechas: cubre el uso habitual con menos controles. El rango libre queda en el backlog.
 - **2026-11-05 — Al editar, una transferencia sigue siendo transferencia.** Un gasto puede pasar a ingreso y viceversa, pero no a transferencia ni al revés, porque se guardan distinto. Para cambiarlo se borra y se vuelve a cargar.
 - **2026-11-05 — Imágenes en la hoja de estilos.** `ThemeManager` completa también `$icons`, la carpeta de íconos del paquete, para que la hoja cargue la flecha de las listas desplegables (`chevron-down.svg`, en un gris que sirve en ambos temas).
+- **2026-11-05 — Preferencias dentro de la base del usuario.** El tema se guarda en la tabla `settings` (`SettingsService`), así viaja con los datos si el archivo se copia a otra computadora. Un valor desconocido vuelve a "Según el sistema".
 - **2026-11-05 — Entorno con venv + pip y gráficos con QtCharts.** venv viene con Python 3.11.9 y QtCharts está incluido en PySide6, así que no suman dependencias.
 
 ## Preguntas abiertas
@@ -42,4 +43,4 @@ Fases 1 a 6 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Ya funcio
 ## Registro de sesiones
 
 ### 2026-11-05
-Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 6 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).
+Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 7 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).

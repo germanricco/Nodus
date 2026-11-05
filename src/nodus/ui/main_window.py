@@ -18,6 +18,7 @@ from nodus.ui.navigation import PageId
 from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.page import Page, PlaceholderPage
+from nodus.ui.pages.settings_page import SettingsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.sidebar import Sidebar
@@ -47,6 +48,7 @@ class MainWindow(QMainWindow):
         self._pages[PageId.ACCOUNTS] = AccountsPage(services, event_bus)
         self._pages[PageId.CATEGORIES] = CategoriesPage(services, event_bus)
         self._pages[PageId.TRANSACTIONS] = TransactionsPage(services, event_bus, theme_manager)
+        self._pages[PageId.SETTINGS] = SettingsPage(services, event_bus, theme_manager)
         for page in self._pages.values():
             self._stack.addWidget(page)
 

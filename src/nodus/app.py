@@ -9,6 +9,7 @@ from nodus.database.database import Database, DatabaseError
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
 from nodus.ui.main_window import MainWindow
+from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 
 
@@ -34,8 +35,10 @@ class NodusApp:
             )
             return 1
         try:
-            theme_manager = ThemeManager(self._qt_app)
-            window = MainWindow(Services.create(database), EventBus(), theme_manager)
+            services = Services.create(database)
+            theme_mode = ThemeMode.from_setting(services.settings.theme_preference())
+            theme_manager = ThemeManager(self._qt_app, theme_mode)
+            window = MainWindow(services, EventBus(), theme_manager)
             window.show()
             return self._qt_app.exec()
         finally:

@@ -47,3 +47,9 @@ def test_money_label_tone(qtbot, amount, highlight_positive, tone):
 
     assert label.property("tone") == tone
     assert label.text() == ars(amount).format()
+
+
+def test_unknown_theme_setting_falls_back_to_system():
+    assert ThemeMode.from_setting(None) is ThemeMode.SYSTEM
+    assert ThemeMode.from_setting("sepia") is ThemeMode.SYSTEM
+    assert ThemeMode.from_setting("dark") is ThemeMode.DARK

@@ -14,7 +14,7 @@ Plan: `docs/plans/001-v0.1-mvp.md`. Se usa desde el código fuente.
 - [x] 4. Cuentas (ARS y USD)
 - [x] 5. Categorías de gasto y de ingreso: set predeterminado corto, alta, edición y borrado por el usuario
 - [x] 6. Transacciones: tabla con filtros, Gasto/Ingreso/Transferencia
-- [ ] 7. Ajustes: tema, cotización manual con historial, ubicación de los datos
+- [x] 7. Ajustes: tema, cotización manual con historial, ubicación de los datos
 - [ ] 8. Dashboard: patrimonio ARS/USD, flujo del mes, gastos por categoría, últimas transacciones
 - [ ] 9. Cierre: prueba de punta a punta, README con capturas, etiqueta `v0.1.0`
 
