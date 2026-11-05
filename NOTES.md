@@ -2,7 +2,9 @@
 
 ## Estado actual
 
-Fases 1 a 8 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Todas las pantallas funcionan: Dashboard (patrimonio, flujo del mes, anillo de gastos por categoría, últimas transacciones y bienvenida sin cuentas), Cuentas, Transacciones, Categorías y Ajustes. 196 tests en verde. Sigue la fase 9, el cierre de la v0.1: prueba de punta a punta, README completo con capturas y tag `v0.1.0`.
+v0.1 terminada (plan `docs/plans/001-v0.1-mvp.md`, versión `0.1.0`): Dashboard, Cuentas, Transacciones, Categorías y Ajustes, con 197 tests en verde (incluida la prueba de punta a punta) y el README completo (las capturas se suman en una versión posterior). Ahora el usuario la prueba con sus datos reales. Lo que surja de esa prueba se corrige antes de seguir; después viene la v0.2 (ejecutable, GitHub Actions y aviso de actualizaciones), que necesita su plan `002`. Pendiente: elegir la licencia.
+
+Desde la v0.1.0, el esquema ya no se cambia editando `001_initial.sql`: cada cambio va en una migración nueva.
 
 ## Decisiones
 
@@ -32,9 +34,14 @@ Fases 1 a 8 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Todas las
 - **2026-11-05 — Al editar, una transferencia sigue siendo transferencia.** Un gasto puede pasar a ingreso y viceversa, pero no a transferencia ni al revés, porque se guardan distinto. Para cambiarlo se borra y se vuelve a cargar.
 - **2026-11-05 — Imágenes en la hoja de estilos.** `ThemeManager` completa también `$icons`, la carpeta de íconos del paquete, para que la hoja cargue la flecha de las listas desplegables (`chevron-down.svg`, en un gris que sirve en ambos temas).
 - **2026-11-05 — Preferencias dentro de la base del usuario.** El tema se guarda en la tabla `settings` (`SettingsService`), así viaja con los datos si el archivo se copia a otra computadora. Un valor desconocido vuelve a "Según el sistema".
+- **2026-11-05 — Capturas del README más adelante.** La v0.1 es usable pero la interfaz todavía va a cambiar; las imágenes se suman al README (en `docs/images/`) en una versión posterior, para no cargar el historial de git con capturas que quedan viejas enseguida. La carpeta `screenshots/` sigue ignorada (es para revisar la interfaz).
 - **2026-11-05 — Entorno con venv + pip.** venv viene con Python 3.11.9, así que no suma dependencias.
 - **2026-11-05 — Gráficos dibujados con QPainter.** El anillo de gastos y la barra de flujo (`ui/widgets/charts.py`) se pintan a mano en lugar de usar QtCharts: son pocas líneas, toman los colores del tema directamente y permiten el total en el centro del anillo. QtCharts queda como opción para gráficos más complejos (evolución del saldo).
 - **2026-11-05 — Flujo del mes en pesos.** `DashboardService` suma ingresos y gastos convirtiendo los movimientos en dólares con la cotización de su día. Los que no tienen cotización se dejan fuera y el dashboard lo avisa, en lugar de mostrar un total equivocado. Las transferencias no cuentan como ingreso ni gasto, y los gastos se agrupan por categoría principal.
+- **2026-11-05 — Dashboard con layout fijo.** No se implementa el botón de MoneyMatter para cambiar el tamaño de las tarjetas: para un uso personal no aporta y complica la interfaz.
+- **2026-11-05 — Dashboard limpio.** Debe mostrar solo lo que importa a simple vista. De las 9 tarjetas de MoneyMatter se toman las importantes. Quedan fuera Progreso FIRE, utilización de crédito y tasa de impuestos promedio, y la lista de seguimiento de categorías se reconsidera junto con Presupuestos.
+- **2026-11-05 — Próximos pagos en el dashboard, en versión compacta.** Mostrará solo los cobros recurrentes de los próximos 14 días y los vencidos, y se oculta si no hay suscripciones. MoneyMatter la trae en su layout por defecto (`subscriptions-overview`) porque es la única tarjeta que mira hacia adelante («qué me va a salir de la cuenta pronto»). Además, una app de escritorio no puede avisar mientras está cerrada, así que el dashboard, lo primero que se ve al abrirla, es el aviso más confiable. Las notificaciones complementan la tarjeta, no la reemplazan.
+- **2026-11-05 — Selector de período con seis opciones rápidas.** Mes actual, últimos 3, 6 y 12 meses, este año y año anterior, sin rango libre, para mantener la interfaz simple.
 
 ## Preguntas abiertas
 
@@ -45,4 +52,4 @@ Fases 1 a 8 de la v0.1 terminadas (plan `docs/plans/001-v0.1-mvp.md`). Todas las
 ## Registro de sesiones
 
 ### 2026-11-05
-Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 8 implementadas y verificadas (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).
+Lectura de la especificación y del repo de referencia. Definidas las reglas de trabajo y creada la base del repo. Revisados el modelo de datos, las categorías y las pantallas de MoneyMatter; escrito el plan 001 con multimoneda ARS/USD y categorías de gasto/ingreso. Fases 1 a 9 implementadas y verificadas; v0.1 cerrada (tests, ruff, capturas revisadas y app abierta contra una carpeta de prueba).

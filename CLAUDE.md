@@ -13,7 +13,7 @@ Nodus es una aplicación de escritorio de finanzas personales, local-first: todo
 - Trabajamos por versiones (v0.1, v0.2…). Cada versión tiene un plan en `docs/plans/NNN-nombre.md` (a partir de `000-plantilla.md`), acordado con el usuario, y se implementa de corrido, tarea por tarea.
 - Cada versión termina estable y usable, porque el usuario la prueba antes de seguir creciendo. Lo que no entra en la versión actual va al backlog de `TASKS.md` en lugar de adelantarse.
 - Una tarea está hecha solo cuando se verificó (tests o ejecución real de la app), no cuando el código compila.
-- Al cerrar una tarea: actualizar `TASKS.md`, `NOTES.md` y la documentación afectada; proponer el mensaje de commit y hacer commit solo si el usuario lo aprueba. Nunca hacer push.
+- Al cerrar una tarea: actualizar `TASKS.md`, `NOTES.md` y la documentación afectada; proponer el mensaje de commit y hacer commit solo si el usuario lo aprueba. Nunca hacer push. Los mensajes de commit no llevan la línea `Co-Authored-By`.
 - Si algo falla tras 1-2 intentos de arreglo, parar y explicar el problema al usuario en lugar de encadenar intentos especulativos.
 
 ## Convenciones de código
@@ -34,7 +34,7 @@ El repositorio vive en GitHub y el README es la primera impresión del proyecto,
 
 - Toda tarea que cambie funciones, instalación o uso actualiza `README.md` (y los docs afectados) en el mismo cierre.
 - Estilo: lenguaje natural, en párrafos, atractivo y descriptivo. Listas solo cuando los elementos son claramente discretos (requisitos, comandos, pasos de instalación).
-- Al cerrar cada versión, revisar el README completo: estado, funciones y capturas cuando haya interfaz.
+- Al cerrar cada versión, revisar el README completo: estado, funciones y capturas una vez que se agreguen.
 
 ## Estructura del repositorio
 
@@ -68,8 +68,8 @@ Todo se ejecuta con el Python del entorno virtual `.venv` (Python 3.11). En Git 
 - Abrir con datos de prueba: definir `NODUS_DATA_DIR` con una carpeta de prueba antes de abrirla. Usar siempre esta variable al probar, para no tocar los datos reales en `%APPDATA%/Nodus`.
 - Tests: `.venv/Scripts/python -m pytest`
 - Lint y formato: `.venv/Scripts/python -m ruff check .` y `.venv/Scripts/python -m ruff format .`
-- Capturas de todas las pantallas, en tema claro y oscuro: `.venv/Scripts/python scripts/screenshot.py --demo --out screenshots`. Corren sobre una base temporal con datos de demostración (`scripts/demo_data.py`). Después de cambiar la interfaz, generar las capturas y revisarlas antes de dar la tarea por terminada.
+- Capturas de todas las pantallas, en tema claro y oscuro: `.venv/Scripts/python scripts/screenshot.py --demo --out screenshots`. Corren sobre una base temporal con datos de demostración (`scripts/demo_data.py`). Después de cambiar la interfaz, generar las capturas y revisarlas antes de dar la tarea por terminada. Las capturas se suman al README (en `docs/images/`) en una versión posterior, cuando la interfaz esté más asentada; desde entonces se renuevan al cerrar cada versión.
 
 ## Base de datos y migraciones
 
-El esquema vive en `src/nodus/database/migrations/NNN_nombre.sql` y se aplica con `PRAGMA user_version`. Mientras no se publique la v0.1.0, los cambios de esquema se hacen editando `001_initial.sql`, porque nadie tiene todavía datos que migrar. Después de publicada, cada cambio va en un archivo nuevo con el número siguiente: una migración ya publicada nunca se edita, porque las bases de los usuarios ya la aplicaron.
+El esquema vive en `src/nodus/database/migrations/NNN_nombre.sql` y se aplica con `PRAGMA user_version`. Desde la v0.1.0 hay usuarios con datos, así que cada cambio de esquema va en un archivo nuevo con el número siguiente: una migración ya publicada nunca se edita, porque las bases de los usuarios ya la aplicaron.

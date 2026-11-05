@@ -8,29 +8,66 @@ Una aplicación de escritorio de finanzas personales con la estética de una app
 
 </div>
 
-<!-- Logo y capturas de pantalla: se agregan con la primera versión que tenga interfaz. -->
-
 ## Qué es Nodus
 
 La mayoría de las aplicaciones de finanzas personales que se ven bien viven en la nube: piden crear una cuenta, cobran una suscripción y guardan tu historial financiero en servidores ajenos. Las alternativas locales, en cambio, suelen sentirse como software de otra época. Nodus busca el punto medio que falta: una interfaz fluida y cuidada, como la de las mejores aplicaciones web actuales, que corre enteramente en tu máquina.
 
-No hay servidores, ni registro, ni suscripciones. Toda tu información vive en un único archivo en tu disco, que puedes copiar, respaldar o mover cuando quieras. Como no depende de la red, abrir la aplicación, filtrar miles de movimientos o generar un gráfico es tan inmediato como trabajar con una hoja de cálculo.
+No hay servidores, ni registro, ni suscripciones. Toda tu información vive en un único archivo en tu disco, que puedes copiar, respaldar o mover cuando quieras. Como no depende de la red, abrir la aplicación, filtrar tus movimientos o ver un gráfico es tan inmediato como trabajar con una hoja de cálculo.
+
+Nodus nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta tiene su moneda, las compras de dólares guardan lo que salió y lo que entró, y el patrimonio se ve en las dos monedas con la cotización que tú elijas, sea el MEP, el blue o el oficial.
 
 ## Por qué "Nodus"
 
 *Nodus* significa "nodo" en latín: el punto donde las líneas se cruzan. El nombre describe la idea central del proyecto, que tu computadora sea el único lugar donde tus datos financieros convergen, se procesan y existen.
 
+## Un recorrido
+
+El **dashboard** responde de un vistazo las tres preguntas de siempre: cuánto tienes, cuánto entró y salió este mes, y en qué se fue. Muestra el patrimonio en pesos y en dólares, el ahorro del mes con la proporción entre ingresos y gastos, un anillo con los gastos por categoría y los últimos movimientos. Con las flechas de arriba recorres los meses anteriores.
+
+En **Cuentas** registras cada lugar donde tienes dinero, con su saldo inicial y su moneda: el banco, el efectivo, los ahorros en dólares, una tarjeta de crédito. Los saldos se calculan siempre a partir de los movimientos, así que nunca quedan desfasados, y las cuentas que ya no usas se archivan sin perder su historia.
+
+**Transacciones** reúne los movimientos de cada mes en una tabla que puedes filtrar por cuenta, categoría, tipo o texto de la nota. Un mismo formulario sirve para gastos, ingresos y transferencias. Cuando la transferencia es entre pesos y dólares, Nodus pide los dos montos y te muestra la cotización que realmente obtuviste.
+
+Las **categorías** vienen con un set corto pensado para el día a día, separado en gastos e ingresos, y puedes crear las tuyas con su color o abrir subcategorías dentro de una existente. Si borras una categoría, sus movimientos pasan a «Otros» en lugar de perderse.
+
+En **Ajustes** eliges entre tema claro, oscuro o el del sistema, cargas la cotización del dólar con su fecha (Nodus guarda el historial y usa en cada día la que correspondía) y ves dónde está el archivo con tus datos, para respaldarlo cuando quieras.
+
 ## Estado del proyecto
 
-Nodus está en sus primeros pasos de desarrollo. La primera versión, la v0.1, apunta a cubrir lo esencial con solidez: cuentas, ingresos, gastos y transferencias, categorías y un panel que muestre de un vistazo cuánto tienes, cuánto entró y en qué se fue el mes. A partir de ahí el proyecto crecerá por versiones, cada una estable y usable, sumando un ejecutable listo para descargar, presupuestos, importación de movimientos y reportes.
+La versión **v0.1** es la primera usable: cubre cuentas en pesos y dólares, ingresos, gastos y transferencias, categorías, cotización manual y el dashboard. Por ahora se ejecuta desde el código fuente. La próxima versión traerá un ejecutable listo para descargar desde GitHub, con aviso de actualizaciones, y después llegarán presupuestos, importación de movimientos, la cotización automática y reportes. El detalle está en [TASKS.md](TASKS.md).
+
+## Instalación
+
+Nodus necesita Python 3.11. Desde una terminal, en la carpeta del proyecto:
+
+```bash
+python -m venv .venv
+.venv/Scripts/python -m pip install -e .        # en Linux o macOS: .venv/bin/python
+.venv/Scripts/python -m nodus
+```
+
+La primera vez, Nodus crea su archivo de datos en la carpeta de aplicaciones de tu usuario (en Windows, `%APPDATA%\Nodus\nodus.db`). Si quieres probarlo sin tocar ese archivo, define la variable de entorno `NODUS_DATA_DIR` con otra carpeta antes de abrirlo.
+
+## Desarrollo
+
+Las herramientas de desarrollo se instalan con `pip install -e ".[dev]"`. Estos son los comandos de uso diario:
+
+```bash
+.venv/Scripts/python -m pytest                       # tests
+.venv/Scripts/python -m ruff check .                 # lint
+.venv/Scripts/python -m ruff format .                # formato
+.venv/Scripts/python scripts/screenshot.py --demo    # capturas de cada pantalla, claras y oscuras
+```
+
+El código está organizado en capas que solo dependen hacia abajo: la interfaz (`ui`) usa los servicios con las reglas de negocio (`services`), que usan los repositorios sobre SQLite (`database`), que trabajan con el dominio puro (`models`). Los montos se guardan en centavos enteros, nunca en números de punto flotante. Las decisiones de diseño y su porqué están en [NOTES.md](NOTES.md) y los planes de cada versión en [docs/plans](docs/plans).
 
 ## Tecnología
 
 Nodus está escrito en Python, por su rapidez de desarrollo y su ecosistema para el manejo de datos. La interfaz usa PySide6, la versión oficial de Qt para Python, que permite construir aplicaciones nativas con un diseño moderno sin cargar un navegador entero. Los datos se guardan en SQLite, una base de datos de un solo archivo que no necesita instalación ni servidor y que resiste años de uso diario.
 
-## Instalación
+## Referencias
 
-Pendiente: las instrucciones se publicarán junto con la primera versión.
+Las funciones y el diseño de la interfaz de Nodus se inspiran en [MoneyMatter](https://github.com/letehaha/moneymatter), una aplicación web de finanzas personales de código abierto. Nodus no reutiliza su código: reimplementa sus ideas en Python y Qt para una aplicación de escritorio local.
 
 ## Licencia
 
