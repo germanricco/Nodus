@@ -483,11 +483,12 @@ class ComparisonCard(Card):
         for change in changes:
             row = CategoryLine(change.category.color, change.category.name, change.current.format())
             badge = ChangeBadge(higher_is_better=False, none_text="Nueva")
+            # In the row before set_change shows it, or it would flash as its own window.
+            row.add(badge)
             badge.set_change(change.change)
             badge.setToolTip(f"Período anterior: {change.previous.format()}")
             badge.setMinimumWidth(64)
             badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            row.add(badge)
             row.clicked.connect(lambda c=change.category.id: self.category_clicked.emit(c))
             row.hovered.connect(lambda on, r=row: r.set_highlighted(on))
             self._rows.addWidget(row)
