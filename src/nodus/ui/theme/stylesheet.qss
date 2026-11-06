@@ -523,3 +523,18 @@ QFrame#FigureTile {
     border: 1px solid $border;
     border-radius: 10px;
 }
+
+/* Tag chips (TagInput, tags column) */
+
+QToolButton#TagChip {
+    border: 1px solid $border;
+    border-radius: 10px;
+    padding: 2px 8px;
+    background: $hover;
+    color: $text;
+    font-size: 9pt;
+}
+
+QToolButton#TagChip:hover {
+    border: 1px solid $expense;
+}

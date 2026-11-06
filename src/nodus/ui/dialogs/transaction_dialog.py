@@ -25,6 +25,7 @@ from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.payee_input import PayeeInput
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
+from nodus.ui.widgets.tag_input import TagInput
 
 # Segment order of the mode selector.
 EXPENSE_MODE, INCOME_MODE, TRANSFER_MODE = range(3)
@@ -74,6 +75,7 @@ class TransactionDialog(FormDialog):
         self.date_input = DateInput()
         self.note_input = QLineEdit()
         self.note_input.setPlaceholderText("Opcional")
+        self.tag_input = TagInput(services.tags)
         self.refund_input = RefundField(
             services, theme_manager, transaction.id if transaction else None
         )
@@ -89,6 +91,7 @@ class TransactionDialog(FormDialog):
         self.form.addRow("Categoría", self.category_input)
         self.form.addRow("Fecha", self.date_input)
         self.form.addRow("Nota", self.note_input)
+        self.form.addRow("Etiquetas", self.tag_input)
         self.form.addRow("Reembolso de", self.refund_input)
         self.form.addRow("", self.refunded_hint)
 
@@ -143,6 +146,8 @@ class TransactionDialog(FormDialog):
             self.amount_input.set_money(transaction.amount)
             if transaction.payee_id is not None:
                 self.payee_input.set_text(self._services.payees.get(transaction.payee_id).name)
+            tags = self._services.transactions.tags_for([transaction.id])
+            self.tag_input.set_names([tag.name for tag in tags.get(transaction.id, [])])
             if transaction.refund_of_id is not None:
                 self.refund_input.set_expense(
                     self._services.transactions.get(transaction.refund_of_id)
@@ -174,6 +179,7 @@ class TransactionDialog(FormDialog):
         self.form.setRowVisible(self.to_account_input, transfer)
         self.form.setRowVisible(self.payee_input, not transfer)
         self.form.setRowVisible(self.category_input, not transfer)
+        self.form.setRowVisible(self.tag_input, not transfer)
         income = self.mode_input.index() == INCOME_MODE
         self.form.setRowVisible(self.refund_input, income)
         expense = self.mode_input.index() == EXPENSE_MODE
@@ -270,12 +276,16 @@ class TransactionDialog(FormDialog):
             note=self.note_input.text(),
             payee_name=self.payee_input.text(),
             refund_of_id=self.refund_input.expense_id(),
+            tag_names=self.tag_input.names(),
         )
+        creates_tags = any(self._services.tags.find(name) is None for name in draft.tag_names)
         if self._transaction:
             self._services.transactions.update(self._transaction.id, draft)
         else:
             self._services.transactions.create(draft)
             self._services.settings.set_last_account_id(draft.account_id)
+        if creates_tags:
+            self._event_bus.tags_changed.emit()
 
     def _save_transfer(self) -> None:
         source = required_account(self.account_input)

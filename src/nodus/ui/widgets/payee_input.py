@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QStringListModel, Qt, Signal
-from PySide6.QtWidgets import QCompleter, QLabel, QLineEdit, QVBoxLayout, QWidget
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from nodus.models.payee import normalize_name
 from nodus.services.payee_service import PayeeService
+from nodus.ui.widgets.name_completer import NameCompleter
 
 
 class PayeeInput(QWidget):
     """Type a few letters and pick a payee, or type a new name that is created on saving.
 
-    The suggestions ignore case and accents and also match in the middle of a name, so the
-    list is rebuilt from the service on every keystroke instead of letting the completer
-    filter it. Under the field, a hint tells when a name is new. Emits ``payee_chosen``
+    The suggestions ignore case and accents and also match in the middle of a name (see
+    ``NameCompleter``). Under the field, a hint tells when a name is new. Emits ``payee_chosen``
     with the payee when the text names an existing one, so the form can fill in its
     category.
     """
@@ -30,20 +30,18 @@ class PayeeInput(QWidget):
         layout.setSpacing(2)
         self.line_edit = QLineEdit()
         self.line_edit.setPlaceholderText("Opcional")
-        self.suggestions = QStringListModel(self)
-        self.completer = QCompleter(self.suggestions, self)
-        self.completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
-        self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.line_edit.setCompleter(self.completer)
+        self.names = NameCompleter(
+            self.line_edit, lambda text: [p.name for p in payees.matches(text)]
+        )
+        self.completer = self.names.completer
         self.hint = QLabel()
         self.hint.setObjectName("FieldHint")
         self.hint.hide()
         layout.addWidget(self.line_edit)
         layout.addWidget(self.hint)
 
-        self.line_edit.textEdited.connect(self._suggest)
         self.line_edit.textChanged.connect(self._update_hint)
-        self.completer.activated.connect(self._choose)
+        self.names.activated.connect(self._choose)
         self.line_edit.editingFinished.connect(lambda: self._choose(self.text()))
 
     def text(self) -> str:
@@ -54,14 +52,6 @@ class PayeeInput(QWidget):
         self.line_edit.setText(name)
         payee = self._payees.find(name)
         self._last_chosen_id = payee.id if payee else None
-
-    def _suggest(self, text: str) -> None:
-        names = [p.name for p in self._payees.matches(text)]
-        self.suggestions.setStringList(names)
-        if names:
-            self.completer.complete()
-        else:
-            self.completer.popup().hide()
 
     def _update_hint(self, text: str) -> None:
         name = text.strip()

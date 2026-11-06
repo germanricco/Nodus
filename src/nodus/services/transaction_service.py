@@ -11,13 +11,16 @@ from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.database.repositories.payee_repository import PayeeRepository
+from nodus.database.repositories.tag_repository import TagRepository
 from nodus.database.repositories.transaction_repository import (
     TransactionFilter,
     TransactionRepository,
 )
 from nodus.models.account import Account
 from nodus.models.money import Money
+from nodus.models.palette import palette_color
 from nodus.models.payee import Payee, normalize_name
+from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction, TransactionType, Transfer
 from nodus.services.errors import ValidationError, require_found
 
@@ -27,8 +30,9 @@ class TransactionDraft:
     """What the user fills in for an income or an expense.
 
     ``payee_name`` is the name as typed: saving finds the payee with that name, or creates
-    it. An empty name leaves the transaction without a payee. ``refund_of_id`` makes an
-    income the refund of that expense; an expense ignores it.
+    it. An empty name leaves the transaction without a payee. ``tag_names`` work the same
+    way, one tag per name. ``refund_of_id`` makes an income the refund of that expense;
+    an expense ignores it.
     """
 
     account_id: int
@@ -39,6 +43,7 @@ class TransactionDraft:
     note: str = ""
     payee_name: str = ""
     refund_of_id: int | None = None
+    tag_names: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -80,19 +85,23 @@ class TransactionService:
         accounts: AccountRepository,
         categories: CategoryRepository,
         payees: PayeeRepository,
+        tags: TagRepository,
     ) -> None:
         self._database = database
         self._transactions = transactions
         self._accounts = accounts
         self._categories = categories
         self._payees = payees
+        self._tags = tags
 
     # Income and expenses
 
     def create(self, draft: TransactionDraft) -> Transaction:
         transaction = self._build_transaction(None, draft)
         with self._database.transaction():
-            return self._transactions.add(self._with_payee(transaction, draft.payee_name))
+            saved = self._transactions.add(self._with_payee(transaction, draft.payee_name))
+            self._set_tags(saved.id, draft.tag_names)
+            return saved
 
     def validated(self, draft: TransactionDraft) -> Transaction:
         """The transaction ``draft`` describes, checked against the rules but not saved, for
@@ -108,6 +117,7 @@ class TransactionService:
                 # An expense turned into income can no longer be refunded.
                 self._transactions.unlink_refunds_of(transaction_id)
             self._transactions.update(self._with_payee(transaction, draft.payee_name))
+            self._set_tags(transaction_id, draft.tag_names)
 
     def delete(self, transaction_id: int) -> None:
         """Deletes a transaction. Deleting either leg of a transfer deletes the whole transfer."""
@@ -130,6 +140,10 @@ class TransactionService:
         same_currency = [r.amount for r in refunds if r.amount.currency is expense.amount.currency]
         refunded = sum(same_currency, Money.zero(expense.amount.currency))
         return RefundSummary(expense, refunds, refunded)
+
+    def tags_for(self, transaction_ids: list[int]) -> dict[int, list[Tag]]:
+        """The tags of each of ``transaction_ids`` by name, read at once for lists."""
+        return self._tags.tags_for(transaction_ids)
 
     def refund_totals(self) -> dict[int, list[Money]]:
         """What has been refunded of each refunded expense, one amount per currency, read
@@ -182,6 +196,22 @@ class TransactionService:
             Payee(None, payee_name.strip())
         )
         return dataclasses.replace(transaction, payee_id=payee.id)
+
+    def _set_tags(self, transaction_id: int, names: tuple[str, ...]) -> None:
+        """Gives the transaction the tags called ``names``, creating the new ones with the
+        next preset color. Runs inside the caller's database transaction, like
+        ``_with_payee``."""
+        tag_ids = []
+        for name in names:
+            normalized = normalize_name(name)
+            if not normalized:
+                continue
+            tag = self._tags.find_by_normalized(normalized)
+            if tag is None:
+                color = palette_color(len(self._tags.list()))
+                tag = self._tags.add(Tag(None, name.strip(), color))
+            tag_ids.append(tag.id)
+        self._tags.set_for(transaction_id, tag_ids)
 
     # Validation
 

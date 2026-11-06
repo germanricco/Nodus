@@ -16,9 +16,10 @@ from nodus.models.money import Money
 from nodus.models.payee import Payee, normalize_name
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.category_service import CategoryService
+from nodus.services.dashboard_service import net_in_pesos
 from nodus.services.errors import ValidationError, clean_name, require_found
 from nodus.services.exchange_rate_service import ExchangeRateService
-from nodus.services.sorting import name_sort_key
+from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transaction_service import TransactionService
 
 
@@ -72,14 +73,7 @@ class PayeeService:
 
     def matches(self, text: str) -> list[Payee]:
         """Payees whose name contains ``text``, those starting with it first."""
-        wanted = normalize_name(text)
-        if not wanted:
-            return []
-        found = [p for p in self._payees.list() if wanted in p.normalized_name]
-        return sorted(
-            found,
-            key=lambda p: (not p.normalized_name.startswith(wanted), name_sort_key(p.name)),
-        )
+        return rank_matches(self._payees.list(), text)
 
     def create(self, name: str, default_category_id: int | None = None) -> Payee:
         payee = self._checked(Payee(None, clean_name(name), default_category_id))
@@ -151,16 +145,7 @@ class PayeeService:
     def _summary(
         self, payee: Payee, transactions: list[Transaction], categories: dict[int, Category]
     ) -> PayeeSummary:
-        net = Money.zero(self.CURRENCY)
-        unconverted = 0
-        for transaction in transactions:
-            amount = self._exchange_rates.convert(
-                transaction.signed_amount, self.CURRENCY, transaction.occurred_on
-            )
-            if amount is None:
-                unconverted += 1
-            else:
-                net += amount
+        net, unconverted = net_in_pesos(transactions, self._exchange_rates)
         usage = Counter(t.category_id for t in transactions).most_common(1)
         return PayeeSummary(
             payee=payee,

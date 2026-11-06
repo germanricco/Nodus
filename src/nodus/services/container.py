@@ -13,6 +13,7 @@ from nodus.database.repositories.exchange_rate_repository import ExchangeRateRep
 from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.database.repositories.recurring_charge_repository import RecurringChargeRepository
 from nodus.database.repositories.settings_repository import SettingsRepository
+from nodus.database.repositories.tag_repository import TagRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
 from nodus.services.account_service import AccountService
 from nodus.services.analysis_service import AnalysisService
@@ -29,6 +30,7 @@ from nodus.services.payee_service import PayeeService
 from nodus.services.rate_feed_service import RateFeedService
 from nodus.services.recurring_charge_service import RecurringChargeService
 from nodus.services.settings_service import SettingsService
+from nodus.services.tag_service import TagService
 from nodus.services.transaction_service import TransactionService
 from nodus.services.update_service import UpdateService
 
@@ -57,6 +59,7 @@ class Services:
     budgets: BudgetService
     payees: PayeeService
     analysis: AnalysisService
+    tags: TagService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -67,12 +70,14 @@ class Services:
         categories = CategoryService(database, category_repository)
         transaction_repository = TransactionRepository(database)
         payee_repository = PayeeRepository(database)
+        tag_repository = TagRepository(database)
         transactions = TransactionService(
             database,
             transaction_repository,
             account_repository,
             category_repository,
             payee_repository,
+            tag_repository,
         )
         payees = PayeeService(database, payee_repository, transactions, categories, exchange_rates)
         recurring = RecurringChargeService(
@@ -105,4 +110,5 @@ class Services:
             budgets=budgets,
             payees=payees,
             analysis=AnalysisService(transactions, categories, payees, exchange_rates),
+            tags=TagService(database, tag_repository, transactions, exchange_rates),
         )

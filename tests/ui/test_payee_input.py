@@ -33,7 +33,7 @@ def test_typing_suggests_matching_payees_ignoring_accents(qtbot, services, event
 
     type_payee(qtbot, dialog, "verd")
 
-    assert dialog.payee_input.suggestions.stringList() == ["Verdulería", "La verdura"]
+    assert dialog.payee_input.names.suggestions.stringList() == ["Verdulería", "La verdura"]
     assert dialog.payee_input.hint.text() == "Se creará «verd»"
 
 

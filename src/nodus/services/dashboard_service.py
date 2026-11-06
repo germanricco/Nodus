@@ -98,6 +98,24 @@ def converted_movements(
     return ConvertedMovements(movements, unconverted)
 
 
+def net_in_pesos(
+    transactions: list[Transaction], exchange_rates: ExchangeRateService
+) -> tuple[Money, int]:
+    """Income minus expenses of ``transactions`` in pesos, each at the rate of its day, and
+    how many could not be converted for lack of a rate."""
+    net = Money.zero(SUMMARY_CURRENCY)
+    unconverted = 0
+    for transaction in transactions:
+        amount = exchange_rates.convert(
+            transaction.signed_amount, SUMMARY_CURRENCY, transaction.occurred_on
+        )
+        if amount is None:
+            unconverted += 1
+        else:
+            net += amount
+    return net, unconverted
+
+
 def positive_totals(totals: dict[int, Money]) -> list[tuple[int, Money]]:
     """The ``totals`` above zero, largest first. A category whose refunds outweigh its
     spending in a period has nothing to show for it."""
