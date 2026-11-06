@@ -91,10 +91,12 @@ def test_corrupt_file_raises_database_error(db_path):
         Database.open(db_path)
 
 
-def test_recurring_charges_migration_keeps_existing_data(db_path):
-    """A database from v0.4 (schema 1) with data gets the new table and keeps its rows."""
-    first = [m for m in load_packaged_migrations() if m.version == 1]
-    database = Database.open(db_path, first)
+@pytest.mark.parametrize("released", [1, 2])
+def test_migrations_keep_existing_data(db_path, released):
+    """A database from an earlier release (schema 1 is v0.4, 2 is v0.5) with data gets the
+    new tables and keeps its rows."""
+    migrations = [m for m in load_packaged_migrations() if m.version <= released]
+    database = Database.open(db_path, migrations)
     with database.transaction():
         database.connection.execute(
             "INSERT INTO accounts (name, type, currency, initial_balance_cents)"
@@ -104,8 +106,8 @@ def test_recurring_charges_migration_keeps_existing_data(db_path):
 
     database = Database.open(db_path)
 
-    assert database.schema_version == 2
-    assert "recurring_charges" in table_names(database)
+    assert database.schema_version == 3
+    assert {"recurring_charges", "budget_limits"} <= table_names(database)
     row = database.connection.execute("SELECT name, initial_balance_cents FROM accounts").fetchone()
     assert tuple(row) == ("Banco", 500)
     database.close()

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from nodus import __version__
 from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
+from nodus.database.repositories.budget_repository import BudgetRepository
 from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.database.repositories.exchange_rate_repository import ExchangeRateRepository
 from nodus.database.repositories.recurring_charge_repository import RecurringChargeRepository
@@ -14,6 +15,7 @@ from nodus.database.repositories.settings_repository import SettingsRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
 from nodus.services.account_service import AccountService
 from nodus.services.backup_service import BackupService
+from nodus.services.budget_service import BudgetService
 from nodus.services.category_service import CategoryService
 from nodus.services.dashboard_service import DashboardService
 from nodus.services.exchange_rate_service import ExchangeRateService
@@ -49,6 +51,7 @@ class Services:
     rate_feed: RateFeedService
     notifications: NotificationService
     recurring: RecurringChargeService
+    budgets: BudgetService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -70,6 +73,8 @@ class Services:
         )
         settings = SettingsService(database, SettingsRepository(database))
         backups = BackupService(database, database.path.parent / "backups")
+        dashboard = DashboardService(transactions, categories, exchange_rates)
+        budgets = BudgetService(database, BudgetRepository(database), categories, dashboard)
         return cls(
             accounts=accounts,
             categories=categories,
@@ -77,7 +82,7 @@ class Services:
             exchange_rates=exchange_rates,
             net_worth=NetWorthService(accounts, transactions, exchange_rates),
             settings=settings,
-            dashboard=DashboardService(transactions, categories, exchange_rates),
+            dashboard=dashboard,
             updates=UpdateService(__version__),
             backups=backups,
             export=ExportService(accounts, categories),
@@ -86,4 +91,5 @@ class Services:
                 settings, accounts, exchange_rates, backups, recurring
             ),
             recurring=recurring,
+            budgets=budgets,
         )
