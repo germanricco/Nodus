@@ -89,3 +89,23 @@ def test_corrupt_file_raises_database_error(db_path):
 
     with pytest.raises(DatabaseError):
         Database.open(db_path)
+
+
+def test_recurring_charges_migration_keeps_existing_data(db_path):
+    """A database from v0.4 (schema 1) with data gets the new table and keeps its rows."""
+    first = [m for m in load_packaged_migrations() if m.version == 1]
+    database = Database.open(db_path, first)
+    with database.transaction():
+        database.connection.execute(
+            "INSERT INTO accounts (name, type, currency, initial_balance_cents)"
+            " VALUES ('Banco', 'bank', 'ARS', 500)"
+        )
+    database.close()
+
+    database = Database.open(db_path)
+
+    assert database.schema_version == 2
+    assert "recurring_charges" in table_names(database)
+    row = database.connection.execute("SELECT name, initial_balance_cents FROM accounts").fetchone()
+    assert tuple(row) == ("Banco", 500)
+    database.close()

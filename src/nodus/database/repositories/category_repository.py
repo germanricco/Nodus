@@ -64,10 +64,12 @@ class CategoryRepository(Repository):
         return row["total"]
 
     def reassign_transactions(self, from_category_id: int, to_category_id: int) -> None:
-        self._execute(
-            "UPDATE transactions SET category_id = ? WHERE category_id = ?",
-            (to_category_id, from_category_id),
-        )
+        """Moves the category's transactions and recurring charges to another category."""
+        for table in ("transactions", "recurring_charges"):
+            self._execute(
+                f"UPDATE {table} SET category_id = ? WHERE category_id = ?",
+                (to_category_id, from_category_id),
+            )
 
     def delete(self, category_id: int) -> None:
         self._execute("DELETE FROM categories WHERE id = ?", (category_id,))

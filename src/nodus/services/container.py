@@ -9,6 +9,7 @@ from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.database.repositories.exchange_rate_repository import ExchangeRateRepository
+from nodus.database.repositories.recurring_charge_repository import RecurringChargeRepository
 from nodus.database.repositories.settings_repository import SettingsRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
 from nodus.services.account_service import AccountService
@@ -21,6 +22,7 @@ from nodus.services.http import downloader
 from nodus.services.net_worth_service import NetWorthService
 from nodus.services.notification_service import NotificationService
 from nodus.services.rate_feed_service import RateFeedService
+from nodus.services.recurring_charge_service import RecurringChargeService
 from nodus.services.settings_service import SettingsService
 from nodus.services.transaction_service import TransactionService
 from nodus.services.update_service import UpdateService
@@ -46,6 +48,7 @@ class Services:
     export: ExportService
     rate_feed: RateFeedService
     notifications: NotificationService
+    recurring: RecurringChargeService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -54,8 +57,16 @@ class Services:
         accounts = AccountService(database, account_repository)
         exchange_rates = ExchangeRateService(database, ExchangeRateRepository(database))
         categories = CategoryService(database, category_repository)
+        transaction_repository = TransactionRepository(database)
         transactions = TransactionService(
-            database, TransactionRepository(database), account_repository, category_repository
+            database, transaction_repository, account_repository, category_repository
+        )
+        recurring = RecurringChargeService(
+            database,
+            RecurringChargeRepository(database),
+            transaction_repository,
+            transactions,
+            exchange_rates,
         )
         settings = SettingsService(database, SettingsRepository(database))
         backups = BackupService(database, database.path.parent / "backups")
@@ -72,4 +83,5 @@ class Services:
             export=ExportService(accounts, categories),
             rate_feed=RateFeedService(exchange_rates, settings, downloader(f"Nodus/{__version__}")),
             notifications=NotificationService(settings, accounts, exchange_rates, backups),
+            recurring=recurring,
         )

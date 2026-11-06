@@ -68,6 +68,11 @@ class TransactionService:
         with self._database.transaction():
             return self._transactions.add(transaction)
 
+    def validated(self, draft: TransactionDraft) -> Transaction:
+        """The transaction ``draft`` describes, checked against the rules but not saved, for
+        services that save it together with other changes."""
+        return self._build_transaction(None, draft)
+
     def update(self, transaction_id: int, draft: TransactionDraft) -> None:
         if self.get(transaction_id).is_transfer:
             raise ValidationError("Las transferencias se editan como transferencia.")
