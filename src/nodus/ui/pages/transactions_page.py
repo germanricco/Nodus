@@ -3,7 +3,15 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableView
+from PySide6.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QTableView,
+)
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.period import Period
@@ -30,7 +38,18 @@ from nodus.ui.widgets.selectors import (
 )
 from nodus.ui.widgets.style import set_style_property
 from nodus.ui.widgets.table import record_table
-from nodus.ui.widgets.transaction_table import DESCRIPTION, TAGS, TransactionTableModel
+from nodus.ui.widgets.transaction_table import (
+    ACCOUNT,
+    CATEGORY,
+    DESCRIPTION,
+    PAYEE,
+    TAGS,
+    TransactionTableModel,
+)
+
+# Columns that fit their content only up to these widths, so the description keeps room
+# on a laptop screen; longer names end in "…" and show whole in a wider window.
+MAX_COLUMN_WIDTHS = {PAYEE: 120, CATEGORY: 150, TAGS: 130, ACCOUNT: 120}
 
 # Type filter: label -> (transaction type, is_transfer, refund_linked) criteria.
 TYPE_FILTERS = {
@@ -175,6 +194,7 @@ class TransactionsPage(Page):
         self.model.set_items(items)
         # Whoever does not use tags keeps the room for the description.
         self.table.setColumnHidden(TAGS, not any(item.tags for item in items))
+        self._fit_columns()
         has_rows = self.model.rowCount() > 0
         self.totals_label.setText(
             totals_text(self.model.rowCount(), self._services.dashboard.totals(criteria))
@@ -295,6 +315,12 @@ class TransactionsPage(Page):
         if confirm(self.window(), "Eliminar transacción", text):
             self._services.transactions.delete(item.transaction.id)
             self._event_bus.transactions_changed.emit()
+
+    def _fit_columns(self) -> None:
+        header = self.table.horizontalHeader()
+        for column, max_width in MAX_COLUMN_WIDTHS.items():
+            header.setSectionResizeMode(column, QHeaderView.ResizeMode.Interactive)
+            header.resizeSection(column, min(self.table.sizeHintForColumn(column), max_width))
 
     def _build_table(self) -> QTableView:
         table = record_table(self.model, DESCRIPTION)
