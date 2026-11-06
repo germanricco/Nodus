@@ -34,7 +34,7 @@ En **Ajustes** eliges entre tema claro, oscuro o el del sistema, cargas la cotiz
 
 ## Estado del proyecto
 
-La versión **v0.1** es la primera usable: cubre cuentas en pesos y dólares, ingresos, gastos y transferencias, categorías, cotización manual y el dashboard. Por ahora se ejecuta desde el código fuente. La próxima versión traerá un ejecutable listo para descargar desde GitHub, con aviso de actualizaciones, y después llegarán presupuestos, importación de movimientos, la cotización automática y reportes. El detalle está en [TASKS.md](TASKS.md).
+La versión **v0.1** es la primera usable: cubre cuentas en pesos y dólares, ingresos, gastos y transferencias, categorías, cotización manual y el dashboard. Por ahora se ejecuta desde el código fuente. La próxima versión traerá un ejecutable listo para descargar desde GitHub, con aviso de actualizaciones, y después llegarán presupuestos, importación de movimientos, la cotización automática y reportes.
 
 ## Instalación
 
@@ -59,7 +59,7 @@ Las herramientas de desarrollo se instalan con `pip install -e ".[dev]"`. Estos 
 .venv/Scripts/python scripts/screenshot.py --demo    # capturas de cada pantalla, claras y oscuras
 ```
 
-El código está organizado en capas que solo dependen hacia abajo: la interfaz (`ui`) usa los servicios con las reglas de negocio (`services`), que usan los repositorios sobre SQLite (`database`), que trabajan con el dominio puro (`models`). Los montos se guardan en centavos enteros, nunca en números de punto flotante. Las decisiones de diseño y su porqué están en [NOTES.md](NOTES.md) y los planes de cada versión en [docs/plans](docs/plans).
+El código está organizado en capas que solo dependen hacia abajo: la interfaz (`ui`) usa los servicios con las reglas de negocio (`services`), que usan los repositorios sobre SQLite (`database`), que trabajan con el dominio puro (`models`). Los montos se guardan en centavos enteros, nunca en números de punto flotante.
 
 ## Tecnología
 

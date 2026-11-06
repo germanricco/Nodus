@@ -1,7 +1,7 @@
 import pytest
 from factories import ars
 
-from nodus.ui.theme.icons import tinted_pixmap
+from nodus.ui.theme.icons import APP_ICON_SIZES, app_icon, tinted_pixmap
 from nodus.ui.theme.theme import DARK, LIGHT, ThemeMode
 from nodus.ui.widgets.money_label import MoneyLabel
 
@@ -53,3 +53,9 @@ def test_unknown_theme_setting_falls_back_to_system():
     assert ThemeMode.from_setting(None) is ThemeMode.SYSTEM
     assert ThemeMode.from_setting("sepia") is ThemeMode.SYSTEM
     assert ThemeMode.from_setting("dark") is ThemeMode.DARK
+
+
+def test_app_icon_has_every_windows_size(qapp):
+    sizes = {size.width() for size in app_icon().availableSizes()}
+
+    assert sizes == set(APP_ICON_SIZES)

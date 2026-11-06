@@ -45,3 +45,9 @@ desktop.ini
 
 # Repositorios de referencia clonados localmente
 referencias/
+
+# Archivos de trabajo (planes, notas, tareas e instrucciones para Claude): quedan en local
+docs/plans/
+NOTES.md
+TASKS.md
+CLAUDE.md

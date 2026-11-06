@@ -21,7 +21,6 @@ QMainWindow, #ContentArea, #PageStack {
 #SidebarLogo {
     font-size: 16pt;
     font-weight: 600;
-    padding: 4px 8px 12px 8px;
 }
 
 #NavButton {

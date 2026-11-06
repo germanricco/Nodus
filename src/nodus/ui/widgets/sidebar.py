@@ -19,7 +19,7 @@ from nodus.models.money import Money
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
-from nodus.ui.theme.icons import icon
+from nodus.ui.theme.icons import icon, logo_pixmap
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.money_label import MoneyLabel
@@ -32,6 +32,7 @@ class Sidebar(QFrame):
     page_requested = Signal(object)  # PageId
 
     WIDTH = 260
+    LOGO_SIZE = 28
 
     def __init__(self, services: Services, event_bus: EventBus, theme_manager: ThemeManager):
         super().__init__()
@@ -43,9 +44,7 @@ class Sidebar(QFrame):
         layout.setContentsMargins(12, 16, 12, 8)
         layout.setSpacing(2)
 
-        logo = QLabel("Nodus")
-        logo.setObjectName("SidebarLogo")
-        layout.addWidget(logo)
+        layout.addWidget(self._build_logo())
 
         self._nav_buttons = self._build_nav_buttons(layout)
 
@@ -83,6 +82,19 @@ class Sidebar(QFrame):
         for account in accounts:
             self._accounts_layout.addWidget(self._account_row(account.name, balances[account.id]))
         self._accounts_layout.addStretch()
+
+    def _build_logo(self) -> QWidget:
+        logo = QWidget()
+        row = QHBoxLayout(logo)
+        row.setContentsMargins(8, 4, 8, 12)
+        row.setSpacing(10)
+        image = QLabel()
+        image.setPixmap(logo_pixmap(self.LOGO_SIZE))
+        row.addWidget(image)
+        name = QLabel("Nodus")
+        name.setObjectName("SidebarLogo")
+        row.addWidget(name, stretch=1)
+        return logo
 
     def _build_nav_buttons(self, layout: QVBoxLayout) -> dict[PageId, QPushButton]:
         group = QButtonGroup(self)
