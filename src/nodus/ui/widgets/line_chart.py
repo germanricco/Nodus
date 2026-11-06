@@ -51,14 +51,15 @@ def value_range(values: list[float]) -> tuple[float, float]:
 def axis_indexes(count: int, fit: int) -> list[int]:
     """The points to label under the chart: every point when they all fit, otherwise one
     every few at a regular step. The last point (usually today) is always labeled; it takes
-    the place of the previous label when the two would be too close."""
+    the place of the previous label when they are less than a step apart, since the step
+    is the least distance at which labels fit."""
     if count == 0:
         return []
     step = max(1, -(-count // max(fit, 1)))
     indexes = list(range(0, count, step))
     last = count - 1
     if indexes[-1] != last:
-        if last - indexes[-1] < step / 2 and len(indexes) > 1:
+        if last - indexes[-1] < step and len(indexes) > 1:
             indexes[-1] = last
         else:
             indexes.append(last)

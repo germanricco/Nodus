@@ -62,7 +62,8 @@ def test_value_range_pads_and_handles_flat_series():
     [
         (6, 9, [0, 1, 2, 3, 4, 5]),  # every day when all fit: none is skipped
         (30, 9, [0, 4, 8, 12, 16, 20, 24, 29]),  # today replaces a label too close to it
-        (30, 6, [0, 5, 10, 15, 20, 25, 29]),
+        (30, 6, [0, 5, 10, 15, 20, 29]),
+        (48, 12, [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 47]),
         (1, 9, [0]),
         (0, 9, []),
     ],

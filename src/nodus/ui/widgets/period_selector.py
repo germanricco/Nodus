@@ -1,4 +1,4 @@
-"""Previous/next control with a menu of ready-made periods, for the dashboard and transactions."""
+"""Previous/next control with a menu of ready-made periods and a free range of dates."""
 
 from __future__ import annotations
 
@@ -8,11 +8,13 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QWidget
 
 from nodus.models.period import Period, QuickPeriod
+from nodus.ui.dialogs.date_range_dialog import DateRangeDialog
 
 
 class PeriodSelector(QWidget):
     """Shows "‹ Noviembre 2026 ▾ ›". The arrows move by the period's length; the middle
-    button offers the quick choices (current month, last 3 months, this year…).
+    button offers the quick choices (current month, last 3 months, this year…) and
+    "Personalizado…", any range of days.
 
     With ``quick_choices`` off it moves month by month only, and the middle button
     returns to the current month, for screens that always show a single month.
@@ -41,6 +43,8 @@ class PeriodSelector(QWidget):
         for quick in QuickPeriod:
             action = self.quick_menu.addAction(quick.value)
             action.triggered.connect(lambda _=False, q=quick: self.choose(q))
+        self.quick_menu.addSeparator()
+        self.quick_menu.addAction("Personalizado…").triggered.connect(self.choose_range)
         if quick_choices:
             self.period_button.setMenu(self.quick_menu)
         else:
@@ -69,6 +73,12 @@ class PeriodSelector(QWidget):
 
     def choose(self, quick: QuickPeriod) -> None:
         self.set_period(quick.period(date.today()))
+
+    def choose_range(self) -> None:
+        """Asks for a first and a last day, starting on the period shown."""
+        dialog = DateRangeDialog(self._period, self.window())
+        if dialog.exec():
+            self.set_period(dialog.period)
 
     @staticmethod
     def _arrow(text: str, tooltip: str) -> QPushButton:
