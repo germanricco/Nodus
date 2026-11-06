@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import QPointF, QRectF, QSize, Qt
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
-    AnimatedChart,
+    ColumnHoverChart,
     column_slots,
     lerp,
     rounded_bar_path,
@@ -33,13 +33,16 @@ class BarGroup:
     selected: bool = False
 
 
-class BarChart(AnimatedChart):
+class BarChart(ColumnHoverChart):
     """A green income bar next to a red expense bar for each month, so both sides of the
     result can be compared at a glance.
 
     Bars grow from the baseline the first time and resize to new values afterwards. The
     month under the mouse lights up, the others fade, and a box shows its details.
+    Clicking a month emits ``clicked`` with its index.
     """
+
+    clicked = Signal(int)
 
     BOTTOM, TOP = 22.0, 8.0
     GROUP_GAP_RATIO = 0.3
@@ -50,7 +53,6 @@ class BarChart(AnimatedChart):
         super().__init__(theme, parent)
         self._groups: list[BarGroup] = []
         self._previous: list[tuple[float, float]] = []
-        self.hover_index: int | None = None
         self.setMinimumHeight(120)
 
     def sizeHint(self) -> QSize:  # noqa: N802
@@ -134,13 +136,7 @@ class BarChart(AnimatedChart):
     def index_at(self, x: float) -> int | None:
         return slot_index(self._slots(), x)
 
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+    def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         index = self.index_at(event.position().x())
-        if index != self.hover_index:
-            self.hover_index = index
-            self.update()
-
-    def leaveEvent(self, event) -> None:  # noqa: N802
-        super().leaveEvent(event)
-        self.hover_index = None
-        self.update()
+        if index is not None and event.button() is Qt.MouseButton.LeftButton:
+            self.clicked.emit(index)

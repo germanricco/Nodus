@@ -75,6 +75,10 @@ def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) ->
 FULL_DASHBOARD_HEIGHT = 1180
 
 
+# File names of the analysis tabs, in their order.
+ANALYSIS_TABS = ("trends", "cash-flow")
+
+
 def render_pages(app: QApplication, services: Services, args: argparse.Namespace) -> None:
     if args.demo:
         load_demo_data(services, args.today)
@@ -100,6 +104,14 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.show_page(PageId.DASHBOARD)
         app.processEvents()
         save(window, args.out / f"dashboard-full-{mode.value}.png")
+        # Each analysis report, whole.
+        window.show_page(PageId.ANALYSIS)
+        analysis = window.page(PageId.ANALYSIS)
+        for index, name in enumerate(ANALYSIS_TABS):
+            analysis.tabs.set_index(index)
+            app.processEvents()
+            save(window, args.out / f"analysis-{name}-{mode.value}.png")
+        analysis.tabs.set_index(0)
         window.resize(window.width(), height)
         # The notifications panel, with a new version announced.
         window.show_page(PageId.DASHBOARD)

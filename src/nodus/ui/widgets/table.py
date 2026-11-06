@@ -25,3 +25,11 @@ def record_table(model: QAbstractItemModel, stretch_column: int) -> QTableView:
         header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
     header.setSectionResizeMode(stretch_column, QHeaderView.ResizeMode.Stretch)
     return table
+
+
+def fit_rows(table: QTableView) -> None:
+    """Makes ``table`` exactly as tall as its rows, for a short table inside a page that
+    scrolls as a whole."""
+    height = table.horizontalHeader().height() + table.verticalHeader().length()
+    table.setFixedHeight(height + 2 * table.frameWidth())
+    table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

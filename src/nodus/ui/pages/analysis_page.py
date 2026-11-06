@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QScrollArea, QStackedWidget
 from nodus.models.period import Period
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
-from nodus.ui.pages.analysis_views import AnalysisView, TrendsView
+from nodus.ui.pages.analysis_views import AnalysisView, CashFlowView, TrendsView
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.period_selector import PeriodSelector
@@ -29,8 +29,11 @@ class AnalysisPage(Page):
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
         super().__init__("Análisis")
-        self.views: list[AnalysisView] = [TrendsView(services, theme_manager)]
-        self.tabs = SegmentedControl(["Tendencias"])
+        self.views: list[AnalysisView] = [
+            TrendsView(services, theme_manager),
+            CashFlowView(services, theme_manager),
+        ]
+        self.tabs = SegmentedControl(["Tendencias", "Flujo de caja"])
         self.period_selector = PeriodSelector(Period.last_months(DEFAULT_MONTHS, date.today()))
         self.add_header_widget(self.tabs)
         self.add_header_widget(self.period_selector)

@@ -5,15 +5,16 @@ from datetime import date
 import pytest
 from factories import ars, category_id, expense_draft, income_draft
 
-from nodus.models.period import Month, Period
+from nodus.models.period import Month, Period, format_month
 from nodus.models.transaction import TransactionType
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.analysis_page import AnalysisPage
-from nodus.ui.pages.analysis_views import NO_PAYEE_LABEL, TrendsView
+from nodus.ui.pages.analysis_views import NO_PAYEE_LABEL, CashFlowView, TrendsView
 
 EXPENSE = TransactionType.EXPENSE
 SEP_NOV = Period.of_months(Month(2026, 9), Month(2026, 11))
 SAVINGS_TAB = 2
+CASH_FLOW_TAB = 1
 
 
 @pytest.fixture
@@ -49,6 +50,16 @@ def filled(page, movements) -> AnalysisPage:
 
 def trends_view(page) -> TrendsView:
     return page.views[0]
+
+
+def cash_flow_view(page) -> CashFlowView:
+    page.tabs.set_index(CASH_FLOW_TAB)
+    return page.views[CASH_FLOW_TAB]
+
+
+def table_row(view: CashFlowView, row: int) -> list[str]:
+    model = view.model
+    return [model.index(row, column).data() for column in range(model.columnCount())]
 
 
 def row_texts(layout) -> list[str]:
@@ -116,3 +127,58 @@ def test_window_opens_transactions_filtered(window, services, movements):
     assert window.current_page is transactions
     assert transactions.period_selector.period() == Period.of_months(Month(2026, 10))
     assert transactions.category_filter.current_id() == servicios
+
+
+# Cash flow
+
+
+def test_cash_flow_totals_and_months(filled):
+    view = cash_flow_view(filled)
+
+    assert filled.current_view is view
+    assert view.income_label.money() == ars("1000")
+    assert view.expenses_label.money() == -ars("400")
+    assert view.savings_label.money() == ars("600")
+    assert view.rate_label.text() == "60 %"
+    assert view.rate_badge.text() == "Sin datos del período anterior"
+    assert [group.label for group in view.chart.groups()] == ["Sep", "Oct", "Nov"]
+    assert view.model.rowCount() == 3
+    assert table_row(view, 0) == [
+        format_month(Month(2026, 9)),
+        "$ 1.000,00",
+        "$ 300,00",
+        "$ 700,00",
+        "70 %",
+    ]
+    assert table_row(view, 2)[4] == "—"  # no income in November
+
+
+def test_cash_flow_compares_the_savings_rate_in_points(services, pesos, filled):
+    services.transactions.create(income_draft(services, pesos.id, ars("1000"), date(2026, 8, 1)))
+    services.transactions.create(expense_draft(services, pesos.id, ars("500"), date(2026, 8, 2)))
+    view = cash_flow_view(filled)
+
+    assert view.rate_badge.text() == "↗ 10 pp"  # 50 % in Jun-Aug, 60 % in Sep-Nov
+    assert view.income_badge.text() == "→ 0 %"
+    assert view.expenses_badge.text() == "↘ 20 %"
+
+
+def test_cash_flow_month_opens_its_transactions(qtbot, filled):
+    view = cash_flow_view(filled)
+    october = Period.of_months(Month(2026, 10))
+
+    with qtbot.waitSignal(filled.transactions_requested) as from_bar:
+        view.chart.clicked.emit(1)
+    assert from_bar.args == [october, None, None]
+
+    with qtbot.waitSignal(filled.transactions_requested) as from_row:
+        view.table.doubleClicked.emit(view.model.index(1, 0))
+    assert from_row.args == [october, None, None]
+
+
+def test_cash_flow_empty_period(page):
+    view = cash_flow_view(page)
+
+    assert view.chart.isHidden()
+    assert not view.empty_label.isHidden()
+    assert view.model.rowCount() == 3

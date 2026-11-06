@@ -10,7 +10,15 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from PySide6.QtCore import QEasingCurve, QPointF, QRectF, Qt, QVariantAnimation
-from PySide6.QtGui import QColor, QFont, QFontMetricsF, QPainter, QPainterPath, QShowEvent
+from PySide6.QtGui import (
+    QColor,
+    QFont,
+    QFontMetricsF,
+    QMouseEvent,
+    QPainter,
+    QPainterPath,
+    QShowEvent,
+)
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.currency import Currency
@@ -166,6 +174,29 @@ class AnimatedChart(QWidget):
             )
             top += line_metrics.height() + spacing
         painter.restore()
+
+
+class ColumnHoverChart(AnimatedChart):
+    """A chart of one column per point, the one under the mouse in ``hover_index``.
+    Subclasses say which column an x falls in through ``index_at``."""
+
+    def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
+        super().__init__(theme, parent)
+        self.hover_index: int | None = None
+
+    def index_at(self, x: float) -> int | None:
+        raise NotImplementedError
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        index = self.index_at(event.position().x())
+        if index != self.hover_index:
+            self.hover_index = index
+            self.update()
+
+    def leaveEvent(self, event) -> None:  # noqa: N802
+        super().leaveEvent(event)
+        self.hover_index = None
+        self.update()
 
 
 def column_slots(count: int, width: float, height: float) -> list[QRectF]:

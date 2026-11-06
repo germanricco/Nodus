@@ -3,24 +3,32 @@ and asks for transactions through ``transactions_requested``."""
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt, Signal
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from nodus.models.money import Money
 from nodus.models.period import Period, format_month
-from nodus.services.analysis_service import Metric, MonthTrend, Trends
+from nodus.services.analysis_service import CashFlowReport, Metric, MonthTrend, Trends
 from nodus.services.container import Services
-from nodus.services.dashboard_service import SUMMARY_CURRENCY, CategoryTotal
+from nodus.services.dashboard_service import (
+    SUMMARY_CURRENCY,
+    CategoryTotal,
+    MonthFlow,
+    relative_change,
+)
 from nodus.ui.labels import movements_text, unconverted_note
 from nodus.ui.pages.dashboard_cards import (
     CategoryLine,
     FigureTile,
     card_header,
+    flow_bar_groups,
     muted_label,
     percent,
 )
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.bar_chart import BarChart
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.chart_base import format_compact
@@ -28,6 +36,7 @@ from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
 from nodus.ui.widgets.style import clear_layout
+from nodus.ui.widgets.table import fit_rows, record_table
 
 METRICS = list(Metric)
 # Categories stacked in the bars, the largest of the period; the rest share one piece.
@@ -37,12 +46,34 @@ REST_LABEL = "Resto"
 PAYEES_SHOWN = 8
 NO_PAYEE_LABEL = "Sin beneficiario"
 TOOLTIP_CATEGORIES = 3
+EMPTY_TEXT = "Sin movimientos en el período"
+NO_PREVIOUS_TEXT = "Sin datos del período anterior"
+
+MONTH, INCOME, EXPENSES, SAVINGS, RATE = range(5)
+FLOW_COLUMNS = ["Mes", "Ingresos", "Gastos", "Ahorro", "Tasa de ahorro"]
+_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+_ModelIndex = QModelIndex | QPersistentModelIndex
 
 
 def amount_label(money: Money) -> QLabel:
     label = QLabel(money.format())
-    label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+    label.setAlignment(_RIGHT)
     return label
+
+
+def chart_card(title: str, chart: QWidget) -> tuple[Card, QLabel, QLabel]:
+    """A card with ``chart``, the label shown instead of it when the period is empty and
+    the note about movements left out for lack of an exchange rate."""
+    card = Card()
+    card_header(card, title)
+    empty_label = muted_label(EMPTY_TEXT)
+    empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    unconverted_label = muted_label("")
+    unconverted_label.setWordWrap(True)
+    card.body.addWidget(chart, stretch=1)
+    card.body.addWidget(empty_label)
+    card.body.addWidget(unconverted_label)
+    return card, empty_label, unconverted_label
 
 
 class AnalysisView(QWidget):
@@ -75,7 +106,7 @@ class TrendsView(AnalysisView):
         layout.addLayout(metric_row)
 
         self.total_label = AnimatedMoneyLabel()
-        self.change_badge = ChangeBadge(none_text="Sin datos del período anterior")
+        self.change_badge = ChangeBadge(none_text=NO_PREVIOUS_TEXT)
         self.change_badge.setToolTip("Frente al período anterior, del mismo largo")
         self.previous_label = QLabel()
         self.average_label = QLabel()
@@ -88,20 +119,12 @@ class TrendsView(AnalysisView):
             tiles.addWidget(tile, stretch=1)
         layout.addLayout(tiles)
 
-        chart_card = Card()
-        self.chart_title = card_header(chart_card, "Mes a mes")
         self.chart = StackedBarChart(
             self._theme, lambda cents: format_compact(cents, SUMMARY_CURRENCY)
         )
         self.chart.clicked.connect(self._bar_clicked)
-        self.empty_label = muted_label("Sin movimientos en el período")
-        self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.unconverted_label = muted_label("")
-        self.unconverted_label.setWordWrap(True)
-        chart_card.body.addWidget(self.chart, stretch=1)
-        chart_card.body.addWidget(self.empty_label)
-        chart_card.body.addWidget(self.unconverted_label)
-        layout.addWidget(chart_card)
+        card, self.empty_label, self.unconverted_label = chart_card("Mes a mes", self.chart)
+        layout.addWidget(card)
 
         self.categories_card = Card()
         card_header(self.categories_card, "Por categoría")
@@ -198,7 +221,7 @@ class TrendsView(AnalysisView):
     def _fill_categories(self, trends: Trends) -> None:
         clear_layout(self._category_rows)
         if not trends.categories:
-            self._category_rows.addWidget(muted_label("Sin movimientos en el período"))
+            self._category_rows.addWidget(muted_label(EMPTY_TEXT))
         for total in trends.categories:
             row = CategoryLine(total.category.color, total.category.name)
             row.add(muted_label(percent(total.total, trends.total)))
@@ -215,7 +238,7 @@ class TrendsView(AnalysisView):
         named = [p for p in trends.payees if p.payee is not None][:PAYEES_SHOWN]
         without = [p for p in trends.payees if p.payee is None]
         if not trends.payees:
-            self._payee_rows.addWidget(muted_label("Sin movimientos en el período"))
+            self._payee_rows.addWidget(muted_label(EMPTY_TEXT))
         for total in named + without:
             name = total.payee.name if total.payee else NO_PAYEE_LABEL
             color = self._theme.accent if total.payee else self._theme.border
@@ -236,3 +259,138 @@ class TrendsView(AnalysisView):
         self.chart.set_theme(theme)
         if self._trends is not None:
             self._reload()
+
+
+class CashFlowTableModel(QAbstractTableModel):
+    """Income, expenses, savings and savings rate of each month, amounts in their colors."""
+
+    def __init__(self, theme: Theme) -> None:
+        super().__init__()
+        self._months: list[MonthFlow] = []
+        self._theme = theme
+
+    def set_months(self, months: list[MonthFlow]) -> None:
+        self.beginResetModel()
+        self._months = months
+        self.endResetModel()
+
+    def set_theme(self, theme: Theme) -> None:
+        self._theme = theme
+        if self._months:
+            self.dataChanged.emit(self.index(0, 0), self.index(len(self._months) - 1, RATE))
+
+    def month(self, row: int) -> MonthFlow:
+        return self._months[row]
+
+    def rowCount(self, parent: _ModelIndex = QModelIndex()) -> int:  # noqa: B008, N802
+        return 0 if parent.isValid() else len(self._months)
+
+    def columnCount(self, parent: _ModelIndex = QModelIndex()) -> int:  # noqa: B008, N802
+        return 0 if parent.isValid() else len(FLOW_COLUMNS)
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = 0) -> object:  # noqa: N802
+        if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+            return FLOW_COLUMNS[section]
+        if role == Qt.ItemDataRole.TextAlignmentRole and section != MONTH:
+            return _RIGHT
+        return None
+
+    def data(self, index: _ModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> object:
+        flow = self._months[index.row()]
+        column = index.column()
+        if role == Qt.ItemDataRole.DisplayRole:
+            return [
+                format_month(flow.month),
+                flow.income.format(),
+                flow.expenses.format(),
+                flow.savings.format(),
+                percent(flow.savings, flow.income),
+            ][column]
+        if role == Qt.ItemDataRole.ForegroundRole and column in (INCOME, EXPENSES, SAVINGS):
+            amount = [flow.income, -flow.expenses, flow.savings][column - INCOME]
+            return QColor(self._theme.amount_color(amount))
+        if role == Qt.ItemDataRole.TextAlignmentRole and column != MONTH:
+            return _RIGHT
+        return None
+
+
+class CashFlowView(AnalysisView):
+    """Income, expenses, savings and savings rate of the period against the previous one,
+    with the bars and the table of each month. A bar or a row opens that month."""
+
+    def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
+        super().__init__()
+        self._services = services
+        self._report: CashFlowReport | None = None
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(16)
+
+        self.income_label = AnimatedMoneyLabel(highlight_positive=True)
+        self.expenses_label = AnimatedMoneyLabel()
+        self.savings_label = AnimatedMoneyLabel(highlight_positive=True)
+        self.rate_label = QLabel()
+        self.income_badge = ChangeBadge(none_text=NO_PREVIOUS_TEXT)
+        self.expenses_badge = ChangeBadge(higher_is_better=False, none_text=NO_PREVIOUS_TEXT)
+        self.savings_badge = ChangeBadge(none_text=NO_PREVIOUS_TEXT)
+        self.rate_badge = ChangeBadge(none_text=NO_PREVIOUS_TEXT, unit="pp")
+        self.rate_badge.setToolTip("Diferencia en puntos porcentuales")
+        tiles = QHBoxLayout()
+        tiles.setSpacing(16)
+        for caption, value, badge in (
+            ("Ingresos", self.income_label, self.income_badge),
+            ("Gastos", self.expenses_label, self.expenses_badge),
+            ("Ahorro", self.savings_label, self.savings_badge),
+            ("Tasa de ahorro", self.rate_label, self.rate_badge),
+        ):
+            badge.setToolTip(badge.toolTip() or "Frente al período anterior, del mismo largo")
+            tiles.addWidget(FigureTile(caption, value, badge), stretch=1)
+        layout.addLayout(tiles)
+
+        self.chart = BarChart(theme_manager.theme)
+        self.chart.setMinimumHeight(StackedBarChart.MIN_HEIGHT)
+        self.chart.clicked.connect(self._open_month)
+        card, self.empty_label, self.unconverted_label = chart_card("Mes a mes", self.chart)
+        layout.addWidget(card)
+
+        table_card = Card()
+        card_header(table_card, "Detalle por mes")
+        self.model = CashFlowTableModel(theme_manager.theme)
+        self.table = record_table(self.model, MONTH)
+        self.table.setToolTip("Doble clic para ver los movimientos del mes")
+        self.table.doubleClicked.connect(lambda index: self._open_month(index.row()))
+        table_card.body.addWidget(self.table)
+        layout.addWidget(table_card)
+        layout.addStretch()
+
+        theme_manager.theme_changed.connect(self._set_theme)
+
+    def show_period(self, period: Period) -> None:
+        report = self._report = self._services.analysis.cash_flow(period)
+        current, previous = report.current, report.previous
+        self.income_label.set_money(current.income)
+        self.expenses_label.set_money(-current.expenses)
+        self.savings_label.set_money(current.savings)
+        self.rate_label.setText(percent(current.savings, current.income))
+        self.income_badge.set_change(relative_change(current.income, previous.income))
+        self.expenses_badge.set_change(relative_change(current.expenses, previous.expenses))
+        self.savings_badge.set_change(relative_change(current.savings, previous.savings))
+        rates = (current.savings_rate, previous.savings_rate)
+        self.rate_badge.set_change(None if None in rates else rates[0] - rates[1])
+
+        has_data = not (current.income.is_zero and current.expenses.is_zero)
+        self.chart.setVisible(has_data)
+        self.empty_label.setVisible(not has_data)
+        self.chart.set_groups(flow_bar_groups(report.months))
+        self.unconverted_label.setText(unconverted_note(report.unconverted))
+        self.unconverted_label.setVisible(bool(report.unconverted))
+        self.model.set_months(report.months)
+        fit_rows(self.table)
+
+    def _open_month(self, index: int) -> None:
+        month = self.model.month(index).month
+        self.transactions_requested.emit(Period.of_months(month), None, None)
+
+    def _set_theme(self, theme: Theme) -> None:
+        self.chart.set_theme(theme)
+        self.model.set_theme(theme)

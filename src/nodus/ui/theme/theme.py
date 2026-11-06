@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from enum import Enum
 
+from nodus.models.money import Money
+
 
 class ThemeMode(Enum):
     """The user's theme preference. SYSTEM follows the operating system's setting."""
@@ -54,6 +56,12 @@ class Theme:
     def tone_color(self, tone: str) -> str:
         """The color of an amount's tone ("positive", "negative" or "neutral")."""
         return {"positive": self.income, "negative": self.expense}.get(tone, self.text)
+
+    def amount_color(self, money: Money) -> str:
+        """Green above zero, red below it, plain text at zero."""
+        if money.is_zero:
+            return self.text
+        return self.expense if money.is_negative else self.income
 
 
 # Inspired by MoneyMatter: warm neutral surfaces with a violet accent.

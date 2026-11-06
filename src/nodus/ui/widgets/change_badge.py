@@ -7,13 +7,14 @@ from PySide6.QtWidgets import QLabel, QWidget
 from nodus.ui.widgets.style import set_style_property
 
 
-def format_change(change: float) -> str:
-    """ "↗ 12 %", "↘ 9,5 %" or "→ 0 %", with one decimal only below 10 %."""
+def format_change(change: float, unit: str = "%") -> str:
+    """ "↗ 12 %", "↘ 9,5 %" or "→ 0 %", with one decimal only below 10. ``unit`` "pp"
+    shows a change of a rate in percentage points."""
     percent = abs(change) * 100
     text = f"{percent:.1f}" if percent < 10 else f"{percent:.0f}"
     text = text.replace(".", ",").removesuffix(",0")
     arrow = "↗" if change > 0 else "↘" if change < 0 else "→"
-    return f"{arrow} {text} %"
+    return f"{arrow} {text} {unit}"
 
 
 class ChangeBadge(QLabel):
@@ -24,12 +25,17 @@ class ChangeBadge(QLabel):
     """
 
     def __init__(
-        self, higher_is_better: bool = True, none_text: str = "", parent: QWidget | None = None
+        self,
+        higher_is_better: bool = True,
+        none_text: str = "",
+        unit: str = "%",
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.setObjectName("ChangeBadge")
         self._higher_is_better = higher_is_better
         self._none_text = none_text
+        self._unit = unit
 
     def set_higher_is_better(self, higher_is_better: bool) -> None:
         """For a badge whose figure changes meaning, as income versus expenses."""
@@ -42,7 +48,7 @@ class ChangeBadge(QLabel):
             self.setVisible(bool(self._none_text))
             set_style_property(self, "tone", "neutral")
             return
-        self.setText(format_change(change) + (f" · {detail}" if detail else ""))
+        self.setText(format_change(change, self._unit) + (f" · {detail}" if detail else ""))
         self.setVisible(True)
         good = change > 0 if self._higher_is_better else change < 0
         set_style_property(self, "tone", "neutral" if change == 0 else "good" if good else "bad")

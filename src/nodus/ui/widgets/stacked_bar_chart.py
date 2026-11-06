@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QWidget
 
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
-    AnimatedChart,
+    ColumnHoverChart,
     column_slots,
     lerp,
     rounded_bar_path,
@@ -43,7 +43,7 @@ class StackedBar:
     tooltip_lines: tuple[str, ...]
 
 
-class StackedBarChart(AnimatedChart):
+class StackedBarChart(ColumnHoverChart):
     """A bar per month, stacked by category, with a dashed line at the monthly average.
 
     Bars grow the first time and each piece resizes to its new value afterwards, matched
@@ -56,6 +56,7 @@ class StackedBarChart(AnimatedChart):
 
     BOTTOM, TOP = 22.0, 18.0
     GAP_RATIO = 0.35
+    MIN_HEIGHT = 220
     MAX_BAR_WIDTH = 34.0
 
     def __init__(
@@ -69,8 +70,7 @@ class StackedBarChart(AnimatedChart):
         self._bars: list[StackedBar] = []
         self._previous: list[dict[int | None, float]] = []
         self.average: float | None = None
-        self.hover_index: int | None = None
-        self.setMinimumHeight(220)
+        self.setMinimumHeight(self.MIN_HEIGHT)
 
     def sizeHint(self) -> QSize:  # noqa: N802
         return QSize(480, 260)
@@ -215,18 +215,7 @@ class StackedBarChart(AnimatedChart):
 
     # Mouse
 
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802
-        index = self.index_at(event.position().x())
-        if index != self.hover_index:
-            self.hover_index = index
-            self.update()
-
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         index, key = self.segment_at(event.position())
         if index is not None and event.button() is Qt.MouseButton.LeftButton:
             self.clicked.emit(index, key)
-
-    def leaveEvent(self, event) -> None:  # noqa: N802
-        super().leaveEvent(event)
-        self.hover_index = None
-        self.update()

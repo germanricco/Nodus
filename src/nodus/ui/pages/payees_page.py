@@ -89,7 +89,7 @@ class PayeeTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DecorationRole and column == CATEGORY and category:
             return color_icon(category.color)
         if role == Qt.ItemDataRole.ForegroundRole and column == TOTAL:
-            return QColor(self._theme.tone_color(_tone(summary)))
+            return QColor(self._theme.amount_color(summary.net))
         if role == Qt.ItemDataRole.ToolTipRole and column == TOTAL and summary.unconverted:
             return unconverted_note(summary.unconverted)
         if role == Qt.ItemDataRole.TextAlignmentRole and column in (COUNT, TOTAL):
@@ -115,12 +115,6 @@ class PayeeTableModel(QAbstractTableModel):
             summary.net.cents,
             name_sort_key(category.name) if category else "",
         ][column]
-
-
-def _tone(summary: PayeeSummary) -> str:
-    if summary.net.is_negative:
-        return "negative"
-    return "neutral" if summary.net.is_zero else "positive"
 
 
 class PayeesPage(Page):

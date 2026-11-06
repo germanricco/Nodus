@@ -11,7 +11,6 @@ from PySide6.QtGui import (
     QColor,
     QFont,
     QLinearGradient,
-    QMouseEvent,
     QPainter,
     QPainterPath,
     QPaintEvent,
@@ -20,7 +19,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QWidget
 
 from nodus.ui.theme.theme import Theme
-from nodus.ui.widgets.chart_base import AnimatedChart, lerp, resample, with_alpha
+from nodus.ui.widgets.chart_base import ColumnHoverChart, lerp, resample, with_alpha
 
 # Up/down dots are drawn only while they stay readable.
 MAX_CHANGE_DOTS = 31
@@ -79,7 +78,7 @@ def change_directions(values: list[float | None]) -> list[int]:
     return directions
 
 
-class LineChart(AnimatedChart):
+class LineChart(ColumnHoverChart):
     """The trend of a value over days.
 
     The first time it draws itself from left to right; later it morphs from the previous
@@ -103,7 +102,6 @@ class LineChart(AnimatedChart):
         self._format_day = format_day
         self._points: list[LinePoint] = []
         self._previous: list[float | None] | None = None
-        self.hover_index: int | None = None
         self.setMinimumHeight(180)
 
     def sizeHint(self) -> QSize:  # noqa: N802
@@ -308,14 +306,3 @@ class LineChart(AnimatedChart):
             return None
         plot = self._plot_rect()
         return min(known, key=lambda i: abs(self._x(i, plot) - x))
-
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802
-        index = self.index_at(event.position().x())
-        if index != self.hover_index:
-            self.hover_index = index
-            self.update()
-
-    def leaveEvent(self, event) -> None:  # noqa: N802
-        super().leaveEvent(event)
-        self.hover_index = None
-        self.update()

@@ -98,6 +98,10 @@ def test_format_change(change, text):
     assert format_change(change) == text
 
 
+def test_format_change_in_percentage_points():
+    assert format_change(-0.05, "pp") == "↘ 5 pp"
+
+
 # Widgets
 
 

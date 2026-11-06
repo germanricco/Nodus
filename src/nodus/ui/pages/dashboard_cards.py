@@ -79,6 +79,25 @@ def due_status_label(charge: RecurringCharge, today: date) -> QLabel:
     return label
 
 
+def flow_bar_groups(flow: list[MonthFlow], selected: Month | None = None) -> list[BarGroup]:
+    """The income and expense bars of each month, with ``selected`` highlighted."""
+    return [
+        BarGroup(
+            month.month.short_name,
+            month.income.cents,
+            month.expenses.cents,
+            format_month(month.month),
+            (
+                f"Ingresos {month.income.format()}",
+                f"Gastos {month.expenses.format()}",
+                f"Ahorro {month.savings.format()}",
+            ),
+            selected=month.month == selected,
+        )
+        for month in flow
+    ]
+
+
 def card_header(card: Card, title: str) -> QHBoxLayout:
     """A title on the left with room on the right, e.g. for a ``ChangeBadge``."""
     header = QHBoxLayout()
@@ -425,21 +444,7 @@ class CashFlowCard(Card):
         self.unconverted_label.setVisible(bool(summary.unconverted))
         single_month = len(summary.period.months()) == 1
         self.chart.set_groups(
-            [
-                BarGroup(
-                    month.month.short_name,
-                    month.income.cents,
-                    month.expenses.cents,
-                    format_month(month.month),
-                    (
-                        f"Ingresos {month.income.format()}",
-                        f"Gastos {month.expenses.format()}",
-                        f"Ahorro {month.savings.format()}",
-                    ),
-                    selected=single_month and month.month == summary.period.first_month,
-                )
-                for month in flow
-            ]
+            flow_bar_groups(flow, summary.period.first_month if single_month else None)
         )
 
     def _set_theme(self, theme: Theme) -> None:
