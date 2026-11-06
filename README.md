@@ -47,9 +47,14 @@ Add every place where you keep money, from your bank and cash to dollar savings 
 <!-- Screenshot (v1.0): docs/images/accounts-light.png | docs/images/accounts-dark.png -->
 
 ### Record and find your transactions
-One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, type or text, and whatever you see exports to a file that opens in Excel.
+One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, type or text, and whatever you see exports to a file that opens in Excel.
 
 <!-- Screenshot (v1.0): docs/images/transactions-light.png | docs/images/transactions-dark.png -->
+
+### Know who your money goes to
+Each expense or income can say who you paid or who paid you: the supermarket, the power company, your employer. Type a few letters to pick one, or a new name to add it, and Nodus fills in the category you usually use with it. The Payees page shows how many transactions and how much money went to or came from each one, so a question like "how much do I spend at the supermarket?" takes one click. Duplicates such as "Coto" and "Coto Online" can be merged into one.
+
+<!-- Screenshot (v1.0): docs/images/payees-light.png | docs/images/payees-dark.png -->
 
 ### Never forget what you pay every month
 Enter rent, utilities or subscriptions once, and Nodus shows what they add up to per month, what is due soon and what is overdue. Paying one takes two clicks: the expense is recorded and the charge moves on to its next date.

@@ -45,9 +45,14 @@ Registras cada lugar donde tienes dinero, sea el banco, el efectivo, los ahorros
 <!-- Captura (v1.0): docs/images/accounts-light.png | docs/images/accounts-dark.png -->
 
 ### Registrar y encontrar tus movimientos
-Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la última cuenta que usaste. La lista se filtra por período, cuenta, categoría, tipo o texto, y lo que ves se exporta a un archivo que se abre en Excel.
+Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la última cuenta que usaste. La lista se filtra por período, cuenta, categoría, beneficiario, tipo o texto, y lo que ves se exporta a un archivo que se abre en Excel.
 
 <!-- Captura (v1.0): docs/images/transactions-light.png | docs/images/transactions-dark.png -->
+
+### Saber a quién va tu dinero
+Cada gasto o ingreso puede decir a quién le pagaste o quién te pagó: el supermercado, la empresa de luz, tu empleador. Escribes unas letras para elegirlo, o un nombre nuevo para sumarlo, y Nodus completa la categoría que sueles usar con él. La página Beneficiarios muestra cuántos movimientos y cuánto dinero fue o vino de cada uno, así que una pregunta como «¿cuánto gasto en el supermercado?» se responde con un clic. Los repetidos, como «Coto» y «Coto Online», se pueden unir en uno.
+
+<!-- Captura (v1.0): docs/images/payees-light.png | docs/images/payees-dark.png -->
 
 ### No olvidarte de lo que pagas todos los meses
 Anotas el alquiler, los servicios o las suscripciones una sola vez, y Nodus te muestra cuánto suman por mes, qué vence pronto y qué está atrasado. Pagar uno toma dos clics: el gasto queda registrado y el cargo pasa a su próxima fecha.

@@ -389,6 +389,11 @@ QHeaderView::section {
     font-weight: 600;
 }
 
+/* Room for the sort arrow, which Qt draws at the right edge of the section. */
+#SortableTable QHeaderView::section {
+    padding-right: 20px;
+}
+
 QCalendarWidget QWidget {
     background: $surface;
     alternate-background-color: $background;

@@ -28,7 +28,8 @@ def usd(amount: str | int) -> Money:
 
 def load_demo_data(services: Services, today: date) -> None:
     """Creates a few accounts, monthly dollar rates, five months of typical movements and
-    the current month's, with one month of overspending for contrast."""
+    the current month's, with one month of overspending for contrast. Most movements
+    name a payee, and the supermarkets have a default category."""
     categories = {(c.kind, c.name): c.id for c in services.categories.list_categories()}
     income, expense = TransactionType.INCOME, TransactionType.EXPENSE
     alquiler = services.categories.create(
@@ -36,10 +37,14 @@ def load_demo_data(services: Services, today: date) -> None:
     )
     categories[(expense, "Alquiler")] = alquiler.id
 
-    def record(account_id, kind, category, amount, day, note=""):
+    def record(account_id, kind, category, amount, day, note="", payee=""):
         services.transactions.create(
-            TransactionDraft(account_id, kind, amount, day, categories[(kind, category)], note)
-        )
+            TransactionDraft(account_id, kind, amount, day, categories[(kind, category)], note,
+                             payee)
+        )  # fmt: skip
+
+    for supermarket in ("Coto", "Día"):
+        services.payees.create(supermarket, categories[(expense, "Supermercado y comida")])
 
     banco = services.accounts.create("Banco", AccountType.BANK, Currency.ARS, ars("420000"))
     efectivo = services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("60000"))
@@ -57,24 +62,24 @@ def load_demo_data(services: Services, today: date) -> None:
             return date(month.year, month.month, min(day, month.end.day))
 
         salary = 1_300_000 + 25_000 * (HISTORY_MONTHS - back)
-        record(banco.id, income, "Sueldo", ars(salary), on(3), "Sueldo del mes")
+        record(banco.id, income, "Sueldo", ars(salary), on(3), "Sueldo del mes", "Empresa S.A.")
         if back % 2 == 0:
             record(banco.id, income, "Trabajo freelance", ars(random_.randrange(150, 320) * 1000),
                    on(18), "Proyecto freelance")  # fmt: skip
         record(banco.id, expense, "Alquiler", ars(380_000 + 8_000 * (HISTORY_MONTHS - back)),
                on(5), "Alquiler")  # fmt: skip
         record(banco.id, expense, "Servicios", ars(random_.randrange(32, 48) * 1000), on(10),
-               "Luz y gas")  # fmt: skip
+               "Luz", "Edenor")  # fmt: skip
         for week in range(4):
             amount = ars(random_.randrange(70, 120) * 1000)
             record(banco.id, expense, "Supermercado y comida", amount, on(2 + 7 * week),
-                   "Supermercado")  # fmt: skip
+                   "Compra de la semana", "Día" if week % 2 else "Coto")  # fmt: skip
         record(efectivo.id, expense, "Transporte", ars(random_.randrange(15, 30) * 1000), on(12),
-               "SUBE")  # fmt: skip
+               "Carga", "SUBE")  # fmt: skip
         record(efectivo.id, expense, "Ocio", ars(random_.randrange(30, 90) * 1000), on(21),
                "Salidas")  # fmt: skip
         record(banco.id, expense, "Salud", ars(random_.randrange(20, 60) * 1000), on(15),
-               "Farmacia")  # fmt: skip
+               "Farmacia", "Farmacity")  # fmt: skip
         if back == 2:
             record(banco.id, expense, "Ocio", ars("1650000"), on(24), "Vacaciones")
             record(banco.id, expense, "Ropa", ars("180000"), on(26), "Ropa de verano")
@@ -90,13 +95,14 @@ def load_demo_data(services: Services, today: date) -> None:
         return today - timedelta(days=days)
 
     services.exchange_rates.set_rate(days_ago(3), Decimal("1215.50"))
-    record(banco.id, income, "Sueldo", ars("1450000"), days_ago(4), "Sueldo del mes")
+    record(banco.id, income, "Sueldo", ars("1450000"), days_ago(4), "Sueldo del mes",
+           "Empresa S.A.")  # fmt: skip
     record(banco.id, income, "Trabajo freelance", ars("280000"), days_ago(2), "Diseño web")
     record(banco.id, expense, "Alquiler", ars("420000"), days_ago(3), "Alquiler de noviembre")
-    record(banco.id, expense, "Servicios", ars("38500.40"), days_ago(3), "Luz y gas")
+    record(banco.id, expense, "Servicios", ars("38500.40"), days_ago(3), "Luz", "Edenor")
     record(banco.id, expense, "Supermercado y comida", ars("96320.75"), days_ago(2),
-           "Supermercado")  # fmt: skip
-    record(efectivo.id, expense, "Transporte", ars("12000"), days_ago(1), "SUBE")
+           "Compra de la semana", "Coto")  # fmt: skip
+    record(efectivo.id, expense, "Transporte", ars("12000"), days_ago(1), "Carga", "SUBE")
     record(efectivo.id, expense, "Ocio", ars("18500"), days_ago(1), "Cine")
     record(banco.id, expense, "Ocio", ars("52000"), days_ago(0), "Entradas recital")
     record(banco.id, expense, "Educación", ars("65000"), days_ago(0), "Curso de inglés")

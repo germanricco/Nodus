@@ -242,6 +242,7 @@ class PayeesPage(Page):
 
     def _build_table(self) -> QTableView:
         table = record_table(self.proxy, NAME)
+        table.setObjectName("SortableTable")
         table.setSortingEnabled(True)
         table.sortByColumn(COUNT, Qt.SortOrder.DescendingOrder)
         table.doubleClicked.connect(lambda _index: self.show_selected_transactions())
