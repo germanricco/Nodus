@@ -161,16 +161,18 @@ class DashboardPage(Page):
         """Places the cards for the available width.
 
         The top row is what matters at a glance: net worth, with upcoming payments and the
-        latest movements beside it. Below come the cash flow, then expenses by category
-        next to the comparison with the previous period, which belong together. In a
-        narrow window everything goes one card per row, except the top's side cards.
+        latest movements beside it. Below come expenses by category next to the comparison
+        with the previous period, which belong together, and last the month-by-month cash
+        flow, for a closer look. In a narrow window everything goes one card per row,
+        except the top's side cards.
         The page scrolls instead of squeezing the cards.
         """
         narrow = self.width() < NARROW_WIDTH
         upcoming = self.upcoming_card.isVisibleTo(self)
-        # Expenses take the full width when narrow, half of it otherwise.
+        # Expenses take the full width when narrow, four of the six columns otherwise.
         width = self._scroll.viewport().width()
-        expenses_width = width if narrow else (width - self._grid.spacing()) / 2
+        column = (width - 5 * self._grid.spacing()) / 6
+        expenses_width = width if narrow else 4 * column + 3 * self._grid.spacing()
         beside = self.expenses_card.fits_legend_beside(expenses_width)
         self.expenses_card.set_legend_beside(beside)
         layout = (narrow, upcoming)
@@ -185,9 +187,9 @@ class DashboardPage(Page):
                     [(self.upcoming_card, 1), (self.latest_card, 1)]
                     if upcoming
                     else [(self.latest_card, 2)],
-                    [(self.flow_card, 2)],
                     [(self.expenses_card, 2)],
                     [(self.comparison_card, 2)],
+                    [(self.flow_card, 2)],
                 ]
                 self._place(rows)
             else:
@@ -197,9 +199,9 @@ class DashboardPage(Page):
                     grid.addWidget(self.latest_card, 1, 4, 1, 2)
                 else:
                     grid.addWidget(self.latest_card, 0, 4, 2, 2)
-                grid.addWidget(self.flow_card, 2, 0, 1, 6)
-                grid.addWidget(self.expenses_card, 3, 0, 1, 3)
-                grid.addWidget(self.comparison_card, 3, 3, 1, 3)
+                grid.addWidget(self.expenses_card, 2, 0, 1, 4)
+                grid.addWidget(self.comparison_card, 2, 4, 1, 2)
+                grid.addWidget(self.flow_card, 3, 0, 1, 6)
             for column in range(6):
                 grid.setColumnStretch(column, 1 if column < (2 if narrow else 6) else 0)
         self._remeasure()

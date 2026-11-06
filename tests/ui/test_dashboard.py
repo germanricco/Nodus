@@ -247,5 +247,5 @@ def test_expenses_legend_goes_beside_the_ring_when_it_fits(qtbot, window, pesos)
     page.refresh()
     qtbot.waitUntil(lambda: card.legend_beside)
 
-    window.resize(1300, 900)  # half of the width is too little for both
-    qtbot.waitUntil(lambda: not card.legend_beside)
+    window.resize(1280, 900)  # four of six columns are enough for both
+    qtbot.waitUntil(lambda: card.legend_beside)

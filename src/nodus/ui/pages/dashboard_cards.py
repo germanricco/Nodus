@@ -46,7 +46,7 @@ LATEST_COUNT_BELOW_UPCOMING = 4
 LEGEND_COUNT = 6
 REST_LABEL = "Resto"
 # Narrowest legend that shows names, shares and amounts without cutting them much.
-LEGEND_MIN_WIDTH = 260
+LEGEND_MIN_WIDTH = 300
 COMPARISON_COUNT = 6
 # Upcoming charges listed on the dashboard; the page has them all.
 UPCOMING_COUNT = 3
