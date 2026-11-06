@@ -23,12 +23,15 @@ if sys.platform == "win32":
 from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
+from nodus.database.repositories.transaction_repository import TransactionFilter  # noqa: E402
 from nodus.models.period import Month  # noqa: E402
+from nodus.models.transaction import TransactionType  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
 from nodus.services.update_service import Release  # noqa: E402
 from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
 from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
+from nodus.ui.dialogs.refund_picker import RefundPickerDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
@@ -57,7 +60,24 @@ DIALOGS = {
     "budget-dialog": lambda services, event_bus, window: BudgetDialog(
         services, event_bus, Month.of(date.today()), parent=window
     ),
+    "transaction-dialog-refund": lambda services, event_bus, window: refund_dialog(
+        services, event_bus, window
+    ),
+    "refund-picker": lambda services, event_bus, window: RefundPickerDialog(
+        services, window.theme_manager, parent=window
+    ),
 }
+
+
+def refund_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
+    """The demo refund of a purchase from the trip, open for editing: its expense, from
+    another month, and its tag."""
+    refunds = services.transactions.list_transactions(
+        TransactionFilter(type=TransactionType.INCOME, refund_linked=True)
+    )
+    tags = services.transactions.tags_for([refund.id for refund in refunds])
+    refund = next(refund for refund in refunds if refund.id in tags)
+    return TransactionDialog(services, event_bus, window.theme_manager, refund, parent=window)
 
 
 def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:

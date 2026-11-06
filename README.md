@@ -37,7 +37,7 @@ It was born for people who manage money in pesos and dollars at the same time. E
 ## What you can do
 
 ### See where you stand at a glance
-The dashboard answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year), and click a category to see its transactions.
+The dashboard answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to see its transactions.
 
 <!-- Screenshot (v1.0): docs/images/dashboard-light.png | docs/images/dashboard-dark.png -->
 
@@ -47,7 +47,7 @@ Add every place where you keep money, from your bank and cash to dollar savings 
 <!-- Screenshot (v1.0): docs/images/accounts-light.png | docs/images/accounts-dark.png -->
 
 ### Record and find your transactions
-One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, type or text, and whatever you see exports to a file that opens in Excel.
+One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, tag, type or text, adds up at the foot the transactions it shows, and whatever you see exports to a file that opens in Excel.
 
 <!-- Screenshot (v1.0): docs/images/transactions-light.png | docs/images/transactions-dark.png -->
 
@@ -55,6 +55,16 @@ One form covers expenses, income and transfers, and it starts on the account you
 Each expense or income can say who you paid or who paid you: the supermarket, the power company, your employer. Type a few letters to pick one, or a new name to add it, and Nodus fills in the category you usually use with it. The Payees page shows how many transactions and how much money went to or came from each one, so a question like "how much do I spend at the supermarket?" takes one click. Duplicates such as "Coto" and "Coto Online" can be merged into one.
 
 <!-- Screenshot (v1.0): docs/images/payees-light.png | docs/images/payees-dark.png -->
+
+### Tag what belongs together
+A trip mixes flights, a hotel and meals; a side job brings income and the expenses that come with it. Tags group transactions across categories: type a few letters in the form to pick one, or a new name to create it, and give each transaction as many as it needs. The Tags page shows how many transactions and how much money each tag adds up to, the transactions list filters by tag, and Analysis splits your spending by tag too. Tags can be renamed, recolored, merged or deleted without losing a single transaction.
+
+<!-- Screenshot (v1.0): docs/images/tags-light.png | docs/images/tags-dark.png -->
+
+### Count refunds for what they are
+When a store gives your money back or a friend pays you their share, link that income to the expense it pays back. Nodus then counts it as less spending, in the category of the original expense and in the month the money came back, instead of as income, so your budgets, the dashboard and Analysis show what you really spent. The list marks both sides, and editing the expense shows how much of it was refunded.
+
+<!-- Screenshot (v1.0): docs/images/transaction-dialog-refund-light.png | docs/images/transaction-dialog-refund-dark.png -->
 
 ### Never forget what you pay every month
 Enter rent, utilities or subscriptions once, and Nodus shows what they add up to per month, what is due soon and what is overdue. Paying one takes two clicks: the expense is recorded and the charge moves on to its next date.
@@ -67,7 +77,7 @@ Set a monthly budget for the categories you want to watch and see how much you h
 <!-- Screenshot (v1.0): docs/images/budgets-light.png | docs/images/budgets-dark.png -->
 
 ### Look back over the year
-The Analysis page takes the long view, the last twelve months by default. Trends shows your spending, income or savings month by month, stacked by category against your monthly average, along with where the money went by category and by payee. Cash flow puts income, expenses, savings and your savings rate side by side with the previous period, and Net worth follows how what you own grew, month end by month end, in pesos or in dollars. Click any bar or row to see the transactions behind it.
+The Analysis page takes the long view, the last twelve months by default. Trends shows your spending, income or savings month by month, stacked by category against your monthly average, along with where the money went by category, by payee and by tag. Cash flow puts income, expenses, savings and your savings rate side by side with the previous period, and Net worth follows how what you own grew, month end by month end, in pesos or in dollars. Click any bar or row to see the transactions behind it.
 
 <!-- Screenshot (v1.0): docs/images/analysis-trends-light.png | docs/images/analysis-trends-dark.png -->
 
@@ -92,9 +102,8 @@ To update, install the new version over the old one: your data is kept. Nodus le
 
 ## Roadmap
 
-Nodus grows in small, stable releases. **v0.8** already covers accounts, transactions, dollar exchange rates, the dashboard, recurring charges, budgets, payees, analysis, backups and export. Coming next:
+Nodus grows in small, stable releases. **v0.9** already covers accounts, transactions, dollar exchange rates, the dashboard, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. Coming next:
 
-- **Refunds and tags:** expenses that get paid back, and tags such as "Vacation 2026".
 - **Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
 
 ## Technology

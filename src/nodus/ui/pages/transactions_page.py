@@ -29,7 +29,7 @@ from nodus.ui.widgets.selectors import (
     TagComboBox,
 )
 from nodus.ui.widgets.table import record_table
-from nodus.ui.widgets.transaction_table import DESCRIPTION, TransactionTableModel
+from nodus.ui.widgets.transaction_table import DESCRIPTION, TAGS, TransactionTableModel
 
 # Type filter: label -> (transaction type, is_transfer, refund_linked) criteria.
 TYPE_FILTERS = {
@@ -170,7 +170,10 @@ class TransactionsPage(Page):
         """Lists the movements matching the current filters."""
         criteria = self.current_filter()
         transactions = self._services.transactions.list_transactions(criteria)
-        self.model.set_items(self._builder.build(transactions))
+        items = self._builder.build(transactions)
+        self.model.set_items(items)
+        # Whoever does not use tags keeps the room for the description.
+        self.table.setColumnHidden(TAGS, not any(item.tags for item in items))
         has_rows = self.model.rowCount() > 0
         self.totals_label.setText(
             totals_text(self.model.rowCount(), self._services.dashboard.totals(criteria))

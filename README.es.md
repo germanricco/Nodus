@@ -35,7 +35,7 @@ Nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta tiene su
 ## Qué puedes hacer
 
 ### Ver tu situación de un vistazo
-El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año) y un clic en una categoría te lleva a sus movimientos.
+El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría te lleva a sus movimientos.
 
 <!-- Captura (v1.0): docs/images/dashboard-light.png | docs/images/dashboard-dark.png -->
 
@@ -45,7 +45,7 @@ Registras cada lugar donde tienes dinero, sea el banco, el efectivo, los ahorros
 <!-- Captura (v1.0): docs/images/accounts-light.png | docs/images/accounts-dark.png -->
 
 ### Registrar y encontrar tus movimientos
-Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la última cuenta que usaste. La lista se filtra por período, cuenta, categoría, beneficiario, tipo o texto, y lo que ves se exporta a un archivo que se abre en Excel.
+Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la última cuenta que usaste. La lista se filtra por período, cuenta, categoría, beneficiario, etiqueta, tipo o texto, suma al pie los movimientos que muestra, y lo que ves se exporta a un archivo que se abre en Excel.
 
 <!-- Captura (v1.0): docs/images/transactions-light.png | docs/images/transactions-dark.png -->
 
@@ -53,6 +53,16 @@ Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la �
 Cada gasto o ingreso puede decir a quién le pagaste o quién te pagó: el supermercado, la empresa de luz, tu empleador. Escribes unas letras para elegirlo, o un nombre nuevo para sumarlo, y Nodus completa la categoría que sueles usar con él. La página Beneficiarios muestra cuántos movimientos y cuánto dinero fue o vino de cada uno, así que una pregunta como «¿cuánto gasto en el supermercado?» se responde con un clic. Los repetidos, como «Coto» y «Coto Online», se pueden unir en uno.
 
 <!-- Captura (v1.0): docs/images/payees-light.png | docs/images/payees-dark.png -->
+
+### Agrupar lo que va junto
+Un viaje mezcla pasajes, hotel y comidas; un trabajo aparte trae ingresos y los gastos que lo acompañan. Las etiquetas agrupan movimientos de distintas categorías: escribes unas letras en el formulario para elegir una, o un nombre nuevo para crearla, y cada movimiento lleva las que necesite. La página Etiquetas muestra cuántos movimientos y cuánto dinero suma cada una, la lista de movimientos se filtra por etiqueta y Análisis también reparte tus gastos por etiqueta. Puedes renombrarlas, cambiarles el color, unirlas o borrarlas sin perder ningún movimiento.
+
+<!-- Captura (v1.0): docs/images/tags-light.png | docs/images/tags-dark.png -->
+
+### Contar los reembolsos como lo que son
+Cuando un comercio te devuelve dinero o un amigo te paga su parte, vinculas ese ingreso con el gasto que devuelve. Nodus lo cuenta entonces como un gasto menor, en la categoría del gasto original y en el mes en que volvió el dinero, en lugar de como un ingreso, así que tus presupuestos, el dashboard y Análisis muestran lo que realmente gastaste. La lista marca los dos lados y, al editar el gasto, ves cuánto te devolvieron.
+
+<!-- Captura (v1.0): docs/images/transaction-dialog-refund-light.png | docs/images/transaction-dialog-refund-dark.png -->
 
 ### No olvidarte de lo que pagas todos los meses
 Anotas el alquiler, los servicios o las suscripciones una sola vez, y Nodus te muestra cuánto suman por mes, qué vence pronto y qué está atrasado. Pagar uno toma dos clics: el gasto queda registrado y el cargo pasa a su próxima fecha.
@@ -65,7 +75,7 @@ Defines un presupuesto mensual para las categorías que quieres cuidar y ves cu�
 <!-- Captura (v1.0): docs/images/budgets-light.png | docs/images/budgets-dark.png -->
 
 ### Mirar el año completo
-La página Análisis toma distancia: por defecto, los últimos doce meses. Tendencias muestra tus gastos, ingresos o ahorro mes a mes, apilados por categoría y frente a tu promedio mensual, junto con en qué se fue el dinero por categoría y por beneficiario. Flujo de caja pone lado a lado ingresos, gastos, ahorro y tasa de ahorro con los del período anterior, y Patrimonio sigue cómo creció lo que tienes, fin de mes tras fin de mes, en pesos o en dólares. Un clic en cualquier barra o fila te lleva a los movimientos que la forman.
+La página Análisis toma distancia: por defecto, los últimos doce meses. Tendencias muestra tus gastos, ingresos o ahorro mes a mes, apilados por categoría y frente a tu promedio mensual, junto con en qué se fue el dinero por categoría, por beneficiario y por etiqueta. Flujo de caja pone lado a lado ingresos, gastos, ahorro y tasa de ahorro con los del período anterior, y Patrimonio sigue cómo creció lo que tienes, fin de mes tras fin de mes, en pesos o en dólares. Un clic en cualquier barra o fila te lleva a los movimientos que la forman.
 
 <!-- Captura (v1.0): docs/images/analysis-trends-light.png | docs/images/analysis-trends-dark.png -->
 
@@ -90,9 +100,8 @@ Para actualizar, instala la versión nueva encima de la anterior: tus datos se c
 
 ## Hoja de ruta
 
-Nodus crece por versiones pequeñas y estables. La **v0.8** ya incluye cuentas, transacciones, cotización del dólar, dashboard, cargos recurrentes, presupuestos, beneficiarios, análisis, copias de seguridad y exportación. Lo que viene:
+Nodus crece por versiones pequeñas y estables. La **v0.9** ya incluye cuentas, transacciones, cotización del dólar, dashboard, cargos recurrentes, presupuestos, beneficiarios, etiquetas, reembolsos, análisis, copias de seguridad y exportación. Lo que viene:
 
-- **Reembolsos y etiquetas:** gastos que te devuelven y etiquetas como «Vacaciones 2026».
 - **Metas y grupos de cuentas:** ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.
 
 ## Tecnología

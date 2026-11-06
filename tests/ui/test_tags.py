@@ -158,3 +158,17 @@ def test_totals_text_without_income_or_expenses(services):
     totals = services.dashboard.totals(TransactionFilter())
 
     assert totals_text(2, totals) == "2 movimientos"
+
+
+def test_tags_column_shows_only_when_a_row_has_tags(services, window, pesos):
+    services.transactions.create(expense_draft(services, pesos.id, ars("10"), date.today()))
+    window.show_page(PageId.TRANSACTIONS)
+    transactions = window.page(PageId.TRANSACTIONS)
+    assert transactions.table.isColumnHidden(TAGS)
+
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("20"), date.today(), tag_names=("Viaje",))
+    )
+    transactions.reload()
+
+    assert not transactions.table.isColumnHidden(TAGS)
