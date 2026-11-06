@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, timedelta
+from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
 
@@ -70,8 +71,10 @@ def next_due(day: date, frequency: Frequency, anchor_day: int) -> date:
 class RecurringCharge:
     """An expense that repeats: rent, a service, a subscription.
 
-    Its currency is the one of the account it is paid from. ``anchor_day`` is the day of
-    the month it was set up for, which ``next_due_on`` returns to after short months.
+    Its currency is the account's, or dollars paid from a peso account, as a subscription
+    charged to a card. For the latter, ``last_paid_rate`` holds the pesos per dollar of
+    its last payment, card taxes included. ``anchor_day`` is the day of the month it was
+    set up for, which ``next_due_on`` returns to after short months.
     """
 
     id: int | None
@@ -84,6 +87,7 @@ class RecurringCharge:
     next_due_on: date
     is_active: bool = True
     note: str = ""
+    last_paid_rate: Decimal | None = None
 
     def __post_init__(self) -> None:
         if self.amount.cents <= 0:

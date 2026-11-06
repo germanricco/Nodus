@@ -5,22 +5,22 @@ from __future__ import annotations
 import dataclasses
 import sqlite3
 from datetime import date
+from decimal import Decimal
 
 from nodus.database.repositories.base import Repository
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.recurring_charge import Frequency, RecurringCharge
 
-# The currency comes from the charge's account.
-_SELECT = "SELECT r.*, a.currency FROM recurring_charges r JOIN accounts a ON a.id = r.account_id"
+_SELECT = "SELECT * FROM recurring_charges"
 
 
 class RecurringChargeRepository(Repository):
     def add(self, charge: RecurringCharge) -> RecurringCharge:
         charge_id = self._insert(
             "INSERT INTO recurring_charges (name, amount_cents, account_id, category_id,"
-            " frequency, anchor_day, next_due_on, is_active, note)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            " frequency, anchor_day, next_due_on, is_active, note, currency, last_paid_rate)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             self._values(charge),
         )
         return dataclasses.replace(charge, id=charge_id)
@@ -29,16 +29,16 @@ class RecurringChargeRepository(Repository):
         self._execute(
             "UPDATE recurring_charges SET name = ?, amount_cents = ?, account_id = ?,"
             " category_id = ?, frequency = ?, anchor_day = ?, next_due_on = ?, is_active = ?,"
-            " note = ? WHERE id = ?",
+            " note = ?, currency = ?, last_paid_rate = ? WHERE id = ?",
             (*self._values(charge), charge.id),
         )
 
     def get(self, charge_id: int) -> RecurringCharge | None:
-        row = self._fetch_one(f"{_SELECT} WHERE r.id = ?", (charge_id,))
+        row = self._fetch_one(f"{_SELECT} WHERE id = ?", (charge_id,))
         return self._from_row(row) if row else None
 
     def list(self) -> list[RecurringCharge]:
-        return [self._from_row(row) for row in self._fetch_all(f"{_SELECT} ORDER BY r.id")]
+        return [self._from_row(row) for row in self._fetch_all(f"{_SELECT} ORDER BY id")]
 
     def count_for_account(self, account_id: int) -> int:
         row = self._fetch_one(
@@ -62,6 +62,8 @@ class RecurringChargeRepository(Repository):
             charge.next_due_on.isoformat(),
             charge.is_active,
             charge.note,
+            charge.amount.currency.value,
+            None if charge.last_paid_rate is None else str(charge.last_paid_rate),
         )
 
     @staticmethod
@@ -77,4 +79,7 @@ class RecurringChargeRepository(Repository):
             next_due_on=date.fromisoformat(row["next_due_on"]),
             is_active=bool(row["is_active"]),
             note=row["note"],
+            last_paid_rate=(
+                None if row["last_paid_rate"] is None else Decimal(row["last_paid_rate"])
+            ),
         )
