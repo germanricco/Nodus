@@ -21,9 +21,9 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
           cache: pip
@@ -61,10 +61,11 @@ jobs:
 
       - name: Attach the installer to the run
         if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: Nodus-Setup
           path: ${{ steps.installer.outputs.path }}
+          # Uploads the .exe as is instead of inside a zip.
+          archive: false
 
       - name: Publish the release
         if: github.event_name == 'push'
