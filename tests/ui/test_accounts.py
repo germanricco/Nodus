@@ -8,13 +8,14 @@ from PySide6.QtWidgets import QLabel
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.ui.dialogs.account_dialog import AccountDialog
+from nodus.ui.navigation import PageId
 from nodus.ui.pages import accounts_page
 from nodus.ui.pages.accounts_page import AccountRow, AccountsPage
 
 
 @pytest.fixture
-def page(qtbot, services, event_bus) -> AccountsPage:
-    accounts_page = AccountsPage(services, event_bus)
+def page(qtbot, services, event_bus, theme_manager) -> AccountsPage:
+    accounts_page = AccountsPage(services, event_bus, theme_manager)
     qtbot.addWidget(accounts_page)
     accounts_page.refresh()
     return accounts_page
@@ -94,16 +95,34 @@ class TestAccountsPage:
         page.refresh()
 
         assert [row.account.name for row in rows(page)] == ["Ahorro", "Banco"]
-        shown = texts(page)
-        assert "$ 600.000,00" in shown
-        assert "US$ 600,00" in shown
-        assert f"US$ 1 = $ 1.000,00 · {TODAY:%d/%m}" in shown
+        card = page.net_worth_card
+        assert card.total_label.text() == "$ 600.000,00"
+        assert card.legends[Currency.ARS].amount.text() == "$ 100.000,00"
+        assert card.legends[Currency.USD].amount.text() == "US$ 500,00"
+        assert [card.legends[c].share.text() for c in Currency] == ["17 %", "83 %"]
+        assert card.rate_label.text() == f"US$ 1 = $ 1.000,00 · {TODAY:%d/%m}"
+
+        card.currency_input.set_index(1)
+
+        assert card.total_label.text() == "US$ 600,00"
+        assert services.settings.net_worth_currency() is Currency.USD
 
     def test_shows_missing_rate_instead_of_inventing_totals(self, page, pesos, dollars):
         page.refresh()
 
-        assert texts(page).count("Sin cotización") == 2
-        assert "Sin cotización: cárgala en Ajustes" in texts(page)
+        card = page.net_worth_card
+        assert card.missing_rate.isVisibleTo(page) and not card.total_label.isVisibleTo(page)
+        assert card.subtotal_labels[Currency.ARS].text() == "$ 100.000,00"
+        assert card.subtotal_labels[Currency.USD].text() == "US$ 500,00"
+        assert card.rate_label.text() == "Sin cotización"
+
+    def test_load_rate_leads_to_settings(self, qtbot, page, pesos, dollars):
+        page.refresh()
+
+        with qtbot.waitSignal(page.navigate_requested) as navigation:
+            page.net_worth_card.load_rate_button.click()
+
+        assert navigation.args == [PageId.SETTINGS]
 
     def test_archive_moves_account_to_archived_section(
         self, qtbot, services, event_bus, page, pesos, dollars

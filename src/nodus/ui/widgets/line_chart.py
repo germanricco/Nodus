@@ -188,9 +188,10 @@ class LineChart(AnimatedChart):
                 )
         painter.setPen(QColor(self._theme.text_muted))
         for index in self._axis_indexes():
-            x = self._x(index, plot)
+            # Centered under its point, but kept inside the widget at both ends.
+            left = min(max(self._x(index, plot) - 40, 0), self.width() - 80)
             painter.drawText(
-                QRectF(x - 40, plot.bottom() + 4, 80, self.BOTTOM - 4),
+                QRectF(left, plot.bottom() + 4, 80, self.BOTTOM - 4),
                 Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
                 self._format_day(self._points[index].day),
             )

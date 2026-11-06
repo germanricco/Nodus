@@ -14,7 +14,9 @@ from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS
+from nodus.ui.navigation import PageId
 from nodus.ui.pages.page import Page
+from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.money_label import MoneyLabel
 from nodus.ui.widgets.net_worth_card import NetWorthCard
@@ -74,7 +76,11 @@ class AccountRow(QWidget):
 class AccountsPage(Page):
     """Net worth in pesos and dollars, then active and archived accounts."""
 
-    def __init__(self, services: Services, event_bus: EventBus) -> None:
+    navigate_requested = Signal(object)  # PageId
+
+    def __init__(
+        self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
+    ) -> None:
         super().__init__("Cuentas")
         self._services = services
         self._event_bus = event_bus
@@ -82,9 +88,19 @@ class AccountsPage(Page):
         self.create_button.clicked.connect(lambda: self.open_account_dialog())
 
         container = QWidget()
-        self._sections = QVBoxLayout(container)
-        self._sections.setContentsMargins(0, 0, 0, 0)
+        page_layout = QVBoxLayout(container)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+        page_layout.setSpacing(16)
+        # The net worth card lives as long as the page, so its figures count to new values.
+        self.net_worth_card = NetWorthCard(services, theme_manager, compact=True)
+        self.net_worth_card.rate_requested.connect(
+            lambda: self.navigate_requested.emit(PageId.SETTINGS)
+        )
+        page_layout.addWidget(self.net_worth_card)
+        self._sections = QVBoxLayout()
         self._sections.setSpacing(16)
+        page_layout.addLayout(self._sections)
+        page_layout.addStretch()
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(container)
@@ -100,18 +116,17 @@ class AccountsPage(Page):
     def refresh(self) -> None:
         clear_layout(self._sections)
         accounts = self._services.accounts.list_accounts(include_archived=True)
+        self.net_worth_card.setVisible(bool(accounts))
         if not accounts:
             self._sections.addWidget(self._empty_state())
-            self._sections.addStretch()
             return
         balances = self._services.accounts.balances()
         active = [a for a in accounts if not a.is_archived]
         archived = [a for a in accounts if a.is_archived]
-        self._sections.addWidget(NetWorthCard(self._services, date.today()))
+        self.net_worth_card.show_day(date.today())
         self._sections.addWidget(self._accounts_card("Cuentas activas", active, balances))
         if archived:
             self._sections.addWidget(self._accounts_card("Archivadas", archived, balances))
-        self._sections.addStretch()
 
     def open_account_dialog(self, account: Account | None = None) -> None:
         AccountDialog(self._services, self._event_bus, account, parent=self.window()).exec()

@@ -187,6 +187,10 @@ class TransactionsPage(Page):
 
     def refresh(self) -> None:
         """Reloads the filter choices (keeping the selection) and then the movements."""
+        self._load_filter_choices()
+        self.reload()
+
+    def _load_filter_choices(self) -> None:
         self.account_filter.set_accounts(
             self._services.accounts.list_accounts(include_archived=True), "Todas las cuentas"
         )
@@ -198,7 +202,6 @@ class TransactionsPage(Page):
             ],
             "Todas las categorías",
         )
-        self.reload()
 
     def reload(self) -> None:
         """Lists the movements matching the current filters."""
@@ -220,6 +223,7 @@ class TransactionsPage(Page):
 
         Does not reload: the caller shows the page, which refreshes it.
         """
+        self._load_filter_choices()
         self._reset_filters()
         self.period_selector.blockSignals(True)
         self.period_selector.set_period(period)

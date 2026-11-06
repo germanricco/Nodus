@@ -33,6 +33,7 @@ from nodus.ui.main_window import MainWindow  # noqa: E402
 from nodus.ui.navigation import PageId  # noqa: E402
 from nodus.ui.theme.theme import ThemeMode  # noqa: E402
 from nodus.ui.theme.theme_manager import ThemeManager  # noqa: E402
+from nodus.ui.widgets import chart_base  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).parent))
 from demo_data import load_demo_data  # noqa: E402
@@ -65,6 +66,10 @@ def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) ->
     return dialog
 
 
+# Tall enough for every dashboard card at once.
+FULL_DASHBOARD_HEIGHT = 1180
+
+
 def render_pages(app: QApplication, services: Services, args: argparse.Namespace) -> None:
     if args.demo:
         load_demo_data(services, args.today)
@@ -72,6 +77,7 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
     event_bus = EventBus()
     window = MainWindow(services, event_bus, theme_manager)
     window.show()
+    height = window.height()
     for mode in (ThemeMode.LIGHT, ThemeMode.DARK):
         theme_manager.set_mode(mode)
         for page_id in PageId:
@@ -84,6 +90,12 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
             app.processEvents()
             save(dialog, args.out / f"{name}-{mode.value}.png")
             dialog.close()
+        # The whole dashboard, below the fold too.
+        window.resize(window.width(), FULL_DASHBOARD_HEIGHT)
+        window.show_page(PageId.DASHBOARD)
+        app.processEvents()
+        save(window, args.out / f"dashboard-full-{mode.value}.png")
+        window.resize(window.width(), height)
         # The new version notice, over the dashboard.
         window.show_page(PageId.DASHBOARD)
         window.update_banner.show_release(Release("0.3.0", ""))
@@ -106,6 +118,8 @@ def main() -> int:
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
+    # Charts are captured in their final state, not halfway through their transitions.
+    chart_base.DURATION_MS = 0
     app = QApplication(sys.argv)
     with tempfile.TemporaryDirectory() as data_dir:
         database = Database.open(Path(data_dir) / "nodus.db")

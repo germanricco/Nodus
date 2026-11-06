@@ -7,6 +7,7 @@ from pathlib import Path
 from nodus.config.paths import visible_path
 from nodus.database.database import Database
 from nodus.database.repositories.settings_repository import SettingsRepository
+from nodus.models.currency import Currency
 
 
 class SettingsService:
@@ -20,6 +21,7 @@ class SettingsService:
     CHECK_UPDATES_KEY = "check_updates"
     RATE_SOURCE_KEY = "rate_source"
     LAST_ACCOUNT_KEY = "last_account_id"
+    NET_WORTH_CURRENCY_KEY = "net_worth_currency"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -54,6 +56,15 @@ class SettingsService:
     def set_last_account_id(self, account_id: int) -> None:
         with self._database.transaction():
             self._settings.set(self.LAST_ACCOUNT_KEY, str(account_id))
+
+    def net_worth_currency(self) -> Currency:
+        """The currency the dashboard shows the net worth in; pesos until chosen."""
+        value = self._settings.get(self.NET_WORTH_CURRENCY_KEY)
+        return Currency(value) if value in {c.value for c in Currency} else Currency.ARS
+
+    def set_net_worth_currency(self, currency: Currency) -> None:
+        with self._database.transaction():
+            self._settings.set(self.NET_WORTH_CURRENCY_KEY, currency.value)
 
     def rate_source(self) -> str | None:
         """Where the dollar rate comes from ("manual", "bolsa"…), or None if never chosen."""

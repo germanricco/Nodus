@@ -96,6 +96,11 @@ QMainWindow, #ContentArea, #PageStack {
     font-weight: 600;
 }
 
+#StatValueHero {
+    font-size: 28pt;
+    font-weight: 700;
+}
+
 #Badge {
     background: $accent_soft;
     color: $accent;
@@ -316,7 +321,7 @@ QPushButton#PeriodButton {
     background: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
-    padding: 4px 28px 4px 12px;
+    padding: 4px 24px 4px 12px;
     font-weight: 600;
     min-width: 130px;
 }
@@ -330,7 +335,7 @@ QPushButton#PeriodButton::menu-indicator {
     image: url($icons/chevron-down.svg);
     subcontrol-origin: padding;
     subcontrol-position: center right;
-    right: 8px;
+    right: 6px;
     width: 14px;
     height: 14px;
 }
@@ -485,4 +490,19 @@ QLabel#ChangeBadge[tone="good"] {
 QLabel#ChangeBadge[tone="bad"] {
     background: $expense_soft;
     color: $expense;
+}
+
+/* Dashboard: category rows that light up under the mouse, and boxed figures */
+
+QFrame#CategoryLine {
+    border-radius: 6px;
+}
+
+QFrame#CategoryLine[highlighted="true"] {
+    background: $hover;
+}
+
+QFrame#FigureTile {
+    border: 1px solid $border;
+    border-radius: 10px;
 }

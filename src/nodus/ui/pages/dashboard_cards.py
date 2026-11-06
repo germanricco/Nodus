@@ -1,0 +1,404 @@
+"""The dashboard cards. Each is built once and updated in place, so its charts and figures
+can move from what they showed to the new data instead of being rebuilt."""
+
+from __future__ import annotations
+
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QEnterEvent, QMouseEvent
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+
+from nodus.database.repositories.transaction_repository import TransactionFilter
+from nodus.models.money import Money
+from nodus.models.period import Period, format_month
+from nodus.services.container import Services
+from nodus.services.dashboard_service import CategoryTotal, Comparison, MonthFlow, PeriodSummary
+from nodus.ui.formatting import format_date
+from nodus.ui.theme.theme import Theme
+from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
+from nodus.ui.widgets.bar_chart import Bar, BarChart
+from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.change_badge import ChangeBadge
+from nodus.ui.widgets.charts import DonutChart, ProportionBar, Segment
+from nodus.ui.widgets.color import ColorDot
+from nodus.ui.widgets.elided_label import ElidedLabel
+from nodus.ui.widgets.money_label import AnimatedMoneyLabel
+from nodus.ui.widgets.style import clear_layout, set_style_property
+
+LATEST_COUNT = 6
+# Categories listed beside the donut; the rest are added up as one line.
+LEGEND_COUNT = 6
+REST_LABEL = "Resto"
+COMPARISON_COUNT = 6
+
+
+def muted_label(text: str) -> QLabel:
+    label = QLabel(text)
+    set_style_property(label, "muted", True)
+    return label
+
+
+def percent(part: Money, whole: Money) -> str:
+    """Share of ``whole``, rounded to a whole percent; "—" when ``whole`` is not positive."""
+    if whole.cents <= 0:
+        return "—"
+    return f"{round(100 * part.cents / whole.cents)} %"
+
+
+def card_header(card: Card, title: str) -> QHBoxLayout:
+    """A title on the left with room on the right, e.g. for a ``ChangeBadge``."""
+    header = QHBoxLayout()
+    header.setSpacing(8)
+    label = QLabel(title.upper())
+    label.setObjectName("CardTitle")
+    header.addWidget(label)
+    header.addStretch()
+    card.body.addLayout(header)
+    return header
+
+
+class CategoryLine(QFrame):
+    """A row with a color dot and a category name, then any widgets on the right.
+
+    It lights up under the mouse (or when ``set_highlighted`` says so) and can be clicked,
+    so the donut legend and the comparison list lead to the category's transactions.
+    """
+
+    hovered = Signal(bool)
+    clicked = Signal()
+
+    def __init__(self, color: str, name: str, detail: str = "", clickable: bool = True) -> None:
+        super().__init__()
+        self.setObjectName("CategoryLine")
+        self.name = name
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(6, 3, 6, 3)
+        layout.setSpacing(8)
+        layout.addWidget(ColorDot(color, size=10))
+        texts = QVBoxLayout()
+        texts.setSpacing(0)
+        texts.addWidget(ElidedLabel(name))
+        if detail:
+            detail_label = ElidedLabel(detail)
+            set_style_property(detail_label, "muted", True)
+            texts.addWidget(detail_label)
+        layout.addLayout(texts, stretch=1)
+        self._layout = layout
+        self._clickable = clickable
+        if clickable:
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+            self.setToolTip("Ver sus transacciones")
+
+    def add(self, widget: QWidget) -> QWidget:
+        self._layout.addWidget(widget)
+        return widget
+
+    def set_highlighted(self, highlighted: bool) -> None:
+        set_style_property(self, "highlighted", highlighted)
+
+    def enterEvent(self, event: QEnterEvent) -> None:  # noqa: N802
+        super().enterEvent(event)
+        self.hovered.emit(True)
+
+    def leaveEvent(self, event) -> None:  # noqa: N802
+        super().leaveEvent(event)
+        self.hovered.emit(False)
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        super().mouseReleaseEvent(event)
+        if self._clickable and event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+
+
+class FigureTile(QFrame):
+    """A boxed caption and value, like the Income / Expenses / Saved boxes of the reference."""
+
+    def __init__(self, caption: str, value: QLabel) -> None:
+        super().__init__()
+        self.setObjectName("FigureTile")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setSpacing(2)
+        caption_label = QLabel(caption.upper())
+        caption_label.setObjectName("StatCaption")
+        value.setObjectName("RowTitle")
+        value.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.value = value
+        layout.addWidget(caption_label)
+        layout.addWidget(value)
+
+
+class LatestTransactionRow(QWidget):
+    """A movement in the latest transactions card: what, where, how much and when."""
+
+    def __init__(self, item: TransactionListItem, transfer_color: str) -> None:
+        super().__init__()
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 4, 0, 4)
+        layout.setSpacing(10)
+        layout.addWidget(ColorDot(item.category_color or transfer_color, size=10))
+        texts = QVBoxLayout()
+        texts.setSpacing(0)
+        title = ElidedLabel(item.description)
+        title.setObjectName("RowTitle")
+        subtitle = ElidedLabel(f"{item.category_name} · {item.account_text}")
+        set_style_property(subtitle, "muted", True)
+        texts.addWidget(title)
+        texts.addWidget(subtitle)
+        layout.addLayout(texts, stretch=1)
+        figures = QVBoxLayout()
+        figures.setSpacing(0)
+        amount = QLabel(item.amount_text)
+        amount.setAlignment(Qt.AlignmentFlag.AlignRight)
+        set_style_property(amount, "tone", item.tone)
+        day = muted_label(format_date(item.occurred_on))
+        day.setAlignment(Qt.AlignmentFlag.AlignRight)
+        figures.addWidget(amount)
+        figures.addWidget(day)
+        layout.addLayout(figures)
+
+
+class LatestTransactionsCard(Card):
+    """The period's most recent movements and a button to see them all."""
+
+    see_all_requested = Signal()
+
+    def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
+        super().__init__("Últimas transacciones")
+        self._services = services
+        self._theme_manager = theme_manager
+        self._builder = TransactionListBuilder(services)
+        self._rows = QVBoxLayout()
+        self._rows.setSpacing(0)
+        self.body.addLayout(self._rows)
+        self.body.addStretch()
+        self.see_all_button = QPushButton("Ver todas")
+        self.see_all_button.setObjectName("SecondaryButton")
+        self.see_all_button.clicked.connect(self.see_all_requested)
+        self.body.addWidget(self.see_all_button)
+
+    def show_period(self, period: Period) -> None:
+        clear_layout(self._rows)
+        # Extra rows leave room for transfers, whose two legs become one item.
+        transactions = self._services.transactions.list_transactions(
+            TransactionFilter(start=period.start, end=period.end, limit=LATEST_COUNT * 2)
+        )
+        items = self._builder.build(transactions)[:LATEST_COUNT]
+        if not items:
+            self._rows.addWidget(muted_label("Sin movimientos en el período"))
+        transfer_color = self._theme_manager.theme.text_muted
+        for item in items:
+            self._rows.addWidget(LatestTransactionRow(item, transfer_color))
+
+
+class CashFlowCard(Card):
+    """What was saved in the period, against the previous one, and month by month."""
+
+    def __init__(self, theme_manager: ThemeManager) -> None:
+        super().__init__()
+        theme = theme_manager.theme
+        header = card_header(self, "Flujo de caja")
+        self.change_badge = ChangeBadge()
+        self.change_badge.setToolTip("Ahorro frente al período anterior")
+        header.addWidget(self.change_badge)
+        self.savings_label = AnimatedMoneyLabel(highlight_positive=True)
+        self.savings_label.setObjectName("StatValueLarge")
+        self.savings_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.caption_label = muted_label("")
+        self.body.addWidget(self.savings_label)
+        self.body.addWidget(self.caption_label)
+        self.body.addSpacing(6)
+        self.proportion = ProportionBar(theme)
+        self.body.addWidget(self.proportion)
+        self.body.addSpacing(6)
+
+        self.income_label = AnimatedMoneyLabel(highlight_positive=True)
+        self.expenses_label = AnimatedMoneyLabel()
+        self.saved_label = QLabel()
+        tiles = QHBoxLayout()
+        tiles.setSpacing(8)
+        for caption, value in (
+            ("Ingresos", self.income_label),
+            ("Gastos", self.expenses_label),
+            ("Ahorrado", self.saved_label),
+        ):
+            tiles.addWidget(FigureTile(caption, value), stretch=1)
+        self.body.addLayout(tiles)
+
+        self.unconverted_label = muted_label("")
+        self.unconverted_label.setWordWrap(True)
+        self.body.addWidget(self.unconverted_label)
+        trend_title = QLabel("MES A MES")
+        trend_title.setObjectName("StatCaption")
+        self.body.addSpacing(6)
+        self.body.addWidget(trend_title)
+        self.chart = BarChart(theme)
+        self.body.addWidget(self.chart, stretch=1)
+        self._theme = theme
+        theme_manager.theme_changed.connect(self._set_theme)
+
+    def show_data(self, comparison: Comparison, flow: list[MonthFlow]) -> None:
+        summary = comparison.current
+        self.savings_label.set_money(summary.savings)
+        self.caption_label.setText(f"Ahorro · {summary.period.label()}")
+        self.change_badge.set_change(comparison.savings_change)
+        self.proportion.set_segments(
+            [
+                Segment(self._theme.income, summary.income.cents, "income"),
+                Segment(self._theme.expense, summary.expenses.cents, "expenses"),
+            ]
+        )
+        self.income_label.set_money(summary.income)
+        self.expenses_label.set_money(-summary.expenses)
+        self.saved_label.setText(percent(summary.savings, summary.income))
+        self.unconverted_label.setText(
+            f"{summary.unconverted} movimiento(s) en dólares sin cotización no se incluyen."
+            if summary.unconverted
+            else ""
+        )
+        self.unconverted_label.setVisible(bool(summary.unconverted))
+        single_month = len(summary.period.months()) == 1
+        self.chart.set_bars(
+            [
+                Bar(
+                    month.month.short_name,
+                    month.savings.cents,
+                    format_month(month.month),
+                    (
+                        f"Ingresos {month.income.format()}",
+                        f"Gastos {month.expenses.format()}",
+                        f"Ahorro {month.savings.format()}",
+                    ),
+                    selected=single_month and month.month == summary.period.first_month,
+                )
+                for month in flow
+            ]
+        )
+
+    def _set_theme(self, theme: Theme) -> None:
+        self._theme = theme
+        self.proportion.set_theme(theme)
+        self.chart.set_theme(theme)
+
+
+class ExpensesCard(Card):
+    """Where the money went: an interactive ring with its legend.
+
+    Hovering a slice or a legend row highlights both; clicking either emits
+    ``category_clicked`` with the category's id.
+    """
+
+    category_clicked = Signal(int)
+
+    def __init__(self, theme_manager: ThemeManager) -> None:
+        super().__init__()
+        self._theme_manager = theme_manager
+        header = card_header(self, "Gastos por categoría")
+        self.change_badge = ChangeBadge(higher_is_better=False)
+        self.change_badge.setToolTip("Gastos frente al período anterior")
+        header.addWidget(self.change_badge)
+        self.donut = DonutChart(theme_manager.theme)
+        self.donut.segment_hovered.connect(self._highlight_row)
+        self.donut.segment_clicked.connect(self._click_item)
+        self.body.addWidget(self.donut, stretch=1)
+        self._legend = QVBoxLayout()
+        self._legend.setSpacing(0)
+        self.body.addLayout(self._legend)
+        self.rows: list[CategoryLine] = []
+        self._category_ids: list[int | None] = []
+        theme_manager.theme_changed.connect(self.donut.set_theme)
+
+    def show_data(self, summary: PeriodSummary, change: float | None) -> None:
+        self.change_badge.set_change(change)
+        items = self._legend_items(summary.expenses_by_category)
+        self._category_ids = [category_id for category_id, *_rest in items]
+        self.donut.set_data(
+            [
+                Segment(
+                    color,
+                    total.cents,
+                    str(category_id),
+                    name,
+                    total.format(),
+                    percent(total, summary.expenses),
+                )
+                for category_id, name, color, total in items
+            ],
+            "Total" if items else "Sin gastos",
+            summary.expenses if items else None,
+            "en el período",
+        )
+        clear_layout(self._legend)
+        self.rows = []
+        for index, (category_id, name, color, total) in enumerate(items):
+            row = CategoryLine(color, name, clickable=category_id is not None)
+            row.add(muted_label(percent(total, summary.expenses)))
+            amount = QLabel(total.format())
+            amount.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            row.add(amount)
+            row.hovered.connect(lambda on, i=index: self._hover_row(i, on))
+            row.clicked.connect(lambda i=index: self._click_item(i))
+            self._legend.addWidget(row)
+            self.rows.append(row)
+
+    def _legend_items(
+        self, totals: list[CategoryTotal]
+    ) -> list[tuple[int | None, str, str, Money]]:
+        """(category id, name, color, total) for the largest categories, the rest added up
+        as one item without an id."""
+        items: list[tuple[int | None, str, str, Money]] = [
+            (t.category.id, t.category.name, t.category.color, t.total)
+            for t in totals[:LEGEND_COUNT]
+        ]
+        rest = totals[LEGEND_COUNT:]
+        if rest:
+            rest_total = sum((t.total for t in rest[1:]), rest[0].total)
+            items.append((None, REST_LABEL, self._theme_manager.theme.text_muted, rest_total))
+        return items
+
+    def _hover_row(self, index: int, on: bool) -> None:
+        self.donut.set_highlight(index if on else None)
+        self._highlight_row(index if on else -1)
+
+    def _highlight_row(self, index: int) -> None:
+        for i, row in enumerate(self.rows):
+            row.set_highlighted(i == index)
+
+    def _click_item(self, index: int) -> None:
+        category_id = self._category_ids[index] if index < len(self._category_ids) else None
+        if category_id is not None:
+            self.category_clicked.emit(category_id)
+
+
+class ComparisonCard(Card):
+    """The categories with the most spending, each against the previous period."""
+
+    category_clicked = Signal(int)
+
+    def __init__(self) -> None:
+        super().__init__()
+        card_header(self, "Frente al período anterior")
+        self._rows = QVBoxLayout()
+        self._rows.setSpacing(2)
+        self.body.addLayout(self._rows)
+        self.body.addStretch()
+        self.rows: list[CategoryLine] = []
+
+    def show_data(self, comparison: Comparison) -> None:
+        clear_layout(self._rows)
+        self.rows = []
+        changes = comparison.categories[:COMPARISON_COUNT]
+        if not changes:
+            self._rows.addWidget(muted_label("Sin gastos en el período"))
+        for change in changes:
+            row = CategoryLine(change.category.color, change.category.name, change.current.format())
+            badge = ChangeBadge(higher_is_better=False, none_text="Nueva")
+            badge.set_change(change.change)
+            badge.setToolTip(f"Período anterior: {change.previous.format()}")
+            badge.setMinimumWidth(64)
+            badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            row.add(badge)
+            row.clicked.connect(lambda c=change.category.id: self.category_clicked.emit(c))
+            row.hovered.connect(lambda on, r=row: r.set_highlighted(on))
+            self._rows.addWidget(row)
+            self.rows.append(row)

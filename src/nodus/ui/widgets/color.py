@@ -32,7 +32,10 @@ class ColorDot(QLabel):
     def __init__(self, color: str, size: int = 12, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setFixedSize(size, size)
-        self.setStyleSheet(f"background: {color}; border-radius: {size // 2}px;")
+        self.set_color(color)
+
+    def set_color(self, color: str) -> None:
+        self.setStyleSheet(f"background: {color}; border-radius: {self.width() // 2}px;")
 
 
 class ColorPicker(QWidget):

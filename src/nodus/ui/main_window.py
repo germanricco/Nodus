@@ -51,10 +51,12 @@ class MainWindow(QMainWindow):
         self._stack.setObjectName("PageStack")
         dashboard = DashboardPage(services, event_bus, theme_manager)
         dashboard.navigate_requested.connect(self.show_page)
+        accounts = AccountsPage(services, event_bus, theme_manager)
+        accounts.navigate_requested.connect(self.show_page)
         dashboard.transactions_requested.connect(self.show_transactions)
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
-            PageId.ACCOUNTS: AccountsPage(services, event_bus),
+            PageId.ACCOUNTS: accounts,
             PageId.TRANSACTIONS: TransactionsPage(services, event_bus, theme_manager),
             PageId.CATEGORIES: CategoriesPage(services, event_bus),
             PageId.SETTINGS: SettingsPage(services, event_bus, theme_manager),
