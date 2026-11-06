@@ -27,7 +27,8 @@ class TransactionDraft:
     """What the user fills in for an income or an expense.
 
     ``payee_name`` is the name as typed: saving finds the payee with that name, or creates
-    it. An empty name leaves the transaction without a payee.
+    it. An empty name leaves the transaction without a payee. ``refund_of_id`` makes an
+    income the refund of that expense; an expense ignores it.
     """
 
     account_id: int
@@ -37,6 +38,21 @@ class TransactionDraft:
     category_id: int
     note: str = ""
     payee_name: str = ""
+    refund_of_id: int | None = None
+
+
+@dataclass(frozen=True)
+class RefundSummary:
+    """How much of an expense has been paid back. ``refunded`` adds the refunds in the
+    expense's currency; refunds in another currency are listed but have no cap."""
+
+    expense: Transaction
+    refunds: list[Transaction]
+    refunded: Money
+
+    @property
+    def remaining(self) -> Money:
+        return self.expense.amount - self.refunded
 
 
 @dataclass(frozen=True)
@@ -88,6 +104,9 @@ class TransactionService:
             raise ValidationError("Las transferencias se editan como transferencia.")
         transaction = self._build_transaction(transaction_id, draft)
         with self._database.transaction():
+            if transaction.type is TransactionType.INCOME:
+                # An expense turned into income can no longer be refunded.
+                self._transactions.unlink_refunds_of(transaction_id)
             self._transactions.update(self._with_payee(transaction, draft.payee_name))
 
     def delete(self, transaction_id: int) -> None:
@@ -98,6 +117,19 @@ class TransactionService:
                 self._transactions.delete_transfer(transaction.transfer_id)
             else:
                 self._transactions.delete(transaction_id)
+
+    def refund_summary(self, expense_id: int, ignore_id: int | None = None) -> RefundSummary:
+        """What has been refunded of ``expense_id``, leaving out ``ignore_id`` (the refund
+        being edited, so its own amount does not count against it)."""
+        expense = self.get(expense_id)
+        refunds = [
+            refund
+            for refund in self._transactions.list_refunds_of(expense_id)
+            if refund.id != ignore_id
+        ]
+        same_currency = [r.amount for r in refunds if r.amount.currency is expense.amount.currency]
+        refunded = sum(same_currency, Money.zero(expense.amount.currency))
+        return RefundSummary(expense, refunds, refunded)
 
     def get(self, transaction_id: int) -> Transaction:
         return require_found(self._transactions.get(transaction_id), "La transacción no existe.")
@@ -158,6 +190,12 @@ class TransactionService:
             raise ValidationError(
                 f"La categoría «{category.name}» no corresponde a este tipo de transacción."
             )
+        income = draft.type is TransactionType.INCOME
+        refund_of_id = draft.refund_of_id if income else None
+        if refund_of_id is not None:
+            self._require_refundable(refund_of_id, transaction_id, draft.amount)
+        if not income and transaction_id is not None:
+            self._require_covers_refunds(transaction_id, draft.amount)
         return Transaction(
             id=transaction_id,
             account_id=account.id,
@@ -166,7 +204,30 @@ class TransactionService:
             occurred_on=draft.occurred_on,
             category_id=category.id,
             note=draft.note.strip(),
+            refund_of_id=refund_of_id,
         )
+
+    def _require_refundable(self, expense_id: int, refund_id: int | None, amount: Money) -> None:
+        """The refund of ``amount`` fits what is left of the expense, when both share a
+        currency."""
+        expense = self._transactions.get(expense_id)
+        if expense is None or expense.is_transfer or expense.type is not TransactionType.EXPENSE:
+            raise ValidationError("Un reembolso tiene que devolver un gasto.")
+        summary = self.refund_summary(expense_id, ignore_id=refund_id)
+        if amount.currency is expense.amount.currency and amount > summary.remaining:
+            raise ValidationError(
+                f"El reembolso supera lo que queda por reembolsar de ese gasto:"
+                f" {summary.remaining.format()}."
+            )
+
+    def _require_covers_refunds(self, expense_id: int, amount: Money) -> None:
+        """An expense cannot become smaller than what has already been refunded of it."""
+        refunded = self.refund_summary(expense_id).refunded
+        if amount.currency is refunded.currency and amount < refunded:
+            raise ValidationError(
+                f"Ya se reembolsaron {refunded.format()} de este gasto:"
+                " el monto no puede ser menor."
+            )
 
     def _build_transfer(
         self,

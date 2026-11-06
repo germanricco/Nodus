@@ -43,10 +43,17 @@ def savings_rate(income: Money, expenses: Money) -> float | None:
 
 @dataclass(frozen=True)
 class ConvertedMovement:
-    """An income or expense with its amount in pesos, converted at the rate of its day."""
+    """An income or expense with its amount in pesos, converted at the rate of its day.
+
+    ``kind`` and ``category_id`` are what the movement counts as. They are the
+    transaction's own, except for a refund: it counts as a negative expense in the
+    category of the expense it pays back, on the day the money came back.
+    """
 
     transaction: Transaction
     amount: Money
+    kind: TransactionType
+    category_id: int
 
 
 @dataclass(frozen=True)
@@ -63,9 +70,10 @@ def converted_movements(
     transactions: TransactionService, exchange_rates: ExchangeRateService, period: Period
 ) -> ConvertedMovements:
     """Income and expenses of ``period`` in pesos; transfers only move money between
-    accounts, so they are left out."""
+    accounts, so they are left out. Refunds are turned into less spending."""
     movements: list[ConvertedMovement] = []
     unconverted = 0
+    refunded_categories: dict[int, int] = {}
     for transaction in transactions.list_transactions(
         TransactionFilter(start=period.start, end=period.end, is_transfer=False)
     ):
@@ -74,9 +82,27 @@ def converted_movements(
         )
         if amount is None:
             unconverted += 1
+        elif transaction.refund_of_id is None:
+            movements.append(
+                ConvertedMovement(transaction, amount, transaction.type, transaction.category_id)
+            )
         else:
-            movements.append(ConvertedMovement(transaction, amount))
+            expense_id = transaction.refund_of_id
+            if expense_id not in refunded_categories:
+                refunded_categories[expense_id] = transactions.get(expense_id).category_id
+            movements.append(
+                ConvertedMovement(
+                    transaction, -amount, TransactionType.EXPENSE, refunded_categories[expense_id]
+                )
+            )
     return ConvertedMovements(movements, unconverted)
+
+
+def positive_totals(totals: dict[int, Money]) -> list[tuple[int, Money]]:
+    """The ``totals`` above zero, largest first. A category whose refunds outweigh its
+    spending in a period has nothing to show for it."""
+    kept = [(key, total) for key, total in totals.items() if total.cents > 0]
+    return sorted(kept, key=lambda item: item[1].cents, reverse=True)
 
 
 @dataclass(frozen=True)
@@ -162,7 +188,7 @@ def month_flows(movements: list[ConvertedMovement], months: list[Month]) -> list
     for movement in movements:
         month = Month.of(movement.transaction.occurred_on)
         if month in totals:
-            totals[month][movement.transaction.type] += movement.amount
+            totals[month][movement.kind] += movement.amount
     return [
         MonthFlow(
             month, totals[month][TransactionType.INCOME], totals[month][TransactionType.EXPENSE]
@@ -190,12 +216,11 @@ class DashboardService:
         by_category: dict[int, Money] = defaultdict(lambda: Money.zero(self.CURRENCY))
         converted = self._converted(period)
         for movement in converted.movements:
-            transaction = movement.transaction
-            totals[transaction.type] += movement.amount
-            if transaction.type is TransactionType.EXPENSE:
-                category = categories[transaction.category_id]
+            totals[movement.kind] += movement.amount
+            if movement.kind is TransactionType.EXPENSE:
+                category = categories[movement.category_id]
                 by_category[category.parent_id or category.id] += movement.amount
-        ranked = sorted(by_category.items(), key=lambda item: item[1].cents, reverse=True)
+        ranked = positive_totals(by_category)
         return PeriodSummary(
             period=period,
             income=totals[TransactionType.INCOME],

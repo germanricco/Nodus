@@ -24,6 +24,7 @@ from nodus.services.dashboard_service import (
     MonthFlow,
     converted_movements,
     month_flows,
+    positive_totals,
     relative_change,
     savings_rate,
 )
@@ -124,10 +125,6 @@ def _sum(amounts) -> Money:
     return sum(amounts, Money.zero(SUMMARY_CURRENCY))
 
 
-def _ranked(totals: dict) -> list:
-    return sorted(totals.items(), key=lambda item: item[1].cents, reverse=True)
-
-
 class AnalysisService:
     def __init__(
         self,
@@ -155,14 +152,14 @@ class AnalysisService:
                 _savings(previous), [], [], converted.unconverted,
             )  # fmt: skip
         kind = metric.kind
-        chosen = [m for m in movements if m.transaction.type is kind]
+        chosen = [m for m in movements if m.kind is kind]
         categories = {c.id: c for c in self._categories.list_categories()}
         return Trends(
             metric=metric,
             period=period,
             months=[self._month_trend(month, chosen, categories) for month in months],
             total=_sum(m.amount for m in chosen),
-            previous_total=_sum(m.amount for m in previous if m.transaction.type is kind),
+            previous_total=_sum(m.amount for m in previous if m.kind is kind),
             categories=self._by_category(chosen, categories),
             payees=self._by_payee(chosen),
             unconverted=converted.unconverted,
@@ -197,9 +194,9 @@ class AnalysisService:
         """Totals by top-level category, subcategories included, largest first."""
         totals: dict[int, Money] = defaultdict(lambda: Money.zero(SUMMARY_CURRENCY))
         for movement in movements:
-            category = categories[movement.transaction.category_id]
+            category = categories[movement.category_id]
             totals[category.parent_id or category.id] += movement.amount
-        return [CategoryTotal(categories[i], total) for i, total in _ranked(totals)]
+        return [CategoryTotal(categories[i], total) for i, total in positive_totals(totals)]
 
     def _by_payee(self, movements: list[ConvertedMovement]) -> list[PayeeTotal]:
         payees = {p.id: p for p in self._payees.list_payees()}
@@ -210,7 +207,7 @@ class AnalysisService:
             counts[movement.transaction.payee_id] += 1
         ranked = [
             PayeeTotal(payees[payee_id], total, counts[payee_id])
-            for payee_id, total in _ranked(totals)
+            for payee_id, total in positive_totals(totals)
             if payee_id is not None
         ]
         if None in totals:
@@ -220,7 +217,7 @@ class AnalysisService:
 
 def _flow_totals(movements: list[ConvertedMovement]) -> FlowTotals:
     def total(kind: TransactionType) -> Money:
-        return _sum(m.amount for m in movements if m.transaction.type is kind)
+        return _sum(m.amount for m in movements if m.kind is kind)
 
     return FlowTotals(total(TransactionType.INCOME), total(TransactionType.EXPENSE))
 
