@@ -105,6 +105,23 @@ def test_savings_hides_the_breakdown(filled):
     assert [bar.segments[0].value for bar in view.chart.bars()] == [70000, -10000, 0]
     assert view.categories_card.isHidden()
     assert view.payees_card.isHidden()
+    assert view.tags_card.isHidden()
+
+
+def test_tags_card_shows_only_with_tagged_movements(qtbot, services, pesos, filled):
+    view = trends_view(filled)
+    assert view.tags_card.isHidden()
+
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("80"), date(2026, 10, 9), tag_names=("Viaje",))
+    )
+    filled.refresh()
+
+    assert not view.tags_card.isHidden()
+    assert row_texts(view._tag_rows) == ["Viaje"]
+    with qtbot.waitSignal(filled.transactions_requested) as from_tag:
+        view._tag_rows.itemAt(0).widget().clicked.emit()
+    assert from_tag.args == [TransactionFocus(SEP_NOV, tag_id=services.tags.find("Viaje").id)]
 
 
 def test_empty_period_says_so(page):

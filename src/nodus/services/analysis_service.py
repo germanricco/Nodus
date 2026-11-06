@@ -15,6 +15,7 @@ from nodus.models.category import Category
 from nodus.models.money import Money
 from nodus.models.payee import Payee
 from nodus.models.period import Month, Period
+from nodus.models.tag import Tag
 from nodus.models.transaction import TransactionType
 from nodus.services.category_service import CategoryService
 from nodus.services.dashboard_service import (
@@ -70,9 +71,19 @@ class PayeeTotal:
 
 
 @dataclass(frozen=True)
+class TagTotal:
+    """What the movements with a tag add up to. A movement with several tags counts in
+    each of them, so these totals may add up to more than the period's."""
+
+    tag: Tag
+    total: Money
+    count: int
+
+
+@dataclass(frozen=True)
 class Trends:
     """A metric month by month along a period, against the period of the same length right
-    before it. ``categories`` and ``payees`` are empty for savings."""
+    before it. ``categories``, ``payees`` and ``tags`` are empty for savings."""
 
     metric: Metric
     period: Period
@@ -81,6 +92,7 @@ class Trends:
     previous_total: Money
     categories: list[CategoryTotal]  # largest first
     payees: list[PayeeTotal]  # largest first, "without payee" last
+    tags: list[TagTotal]  # largest first; untagged movements are left out
     unconverted: int
 
     @property
@@ -150,7 +162,7 @@ class AnalysisService:
             ]
             return Trends(
                 metric, period, month_totals, _sum(m.total for m in month_totals),
-                _savings(previous), [], [], converted.unconverted,
+                _savings(previous), [], [], [], converted.unconverted,
             )  # fmt: skip
         kind = metric.kind
         chosen = [m for m in movements if m.kind is kind]
@@ -163,6 +175,7 @@ class AnalysisService:
             previous_total=_sum(m.amount for m in previous if m.kind is kind),
             categories=self._by_category(chosen, categories),
             payees=self._by_payee(chosen),
+            tags=self._by_tag(chosen),
             unconverted=converted.unconverted,
         )
 
@@ -214,6 +227,18 @@ class AnalysisService:
         if None in totals:
             ranked.append(PayeeTotal(None, totals[None], counts[None]))
         return ranked
+
+    def _by_tag(self, movements: list[ConvertedMovement]) -> list[TagTotal]:
+        tags_by_transaction = self._transactions.tags_for([m.transaction.id for m in movements])
+        tags: dict[int, Tag] = {}
+        totals: dict[int, Money] = defaultdict(lambda: Money.zero(SUMMARY_CURRENCY))
+        counts: dict[int, int] = defaultdict(int)
+        for movement in movements:
+            for tag in tags_by_transaction.get(movement.transaction.id, []):
+                tags[tag.id] = tag
+                totals[tag.id] += movement.amount
+                counts[tag.id] += 1
+        return [TagTotal(tags[i], total, counts[i]) for i, total in positive_totals(totals)]
 
 
 def _flow_totals(movements: list[ConvertedMovement]) -> FlowTotals:

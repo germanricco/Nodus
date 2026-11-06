@@ -52,6 +52,7 @@ REST_LABEL = "Resto"
 # Payees listed; the rest are left to the transactions page.
 PAYEES_SHOWN = 8
 NO_PAYEE_LABEL = "Sin beneficiario"
+TAGS_HINT = "Un movimiento con varias etiquetas suma en cada una."
 TOOLTIP_CATEGORIES = 3
 EMPTY_TEXT = "Sin movimientos en el período"
 NO_PREVIOUS_TEXT = "Sin datos del período anterior"
@@ -87,6 +88,17 @@ def chart_card(title: str, chart: QWidget) -> tuple[Card, QLabel, QLabel]:
     return card, empty_label, unconverted_label
 
 
+def rows_card(title: str) -> tuple[Card, QVBoxLayout]:
+    """A card with ``title`` and a column of rows to fill, as the breakdowns use."""
+    card = Card()
+    card_header(card, title)
+    rows = QVBoxLayout()
+    rows.setSpacing(0)
+    card.body.addLayout(rows)
+    card.body.addStretch()
+    return card, rows
+
+
 class AnalysisView(QWidget):
     """A report: shows a period and asks for the transactions behind its figures."""
 
@@ -98,8 +110,8 @@ class AnalysisView(QWidget):
 
 class TrendsView(AnalysisView):
     """Expenses, income or savings month by month: totals against the previous period,
-    bars stacked by category with the monthly average, and the split by category and
-    by payee. Clicking a bar, a piece or a row opens those transactions."""
+    bars stacked by category with the monthly average, and the split by category, by
+    payee and by tag. Clicking a bar, a piece or a row opens those transactions."""
 
     def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
         super().__init__()
@@ -137,23 +149,16 @@ class TrendsView(AnalysisView):
         card, self.empty_label, self.unconverted_label = chart_card("Mes a mes", self.chart)
         layout.addWidget(card)
 
-        self.categories_card = Card()
-        card_header(self.categories_card, "Por categoría")
-        self._category_rows = QVBoxLayout()
-        self._category_rows.setSpacing(0)
-        self.categories_card.body.addLayout(self._category_rows)
-        self.categories_card.body.addStretch()
-        self.payees_card = Card()
-        card_header(self.payees_card, "Por beneficiario")
-        self._payee_rows = QVBoxLayout()
-        self._payee_rows.setSpacing(0)
-        self.payees_card.body.addLayout(self._payee_rows)
-        self.payees_card.body.addStretch()
+        self.categories_card, self._category_rows = rows_card("Por categoría")
+        self.payees_card, self._payee_rows = rows_card("Por beneficiario")
         breakdown = QHBoxLayout()
         breakdown.setSpacing(16)
         breakdown.addWidget(self.categories_card, stretch=1)
         breakdown.addWidget(self.payees_card, stretch=1)
         layout.addLayout(breakdown)
+        self.tags_card, self._tag_rows = rows_card("Por etiqueta")
+        self.tags_card.setToolTip(TAGS_HINT)
+        layout.addWidget(self.tags_card)
         layout.addStretch()
 
         self.metric_input.changed.connect(lambda _index: self._reload())
@@ -191,9 +196,11 @@ class TrendsView(AnalysisView):
         breakdown = trends.metric is not Metric.SAVINGS
         self.categories_card.setVisible(breakdown)
         self.payees_card.setVisible(breakdown)
+        self.tags_card.setVisible(breakdown and bool(trends.tags))
         if breakdown:
             self._fill_categories(trends)
             self._fill_payees(trends)
+            self._fill_tags(trends)
 
     # Bars
 
@@ -264,6 +271,19 @@ class TrendsView(AnalysisView):
                     )
                 )
             self._payee_rows.addWidget(row)
+
+    def _fill_tags(self, trends: Trends) -> None:
+        clear_layout(self._tag_rows)
+        for total in trends.tags:
+            row = CategoryLine(total.tag.color, total.tag.name, movements_text(total.count))
+            row.add(muted_label(percent(total.total, trends.total)))
+            row.add(amount_label(total.total))
+            row.clicked.connect(
+                lambda tag_id=total.tag.id: self.transactions_requested.emit(
+                    TransactionFocus(self._period, tag_id=tag_id)
+                )
+            )
+            self._tag_rows.addWidget(row)
 
     def _set_theme(self, theme: Theme) -> None:
         self._theme = theme

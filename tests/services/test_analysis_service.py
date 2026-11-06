@@ -73,6 +73,20 @@ class TestTrends:
             (None, ars("100"), 1),
         ]
 
+    def test_tags_count_each_movement_in_every_tag(self, services, pesos):
+        spend(services, pesos, ars("300"), date(2026, 10, 3), tag_names=("Viaje", "Trabajo"))
+        spend(services, pesos, ars("200"), date(2026, 10, 4), tag_names=("Viaje",))
+        spend(services, pesos, ars("50"), date(2026, 10, 5))
+        earn(services, pesos, ars("999"), date(2026, 10, 6), tag_names=("Sueldo extra",))
+
+        trends = services.analysis.trends(SEP_NOV, Metric.EXPENSES)
+
+        assert [(t.tag.name, t.total, t.count) for t in trends.tags] == [
+            ("Viaje", ars("500"), 2),
+            ("Trabajo", ars("300"), 1),
+        ]
+        assert services.analysis.trends(SEP_NOV, Metric.SAVINGS).tags == []
+
     def test_subcategories_add_up_in_their_parent(self, services, pesos):
         vivienda = category_id(services, "Vivienda", EXPENSE)
         alquiler = services.categories.create("Alquiler", EXPENSE, "#e67e22", parent_id=vivienda)
