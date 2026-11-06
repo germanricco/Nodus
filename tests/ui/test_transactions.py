@@ -18,7 +18,7 @@ from nodus.ui.dialogs.transaction_dialog import (
 )
 from nodus.ui.navigation import PageId
 from nodus.ui.pages import transactions_page
-from nodus.ui.pages.transactions_page import AMOUNT, CATEGORY, TransactionsPage
+from nodus.ui.pages.transactions_page import AMOUNT, CATEGORY, PAYEE, TransactionsPage
 
 EXPENSE = TransactionType.EXPENSE
 NOVEMBER = Month(2026, 11)
@@ -259,6 +259,22 @@ class TestTransactionsPage:
         assert all_transactions(services) == []
         assert page.model.rowCount() == 0
 
+    def test_payee_column_filter_and_search(self, services, page, pesos):
+        for amount, payee in [("100", "Coto"), ("200", "Verdulería"), ("300", "")]:
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars(amount), date(2026, 11, 3), payee_name=payee)
+            )
+        page.refresh()
+        assert sorted(column(page, PAYEE)) == ["", "Coto", "Verdulería"]
+
+        page.payee_filter.select(services.payees.find("Coto").id)
+        assert column(page, AMOUNT) == ["-$ 100,00"]
+        assert page.clear_filters_button.isEnabled()
+
+        page.clear_filters_button.click()
+        page.search_input.setText("verduleria")
+        assert column(page, AMOUNT) == ["-$ 200,00"]
+
     def test_actions_need_a_selection(self, services, page, pesos, dollars):
         populate(services, pesos, dollars)
         page.refresh()
@@ -308,3 +324,26 @@ def test_export_saves_what_is_shown(monkeypatch, tmp_path, services, window, pes
     assert target.read_text(encoding="utf-8-sig").count("\n") == 2
     month = page.period_selector.period().start
     assert suggested[0].endswith(f"nodus-transacciones-{month:%Y-%m}.csv")
+
+
+def test_payee_opens_its_whole_history(qtbot, services, window, pesos):
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("10"), date(2026, 3, 5), payee_name="Coto")
+    )
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("20"), date(2026, 3, 6), payee_name="Día")
+    )
+    window.show_page(PageId.PAYEES)
+    payees = window.page(PageId.PAYEES)
+    payees.table.selectRow(next(
+        row for row in range(payees.proxy.rowCount())
+        if payees.proxy.index(row, 0).data() == "Coto"
+    ))  # fmt: skip
+
+    payees.transactions_button.click()
+
+    transactions = window.page(PageId.TRANSACTIONS)
+    assert window.current_page is transactions
+    assert transactions.period_selector.period().start == date(2026, 3, 1)
+    assert transactions.payee_filter.current_id() == services.payees.find("Coto").id
+    assert column(transactions, AMOUNT) == ["-$ 10,00"]

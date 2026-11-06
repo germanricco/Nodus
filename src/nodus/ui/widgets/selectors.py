@@ -1,10 +1,11 @@
-"""Combo boxes to pick an account or a category."""
+"""Combo boxes to pick an account, a category or a payee."""
 
 from __future__ import annotations
 
 from PySide6.QtWidgets import QComboBox, QWidget
 
 from nodus.models.account import Account
+from nodus.models.payee import Payee
 from nodus.services.category_service import CategoryNode
 from nodus.ui.widgets.color import color_icon
 
@@ -68,6 +69,18 @@ class AccountComboBox(_SelectorComboBox):
     def current_account(self) -> Account | None:
         account_id = self.current_id()
         return None if account_id is None else self._accounts[account_id]
+
+
+class PayeeComboBox(_SelectorComboBox):
+    """Lists payees by name; remembers the selection when the list is reloaded."""
+
+    def set_payees(self, payees: list[Payee], all_label: str | None = None) -> None:
+        self.blockSignals(True)
+        previous = self._start(all_label)
+        for payee in payees:
+            self.addItem(payee.name, payee.id)
+        self.blockSignals(False)
+        self.select(previous)
 
 
 class CategoryComboBox(_SelectorComboBox):

@@ -22,7 +22,7 @@ from nodus.ui.transaction_list import TransactionListBuilder, TransactionListIte
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import color_icon
 from nodus.ui.widgets.period_selector import PeriodSelector
-from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
+from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox, PayeeComboBox
 from nodus.ui.widgets.table import record_table
 
 # Type filter: label -> (transaction type, is_transfer) criteria.
@@ -33,8 +33,8 @@ TYPE_FILTERS = {
     "Transferencias": (None, True),
 }
 
-DATE, DESCRIPTION, CATEGORY, ACCOUNT, AMOUNT = range(5)
-COLUMN_TITLES = ["Fecha", "Descripción", "Categoría", "Cuenta", "Monto"]
+DATE, DESCRIPTION, PAYEE, CATEGORY, ACCOUNT, AMOUNT = range(6)
+COLUMN_TITLES = ["Fecha", "Descripción", "Beneficiario", "Categoría", "Cuenta", "Monto"]
 
 
 def export_filename(period: Period) -> str:
@@ -99,6 +99,7 @@ class TransactionTableModel(QAbstractTableModel):
         return [
             format_date(item.occurred_on),
             item.description,
+            item.payee_name,
             item.category_name,
             item.account_text,
             item.amount_text,
@@ -106,7 +107,8 @@ class TransactionTableModel(QAbstractTableModel):
 
 
 class TransactionsPage(Page):
-    """The movements of one month, newest first, narrowed by account, category, type or note.
+    """The movements of a period, newest first, narrowed by account, category, payee, type
+    or text.
 
     Double-clicking a row edits it. A transfer shows as one row for both of its legs.
     """
@@ -132,10 +134,11 @@ class TransactionsPage(Page):
 
         self.account_filter = AccountComboBox()
         self.category_filter = CategoryComboBox()
+        self.payee_filter = PayeeComboBox()
         self.type_filter = QComboBox()
         self.type_filter.addItems(list(TYPE_FILTERS))
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Buscar en la nota…")
+        self.search_input.setPlaceholderText("Buscar en la nota o el beneficiario…")
         self.search_input.setMinimumWidth(140)
         self.search_input.setClearButtonEnabled(True)
         self.clear_filters_button = QPushButton("Limpiar filtros")
@@ -143,7 +146,7 @@ class TransactionsPage(Page):
         self.clear_filters_button.clicked.connect(self.clear_filters)
         filters = QHBoxLayout()
         filters.setSpacing(8)
-        for widget in (self.account_filter, self.category_filter, self.type_filter):
+        for widget in self._filter_combos():
             filters.addWidget(widget)
         filters.addWidget(self.search_input, stretch=1)
         filters.addWidget(self.clear_filters_button)
@@ -163,6 +166,7 @@ class TransactionsPage(Page):
         self.period_selector.period_changed.connect(self.reload)
         self.account_filter.currentIndexChanged.connect(self.reload)
         self.category_filter.currentIndexChanged.connect(self.reload)
+        self.payee_filter.currentIndexChanged.connect(self.reload)
         self.type_filter.currentIndexChanged.connect(self.reload)
         self.search_input.textChanged.connect(self.reload)
         theme_manager.theme_changed.connect(self.model.set_theme)
@@ -170,6 +174,7 @@ class TransactionsPage(Page):
             event_bus.transactions_changed,
             event_bus.accounts_changed,
             event_bus.categories_changed,
+            event_bus.payees_changed,
         ):
             signal.connect(self.refresh)
 
@@ -190,6 +195,7 @@ class TransactionsPage(Page):
             ],
             "Todas las categorías",
         )
+        self.payee_filter.set_payees(self._services.payees.list_payees(), "Todos los beneficiarios")
 
     def reload(self) -> None:
         """Lists the movements matching the current filters."""
@@ -206,8 +212,11 @@ class TransactionsPage(Page):
         self._reset_filters()
         self.reload()
 
-    def focus(self, period: Period, category_id: int | None = None) -> None:
-        """Shows ``period`` with only ``category_id`` filtered, as the dashboard asks for.
+    def focus(
+        self, period: Period, category_id: int | None = None, payee_id: int | None = None
+    ) -> None:
+        """Shows ``period`` with only ``category_id`` or ``payee_id`` filtered, as the
+        dashboard, budgets and payees pages ask for.
 
         Does not reload: the caller shows the page, which refreshes it.
         """
@@ -216,16 +225,20 @@ class TransactionsPage(Page):
         self.period_selector.blockSignals(True)
         self.period_selector.set_period(period)
         self.period_selector.blockSignals(False)
-        if category_id is not None:
-            self.category_filter.blockSignals(True)
-            self.category_filter.select(category_id)
-            self.category_filter.blockSignals(False)
+        for combo, item_id in ((self.category_filter, category_id), (self.payee_filter, payee_id)):
+            if item_id is not None:
+                combo.blockSignals(True)
+                combo.select(item_id)
+                combo.blockSignals(False)
+
+    def _filter_combos(self) -> tuple[QComboBox, ...]:
+        return (self.account_filter, self.category_filter, self.payee_filter, self.type_filter)
 
     def _reset_filters(self) -> None:
-        inputs = (self.account_filter, self.category_filter, self.type_filter, self.search_input)
+        inputs = (*self._filter_combos(), self.search_input)
         for widget in inputs:  # one reload at the end instead of one per filter
             widget.blockSignals(True)
-        for combo in inputs[:3]:
+        for combo in self._filter_combos():
             combo.setCurrentIndex(0)
         self.search_input.clear()
         for widget in inputs:
@@ -241,8 +254,8 @@ class TransactionsPage(Page):
         )
 
     def _has_filters(self) -> bool:
-        combos = (self.account_filter, self.category_filter, self.type_filter)
-        return any(combo.currentIndex() > 0 for combo in combos) or bool(self.search_input.text())
+        has_choice = any(combo.currentIndex() > 0 for combo in self._filter_combos())
+        return has_choice or bool(self.search_input.text())
 
     def current_filter(self) -> TransactionFilter:
         period = self.period_selector.period()
@@ -252,6 +265,7 @@ class TransactionsPage(Page):
             end=period.end,
             account_id=self.account_filter.current_id(),
             category_id=self.category_filter.current_id(),
+            payee_id=self.payee_filter.current_id(),
             type=transaction_type,
             is_transfer=is_transfer,
             text=self.search_input.text().strip() or None,

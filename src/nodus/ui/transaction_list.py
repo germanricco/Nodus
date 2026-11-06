@@ -23,6 +23,7 @@ class TransactionListItem:
     description: str
     category_name: str
     category_color: str | None
+    payee_name: str
     account_text: str
     amount_text: str
     tone: str  # "positive", "negative" or "neutral", as MoneyLabel uses it
@@ -53,6 +54,7 @@ class TransactionListBuilder:
             for account in self._services.accounts.list_accounts(include_archived=True)
         }
         self._categories = {c.id: c for c in self._services.categories.list_categories()}
+        self._payee_names = {p.id: p.name for p in self._services.payees.list_payees()}
         items: list[TransactionListItem] = []
         seen_transfers: set[str] = set()
         for transaction in transactions:
@@ -70,6 +72,7 @@ class TransactionListBuilder:
             description=transaction.note or category.name,
             category_name=category.name,
             category_color=category.color,
+            payee_name=self._payee_names.get(transaction.payee_id, ""),
             account_text=self._account_names[transaction.account_id],
             amount_text=transaction.signed_amount.format(),
             tone="positive" if transaction.type is TransactionType.INCOME else "negative",
@@ -86,6 +89,7 @@ class TransactionListBuilder:
             description=outgoing.note or TRANSFER_LABEL,
             category_name=TRANSFER_LABEL,
             category_color=None,
+            payee_name="",
             account_text=(
                 f"{self._account_names[outgoing.account_id]}"
                 f" → {self._account_names[incoming.account_id]}"

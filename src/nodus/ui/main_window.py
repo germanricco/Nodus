@@ -68,6 +68,10 @@ class MainWindow(QMainWindow):
         budgets = BudgetsPage(services, event_bus, theme_manager)
         budgets.transactions_requested.connect(self.show_transactions)
         dashboard.budgets_requested.connect(self.show_budgets)
+        payees = PayeesPage(services, event_bus, theme_manager)
+        payees.transactions_requested.connect(
+            lambda period, payee_id: self.show_transactions(period, payee_id=payee_id)
+        )
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
@@ -75,7 +79,7 @@ class MainWindow(QMainWindow):
             PageId.RECURRING: RecurringPage(services, event_bus),
             PageId.BUDGETS: budgets,
             PageId.CATEGORIES: CategoriesPage(services, event_bus),
-            PageId.PAYEES: PayeesPage(services, event_bus, theme_manager),
+            PageId.PAYEES: payees,
             PageId.SETTINGS: SettingsPage(services, event_bus, theme_manager),
         }
         for page in self._pages.values():
@@ -179,9 +183,12 @@ class MainWindow(QMainWindow):
         self._stack.setCurrentWidget(page)
         self.sidebar.select(page_id)
 
-    def show_transactions(self, period: Period, category_id: int | None = None) -> None:
-        """Opens the transactions page on ``period``, filtered by ``category_id`` if given."""
-        self._pages[PageId.TRANSACTIONS].focus(period, category_id)
+    def show_transactions(
+        self, period: Period, category_id: int | None = None, payee_id: int | None = None
+    ) -> None:
+        """Opens the transactions page on ``period``, filtered by ``category_id`` or
+        ``payee_id`` if given."""
+        self._pages[PageId.TRANSACTIONS].focus(period, category_id, payee_id)
         self.show_page(PageId.TRANSACTIONS)
 
     def show_budgets(self, month: Month) -> None:
