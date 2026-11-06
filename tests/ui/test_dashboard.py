@@ -201,3 +201,37 @@ def test_upcoming_card_says_when_nothing_is_due_soon(qtbot, window, services, pe
 class NoDialog:
     def exec(self) -> int:
         return 0
+
+
+def grid_cell(page, card) -> tuple[int, int, int, int]:
+    return page._grid.getItemPosition(page._grid.indexOf(card))
+
+
+def test_cards_rearrange_for_narrow_windows(qtbot, window, services, pesos):
+    services.recurring.create(charge_draft(services, pesos.id, ars("1"), date.today()))
+    page = dashboard(window)
+    window.resize(1400, 900)
+    page.refresh()
+    qtbot.waitUntil(lambda: grid_cell(page, page.upcoming_card) == (0, 4, 1, 2))
+    # Expenses and the comparison with the previous period sit side by side.
+    assert grid_cell(page, page.expenses_card)[0] == grid_cell(page, page.comparison_card)[0]
+
+    window.resize(900, 900)
+
+    qtbot.waitUntil(lambda: grid_cell(page, page.upcoming_card) == (1, 0, 1, 1))
+    assert grid_cell(page, page.comparison_card)[0] > grid_cell(page, page.expenses_card)[0]
+
+
+def test_cards_are_never_squeezed_when_the_theme_changes(qtbot, window, theme_manager, pesos):
+    from nodus.ui.theme.theme_manager import ThemeMode
+
+    page = dashboard(window)
+    window.resize(1280, 700)
+    window.show_page(PageId.DASHBOARD)
+    theme_manager.set_mode(ThemeMode.DARK)
+
+    def fits() -> bool:
+        grid_page = page._grid.parentWidget()
+        return grid_page.height() >= page._grid.minimumSize().height()
+
+    qtbot.waitUntil(fits)

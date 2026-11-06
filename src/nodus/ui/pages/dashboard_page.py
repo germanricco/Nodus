@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import QCoreApplication, QEvent, Signal
+from PySide6.QtCore import QCoreApplication, QEvent, Qt, QTimer, Signal
+from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
@@ -12,7 +13,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QStackedWidget,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -36,6 +36,9 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.net_worth_card import NetWorthCard
 from nodus.ui.widgets.period_selector import PeriodSelector
+
+# Below this page width, the cards go one per row.
+NARROW_WIDTH = 900
 
 
 class DashboardPage(Page):
@@ -84,25 +87,17 @@ class DashboardPage(Page):
             )
 
         grid_page = QWidget()
-        grid = QGridLayout(grid_page)
-        grid.setContentsMargins(0, 0, 0, 0)
-        grid.setSpacing(16)
-        grid.addWidget(self.net_worth_card, 0, 0, 1, 2)
-        # Upcoming payments sit above the latest movements, and disappear without charges.
-        right_column = QVBoxLayout()
-        right_column.setSpacing(16)
-        right_column.addWidget(self.upcoming_card)
-        right_column.addWidget(self.latest_card, stretch=1)
-        grid.addLayout(right_column, 0, 2)
-        grid.addWidget(self.flow_card, 1, 0)
-        grid.addWidget(self.expenses_card, 1, 1)
-        grid.addWidget(self.comparison_card, 1, 2)
-        for column in range(3):
-            grid.setColumnStretch(column, 1)
-        grid.setRowStretch(0, 1)
-        grid.setRowStretch(1, 1)
+        self._grid = QGridLayout(grid_page)
+        self._grid.setContentsMargins(0, 0, 0, 0)
+        self._grid.setSpacing(16)
+        self._layout: tuple[bool, bool] | None = None
+        # Owned by the grid page from the start, so a card left out of the grid (upcoming
+        # payments without charges) never becomes a window of its own when shown.
+        for card in self._cards():
+            card.setParent(grid_page)
         scroll = self._scroll = QScrollArea()
         scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setWidget(grid_page)
 
         self._stack = QStackedWidget()
@@ -118,6 +113,7 @@ class DashboardPage(Page):
 
         self.period_selector.period_changed.connect(self.refresh)
         theme_manager.theme_changed.connect(self._data_changed)
+        theme_manager.theme_changed.connect(self._remeasure)
         for signal in (
             event_bus.accounts_changed,
             event_bus.categories_changed,
@@ -150,13 +146,91 @@ class DashboardPage(Page):
         self.flow_card.show_data(comparison, dashboard.monthly_flow(period))
         self.expenses_card.show_data(comparison.current, comparison.expenses_change)
         self.comparison_card.show_data(comparison)
-        # A card that appears or disappears changes how tall the grid must be; the scroll
-        # area only re-measures its content when asked, so the cards don't get squeezed.
-        self._scroll.widget().layout().activate()
-        QCoreApplication.postEvent(self._scroll, QEvent(QEvent.Type.LayoutRequest))
+        self._arrange()
 
     def open_pay_dialog(self, charge: RecurringCharge) -> None:
         PayChargeDialog(self._services, self._event_bus, charge, parent=self.window()).exec()
+
+    # Layout
+
+    def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802
+        super().resizeEvent(event)
+        self._arrange()
+
+    def _arrange(self) -> None:
+        """Places the cards for the available width.
+
+        The top row is what matters at a glance: net worth, with upcoming payments and the
+        latest movements beside it. Below come the cash flow, then expenses by category
+        next to the comparison with the previous period, which belong together. In a
+        narrow window everything goes one card per row, except the top's side cards.
+        The page scrolls instead of squeezing the cards.
+        """
+        narrow = self.width() < NARROW_WIDTH
+        upcoming = self.upcoming_card.isVisibleTo(self)
+        layout = (narrow, upcoming)
+        if layout != self._layout:
+            self._layout = layout
+            grid = self._grid
+            for card in self._cards():
+                grid.removeWidget(card)
+            if narrow:
+                rows = [
+                    [(self.net_worth_card, 2)],
+                    [(self.upcoming_card, 1), (self.latest_card, 1)]
+                    if upcoming
+                    else [(self.latest_card, 2)],
+                    [(self.flow_card, 2)],
+                    [(self.expenses_card, 2)],
+                    [(self.comparison_card, 2)],
+                ]
+                self._place(rows)
+            else:
+                grid.addWidget(self.net_worth_card, 0, 0, 2, 4)
+                if upcoming:
+                    grid.addWidget(self.upcoming_card, 0, 4, 1, 2)
+                    grid.addWidget(self.latest_card, 1, 4, 1, 2)
+                else:
+                    grid.addWidget(self.latest_card, 0, 4, 2, 2)
+                grid.addWidget(self.flow_card, 2, 0, 1, 6)
+                grid.addWidget(self.expenses_card, 3, 0, 1, 3)
+                grid.addWidget(self.comparison_card, 3, 3, 1, 3)
+            for column in range(6):
+                grid.setColumnStretch(column, 1 if column < (2 if narrow else 6) else 0)
+        self._remeasure()
+
+    def _place(self, rows: list[list[tuple[QWidget, int]]]) -> None:
+        """Adds each row of (card, columns spanned) below the previous one."""
+        for row_index, row in enumerate(rows):
+            column = 0
+            for card, span in row:
+                self._grid.addWidget(card, row_index, column, 1, span)
+                column += span
+
+    def _cards(self) -> list[QWidget]:
+        return [
+            self.net_worth_card,
+            self.upcoming_card,
+            self.latest_card,
+            self.flow_card,
+            self.expenses_card,
+            self.comparison_card,
+        ]
+
+    def _remeasure(self) -> None:
+        """Makes the page scroll instead of squeezing the cards.
+
+        The scroll area only takes its content's minimum height when it is resized, so a
+        card that appears or a theme with other fonts would leave the cards squeezed. The
+        content's minimum height is set explicitly instead, once Qt has applied pending
+        style and layout changes.
+        """
+        QTimer.singleShot(0, self._apply_minimum_height)
+
+    def _apply_minimum_height(self) -> None:
+        self._grid.activate()
+        self._scroll.widget().setMinimumHeight(self._grid.minimumSize().height())
+        QCoreApplication.postEvent(self._scroll, QEvent(QEvent.Type.LayoutRequest))
 
     def _data_changed(self) -> None:
         # Hidden pages are refreshed by the main window when shown.

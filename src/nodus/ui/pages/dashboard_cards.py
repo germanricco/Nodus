@@ -254,6 +254,8 @@ class UpcomingPaymentsCard(Card):
         self._rows = QVBoxLayout()
         self._rows.setSpacing(0)
         self.body.addLayout(self._rows)
+        # Extra height goes below the rows, keeping the title on top.
+        self.body.addStretch()
         self.see_all_button = QPushButton("Ver todos")
         self.see_all_button.setObjectName("SecondaryButton")
         self.see_all_button.clicked.connect(self.see_all_requested)
