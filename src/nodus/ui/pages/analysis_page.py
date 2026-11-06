@@ -10,7 +10,8 @@ from PySide6.QtWidgets import QScrollArea, QStackedWidget
 from nodus.models.period import Period
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
-from nodus.ui.pages.analysis_views import AnalysisView, CashFlowView, TrendsView
+from nodus.ui.navigation import PageId
+from nodus.ui.pages.analysis_views import AnalysisView, CashFlowView, NetWorthView, TrendsView
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.period_selector import PeriodSelector
@@ -24,16 +25,20 @@ class AnalysisPage(Page):
     (the last 12 months at first). Only the report on screen is computed."""
 
     transactions_requested = Signal(object, object, object)  # Period, category id, payee id
+    navigate_requested = Signal(object)  # PageId
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
         super().__init__("Análisis")
+        net_worth = NetWorthView(services, theme_manager)
+        net_worth.rate_requested.connect(lambda: self.navigate_requested.emit(PageId.SETTINGS))
         self.views: list[AnalysisView] = [
             TrendsView(services, theme_manager),
             CashFlowView(services, theme_manager),
+            net_worth,
         ]
-        self.tabs = SegmentedControl(["Tendencias", "Flujo de caja"])
+        self.tabs = SegmentedControl(["Tendencias", "Flujo de caja", "Patrimonio"])
         self.period_selector = PeriodSelector(Period.last_months(DEFAULT_MONTHS, date.today()))
         self.add_header_widget(self.tabs)
         self.add_header_widget(self.period_selector)

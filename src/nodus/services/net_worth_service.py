@@ -64,13 +64,31 @@ class NetWorthService:
         """The net worth along ``period``, up to ``today`` (the future has no data yet).
 
         Daily for periods of up to ``DAILY_POINTS_MAX_DAYS``, otherwise at each month end.
-        Balances are read once at the start and then advanced with the period's movements,
-        instead of one query per point.
         """
         end = min(period.end, today)
         if end < period.start:
             return []
-        days = self._sample_days(period, end)
+        if period.days <= DAILY_POINTS_MAX_DAYS:
+            days = [period.start + timedelta(days=i) for i in range((end - period.start).days + 1)]
+            return self._points(period, days)
+        return self.month_ends(period, today)
+
+    def month_ends(self, period: Period, today: date) -> list[NetWorthPoint]:
+        """The net worth at the end of each month of ``period``; the last point is today
+        when the period reaches it."""
+        end = min(period.end, today)
+        if end < period.start:
+            return []
+        ends = [month.end for month in period.months() if month.end < end]
+        return self._points(period, [*ends, end])
+
+    def _points(self, period: Period, days: list[date]) -> list[NetWorthPoint]:
+        """The net worth at the end of each of ``days``, in order within ``period``.
+
+        Balances are read once at the start and then advanced with the period's movements,
+        instead of one query per point.
+        """
+        end = days[-1]
         currencies = {a.id: a.currency for a in self._accounts.list_accounts()}
         balances = self._accounts.balances(period.start - timedelta(days=1))
         by_currency = {currency: Money.zero(currency) for currency in Currency}
@@ -95,13 +113,6 @@ class NetWorthService:
                 )
             points.append(NetWorthPoint(day, self._net_worth(dict(by_currency), day)))
         return points
-
-    @staticmethod
-    def _sample_days(period: Period, end: date) -> list[date]:
-        if period.days <= DAILY_POINTS_MAX_DAYS:
-            return [period.start + timedelta(days=i) for i in range((end - period.start).days + 1)]
-        ends = [month.end for month in period.months() if month.end < end]
-        return [*ends, end]
 
     def _net_worth(self, by_currency: dict[Currency, Money], day: date) -> NetWorth:
         total_in = {target: self._total_in(by_currency, target, day) for target in Currency}

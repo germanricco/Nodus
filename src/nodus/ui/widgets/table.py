@@ -29,7 +29,9 @@ def record_table(model: QAbstractItemModel, stretch_column: int) -> QTableView:
 
 def fit_rows(table: QTableView) -> None:
     """Makes ``table`` exactly as tall as its rows, for a short table inside a page that
-    scrolls as a whole."""
-    height = table.horizontalHeader().height() + table.verticalHeader().length()
+    scrolls as a whole. Measured from the size hints, so it also works before the table
+    is first shown."""
+    rows = table.model().rowCount() * table.verticalHeader().defaultSectionSize()
+    height = table.horizontalHeader().sizeHint().height() + rows
     table.setFixedHeight(height + 2 * table.frameWidth())
     table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

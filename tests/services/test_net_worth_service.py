@@ -98,6 +98,19 @@ def test_history_of_a_long_period_has_month_ends(services, pesos):
     assert [p.day for p in points] == [Month(2026, m).end for m in range(1, 11)] + [TODAY]
 
 
+def test_month_ends_of_a_short_period(services, pesos):
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("30000"), on=date(2026, 10, 15))
+    )
+    period = Period.of_months(Month(2026, 9), Month(2026, 11))
+
+    points = services.net_worth.month_ends(period, TODAY)
+
+    assert [p.day for p in points] == [Month(2026, 9).end, Month(2026, 10).end, TODAY]
+    totals = [p.net_worth.total_in[Currency.ARS] for p in points]
+    assert totals == [ars("100000"), ars("70000"), ars("70000")]
+
+
 def test_history_without_a_rate_leaves_a_gap(services, pesos, dollars):
     services.exchange_rates.set_rate(date(2026, 11, 3), Decimal("1000"))
 

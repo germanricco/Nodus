@@ -3,12 +3,15 @@ and asks for transactions through ``transactions_requested``."""
 
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.models.period import Period, format_month
+from nodus.models.period import Month, Period, format_month
 from nodus.services.analysis_service import CashFlowReport, Metric, MonthTrend, Trends
 from nodus.services.container import Services
 from nodus.services.dashboard_service import (
@@ -17,6 +20,8 @@ from nodus.services.dashboard_service import (
     MonthFlow,
     relative_change,
 )
+from nodus.services.net_worth_service import NetWorth, NetWorthPoint
+from nodus.ui.formatting import format_date
 from nodus.ui.labels import movements_text, unconverted_note
 from nodus.ui.pages.dashboard_cards import (
     CategoryLine,
@@ -33,6 +38,7 @@ from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.chart_base import format_compact
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
+from nodus.ui.widgets.net_worth_card import CURRENCIES, CURRENCY_LABELS, NetWorthCard, signed
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
 from nodus.ui.widgets.style import clear_layout
@@ -51,6 +57,10 @@ NO_PREVIOUS_TEXT = "Sin datos del período anterior"
 
 MONTH, INCOME, EXPENSES, SAVINGS, RATE = range(5)
 FLOW_COLUMNS = ["Mes", "Ingresos", "Gastos", "Ahorro", "Tasa de ahorro"]
+IN_PESOS, IN_DOLLARS, TOTAL, CHANGE = range(1, 5)
+NET_WORTH_COLUMNS = ["Mes", "En pesos", "En dólares", "Total", "Variación"]
+NO_RATE_TEXT = "sin cotización"
+
 _RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 _ModelIndex = QModelIndex | QPersistentModelIndex
 
@@ -394,3 +404,123 @@ class CashFlowView(AnalysisView):
     def _set_theme(self, theme: Theme) -> None:
         self.chart.set_theme(theme)
         self.model.set_theme(theme)
+
+
+class NetWorthTableModel(QAbstractTableModel):
+    """The net worth at each month end: held in pesos, in dollars, the total in the chosen
+    currency and how much it moved since the month before."""
+
+    def __init__(self, theme: Theme) -> None:
+        super().__init__()
+        self._points: list[NetWorthPoint] = []
+        self._opening: NetWorth | None = None
+        self._currency = Currency.ARS
+        self._theme = theme
+
+    def set_points(
+        self, points: list[NetWorthPoint], opening: NetWorth | None, currency: Currency
+    ) -> None:
+        """``opening`` is the net worth before the first point, to show its change."""
+        self.beginResetModel()
+        self._points, self._opening, self._currency = points, opening, currency
+        self.endResetModel()
+
+    def set_theme(self, theme: Theme) -> None:
+        self._theme = theme
+        if self._points:
+            self.dataChanged.emit(self.index(0, 0), self.index(len(self._points) - 1, CHANGE))
+
+    def rowCount(self, parent: _ModelIndex = QModelIndex()) -> int:  # noqa: B008, N802
+        return 0 if parent.isValid() else len(self._points)
+
+    def columnCount(self, parent: _ModelIndex = QModelIndex()) -> int:  # noqa: B008, N802
+        return 0 if parent.isValid() else len(NET_WORTH_COLUMNS)
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = 0) -> object:  # noqa: N802
+        if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+            if section == TOTAL:
+                return f"Total en {CURRENCY_LABELS[CURRENCIES.index(self._currency)]}"
+            return NET_WORTH_COLUMNS[section]
+        if role == Qt.ItemDataRole.TextAlignmentRole and section != MONTH:
+            return _RIGHT
+        return None
+
+    def data(self, index: _ModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> object:
+        row, column = index.row(), index.column()
+        point = self._points[row]
+        change = self._change(row)
+        if role == Qt.ItemDataRole.DisplayRole:
+            by_currency = point.net_worth.by_currency
+            total = point.net_worth.total_in[self._currency]
+            return [
+                self._month_text(point.day),
+                by_currency[Currency.ARS].format(),
+                by_currency[Currency.USD].format(),
+                total.format() if total is not None else NO_RATE_TEXT,
+                signed(change) if change is not None else "—",
+            ][column]
+        if role == Qt.ItemDataRole.ForegroundRole and column == CHANGE and change is not None:
+            return QColor(self._theme.amount_color(change))
+        if role == Qt.ItemDataRole.TextAlignmentRole and column != MONTH:
+            return _RIGHT
+        return None
+
+    def _change(self, row: int) -> Money | None:
+        """The move from the previous point (the opening one for the first row)."""
+        before = self._points[row - 1].net_worth if row else self._opening
+        current = self._points[row].net_worth.total_in[self._currency]
+        previous = before.total_in[self._currency] if before else None
+        if current is None or previous is None:
+            return None
+        return current - previous
+
+    @staticmethod
+    def _month_text(day: date) -> str:
+        """The month, and the day when the point is not its last one (today)."""
+        month = Month.of(day)
+        return format_month(month) + ("" if day == month.end else f" · al {format_date(day)}")
+
+
+class NetWorthView(AnalysisView):
+    """The net worth along the period, in pesos or dollars, with its change and split by
+    currency, and a table of what there was at each month end."""
+
+    rate_requested = Signal()
+
+    def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
+        super().__init__()
+        self._services = services
+        self._period: Period | None = None
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(16)
+
+        self.card = NetWorthCard(services, theme_manager)
+        self.card.chart.setMinimumHeight(StackedBarChart.MIN_HEIGHT)
+        self.card.rate_requested.connect(self.rate_requested)
+        self.card.currency_input.changed.connect(lambda _index: self._fill_table())
+        layout.addWidget(self.card)
+
+        table_card = Card()
+        card_header(table_card, "Fin de cada mes")
+        self.model = NetWorthTableModel(theme_manager.theme)
+        self.table = record_table(self.model, MONTH)
+        table_card.body.addWidget(self.table)
+        layout.addWidget(table_card)
+        layout.addStretch()
+
+        theme_manager.theme_changed.connect(self.model.set_theme)
+
+    def show_period(self, period: Period) -> None:
+        self._period = period
+        self.card.show_day(min(period.end, date.today()), period)
+        self._fill_table()
+
+    def _fill_table(self) -> None:
+        if self._period is None:
+            return
+        net_worth = self._services.net_worth
+        points = net_worth.month_ends(self._period, date.today())
+        opening = net_worth.net_worth(self._period.start - timedelta(days=1))
+        self.model.set_points(points, opening, self.card.currency())
+        fit_rows(self.table)

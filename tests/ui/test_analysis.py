@@ -4,17 +4,25 @@ from datetime import date
 
 import pytest
 from factories import ars, category_id, expense_draft, income_draft
+from PySide6.QtCore import Qt
 
 from nodus.models.period import Month, Period, format_month
 from nodus.models.transaction import TransactionType
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.analysis_page import AnalysisPage
-from nodus.ui.pages.analysis_views import NO_PAYEE_LABEL, CashFlowView, TrendsView
+from nodus.ui.pages.analysis_views import (
+    NO_PAYEE_LABEL,
+    NO_RATE_TEXT,
+    CashFlowView,
+    NetWorthView,
+    TrendsView,
+)
 
 EXPENSE = TransactionType.EXPENSE
 SEP_NOV = Period.of_months(Month(2026, 9), Month(2026, 11))
 SAVINGS_TAB = 2
 CASH_FLOW_TAB = 1
+NET_WORTH_TAB = 2
 
 
 @pytest.fixture
@@ -57,7 +65,12 @@ def cash_flow_view(page) -> CashFlowView:
     return page.views[CASH_FLOW_TAB]
 
 
-def table_row(view: CashFlowView, row: int) -> list[str]:
+def net_worth_view(page) -> NetWorthView:
+    page.tabs.set_index(NET_WORTH_TAB)
+    return page.views[NET_WORTH_TAB]
+
+
+def table_row(view: CashFlowView | NetWorthView, row: int) -> list[str]:
     model = view.model
     return [model.index(row, column).data() for column in range(model.columnCount())]
 
@@ -182,3 +195,35 @@ def test_cash_flow_empty_period(page):
     assert view.chart.isHidden()
     assert not view.empty_label.isHidden()
     assert view.model.rowCount() == 3
+
+
+# Net worth
+
+
+def test_net_worth_month_ends_with_their_change(filled):
+    view = net_worth_view(filled)
+
+    assert not view.card.chart.isHidden()
+    assert view.model.rowCount() == 3  # September, October and November so far
+    september, october = table_row(view, 0), table_row(view, 1)
+    assert september[0] == format_month(Month(2026, 9))
+    assert september[4] == "+$ 700,00"  # from the end of August
+    assert october[4] == "-$ 100,00"
+
+
+def test_net_worth_table_follows_the_currency(services, dollars, filled):
+    view = net_worth_view(filled)
+
+    view.card.currency_input.set_index(1)
+
+    assert view.model.headerData(3, Qt.Orientation.Horizontal) == "Total en US$"
+    assert table_row(view, 0)[3] == NO_RATE_TEXT  # no exchange rate loaded
+    assert table_row(view, 0)[4] == "—"
+
+
+def test_net_worth_asks_for_a_rate_in_settings(qtbot, page):
+    view = net_worth_view(page)
+
+    with qtbot.waitSignal(page.navigate_requested) as navigate:
+        view.card.rate_requested.emit()
+    assert navigate.args == [PageId.SETTINGS]

@@ -76,7 +76,7 @@ FULL_DASHBOARD_HEIGHT = 1180
 
 
 # File names of the analysis tabs, in their order.
-ANALYSIS_TABS = ("trends", "cash-flow")
+ANALYSIS_TABS = ("trends", "cash-flow", "net-worth")
 
 
 def render_pages(app: QApplication, services: Services, args: argparse.Namespace) -> None:
@@ -109,6 +109,8 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         analysis = window.page(PageId.ANALYSIS)
         for index, name in enumerate(ANALYSIS_TABS):
             analysis.tabs.set_index(index)
+            # A table that grows to fit its rows resizes its card on a second pass.
+            app.processEvents()
             app.processEvents()
             save(window, args.out / f"analysis-{name}-{mode.value}.png")
         analysis.tabs.set_index(0)

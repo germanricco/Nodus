@@ -71,6 +71,7 @@ class MainWindow(QMainWindow):
         dashboard.budgets_requested.connect(self.show_budgets)
         analysis = AnalysisPage(services, event_bus, theme_manager)
         analysis.transactions_requested.connect(self.show_transactions)
+        analysis.navigate_requested.connect(self.show_page)
         payees = PayeesPage(services, event_bus, theme_manager)
         payees.transactions_requested.connect(
             lambda period, payee_id: self.show_transactions(period, payee_id=payee_id)
