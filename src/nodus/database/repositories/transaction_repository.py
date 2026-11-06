@@ -26,8 +26,9 @@ class TransactionFilter:
     """Criteria for listing transactions. Unset fields do not filter.
 
     ``category_id`` also matches the category's subcategories, and ``text`` searches the note
-    and the payee's name, the latter ignoring case and accents.
-    ``is_transfer`` keeps only transfer legs (True) or only income and expenses (False).
+    and the names of the payee and the tags, these ignoring case and accents.
+    ``is_transfer`` keeps only transfer legs (True) or only income and expenses (False), and
+    ``refund_linked`` only refunds and refunded expenses (True) or neither (False).
     Dates are inclusive.
     """
 
@@ -36,9 +37,11 @@ class TransactionFilter:
     account_id: int | None = None
     category_id: int | None = None
     payee_id: int | None = None
+    tag_id: int | None = None
     type: TransactionType | None = None
     text: str | None = None
     is_transfer: bool | None = None
+    refund_linked: bool | None = None
     limit: int | None = None
 
 
@@ -47,8 +50,8 @@ class TransactionRepository(Repository):
         transaction_id = self._insert(
             "INSERT INTO transactions"
             " (account_id, type, amount_cents, occurred_on, category_id, note, transfer_id,"
-            " payee_id)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            " payee_id, refund_of_id)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             self._values(transaction),
         )
         return dataclasses.replace(transaction, id=transaction_id)
@@ -56,7 +59,7 @@ class TransactionRepository(Repository):
     def update(self, transaction: Transaction) -> None:
         self._execute(
             "UPDATE transactions SET account_id = ?, type = ?, amount_cents = ?, occurred_on = ?,"
-            " category_id = ?, note = ?, transfer_id = ?, payee_id = ?,"
+            " category_id = ?, note = ?, transfer_id = ?, payee_id = ?, refund_of_id = ?,"
             " updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')"
             " WHERE id = ?",
             (*self._values(transaction), transaction.id),
@@ -81,6 +84,20 @@ class TransactionRepository(Repository):
             sql += " LIMIT ?"
             params.append(criteria.limit)
         return [self._from_row(row) for row in self._fetch_all(sql, params)]
+
+    def list_refunds_of(self, expense_id: int) -> list[Transaction]:
+        """The refunds of ``expense_id``, newest first."""
+        rows = self._fetch_all(
+            f"{_SELECT} WHERE t.refund_of_id = ? ORDER BY t.occurred_on DESC, t.id DESC",
+            (expense_id,),
+        )
+        return [self._from_row(row) for row in rows]
+
+    def unlink_refunds_of(self, expense_id: int) -> None:
+        """Turns the refunds of ``expense_id`` back into plain income."""
+        self._execute(
+            "UPDATE transactions SET refund_of_id = NULL WHERE refund_of_id = ?", (expense_id,)
+        )
 
     def delete(self, transaction_id: int) -> None:
         self._execute("DELETE FROM transactions WHERE id = ?", (transaction_id,))
@@ -109,6 +126,11 @@ class TransactionRepository(Repository):
         if criteria.payee_id is not None:
             conditions.append("t.payee_id = ?")
             params.append(criteria.payee_id)
+        if criteria.tag_id is not None:
+            conditions.append(
+                "t.id IN (SELECT transaction_id FROM transaction_tags WHERE tag_id = ?)"
+            )
+            params.append(criteria.tag_id)
         if criteria.type is not None:
             conditions.append("t.type = ?")
             params.append(criteria.type.value)
@@ -116,11 +138,21 @@ class TransactionRepository(Repository):
             conditions.append(
                 "t.transfer_id IS NOT NULL" if criteria.is_transfer else "t.transfer_id IS NULL"
             )
+        if criteria.refund_linked is not None:
+            linked = (
+                "(t.refund_of_id IS NOT NULL"
+                " OR EXISTS (SELECT 1 FROM transactions r WHERE r.refund_of_id = t.id))"
+            )
+            conditions.append(linked if criteria.refund_linked else f"NOT {linked}")
         if criteria.text:
-            payee_text = normalize_name(criteria.text)
-            if payee_text:
-                conditions.append("(t.note LIKE ? OR p.normalized_name LIKE ?)")
-                params.extend([f"%{criteria.text}%", f"%{payee_text}%"])
+            name_text = normalize_name(criteria.text)
+            if name_text:
+                conditions.append(
+                    "(t.note LIKE ? OR p.normalized_name LIKE ? OR t.id IN ("
+                    "SELECT tt.transaction_id FROM transaction_tags tt"
+                    " JOIN tags g ON g.id = tt.tag_id WHERE g.normalized_name LIKE ?))"
+                )
+                params.extend([f"%{criteria.text}%"] + [f"%{name_text}%"] * 2)
             else:
                 conditions.append("t.note LIKE ?")
                 params.append(f"%{criteria.text}%")
@@ -137,6 +169,7 @@ class TransactionRepository(Repository):
             transaction.note,
             transaction.transfer_id,
             transaction.payee_id,
+            transaction.refund_of_id,
         )
 
     @staticmethod
@@ -151,4 +184,5 @@ class TransactionRepository(Repository):
             note=row["note"],
             transfer_id=row["transfer_id"],
             payee_id=row["payee_id"],
+            refund_of_id=row["refund_of_id"],
         )

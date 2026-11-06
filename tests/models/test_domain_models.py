@@ -91,3 +91,15 @@ class TestMonth:
 )
 def test_implied_ars_per_usd(first, second, expected):
     assert implied_ars_per_usd(first, second) == expected
+
+
+@pytest.mark.parametrize(
+    "kind, transfer_id",
+    [(TransactionType.EXPENSE, None), (TransactionType.INCOME, "abc")],
+)
+def test_only_a_plain_income_can_be_a_refund(kind, transfer_id):
+    with pytest.raises(ValueError):
+        Transaction(
+            None, 1, kind, ars("10"), date(2026, 11, 1),
+            category_id=None if transfer_id else 1, transfer_id=transfer_id, refund_of_id=7,
+        )  # fmt: skip

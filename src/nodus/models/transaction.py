@@ -16,6 +16,9 @@ class TransactionType(Enum):
     EXPENSE = "expense"
 
 
+INCOME = TransactionType.INCOME
+
+
 @dataclass(frozen=True)
 class Transaction:
     """One movement in one account.
@@ -23,6 +26,8 @@ class Transaction:
     ``amount`` is always positive; ``type`` gives the direction. Its currency is the
     account's currency. A transaction with a ``transfer_id`` is one leg of a transfer and
     has no category or payee; every other transaction has a category and may have a payee.
+    An income with ``refund_of_id`` pays back that expense, so totals count it as less
+    spending instead of as income.
     """
 
     id: int | None
@@ -34,6 +39,7 @@ class Transaction:
     note: str = ""
     transfer_id: str | None = None
     payee_id: int | None = None
+    refund_of_id: int | None = None
 
     def __post_init__(self) -> None:
         if self.amount.cents <= 0:
@@ -42,6 +48,8 @@ class Transaction:
             raise ValueError("A transaction has either a category or a transfer_id, not both")
         if self.is_transfer and self.payee_id is not None:
             raise ValueError("A transfer has no payee")
+        if self.refund_of_id is not None and (self.is_transfer or self.type is not INCOME):
+            raise ValueError("Only an income that is not a transfer can be a refund")
 
     @property
     def is_transfer(self) -> bool:

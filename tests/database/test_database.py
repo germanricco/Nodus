@@ -91,10 +91,10 @@ def test_corrupt_file_raises_database_error(db_path):
         Database.open(db_path)
 
 
-@pytest.mark.parametrize("released", [1, 2, 3])
+@pytest.mark.parametrize("released", [1, 2, 3, 4])
 def test_migrations_keep_existing_data(db_path, released):
-    """A database from an earlier release (schema 1 is v0.4, 2 is v0.5, 3 is v0.6) with data
-    gets the new tables and keeps its rows."""
+    """A database from an earlier release (schema 1 is v0.4, 2 is v0.5, 3 is v0.6, 4 is
+    v0.7 and v0.8) with data gets the new tables and keeps its rows."""
     migrations = [m for m in load_packaged_migrations() if m.version <= released]
     database = Database.open(db_path, migrations)
     with database.transaction():
@@ -106,8 +106,10 @@ def test_migrations_keep_existing_data(db_path, released):
 
     database = Database.open(db_path)
 
-    assert database.schema_version == 4
-    assert {"recurring_charges", "budget_limits", "payees"} <= table_names(database)
+    assert database.schema_version == 5
+    assert {"recurring_charges", "budget_limits", "payees", "tags", "transaction_tags"} <= (
+        table_names(database)
+    )
     row = database.connection.execute("SELECT name, initial_balance_cents FROM accounts").fetchone()
     assert tuple(row) == ("Banco", 500)
     database.close()
@@ -130,5 +132,28 @@ def test_payees_migration_keeps_transactions_without_payee(db_path):
     database = Database.open(db_path)
 
     row = database.connection.execute("SELECT amount_cents, payee_id FROM transactions").fetchone()
+    assert tuple(row) == (700, None)
+    database.close()
+
+
+def test_refunds_and_tags_migration_keeps_transactions(db_path):
+    migrations = [m for m in load_packaged_migrations() if m.version <= 4]
+    database = Database.open(db_path, migrations)
+    with database.transaction():
+        database.connection.execute(
+            "INSERT INTO accounts (name, type, currency, initial_balance_cents)"
+            " VALUES ('Banco', 'bank', 'ARS', 0)"
+        )
+        database.connection.execute(
+            "INSERT INTO transactions (account_id, type, amount_cents, occurred_on, category_id)"
+            " VALUES (1, 'expense', 700, '2026-11-01', 1)"
+        )
+    database.close()
+
+    database = Database.open(db_path)
+
+    row = database.connection.execute(
+        "SELECT amount_cents, refund_of_id FROM transactions"
+    ).fetchone()
     assert tuple(row) == (700, None)
     database.close()
