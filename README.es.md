@@ -64,6 +64,11 @@ Defines un presupuesto mensual para las categorías que quieres cuidar y ves cu�
 
 <!-- Captura (v1.0): docs/images/budgets-light.png | docs/images/budgets-dark.png -->
 
+### Mirar el año completo
+La página Análisis toma distancia: por defecto, los últimos doce meses. Tendencias muestra tus gastos, ingresos o ahorro mes a mes, apilados por categoría y frente a tu promedio mensual, junto con en qué se fue el dinero por categoría y por beneficiario. Flujo de caja pone lado a lado ingresos, gastos, ahorro y tasa de ahorro con los del período anterior, y Patrimonio sigue cómo creció lo que tienes, fin de mes tras fin de mes, en pesos o en dólares. Un clic en cualquier barra o fila te lleva a los movimientos que la forman.
+
+<!-- Captura (v1.0): docs/images/analysis-trends-light.png | docs/images/analysis-trends-dark.png -->
+
 ### Enterarte de lo importante
 Una campana junta lo que merece tu atención: un pago que vence, un presupuesto excedido, una cotización vieja o una versión nueva para instalar. Además, cada día Nodus guarda una copia de seguridad de tus datos, y puedes restaurar cualquiera desde Ajustes. Todo funciona en tema claro u oscuro.
 
@@ -85,9 +90,8 @@ Para actualizar, instala la versión nueva encima de la anterior: tus datos se c
 
 ## Hoja de ruta
 
-Nodus crece por versiones pequeñas y estables. La **v0.7** ya incluye cuentas, transacciones, cotización del dólar, dashboard, cargos recurrentes, presupuestos, beneficiarios, copias de seguridad y exportación. Lo que viene:
+Nodus crece por versiones pequeñas y estables. La **v0.8** ya incluye cuentas, transacciones, cotización del dólar, dashboard, cargos recurrentes, presupuestos, beneficiarios, análisis, copias de seguridad y exportación. Lo que viene:
 
-- **Análisis:** la evolución de ingresos, gastos y patrimonio en detalle.
 - **Reembolsos y etiquetas:** gastos que te devuelven y etiquetas como «Vacaciones 2026».
 - **Metas y grupos de cuentas:** ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.
 

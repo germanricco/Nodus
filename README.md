@@ -66,6 +66,11 @@ Set a monthly budget for the categories you want to watch and see how much you h
 
 <!-- Screenshot (v1.0): docs/images/budgets-light.png | docs/images/budgets-dark.png -->
 
+### Look back over the year
+The Analysis page takes the long view, the last twelve months by default. Trends shows your spending, income or savings month by month, stacked by category against your monthly average, along with where the money went by category and by payee. Cash flow puts income, expenses, savings and your savings rate side by side with the previous period, and Net worth follows how what you own grew, month end by month end, in pesos or in dollars. Click any bar or row to see the transactions behind it.
+
+<!-- Screenshot (v1.0): docs/images/analysis-trends-light.png | docs/images/analysis-trends-dark.png -->
+
 ### Hear about what matters
 A bell gathers what needs your attention: a payment coming due, a budget passed, a stale exchange rate or a new version to install. Nodus also backs up your data every day, and you can restore any copy from Settings. Everything works in light or dark mode.
 
@@ -87,9 +92,8 @@ To update, install the new version over the old one: your data is kept. Nodus le
 
 ## Roadmap
 
-Nodus grows in small, stable releases. **v0.7** already covers accounts, transactions, dollar exchange rates, the dashboard, recurring charges, budgets, payees, backups and export. Coming next:
+Nodus grows in small, stable releases. **v0.8** already covers accounts, transactions, dollar exchange rates, the dashboard, recurring charges, budgets, payees, analysis, backups and export. Coming next:
 
-- **Analysis:** income, spending and net worth over time, in detail.
 - **Refunds and tags:** expenses that get paid back, and tags such as "Vacation 2026".
 - **Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
 
