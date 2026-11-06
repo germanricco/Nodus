@@ -4,21 +4,22 @@ from __future__ import annotations
 
 import dataclasses
 import sqlite3
+from datetime import date
 
 from nodus.database.repositories.base import Repository
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 
-# Initial balance plus incomes minus expenses. Accounts without transactions get their
-# initial balance thanks to the LEFT JOIN and COALESCE.
+# Initial balance plus incomes minus expenses, up to a day when one is given. Accounts
+# without transactions get their initial balance thanks to the LEFT JOIN and COALESCE.
 _BALANCES_SQL = """
     SELECT a.id,
            a.initial_balance_cents + COALESCE(SUM(
                CASE t.type WHEN 'income' THEN t.amount_cents ELSE -t.amount_cents END
            ), 0) AS balance_cents
     FROM accounts a
-    LEFT JOIN transactions t ON t.account_id = a.id
+    LEFT JOIN transactions t ON t.account_id = a.id AND (? IS NULL OR t.occurred_on <= ?)
     GROUP BY a.id
 """
 
@@ -83,9 +84,13 @@ class AccountRepository(Repository):
         self._execute("DELETE FROM transactions WHERE account_id = ?", (account_id,))
         self._execute("DELETE FROM accounts WHERE id = ?", (account_id,))
 
-    def balances_cents(self) -> dict[int, int]:
-        """Current balance of every account, in cents of the account's own currency."""
-        return {row["id"]: row["balance_cents"] for row in self._fetch_all(_BALANCES_SQL)}
+    def balances_cents(self, on: date | None = None) -> dict[int, int]:
+        """Balance of every account at the end of ``on`` (today's if None), in cents of the
+        account's own currency."""
+        day = on.isoformat() if on else None
+        return {
+            row["id"]: row["balance_cents"] for row in self._fetch_all(_BALANCES_SQL, (day, day))
+        }
 
     @staticmethod
     def _from_row(row: sqlite3.Row) -> Account:

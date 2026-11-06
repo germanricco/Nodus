@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from datetime import date
 
 from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
@@ -63,12 +64,13 @@ class AccountService:
         """Accounts in alphabetical order."""
         return sorted(self._accounts.list(include_archived), key=lambda a: name_sort_key(a.name))
 
-    def balances(self) -> dict[int, Money]:
-        """Current balance of every account (archived included), keyed by account id."""
+    def balances(self, on: date | None = None) -> dict[int, Money]:
+        """Balance of every account (archived included) at the end of ``on``, or the current
+        one if None, keyed by account id."""
         currencies = {a.id: a.currency for a in self._accounts.list(include_archived=True)}
         return {
             account_id: Money(cents, currencies[account_id])
-            for account_id, cents in self._accounts.balances_cents().items()
+            for account_id, cents in self._accounts.balances_cents(on).items()
         }
 
     def balance(self, account_id: int) -> Money:

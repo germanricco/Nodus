@@ -61,7 +61,7 @@ class Services:
             categories=categories,
             transactions=transactions,
             exchange_rates=exchange_rates,
-            net_worth=NetWorthService(accounts, exchange_rates),
+            net_worth=NetWorthService(accounts, transactions, exchange_rates),
             settings=settings,
             dashboard=DashboardService(transactions, categories, exchange_rates),
             updates=UpdateService(__version__),
