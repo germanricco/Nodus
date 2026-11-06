@@ -1,0 +1,106 @@
+<div align="center">
+
+<img src="src/nodus/ui/icons/logo.svg" width="88" alt="Logo de Nodus">
+
+# Nodus
+
+**Tus finanzas, en tu computadora.**
+
+Finanzas personales con el diseño de una app moderna y la privacidad de un archivo que es solo tuyo.<br>
+Sin nube, sin cuentas, sin suscripciones.
+
+[English](README.md) · **Español**
+
+[![Última versión](https://img.shields.io/github/v/release/germanricco/Nodus?label=versi%C3%B3n)](https://github.com/germanricco/Nodus/releases/latest)
+[![Licencia MIT](https://img.shields.io/github/license/germanricco/Nodus?label=licencia)](LICENSE)
+[![Windows 10 y 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4)](https://github.com/germanricco/Nodus/releases/latest)
+
+### [Descargar para Windows](https://github.com/germanricco/Nodus/releases/latest)
+
+</div>
+
+<!-- Captura principal (v1.0): copiar a docs/images/ las capturas de `scripts/screenshot.py --demo` y quitar este comentario.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-full-dark.png">
+  <img src="docs/images/dashboard-full-light.png" alt="El dashboard de Nodus: patrimonio, próximos pagos, gastos por categoría y presupuestos">
+</picture>
+-->
+
+## Por qué Nodus
+
+Las aplicaciones de finanzas personales que se ven bien suelen vivir en la nube: piden crear una cuenta, cobran una suscripción y guardan tu historial financiero en servidores ajenos. Las que funcionan en tu computadora, en cambio, muchas veces parecen de otra época. Nodus busca el punto medio que faltaba: una interfaz cuidada y fluida que corre entera en tu máquina, con todos tus datos en un único archivo que puedes copiar, respaldar o mover cuando quieras.
+
+Nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta tiene su moneda, las compras de dólares guardan lo que salió y lo que entró, y el patrimonio se ve en las dos monedas con la cotización que elijas: MEP, blue u oficial. *Nodus* significa «nodo» en latín, el punto donde las líneas se cruzan, y esa es la idea: tu computadora es el único lugar donde tus datos financieros se encuentran.
+
+## Qué puedes hacer
+
+### Ver tu situación de un vistazo
+El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año) y un clic en una categoría te lleva a sus movimientos.
+
+<!-- Captura (v1.0): docs/images/dashboard-light.png | docs/images/dashboard-dark.png -->
+
+### Llevar tus cuentas en pesos y en dólares
+Registras cada lugar donde tienes dinero, sea el banco, el efectivo, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. La cotización del día puede llegar sola o la cargas a mano.
+
+<!-- Captura (v1.0): docs/images/accounts-light.png | docs/images/accounts-dark.png -->
+
+### Registrar y encontrar tus movimientos
+Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la última cuenta que usaste. La lista se filtra por período, cuenta, categoría, tipo o texto, y lo que ves se exporta a un archivo que se abre en Excel.
+
+<!-- Captura (v1.0): docs/images/transactions-light.png | docs/images/transactions-dark.png -->
+
+### No olvidarte de lo que pagas todos los meses
+Anotas el alquiler, los servicios o las suscripciones una sola vez, y Nodus te muestra cuánto suman por mes, qué vence pronto y qué está atrasado. Pagar uno toma dos clics: el gasto queda registrado y el cargo pasa a su próxima fecha.
+
+<!-- Captura (v1.0): docs/images/recurring-light.png | docs/images/recurring-dark.png -->
+
+### Ponerle un límite a lo que gastas
+Defines un presupuesto mensual para las categorías que quieres cuidar y ves cuánto llevas y cuánto te queda. La barra se pone amarilla cuando gastas más rápido de lo que avanza el mes y roja cuando te pasas, a tiempo para frenar. Para elegir el límite, Nodus te sugiere tu promedio de los últimos meses.
+
+<!-- Captura (v1.0): docs/images/budgets-light.png | docs/images/budgets-dark.png -->
+
+### Enterarte de lo importante
+Una campana junta lo que merece tu atención: un pago que vence, un presupuesto excedido, una cotización vieja o una versión nueva para instalar. Además, cada día Nodus guarda una copia de seguridad de tus datos, y puedes restaurar cualquiera desde Ajustes. Todo funciona en tema claro u oscuro.
+
+<!-- Captura (v1.0): docs/images/notifications-light.png | docs/images/notifications-dark.png -->
+
+## Tus datos son tuyos
+
+Todo vive en un archivo de tu computadora, `%APPDATA%\Nodus\nodus.db`, con las copias diarias al lado, en `%APPDATA%\Nodus\backups`. Actualizar o desinstalar Nodus no lo toca. La aplicación solo se conecta a internet para dos cosas, y puedes desactivar las dos: ver en GitHub si hay una versión nueva, sin enviar ningún dato tuyo, y traer la cotización del dólar de [DolarApi](https://dolarapi.com) si elegiste una automática.
+
+## Descargar e instalar
+
+Nodus funciona en **Windows 10 y 11 de 64 bits**.
+
+1. Descarga `Nodus-Setup-<versión>.exe` desde la [última versión publicada](https://github.com/germanricco/Nodus/releases/latest).
+2. Ábrelo y sigue el asistente. Se instala solo para tu usuario, sin permisos de administrador, y queda en el menú Inicio.
+3. Si Windows muestra «Windows protegió tu PC», haz clic en «Más información» y luego en «Ejecutar de todas formas». Aparece porque el instalador no tiene una firma comercial, que tiene un costo anual. Cada instalador se compila automáticamente en GitHub a partir del código de este repositorio.
+
+Para actualizar, instala la versión nueva encima de la anterior: tus datos se conservan. Cuando haya una nueva, Nodus te avisa.
+
+## Hoja de ruta
+
+Nodus crece por versiones pequeñas y estables. La **v0.6** ya incluye cuentas, transacciones, cotización del dólar, dashboard, cargos recurrentes, presupuestos, copias de seguridad y exportación. Lo que viene:
+
+- **Beneficiarios:** a quién le pagas y de quién cobras.
+- **Análisis:** la evolución de ingresos, gastos y patrimonio en detalle.
+- **Reembolsos y etiquetas:** gastos que te devuelven y etiquetas como «Vacaciones 2026».
+- **Metas y grupos de cuentas:** ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.
+
+## Tecnología
+
+Nodus está escrito en **Python**. La interfaz usa **PySide6**, la versión oficial de Qt para Python, que da aplicaciones nativas y rápidas sin cargar un navegador. Los datos se guardan en **SQLite**, una base de datos de un solo archivo que no necesita servidor. El instalador se arma con PyInstaller e Inno Setup.
+
+## Contribuir
+
+Las ideas y los reportes de errores son bienvenidos en [Issues](https://github.com/germanricco/Nodus/issues). Para ejecutar Nodus desde el código, correr las pruebas o compilar el instalador, mira [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Agradecimientos
+
+Las funciones y el diseño de Nodus se inspiran en [MoneyMatter](https://github.com/letehaha/moneymatter), una aplicación web de finanzas personales de código abierto. Nodus no reutiliza su código: reimplementa sus ideas para una aplicación de escritorio local.
+
+## Licencia
+
+Nodus es software libre bajo la [licencia MIT](LICENSE).
+
+Hecho por [German Ricco](https://github.com/germanricco).

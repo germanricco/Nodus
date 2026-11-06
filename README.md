@@ -1,88 +1,108 @@
 <div align="center">
 
+<img src="src/nodus/ui/icons/logo.svg" width="88" alt="Nodus logo">
+
 # Nodus
 
-**Tus finanzas, en tu computadora.**
+**Your finances, on your computer.**
 
-Una aplicación de escritorio de finanzas personales con la estética de una app moderna y la privacidad de un archivo que es solo tuyo.
+Personal finance with the look of a modern app and the privacy of a file that is yours alone.<br>
+No cloud, no accounts, no subscriptions.
+
+**English** · [Español](README.es.md)
+
+[![Latest release](https://img.shields.io/github/v/release/germanricco/Nodus)](https://github.com/germanricco/Nodus/releases/latest)
+[![MIT License](https://img.shields.io/github/license/germanricco/Nodus)](LICENSE)
+[![Windows 10 and 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4)](https://github.com/germanricco/Nodus/releases/latest)
+
+### [Download for Windows](https://github.com/germanricco/Nodus/releases/latest)
 
 </div>
 
-## Qué es Nodus
+<!-- Main screenshot (v1.0): copy the `scripts/screenshot.py --demo` captures to docs/images/ and remove this comment.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-full-dark.png">
+  <img src="docs/images/dashboard-full-light.png" alt="The Nodus dashboard: net worth, upcoming payments, spending by category and budgets">
+</picture>
+-->
 
-La mayoría de las aplicaciones de finanzas personales que se ven bien viven en la nube: piden crear una cuenta, cobran una suscripción y guardan tu historial financiero en servidores ajenos. Las alternativas locales, en cambio, suelen sentirse como software de otra época. Nodus busca el punto medio que falta: una interfaz fluida y cuidada, como la de las mejores aplicaciones web actuales, que corre enteramente en tu máquina.
+> The app's interface is in Spanish: Nodus was built for people in Argentina who keep their money in both pesos and US dollars.
 
-No hay servidores, ni registro, ni suscripciones. Toda tu información vive en un único archivo en tu disco, que puedes copiar, respaldar o mover cuando quieras. Como no depende de la red, abrir la aplicación, filtrar tus movimientos o ver un gráfico es tan inmediato como trabajar con una hoja de cálculo.
+## Why Nodus
 
-Nodus nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta tiene su moneda, las compras de dólares guardan lo que salió y lo que entró, y el patrimonio se ve en las dos monedas con la cotización que tú elijas, sea el MEP, el blue o el oficial.
+Personal finance apps that look good tend to live in the cloud: they ask you to sign up, charge a subscription and keep your financial history on someone else's servers. The ones that run on your own computer, on the other hand, often feel like software from another era. Nodus aims for the missing middle ground: a polished, fluid interface that runs entirely on your machine, with all your data in a single file you can copy, back up or move whenever you like.
 
-## Por qué "Nodus"
+It was born for people who manage money in pesos and dollars at the same time. Each account has its own currency, dollar purchases record both what went out and what came in, and your net worth shows in either currency at the exchange rate you choose. *Nodus* is Latin for "node", the point where lines meet, and that is the idea: your computer is the only place where your financial data comes together.
 
-*Nodus* significa "nodo" en latín: el punto donde las líneas se cruzan. El nombre describe la idea central del proyecto, que tu computadora sea el único lugar donde tus datos financieros convergen, se procesan y existen.
+## What you can do
 
-## Un recorrido
+### See where you stand at a glance
+The dashboard answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year), and click a category to see its transactions.
 
-El **dashboard** responde de un vistazo las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Arriba está tu patrimonio, en pesos o en dólares, con una curva de su evolución, cuánto cambió en el período y qué parte tienes en cada moneda. A su lado, los próximos pagos y las últimas transacciones. Debajo, un anillo con los gastos por categoría junto a la comparación de cada una con el período anterior, y al final el flujo de caja con los ingresos y los gastos de cada mes lado a lado, junto a tus presupuestos más cerca de su límite. Las tarjetas se acomodan al ancho de la ventana y, cuando no entran, la página se desplaza en lugar de apretarlas. Eliges qué mirar con el selector de arriba: el mes actual, los últimos 3, 6 o 12 meses, este año o el anterior, y las flechas te llevan al período previo o al siguiente. Los gráficos responden al mouse, y un clic en una categoría te lleva a sus transacciones. Cuando cargas un movimiento, todo se actualiza en el momento, con una transición que muestra qué cambió.
+<!-- Screenshot (v1.0): docs/images/dashboard-light.png | docs/images/dashboard-dark.png -->
 
-En **Cuentas** registras cada lugar donde tienes dinero, con su saldo inicial y su moneda: el banco, el efectivo, los ahorros en dólares, una tarjeta de crédito. Los saldos se calculan siempre a partir de los movimientos, así que nunca quedan desfasados. Las cuentas que ya no usas se archivan sin perder su historia, y las que creaste por error se eliminan.
+### Keep accounts in pesos and dollars
+Add every place where you keep money, from your bank and cash to dollar savings or a credit card, and balances are always computed from your transactions. When you buy dollars, Nodus stores both amounts and shows the rate you actually got. Today's exchange rate can be fetched automatically or entered by hand.
 
-**Transacciones** reúne los movimientos del período que elijas en una tabla que puedes filtrar por cuenta, categoría, tipo o texto de la nota, y volver a ver completa con un clic. Un mismo formulario sirve para gastos, ingresos y transferencias, y te ofrece de entrada la cuenta que usaste la última vez. Con «Exportar» guardas lo que ves en un archivo CSV que se abre en Excel. Cuando la transferencia es entre pesos y dólares, Nodus pide los dos montos y te muestra la cotización que realmente obtuviste.
+<!-- Screenshot (v1.0): docs/images/accounts-light.png | docs/images/accounts-dark.png -->
 
-En **Recurrentes** anotas lo que pagas siempre: el alquiler, los servicios, Netflix, el gimnasio, el seguro del auto. Cada cargo tiene su monto, su cuenta, su categoría y cada cuánto se cobra, de semanal a anual, y Nodus te muestra cuánto suman por mes y por año y los agrupa en vencidos, próximos y más adelante. Pagar uno toma dos clics: el formulario ya viene con el monto, la cuenta y la fecha de hoy, y si la factura llegó distinta corriges el monto antes de guardar. El gasto queda registrado y el cargo pasa a su próxima fecha, contada desde la que vencía y no desde el día en que pagaste, así un pago atrasado no corre el calendario; un cargo del 31 cae el 30 en los meses cortos y vuelve al 31 cuando corresponde. Si un mes no hay que pagarlo, lo omites, y si lo dejas de usar por un tiempo, lo pausas. Los próximos pagos también aparecen arriba a la derecha del dashboard, cada uno con su botón «Pagar».
+### Record and find your transactions
+One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, type or text, and whatever you see exports to a file that opens in Excel.
 
-En **Presupuestos** le pones un límite mensual a las categorías que quieres cuidar, como el supermercado o las salidas, y ves mes a mes cuánto llevas gastado y cuánto te queda. La barra de cada categoría está en verde mientras vas bien, se pone amarilla cuando gastas más rápido de lo que avanza el mes y roja cuando te pasas; una marca fina indica dónde deberías ir hoy. Para elegir el límite, Nodus te sugiere el promedio de lo que gastaste en los últimos tres meses. Si lo cambias, rige desde ese mes en adelante y los meses anteriores conservan el suyo, así el historial no se reescribe. Debajo ves lo que gastaste en las categorías que todavía no tienen límite, y un clic en cualquier categoría te lleva a sus movimientos del mes.
+<!-- Screenshot (v1.0): docs/images/transactions-light.png | docs/images/transactions-dark.png -->
 
-Las **categorías** vienen con un set corto pensado para el día a día, separado en gastos e ingresos, y puedes crear las tuyas con su color o abrir subcategorías dentro de una existente. Si borras una categoría, sus movimientos pasan a «Otros» en lugar de perderse.
+### Never forget what you pay every month
+Enter rent, utilities or subscriptions once, and Nodus shows what they add up to per month, what is due soon and what is overdue. Paying one takes two clicks: the expense is recorded and the charge moves on to its next date.
 
-En **Ajustes** eliges entre tema claro, oscuro o el del sistema y de dónde sale la cotización del dólar: con MEP, Blue u Oficial, Nodus trae el valor del día al abrirse; con Manual, la cargas tú con su fecha. En los dos casos guarda el historial y usa en cada día la que correspondía. Ahí también están tus datos: cada día Nodus guarda una copia de seguridad, y desde Ajustes puedes hacer una en el momento, restaurar una anterior o exportar todos tus movimientos. Por último, ves qué versión tienes y decides si Nodus busca actualizaciones al abrirse.
+<!-- Screenshot (v1.0): docs/images/recurring-light.png | docs/images/recurring-dark.png -->
 
-La campana de la barra superior junta lo que merece tu atención: una versión nueva para descargar, cargos recurrentes vencidos o que vencen en los próximos tres días, un presupuesto que pasaste este mes, una cotización del dólar que quedó vieja o una copia de seguridad que no se pudo hacer. Al lado, el engranaje te lleva a Ajustes.
+### Put a limit on your spending
+Set a monthly budget for the categories you want to watch and see how much you have spent and how much is left. The bar turns amber when you spend faster than the month goes by and red when you go over, early enough to slow down. To choose a limit, Nodus suggests your average of the last few months.
 
-## Estado del proyecto
+<!-- Screenshot (v1.0): docs/images/budgets-light.png | docs/images/budgets-dark.png -->
 
-La versión **v0.6** cubre cuentas en pesos y dólares, ingresos, gastos y transferencias, categorías, la cotización del dólar automática o manual, copias de seguridad diarias y exportación a CSV, un dashboard por período con la evolución del patrimonio, el flujo de caja mes a mes y gráficos interactivos que se actualizan solos, y los cargos recurrentes con sus vencimientos. Suma los presupuestos: un límite mensual por categoría que muestra si el gasto va al ritmo del mes y avisa en la campana cuando te pasas. Se instala como cualquier programa de Windows. Lo que sigue son los beneficiarios, para saber a quién le pagas y de quién cobras.
+### Hear about what matters
+A bell gathers what needs your attention: a payment coming due, a budget passed, a stale exchange rate or a new version to install. Nodus also backs up your data every day, and you can restore any copy from Settings. Everything works in light or dark mode.
 
-## Descargar Nodus
+<!-- Screenshot (v1.0): docs/images/notifications-light.png | docs/images/notifications-dark.png -->
 
-Nodus funciona en Windows 10 y 11 de 64 bits. Descarga `Nodus-Setup-<versión>.exe` desde la [última versión publicada](https://github.com/germanricco/Nodus/releases/latest), ábrelo y sigue el asistente. Se instala solo para tu usuario, sin pedir permisos de administrador, y queda en el menú Inicio.
+## Your data stays yours
 
-La primera vez es probable que Windows muestre «Windows protegió tu PC». Aparece con los programas que no están firmados con un certificado comercial, que tiene un costo anual difícil de justificar para un proyecto personal y gratuito. Para seguir, haz clic en «Más información» y luego en «Ejecutar de todas formas». Si prefieres revisar lo que instalas, el código completo está en este repositorio y cada instalador se compila automáticamente en GitHub a partir de él.
+Everything lives in one file on your computer, `%APPDATA%\Nodus\nodus.db`, with the daily backups next to it in `%APPDATA%\Nodus\backups`. Updating or uninstalling Nodus never touches it. The app only goes online for two things, and you can turn both off: checking GitHub for a new version, without sending any of your data, and fetching the dollar rate from [DolarApi](https://dolarapi.com) if you chose an automatic one.
 
-Tus datos se guardan aparte del programa, en `%APPDATA%\Nodus\nodus.db`. Para actualizar basta con instalar la versión nueva encima de la anterior, y desinstalar Nodus desde la configuración de Windows tampoco toca ese archivo. Las copias de seguridad diarias quedan al lado, en `%APPDATA%\Nodus\backups`.
+## Download and install
 
-Al abrirse, Nodus consulta en GitHub cuál es la última versión publicada y, si hay una más nueva, lo avisa en la campana de la barra superior con un enlace para descargarla. Esa consulta solo pide el número de versión: no envía ningún dato tuyo. Si no la quieres, se desactiva en Ajustes. De la misma forma, si elegiste una cotización automática, Nodus pide a [DolarApi](https://dolarapi.com) los valores del día; con la cotización en Manual no se conecta.
+Nodus runs on **64-bit Windows 10 and 11**.
 
-## Desarrollo
+1. Download `Nodus-Setup-<version>.exe` from the [latest release](https://github.com/germanricco/Nodus/releases/latest).
+2. Open it and follow the wizard. It installs for your user only, without administrator rights, and shows up in the Start menu.
+3. If Windows says "Windows protected your PC", click "More info" and then "Run anyway". The warning appears because the installer has no commercial code-signing certificate, which costs a yearly fee. Every installer is built automatically on GitHub from the code in this repository.
 
-Para ejecutar Nodus desde el código hace falta Python 3.11. En Windows, conviene instalarlo desde [python.org](https://www.python.org/downloads/) y no desde la Microsoft Store: esa versión guarda los archivos de `AppData` en una carpeta privada, donde el Explorador no los encuentra. Desde una terminal, en la carpeta del proyecto:
+To update, install the new version over the old one: your data is kept. Nodus lets you know when a new version is out.
 
-```bash
-python -m venv .venv
-.venv/Scripts/python -m pip install -e ".[dev]"   # en Linux o macOS: .venv/bin/python
-.venv/Scripts/python -m nodus
-```
+## Roadmap
 
-Para probar sin tocar tus datos reales, define la variable de entorno `NODUS_DATA_DIR` con otra carpeta antes de abrirlo. Estos son los comandos de uso diario:
+Nodus grows in small, stable releases. **v0.6** already covers accounts, transactions, dollar exchange rates, the dashboard, recurring charges, budgets, backups and export. Coming next:
 
-```bash
-.venv/Scripts/python -m pytest                       # tests
-.venv/Scripts/python -m ruff check .                 # lint
-.venv/Scripts/python -m ruff format .                # formato
-.venv/Scripts/python scripts/screenshot.py --demo    # capturas de cada pantalla, claras y oscuras
-```
+- **Payees:** who you pay and who pays you.
+- **Analysis:** income, spending and net worth over time, in detail.
+- **Refunds and tags:** expenses that get paid back, and tags such as "Vacation 2026".
+- **Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
 
-El instalador se arma con `pip install -e ".[build]"` y `.venv/Scripts/python scripts/build.py`, que congela la aplicación con PyInstaller en `dist/Nodus` y, si encuentra [Inno Setup 6](https://jrsoftware.org/isinfo.php), genera `dist/Nodus-Setup-<versión>.exe`. Para publicar una versión se sube una etiqueta anotada con el número de `nodus.__version__` (por ejemplo `v0.2.0`, con las novedades en el mensaje): GitHub Actions corre los tests, compila el instalador y crea el release.
+## Technology
 
-El código está organizado en capas que solo dependen hacia abajo: la interfaz (`ui`) usa los servicios con las reglas de negocio (`services`), que usan los repositorios sobre SQLite (`database`), que trabajan con el dominio puro (`models`). Los montos se guardan en centavos enteros, nunca en números de punto flotante.
+Nodus is written in **Python**. The interface uses **PySide6**, the official Qt for Python, which gives fast native apps without shipping a browser. Data is stored in **SQLite**, a single-file database that needs no server. The installer is built with PyInstaller and Inno Setup.
 
-## Tecnología
+## Contributing
 
-Nodus está escrito en Python, por su rapidez de desarrollo y su ecosistema para el manejo de datos. La interfaz usa PySide6, la versión oficial de Qt para Python, que permite construir aplicaciones nativas con un diseño moderno sin cargar un navegador entero. Los datos se guardan en SQLite, una base de datos de un solo archivo que no necesita instalación ni servidor y que resiste años de uso diario. El instalador se arma con PyInstaller e Inno Setup.
+Ideas and bug reports are welcome in [Issues](https://github.com/germanricco/Nodus/issues). To run Nodus from source, run the tests or build the installer, see [CONTRIBUTING.md](CONTRIBUTING.md) (in Spanish).
 
-## Referencias
+## Acknowledgements
 
-Las funciones y el diseño de la interfaz de Nodus se inspiran en [MoneyMatter](https://github.com/letehaha/moneymatter), una aplicación web de finanzas personales de código abierto. Nodus no reutiliza su código: reimplementa sus ideas en Python y Qt para una aplicación de escritorio local.
+Nodus's features and design are inspired by [MoneyMatter](https://github.com/letehaha/moneymatter), an open-source personal finance web app. Nodus reuses none of its code: it reimplements its ideas as a local desktop application.
 
-## Licencia
+## License
 
-Nodus es software libre bajo la [licencia MIT](LICENSE): puedes usarlo, modificarlo y redistribuirlo, incluso con fines comerciales, siempre que conserves el aviso de copyright con la referencia a este repositorio.
+Nodus is free software under the [MIT License](LICENSE).
+
+Made by [German Ricco](https://github.com/germanricco).

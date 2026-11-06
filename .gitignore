@@ -49,6 +49,7 @@ referencias/
 
 # Archivos de trabajo (planes, notas, tareas e instrucciones para Claude): quedan en local
 docs/plans/
+docs/especificacion_de_proyecto.md
 NOTES.md
 TASKS.md
 CLAUDE.md

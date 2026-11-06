@@ -12,6 +12,11 @@ license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = ["PySide6>=6.8"]
 
+[project.urls]
+Homepage = "https://github.com/germanricco/Nodus"
+Releases = "https://github.com/germanricco/Nodus/releases"
+Issues = "https://github.com/germanricco/Nodus/issues"
+
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.7"]
 build = ["pyinstaller>=6.10", "pillow>=10"]
