@@ -17,7 +17,9 @@ from nodus.services.category_service import CategoryService
 from nodus.services.dashboard_service import DashboardService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.export_service import ExportService
+from nodus.services.http import downloader
 from nodus.services.net_worth_service import NetWorthService
+from nodus.services.rate_feed_service import RateFeedService
 from nodus.services.settings_service import SettingsService
 from nodus.services.transaction_service import TransactionService
 from nodus.services.update_service import UpdateService
@@ -41,6 +43,7 @@ class Services:
     updates: UpdateService
     backups: BackupService
     export: ExportService
+    rate_feed: RateFeedService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -52,15 +55,17 @@ class Services:
         transactions = TransactionService(
             database, TransactionRepository(database), account_repository, category_repository
         )
+        settings = SettingsService(database, SettingsRepository(database))
         return cls(
             accounts=accounts,
             categories=categories,
             transactions=transactions,
             exchange_rates=exchange_rates,
             net_worth=NetWorthService(accounts, exchange_rates),
-            settings=SettingsService(database, SettingsRepository(database)),
+            settings=settings,
             dashboard=DashboardService(transactions, categories, exchange_rates),
             updates=UpdateService(__version__),
             backups=BackupService(database, database.path.parent / "backups"),
             export=ExportService(accounts, categories),
+            rate_feed=RateFeedService(exchange_rates, settings, downloader(f"Nodus/{__version__}")),
         )

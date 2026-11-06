@@ -18,6 +18,8 @@ class SettingsService:
 
     THEME_KEY = "theme"
     CHECK_UPDATES_KEY = "check_updates"
+    RATE_SOURCE_KEY = "rate_source"
+    LAST_ACCOUNT_KEY = "last_account_id"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -43,3 +45,11 @@ class SettingsService:
     def set_check_updates(self, enabled: bool) -> None:
         with self._database.transaction():
             self._settings.set(self.CHECK_UPDATES_KEY, "true" if enabled else "false")
+
+    def rate_source(self) -> str | None:
+        """Where the dollar rate comes from ("manual", "bolsa"…), or None if never chosen."""
+        return self._settings.get(self.RATE_SOURCE_KEY)
+
+    def set_rate_source(self, source: str) -> None:
+        with self._database.transaction():
+            self._settings.set(self.RATE_SOURCE_KEY, source)

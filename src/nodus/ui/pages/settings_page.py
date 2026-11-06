@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl, Signal
@@ -28,12 +29,14 @@ from nodus.models.money import Money
 from nodus.services.backup_service import BackupService
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
+from nodus.services.rate_feed_service import SOURCES
 from nodus.services.update_service import REPOSITORY_URL
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import export_transactions
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.pages.page import Page
+from nodus.ui.rate_updater import RateUpdater
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
@@ -103,10 +106,14 @@ class SettingsPage(Page):
         self.content_layout.addWidget(scroll)
 
         event_bus.exchange_rates_changed.connect(self.refresh)
+        self._rate_updater = RateUpdater(services, event_bus, parent=self)
+        self._rate_updater.updated.connect(self._on_rate_updated)
+        self._rate_updater.failed.connect(self._on_rate_failed)
 
     def refresh(self) -> None:
         self.theme_input.set_index(THEME_MODES.index(self._theme_manager.mode))
         self._refresh_rates()
+        self._refresh_rate_source()
         self._refresh_backup_status()
         self.check_updates_input.setChecked(self._services.settings.check_updates())
 
@@ -134,13 +141,30 @@ class SettingsPage(Page):
     def _rate_card(self) -> Card:
         card = Card("Cotización del dólar")
         intro = QLabel(
-            "Cuántos pesos vale un dólar, según la cotización que uses (MEP, blue, oficial)."
-            " Se usa para ver el patrimonio en las dos monedas; cada fecha usa la última"
-            " cotización cargada hasta ese día."
+            "Cuántos pesos vale un dólar. Se usa para ver el patrimonio en las dos monedas;"
+            " cada fecha usa la última cotización cargada hasta ese día. Con MEP, Blue u"
+            " Oficial, Nodus trae el valor de venta del día desde DolarApi al abrirse; con"
+            " Manual, la cargas tú."
         )
         intro.setWordWrap(True)
         set_style_property(intro, "muted", True)
         card.body.addWidget(intro)
+
+        self.rate_source_input = SegmentedControl(list(SOURCES.values()))
+        self.rate_source_input.changed.connect(self._set_rate_source)
+        self.refresh_rate_button = QPushButton("Actualizar ahora")
+        self.refresh_rate_button.setObjectName("SecondaryButton")
+        self.refresh_rate_button.clicked.connect(self.refresh_rate)
+        self.rate_feed_label = QLabel()
+        self.rate_feed_label.setObjectName("FieldHint")
+        source_row = QHBoxLayout()
+        source_row.setSpacing(8)
+        source_row.addWidget(QLabel("Fuente"))
+        source_row.addWidget(self.rate_source_input)
+        source_row.addWidget(self.refresh_rate_button)
+        source_row.addWidget(self.rate_feed_label)
+        source_row.addStretch()
+        card.body.addLayout(source_row)
 
         self.current_rate_label = QLabel()
         self.current_rate_label.setObjectName("RowTitle")
@@ -181,6 +205,34 @@ class SettingsPage(Page):
         self._history.setSpacing(0)
         card.body.addLayout(self._history)
         return card
+
+    def _set_rate_source(self, index: int) -> None:
+        source = list(SOURCES)[index]
+        feed = self._services.rate_feed
+        if source == feed.source():
+            return
+        feed.set_source(source)
+        self._refresh_rate_source()
+        self.refresh_rate()
+
+    def refresh_rate(self) -> None:
+        """Replaces today's rate with the one the chosen source publishes now."""
+        if self._services.rate_feed.is_automatic():
+            self.rate_feed_label.setText("Consultando…")
+            self._rate_updater.update(force=True)
+
+    def _on_rate_updated(self, value: Decimal) -> None:
+        self.rate_feed_label.setText("Cotización de hoy actualizada.")
+
+    def _on_rate_failed(self) -> None:
+        self.rate_feed_label.setText("No se pudo consultar DolarApi; se usa la última guardada.")
+
+    def _refresh_rate_source(self) -> None:
+        feed = self._services.rate_feed
+        self.rate_source_input.set_index(list(SOURCES).index(feed.source()))
+        automatic = feed.is_automatic()
+        self.refresh_rate_button.setVisible(automatic)
+        self.rate_feed_label.setText("Se actualiza al abrir Nodus." if automatic else "")
 
     def save_rate(self) -> None:
         try:

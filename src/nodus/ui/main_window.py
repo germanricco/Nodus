@@ -24,6 +24,7 @@ from nodus.ui.pages.dashboard_page import DashboardPage
 from nodus.ui.pages.page import Page
 from nodus.ui.pages.settings_page import SettingsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
+from nodus.ui.rate_updater import RateUpdater
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.sidebar import Sidebar
 from nodus.ui.widgets.top_bar import TopBar
@@ -92,6 +93,13 @@ class MainWindow(QMainWindow):
         self._update_check = BackgroundCall(self._services.updates.check, parent=self)
         self._update_check.done.connect(self._show_release)
         self._update_check.start()
+
+    def update_exchange_rate(self) -> None:
+        """Brings today's dollar rate in the background when the source is automatic.
+
+        Called by the app once the window is open, like ``check_for_updates``."""
+        self._rate_updater = RateUpdater(self._services, self._event_bus, parent=self)
+        self._rate_updater.update()
 
     def _show_release(self, release: Release | None) -> None:
         if release is not None:

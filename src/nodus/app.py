@@ -49,6 +49,7 @@ class NodusApp:
             window = MainWindow(services, EventBus(), theme_manager)
             window.show()
             window.check_for_updates()
+            window.update_exchange_rate()
             return self._qt_app.exec()
         finally:
             database.close()
