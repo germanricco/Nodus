@@ -40,7 +40,7 @@ La campana de la barra superior junta lo que merece tu atención: una versión n
 
 ## Estado del proyecto
 
-La versión **v0.5** cubre cuentas en pesos y dólares, ingresos, gastos y transferencias, categorías, la cotización del dólar automática o manual, copias de seguridad diarias y exportación a CSV, y un dashboard por período con la evolución del patrimonio, el flujo de caja mes a mes y gráficos interactivos que se actualizan solos. Suma los cargos recurrentes y las suscripciones: Nodus sabe cuándo vence cada uno, cuánto suman por mes y te avisa en la campana de la barra superior cuando llega la fecha. Se instala como cualquier programa de Windows. Lo que sigue son los presupuestos.
+La versión **v0.6** cubre cuentas en pesos y dólares, ingresos, gastos y transferencias, categorías, la cotización del dólar automática o manual, copias de seguridad diarias y exportación a CSV, un dashboard por período con la evolución del patrimonio, el flujo de caja mes a mes y gráficos interactivos que se actualizan solos, y los cargos recurrentes con sus vencimientos. Suma los presupuestos: un límite mensual por categoría que muestra si el gasto va al ritmo del mes y avisa en la campana cuando te pasas. Se instala como cualquier programa de Windows. Lo que sigue son los beneficiarios, para saber a quién le pagas y de quién cobras.
 
 ## Descargar Nodus
 
