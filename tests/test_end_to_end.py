@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from factories import ars, usd
+from factories import ars, light_theme, usd
 from PySide6.QtWidgets import QLabel
 
 from nodus.database.database import Database
@@ -42,7 +42,7 @@ def create_account(qtbot, services, event_bus, name: str, currency: Currency, ba
 
 
 def record(qtbot, services, event_bus, mode: int, **fields) -> None:
-    dialog = TransactionDialog(services, event_bus)
+    dialog = TransactionDialog(services, event_bus, light_theme())
     dialog.mode_input.set_index(mode)
     dialog.account_input.select(fields["account"].id)
     if "to_account" in fields:

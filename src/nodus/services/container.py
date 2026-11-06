@@ -96,7 +96,7 @@ class Services:
             dashboard=dashboard,
             updates=UpdateService(__version__),
             backups=backups,
-            export=ExportService(accounts, categories, payees),
+            export=ExportService(accounts, categories, payees, transactions),
             rate_feed=RateFeedService(exchange_rates, settings, downloader(f"Nodus/{__version__}")),
             notifications=NotificationService(
                 settings, accounts, exchange_rates, backups, recurring, budgets

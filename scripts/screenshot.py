@@ -49,7 +49,7 @@ DIALOGS = {
         services, event_bus, parent=window
     ),
     "transaction-dialog": lambda services, event_bus, window: TransactionDialog(
-        services, event_bus, parent=window
+        services, event_bus, window.theme_manager, parent=window
     ),
     "transfer-dialog": lambda services, event_bus, window: transfer_dialog(
         services, event_bus, window
@@ -62,7 +62,7 @@ DIALOGS = {
 
 def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
     """A transfer from pesos to dollars, to show the implied exchange rate."""
-    dialog = TransactionDialog(services, event_bus, parent=window)
+    dialog = TransactionDialog(services, event_bus, window.theme_manager, parent=window)
     dialog.mode_input.set_index(TRANSFER_MODE)
     dialog.account_input.setCurrentIndex(dialog.account_input.findText("Banco"))
     dialog.amount_input.line_edit.setText("121.550")

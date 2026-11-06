@@ -17,7 +17,9 @@ from nodus.services.errors import ValidationError
 from nodus.services.transaction_service import TransactionDraft, TransferDraft
 from nodus.ui.dialogs.account_fields import required_account, selectable_accounts
 from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.dialogs.refund_picker import RefundField
 from nodus.ui.event_bus import EventBus
+from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.payee_input import PayeeInput
@@ -28,6 +30,8 @@ from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
 EXPENSE_MODE, INCOME_MODE, TRANSFER_MODE = range(3)
 MODE_LABELS = ["Gasto", "Ingreso", "Transferencia"]
 _MODE_TYPES = {EXPENSE_MODE: TransactionType.EXPENSE, INCOME_MODE: TransactionType.INCOME}
+# The default income category for refunds.
+REFUNDS_CATEGORY = "Reembolsos"
 
 
 class TransactionDialog(FormDialog):
@@ -39,13 +43,15 @@ class TransactionDialog(FormDialog):
     versa, but a transfer stays a transfer, since they are stored differently.
 
     Choosing a known payee fills in its suggested category, unless the user already
-    picked one by hand, which an edited transaction counts as.
+    picked one by hand, which an edited transaction counts as. An income can be linked to
+    the expense it pays back; an edited expense shows how much of it was refunded.
     """
 
     def __init__(
         self,
         services: Services,
         event_bus: EventBus,
+        theme_manager: ThemeManager,
         transaction: Transaction | None = None,
         parent: QWidget | None = None,
     ) -> None:
@@ -68,6 +74,11 @@ class TransactionDialog(FormDialog):
         self.date_input = DateInput()
         self.note_input = QLineEdit()
         self.note_input.setPlaceholderText("Opcional")
+        self.refund_input = RefundField(
+            services, theme_manager, transaction.id if transaction else None
+        )
+        self.refunded_hint = QLabel()
+        self.refunded_hint.setObjectName("FieldHint")
 
         self.form.addRow("Cuenta", self.account_input)
         self.form.addRow("Hacia", self.to_account_input)
@@ -78,6 +89,8 @@ class TransactionDialog(FormDialog):
         self.form.addRow("Categoría", self.category_input)
         self.form.addRow("Fecha", self.date_input)
         self.form.addRow("Nota", self.note_input)
+        self.form.addRow("Reembolso de", self.refund_input)
+        self.form.addRow("", self.refunded_hint)
 
         self._load_accounts()
         self.mode_input.changed.connect(self._update_mode)
@@ -87,6 +100,7 @@ class TransactionDialog(FormDialog):
         self.amount_in_input.line_edit.textChanged.connect(self._update_rate_hint)
         self.payee_input.payee_chosen.connect(self._suggest_category)
         self.category_input.activated.connect(self._mark_category_picked)
+        self.refund_input.changed.connect(self._suggest_refund_category)
 
         if transaction:
             self._load(transaction)
@@ -129,8 +143,21 @@ class TransactionDialog(FormDialog):
             self.amount_input.set_money(transaction.amount)
             if transaction.payee_id is not None:
                 self.payee_input.set_text(self._services.payees.get(transaction.payee_id).name)
+            if transaction.refund_of_id is not None:
+                self.refund_input.set_expense(
+                    self._services.transactions.get(transaction.refund_of_id)
+                )
+            self._show_refunded(transaction)
         self.date_input.set_day(transaction.occurred_on)
         self.note_input.setText(transaction.note)
+
+    def _show_refunded(self, transaction: Transaction) -> None:
+        """ "Reembolsado $ 400,00 de $ 1.000,00", for an expense with refunds."""
+        summary = self._services.transactions.refund_summary(transaction.id)
+        if summary.refunds:
+            self.refunded_hint.setText(
+                f"Reembolsado {summary.refunded.format()} de {transaction.amount.format()}"
+            )
 
     def _legs(self, transaction: Transaction) -> list[Transaction]:
         if not transaction.is_transfer:
@@ -147,6 +174,10 @@ class TransactionDialog(FormDialog):
         self.form.setRowVisible(self.to_account_input, transfer)
         self.form.setRowVisible(self.payee_input, not transfer)
         self.form.setRowVisible(self.category_input, not transfer)
+        income = self.mode_input.index() == INCOME_MODE
+        self.form.setRowVisible(self.refund_input, income)
+        expense = self.mode_input.index() == EXPENSE_MODE
+        self.form.setRowVisible(self.refunded_hint, expense and bool(self.refunded_hint.text()))
         if transfer:
             self._pick_distinct_destination()
         else:
@@ -171,6 +202,15 @@ class TransactionDialog(FormDialog):
         category_id = self._services.payees.suggested_category(payee.id, kind)
         if category_id is not None:
             self.category_input.select(category_id)
+
+    def _suggest_refund_category(self) -> None:
+        """A refund goes to the "Reembolsos" income category, unless one was picked."""
+        if self._category_picked or self.refund_input.expense_id() is None:
+            return
+        for category in self._services.categories.list_categories(TransactionType.INCOME):
+            if category.name == REFUNDS_CATEGORY:
+                self.category_input.select(category.id)
+                return
 
     def _pick_distinct_destination(self) -> None:
         """For a new transfer, starts with a destination other than the source."""
@@ -229,6 +269,7 @@ class TransactionDialog(FormDialog):
             category_id=category_id,
             note=self.note_input.text(),
             payee_name=self.payee_input.text(),
+            refund_of_id=self.refund_input.expense_id(),
         )
         if self._transaction:
             self._services.transactions.update(self._transaction.id, draft)

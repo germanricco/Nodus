@@ -2,6 +2,8 @@
 
 from datetime import date
 
+from PySide6.QtWidgets import QApplication
+
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.recurring_charge import Frequency
@@ -9,6 +11,8 @@ from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
 from nodus.services.recurring_charge_service import RecurringChargeDraft
 from nodus.services.transaction_service import TransactionDraft
+from nodus.ui.theme.theme import ThemeMode
+from nodus.ui.theme.theme_manager import ThemeManager
 
 TODAY = date(2026, 11, 5)
 
@@ -67,3 +71,8 @@ def charge_draft(
         "next_due_on": due,
     }
     return RecurringChargeDraft(**(values | overrides))
+
+
+def light_theme() -> ThemeManager:
+    """A light theme for widgets that need one, built over the running application."""
+    return ThemeManager(QApplication.instance(), ThemeMode.LIGHT)

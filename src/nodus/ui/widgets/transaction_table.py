@@ -1,0 +1,78 @@
+"""The table of movements, shared by the transactions page and the refund picker."""
+
+from __future__ import annotations
+
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
+from PySide6.QtGui import QColor
+
+from nodus.ui.formatting import format_date
+from nodus.ui.theme.theme import Theme
+from nodus.ui.transaction_list import REFUND_MARK, TransactionListItem
+from nodus.ui.widgets.color import color_icon
+
+DATE, DESCRIPTION, PAYEE, CATEGORY, ACCOUNT, AMOUNT = range(6)
+COLUMN_TITLES = ["Fecha", "Descripción", "Beneficiario", "Categoría", "Cuenta", "Monto"]
+
+
+_ModelIndex = QModelIndex | QPersistentModelIndex
+
+
+class TransactionTableModel(QAbstractTableModel):
+    """Exposes list items to a table view, coloring amounts with the current theme."""
+
+    def __init__(self, theme: Theme) -> None:
+        super().__init__()
+        self._items: list[TransactionListItem] = []
+        self._theme = theme
+
+    def set_items(self, items: list[TransactionListItem]) -> None:
+        self.beginResetModel()
+        self._items = items
+        self.endResetModel()
+
+    def set_theme(self, theme: Theme) -> None:
+        self._theme = theme
+        if self._items:
+            self.dataChanged.emit(self.index(0, AMOUNT), self.index(len(self._items) - 1, AMOUNT))
+
+    def item(self, row: int) -> TransactionListItem:
+        return self._items[row]
+
+    def rowCount(self, parent: _ModelIndex = QModelIndex()) -> int:  # noqa: B008, N802
+        return 0 if parent.isValid() else len(self._items)
+
+    def columnCount(self, parent: _ModelIndex = QModelIndex()) -> int:  # noqa: B008, N802
+        return 0 if parent.isValid() else len(COLUMN_TITLES)
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = 0) -> object:  # noqa: N802
+        if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+            return COLUMN_TITLES[section]
+        if role == Qt.ItemDataRole.TextAlignmentRole and section == AMOUNT:
+            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        return None
+
+    def data(self, index: _ModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> object:
+        item = self._items[index.row()]
+        column = index.column()
+        if role == Qt.ItemDataRole.DisplayRole:
+            return self._text(item, column)
+        if role == Qt.ItemDataRole.DecorationRole and column == CATEGORY and item.category_color:
+            return color_icon(item.category_color)
+        if role == Qt.ItemDataRole.ForegroundRole and column == AMOUNT:
+            return QColor(self._theme.tone_color(item.tone))
+        if role == Qt.ItemDataRole.ToolTipRole and column == DESCRIPTION and item.refund_text:
+            return item.refund_text
+        if role == Qt.ItemDataRole.TextAlignmentRole and column == AMOUNT:
+            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        return None
+
+    @staticmethod
+    def _text(item: TransactionListItem, column: int) -> str:
+        return [
+            format_date(item.occurred_on),
+            f"{REFUND_MARK} {item.description}" if item.refund_text else item.description,
+            item.payee_name,
+            item.category_name,
+            item.account_text,
+            item.amount_text,
+        ][column]

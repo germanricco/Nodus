@@ -53,6 +53,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1100, 700)
         self.resize(1280, 800)
 
+        self.theme_manager = theme_manager
         self.sidebar = Sidebar(services, event_bus, theme_manager)
         self.top_bar = TopBar(theme_manager)
         self.notification_panel = NotificationPanel(self)
@@ -212,4 +213,4 @@ class MainWindow(QMainWindow):
             )
             self.show_page(PageId.ACCOUNTS)
             return
-        TransactionDialog(self._services, self._event_bus, parent=self).exec()
+        TransactionDialog(self._services, self._event_bus, self.theme_manager, parent=self).exec()

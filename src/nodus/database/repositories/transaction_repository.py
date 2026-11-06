@@ -93,6 +93,19 @@ class TransactionRepository(Repository):
         )
         return [self._from_row(row) for row in rows]
 
+    def refund_totals(self) -> dict[int, list[Money]]:
+        """What has been refunded of each refunded expense, one amount per currency."""
+        rows = self._fetch_all(
+            "SELECT t.refund_of_id, a.currency, SUM(t.amount_cents) AS cents"
+            " FROM transactions t JOIN accounts a ON a.id = t.account_id"
+            " WHERE t.refund_of_id IS NOT NULL GROUP BY t.refund_of_id, a.currency"
+        )
+        totals: dict[int, list[Money]] = {}
+        for row in rows:
+            money = Money(row["cents"], Currency(row["currency"]))
+            totals.setdefault(row["refund_of_id"], []).append(money)
+        return totals
+
     def unlink_refunds_of(self, expense_id: int) -> None:
         """Turns the refunds of ``expense_id`` back into plain income."""
         self._execute(

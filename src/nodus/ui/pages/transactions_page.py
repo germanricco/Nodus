@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableView
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
@@ -16,25 +15,22 @@ from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.pages.page import Page
-from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.color import color_icon
 from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox, PayeeComboBox
 from nodus.ui.widgets.table import record_table
+from nodus.ui.widgets.transaction_table import DESCRIPTION, TransactionTableModel
 
-# Type filter: label -> (transaction type, is_transfer) criteria.
+# Type filter: label -> (transaction type, is_transfer, refund_linked) criteria.
 TYPE_FILTERS = {
-    "Todos los tipos": (None, None),
-    "Gastos": (TransactionType.EXPENSE, False),
-    "Ingresos": (TransactionType.INCOME, False),
-    "Transferencias": (None, True),
+    "Todos los tipos": (None, None, None),
+    "Gastos": (TransactionType.EXPENSE, False, None),
+    "Ingresos": (TransactionType.INCOME, False, None),
+    "Transferencias": (None, True, None),
+    "Reembolsos": (None, False, True),
 }
-
-DATE, DESCRIPTION, PAYEE, CATEGORY, ACCOUNT, AMOUNT = range(6)
-COLUMN_TITLES = ["Fecha", "Descripción", "Beneficiario", "Categoría", "Cuenta", "Monto"]
 
 
 def export_filename(period: Period) -> str:
@@ -42,68 +38,6 @@ def export_filename(period: Period) -> str:
     if period.is_whole_months and period.first_month == period.last_month:
         return f"nodus-transacciones-{period.start:%Y-%m}.csv"
     return f"nodus-transacciones-{period.start:%Y-%m-%d}_{period.end:%Y-%m-%d}.csv"
-
-
-_ModelIndex = QModelIndex | QPersistentModelIndex
-
-
-class TransactionTableModel(QAbstractTableModel):
-    """Exposes list items to a table view, coloring amounts with the current theme."""
-
-    def __init__(self, theme: Theme) -> None:
-        super().__init__()
-        self._items: list[TransactionListItem] = []
-        self._theme = theme
-
-    def set_items(self, items: list[TransactionListItem]) -> None:
-        self.beginResetModel()
-        self._items = items
-        self.endResetModel()
-
-    def set_theme(self, theme: Theme) -> None:
-        self._theme = theme
-        if self._items:
-            self.dataChanged.emit(self.index(0, AMOUNT), self.index(len(self._items) - 1, AMOUNT))
-
-    def item(self, row: int) -> TransactionListItem:
-        return self._items[row]
-
-    def rowCount(self, parent: _ModelIndex = QModelIndex()) -> int:  # noqa: B008, N802
-        return 0 if parent.isValid() else len(self._items)
-
-    def columnCount(self, parent: _ModelIndex = QModelIndex()) -> int:  # noqa: B008, N802
-        return 0 if parent.isValid() else len(COLUMN_TITLES)
-
-    def headerData(self, section: int, orientation: Qt.Orientation, role: int = 0) -> object:  # noqa: N802
-        if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            return COLUMN_TITLES[section]
-        if role == Qt.ItemDataRole.TextAlignmentRole and section == AMOUNT:
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-        return None
-
-    def data(self, index: _ModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> object:
-        item = self._items[index.row()]
-        column = index.column()
-        if role == Qt.ItemDataRole.DisplayRole:
-            return self._text(item, column)
-        if role == Qt.ItemDataRole.DecorationRole and column == CATEGORY and item.category_color:
-            return color_icon(item.category_color)
-        if role == Qt.ItemDataRole.ForegroundRole and column == AMOUNT:
-            return QColor(self._theme.tone_color(item.tone))
-        if role == Qt.ItemDataRole.TextAlignmentRole and column == AMOUNT:
-            return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-        return None
-
-    @staticmethod
-    def _text(item: TransactionListItem, column: int) -> str:
-        return [
-            format_date(item.occurred_on),
-            item.description,
-            item.payee_name,
-            item.category_name,
-            item.account_text,
-            item.amount_text,
-        ][column]
 
 
 class TransactionsPage(Page):
@@ -119,6 +53,7 @@ class TransactionsPage(Page):
         super().__init__("Transacciones")
         self._services = services
         self._event_bus = event_bus
+        self._theme_manager = theme_manager
         self._builder = TransactionListBuilder(services)
 
         # The period goes in the header, as on the dashboard, to leave the row to the filters.
@@ -260,7 +195,7 @@ class TransactionsPage(Page):
 
     def current_filter(self) -> TransactionFilter:
         period = self.period_selector.period()
-        transaction_type, is_transfer = TYPE_FILTERS[self.type_filter.currentText()]
+        transaction_type, is_transfer, refund_linked = TYPE_FILTERS[self.type_filter.currentText()]
         return TransactionFilter(
             start=period.start,
             end=period.end,
@@ -269,6 +204,7 @@ class TransactionsPage(Page):
             payee_id=self.payee_filter.current_id(),
             type=transaction_type,
             is_transfer=is_transfer,
+            refund_linked=refund_linked,
             text=self.search_input.text().strip() or None,
         )
 
@@ -280,7 +216,11 @@ class TransactionsPage(Page):
         item = self.selected_item()
         if item:
             TransactionDialog(
-                self._services, self._event_bus, item.transaction, parent=self.window()
+                self._services,
+                self._event_bus,
+                self._theme_manager,
+                item.transaction,
+                parent=self.window(),
             ).exec()
 
     def delete_selected(self) -> None:
@@ -292,6 +232,13 @@ class TransactionsPage(Page):
             if item.is_transfer
             else f"Se va a eliminar «{item.description}» del {format_date(item.occurred_on)}."
         )
+        refunds = len(self._services.transactions.refund_summary(item.transaction.id).refunds)
+        if refunds and not item.is_transfer:
+            text += (
+                " Su reembolso queda como un ingreso común."
+                if refunds == 1
+                else f" Sus {refunds} reembolsos quedan como ingresos comunes."
+            )
         if confirm(self.window(), "Eliminar transacción", text):
             self._services.transactions.delete(item.transaction.id)
             self._event_bus.transactions_changed.emit()

@@ -9,10 +9,23 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
+from nodus.models.money import Money
+from nodus.models.period import format_date
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 
 TRANSFER_LABEL = "Transferencia"
+REFUND_MARK = "↺"
+
+
+def refund_of_text(expense: Transaction, description: str) -> str:
+    """ "Reembolso de «Zapatillas» del 20/10/2026"."""
+    return f"Reembolso de «{description}» del {format_date(expense.occurred_on)}"
+
+
+def refunded_text(amounts: list[Money]) -> str:
+    """ "Reembolsado $ 400,00", or "Reembolsado $ 400,00 + US$ 2,00" across currencies."""
+    return "Reembolsado " + " + ".join(amount.format() for amount in amounts)
 
 
 @dataclass(frozen=True)
@@ -27,6 +40,7 @@ class TransactionListItem:
     account_text: str
     amount_text: str
     tone: str  # "positive", "negative" or "neutral", as MoneyLabel uses it
+    refund_text: str = ""  # what the refund pays back, or what was refunded of the expense
 
     @property
     def occurred_on(self) -> date:
@@ -55,6 +69,7 @@ class TransactionListBuilder:
         }
         self._categories = {c.id: c for c in self._services.categories.list_categories()}
         self._payee_names = {p.id: p.name for p in self._services.payees.list_payees()}
+        self._refunded = self._services.transactions.refund_totals()
         items: list[TransactionListItem] = []
         seen_transfers: set[str] = set()
         for transaction in transactions:
@@ -65,17 +80,30 @@ class TransactionListBuilder:
                 items.append(self._transfer_item(transaction.transfer_id))
         return items
 
+    def describe(self, transaction: Transaction) -> str:
+        """The note, or the category's name when there is none."""
+        return transaction.note or self._categories[transaction.category_id].name
+
+    def _refund_text(self, transaction: Transaction) -> str:
+        if transaction.refund_of_id is not None:
+            expense = self._services.transactions.get(transaction.refund_of_id)
+            return refund_of_text(expense, self.describe(expense))
+        if transaction.id in self._refunded:
+            return refunded_text(self._refunded[transaction.id])
+        return ""
+
     def _regular_item(self, transaction: Transaction) -> TransactionListItem:
         category = self._categories[transaction.category_id]
         return TransactionListItem(
             transaction=transaction,
-            description=transaction.note or category.name,
+            description=self.describe(transaction),
             category_name=category.name,
             category_color=category.color,
             payee_name=self._payee_names.get(transaction.payee_id, ""),
             account_text=self._account_names[transaction.account_id],
             amount_text=transaction.signed_amount.format(),
             tone="positive" if transaction.type is TransactionType.INCOME else "negative",
+            refund_text=self._refund_text(transaction),
         )
 
     def _transfer_item(self, transfer_id: str) -> TransactionListItem:

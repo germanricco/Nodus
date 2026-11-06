@@ -1,6 +1,6 @@
 """The payee field of the transaction dialog."""
 
-from factories import ars, category_id, expense_draft
+from factories import ars, category_id, expense_draft, light_theme
 from PySide6.QtCore import Qt
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
@@ -11,7 +11,7 @@ EXPENSE = TransactionType.EXPENSE
 
 
 def make_dialog(qtbot, services, event_bus, transaction=None) -> TransactionDialog:
-    dialog = TransactionDialog(services, event_bus, transaction)
+    dialog = TransactionDialog(services, event_bus, light_theme(), transaction)
     qtbot.addWidget(dialog)
     return dialog
 

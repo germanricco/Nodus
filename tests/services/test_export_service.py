@@ -26,8 +26,18 @@ def test_rows_for_expense_and_income_oldest_first(services, pesos):
     rows = services.export.rows(all_transactions(services))
 
     assert rows == [
-        ["01/11/2026", "Ingreso", "Banco", "Sueldo", "", "", "500000,00", "ARS"],
-        ["03/11/2026", "Gasto", "Banco", "Supermercado y comida", "", "Súper", "-1234,50", "ARS"],
+        ["01/11/2026", "Ingreso", "Banco", "Sueldo", "", "", "500000,00", "ARS", ""],
+        [
+            "03/11/2026",
+            "Gasto",
+            "Banco",
+            "Supermercado y comida",
+            "",
+            "Súper",
+            "-1234,50",
+            "ARS",
+            "",
+        ],
     ]
 
 

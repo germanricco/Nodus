@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-from factories import ars, category_id, expense_draft, income_draft, usd
+from factories import ars, category_id, expense_draft, income_draft, light_theme, usd
 from PySide6.QtCore import Qt
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
@@ -18,14 +18,15 @@ from nodus.ui.dialogs.transaction_dialog import (
 )
 from nodus.ui.navigation import PageId
 from nodus.ui.pages import transactions_page
-from nodus.ui.pages.transactions_page import AMOUNT, CATEGORY, PAYEE, TransactionsPage
+from nodus.ui.pages.transactions_page import TransactionsPage
+from nodus.ui.widgets.transaction_table import AMOUNT, CATEGORY, PAYEE
 
 EXPENSE = TransactionType.EXPENSE
 NOVEMBER = Month(2026, 11)
 
 
 def make_dialog(qtbot, services, event_bus, transaction=None) -> TransactionDialog:
-    dialog = TransactionDialog(services, event_bus, transaction)
+    dialog = TransactionDialog(services, event_bus, light_theme(), transaction)
     qtbot.addWidget(dialog)
     return dialog
 

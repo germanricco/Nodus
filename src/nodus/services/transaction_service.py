@@ -131,6 +131,11 @@ class TransactionService:
         refunded = sum(same_currency, Money.zero(expense.amount.currency))
         return RefundSummary(expense, refunds, refunded)
 
+    def refund_totals(self) -> dict[int, list[Money]]:
+        """What has been refunded of each refunded expense, one amount per currency, read
+        at once for lists."""
+        return self._transactions.refund_totals()
+
     def get(self, transaction_id: int) -> Transaction:
         return require_found(self._transactions.get(transaction_id), "La transacción no existe.")
 
