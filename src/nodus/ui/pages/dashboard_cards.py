@@ -18,18 +18,20 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
+from nodus.models.budget import Budget
 from nodus.models.money import Money
-from nodus.models.period import Period, format_month
+from nodus.models.period import Month, Period, format_month
 from nodus.models.recurring_charge import DueStatus, RecurringCharge
 from nodus.services.container import Services
 from nodus.services.dashboard_service import CategoryTotal, Comparison, MonthFlow, PeriodSummary
 from nodus.services.recurring_charge_service import UPCOMING_DAYS
 from nodus.ui.formatting import format_date
-from nodus.ui.labels import due_label, unconverted_note
+from nodus.ui.labels import days_left_text, due_label, unconverted_note
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
 from nodus.ui.widgets.bar_chart import BarChart, BarGroup
+from nodus.ui.widgets.budget_bar import BudgetBar, spent_of_limit
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts import DonutChart, ProportionBar, Segment
@@ -50,6 +52,8 @@ LEGEND_MIN_WIDTH = 300
 COMPARISON_COUNT = 6
 # Upcoming charges listed on the dashboard; the page has them all.
 UPCOMING_COUNT = 3
+# Budgets on the dashboard, the closest to their limit first; the page has them all.
+BUDGETS_COUNT = 4
 
 
 def muted_label(text: str) -> QLabel:
@@ -288,6 +292,68 @@ class UpcomingPaymentsCard(Card):
         for charge in charges[:UPCOMING_COUNT]:
             row = UpcomingPaymentRow(charge, today)
             row.pay_requested.connect(self.pay_requested)
+            self._rows.addWidget(row)
+            self.rows.append(row)
+
+
+class BudgetRow(QWidget):
+    """A budgeted category with its bar underneath; clicking it opens the category's
+    transactions of the month. Callers add details to the right of the name on ``line``."""
+
+    clicked = Signal()
+
+    def __init__(self, budget: Budget, theme: Theme) -> None:
+        super().__init__()
+        self.budget = budget
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 2, 0, 6)
+        layout.setSpacing(2)
+        self.line = CategoryLine(budget.category.color, budget.category.name)
+        self.line.hovered.connect(self.line.set_highlighted)
+        self.line.clicked.connect(self.clicked)
+        self.bar = BudgetBar(theme, budget)
+        bar_row = QHBoxLayout()
+        bar_row.setContentsMargins(24, 0, 6, 0)  # under the name, past the color dot
+        bar_row.addWidget(self.bar)
+        layout.addWidget(self.line)
+        layout.addLayout(bar_row)
+
+
+class BudgetsCard(Card):
+    """The budgets closest to their limit in a month, for a glance; the rest are on the
+    budgets page. Hidden when the month has no budgets."""
+
+    category_clicked = Signal(object)  # category id
+    see_all_requested = Signal()
+
+    def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
+        super().__init__()
+        self._services = services
+        self._theme_manager = theme_manager
+        header = card_header(self, "Presupuestos")
+        self.when_label = muted_label("")
+        header.addWidget(self.when_label)
+        self._rows = QVBoxLayout()
+        self._rows.setSpacing(0)
+        self.body.addLayout(self._rows)
+        self.body.addStretch()
+        self.see_all_button = QPushButton("Ver todos")
+        self.see_all_button.setObjectName("SecondaryButton")
+        self.see_all_button.clicked.connect(self.see_all_requested)
+        self.body.addWidget(self.see_all_button)
+        self.rows: list[BudgetRow] = []
+
+    def show_month(self, month: Month, today: date) -> None:
+        budgets = self._services.budgets.month_budgets(month, today)
+        self.setVisible(bool(budgets.budgets))
+        self.when_label.setText(days_left_text(month, today) or format_month(month))
+        clear_layout(self._rows)
+        self.rows = []
+        theme = self._theme_manager.theme
+        for budget in budgets.budgets[:BUDGETS_COUNT]:
+            row = BudgetRow(budget, theme)
+            row.line.add(muted_label(spent_of_limit(budget, compact=True)))
+            row.clicked.connect(lambda c=budget.category.id: self.category_clicked.emit(c))
             self._rows.addWidget(row)
             self.rows.append(row)
 

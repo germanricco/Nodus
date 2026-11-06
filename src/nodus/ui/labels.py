@@ -1,7 +1,10 @@
 """Spanish names for domain values shown in the interface."""
 
+from datetime import date
+
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.models.period import Month
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
 
@@ -49,3 +52,13 @@ def due_label(days: int) -> str:
 def unconverted_note(count: int) -> str:
     """Why a total may fall short: dollar movements left out for lack of a rate."""
     return f"{count} movimiento(s) en dólares sin cotización no se incluyen."
+
+
+def days_left_text(month: Month, today: date) -> str | None:
+    """ "24 días restantes" while ``month`` is the current one; None for any other."""
+    if Month.of(today) != month:
+        return None
+    days = month.end.day - today.day
+    if days == 0:
+        return "Último día"
+    return "1 día restante" if days == 1 else f"{days} días restantes"

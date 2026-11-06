@@ -234,6 +234,51 @@ def test_cards_rearrange_for_narrow_windows(qtbot, window, services, pesos):
     assert grid_cell(page, page.comparison_card)[0] > grid_cell(page, page.expenses_card)[0]
 
 
+def test_budgets_card_sits_beside_the_cash_flow_when_there_are_budgets(
+    qtbot, window, services, event_bus, pesos
+):
+    page = dashboard(window)
+    window.resize(1400, 900)
+    page.refresh()
+    assert not page.budgets_card.isVisibleTo(page)
+    qtbot.waitUntil(lambda: grid_cell(page, page.flow_card)[3] == 6)
+
+    food = category_id(services, "Supermercado y comida", TransactionType.EXPENSE)
+    services.budgets.set_limit(food, Month.of(date.today()), ars("1000"))
+    event_bus.budgets_changed.emit()
+
+    assert page.budgets_card.isVisibleTo(page)
+    qtbot.waitUntil(lambda: grid_cell(page, page.flow_card)[3] == 4)
+    flow_row = grid_cell(page, page.flow_card)[0]
+    assert grid_cell(page, page.budgets_card) == (flow_row, 4, 1, 2)
+
+
+def test_budgets_card_lists_the_closest_to_their_limit(qtbot, window, services, pesos):
+    month = Month.of(date.today())
+    for name, limit in (("Supermercado y comida", "1000"), ("Ocio", "100"), ("Salud", "500"),
+                        ("Ropa", "500"), ("Transporte", "500")):  # fmt: skip
+        services.budgets.set_limit(
+            category_id(services, name, TransactionType.EXPENSE), month, ars(limit)
+        )
+    leisure = category_id(services, "Ocio", TransactionType.EXPENSE)
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("90"), on=date.today(), category_id=leisure)
+    )
+    page = dashboard(window)
+    page.refresh()
+    card = page.budgets_card
+
+    assert len(card.rows) == 4
+    assert card.rows[0].budget.category.name == "Ocio"
+
+    with qtbot.waitSignal(page.transactions_requested) as signal:
+        card.rows[0].clicked.emit()
+    assert signal.args == [Period.of_months(month), leisure]
+
+    card.see_all_button.click()
+    assert window.current_page is window.page(PageId.BUDGETS)
+
+
 def test_cards_are_never_squeezed_when_the_theme_changes(qtbot, window, theme_manager, pesos):
     from nodus.ui.theme.theme_manager import ThemeMode
 

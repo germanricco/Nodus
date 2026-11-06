@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
 
 from nodus.models.budget import Budget, BudgetState, used_percent_label
 from nodus.ui.theme.theme import Theme
-from nodus.ui.widgets.chart_base import AnimatedChart, lerp, with_alpha
+from nodus.ui.widgets.chart_base import AnimatedChart, format_compact, lerp, with_alpha
 from nodus.ui.widgets.style import set_style_property
 
 STATE_TONES = {
@@ -27,8 +27,14 @@ def state_color(theme: Theme, state: BudgetState) -> str:
     }[state]
 
 
-def spent_of_limit(budget: Budget) -> str:
-    """ "$ 260.000,00 de $ 400.000,00"."""
+def spent_of_limit(budget: Budget, compact: bool = False) -> str:
+    """ "$ 260.000,00 de $ 400.000,00", or "$ 260 k de $ 400 k" where room is short."""
+    if compact:
+        currency = budget.limit.currency
+        return (
+            f"{format_compact(budget.spent.cents, currency)} de "
+            f"{format_compact(budget.limit.cents, currency)}"
+        )
     return f"{budget.spent.format()} de {budget.limit.format()}"
 
 

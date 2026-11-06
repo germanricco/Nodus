@@ -24,12 +24,12 @@ from nodus.services.dashboard_service import CategoryTotal
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import unconverted_note
-from nodus.ui.pages.dashboard_cards import CategoryLine, FigureTile
+from nodus.ui.labels import days_left_text, unconverted_note
+from nodus.ui.pages.dashboard_cards import BudgetRow, CategoryLine, FigureTile, muted_label
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.budget_bar import BudgetBar, budget_pill, usage_text
+from nodus.ui.widgets.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.style import clear_layout, set_style_property
@@ -41,26 +41,16 @@ EMPTY_TEXT = (
 )
 
 
-class BudgetRow(QWidget):
-    """A budgeted category: name, how much of its limit is used and what is left, with the
-    bar underneath. Clicking it opens the category's transactions of the month."""
+class BudgetPageRow(BudgetRow):
+    """A budget row with the details the page has room for: how much is used, what is
+    left and a menu to change or remove the limit."""
 
-    clicked = Signal()
     edit_requested = Signal()
     remove_requested = Signal()
 
     def __init__(self, budget: Budget, theme: Theme) -> None:
-        super().__init__()
-        self.budget = budget
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 2, 0, 6)
-        layout.setSpacing(2)
-        self.line = CategoryLine(budget.category.color, budget.category.name)
-        self.line.hovered.connect(self.line.set_highlighted)
-        self.line.clicked.connect(self.clicked)
-        self.usage_label = QLabel(usage_text(budget))
-        set_style_property(self.usage_label, "muted", True)
-        self.line.add(self.usage_label)
+        super().__init__(budget, theme)
+        self.usage_label = self.line.add(muted_label(usage_text(budget)))
         self.pill = self.line.add(budget_pill(budget))
         self.more_button = QPushButton("⋯")
         self.more_button.setObjectName("SmallButton")
@@ -70,12 +60,6 @@ class BudgetRow(QWidget):
         menu.addAction("Quitar presupuesto", self.remove_requested.emit)
         self.more_button.setMenu(menu)
         self.line.add(self.more_button)
-        self.bar = BudgetBar(theme, budget)
-        bar_row = QHBoxLayout()
-        bar_row.setContentsMargins(24, 0, 6, 0)  # under the name, past the color dot
-        bar_row.addWidget(self.bar)
-        layout.addWidget(self.line)
-        layout.addLayout(bar_row)
 
 
 class BudgetsPage(Page):
@@ -104,7 +88,7 @@ class BudgetsPage(Page):
         scroll.setWidgetResizable(True)
         scroll.setWidget(container)
         self.content_layout.addWidget(scroll)
-        self.rows: list[BudgetRow] = []
+        self.rows: list[BudgetPageRow] = []
         self.unbudgeted_rows: list[CategoryLine] = []
         self.limit_label = QLabel()
         self.spent_label = QLabel()
@@ -167,11 +151,8 @@ class BudgetsPage(Page):
     # Building
 
     def _summary_card(self, month: MonthBudgets, today: date) -> Card:
-        title = format_month(month.month)
-        if 0 < month.elapsed < 1:
-            days_left = month.month.end.day - today.day
-            title += f" · {days_left} días restantes" if days_left != 1 else " · 1 día restante"
-        card = Card(title)
+        days_left = days_left_text(month.month, today)
+        card = Card(format_month(month.month) + (f" · {days_left}" if days_left else ""))
         over = month.remaining.is_negative
         self.limit_label = QLabel(month.limit.format())
         self.spent_label = QLabel(month.spent.format())
@@ -199,7 +180,7 @@ class BudgetsPage(Page):
         card = Card(title)
         theme = self._theme_manager.theme
         for budget in month.budgets:
-            row = BudgetRow(budget, theme)
+            row = BudgetPageRow(budget, theme)
             category = budget.category
             row.clicked.connect(lambda c=category: self._show_transactions(c))
             row.edit_requested.connect(lambda c=category: self.open_budget_dialog(c))

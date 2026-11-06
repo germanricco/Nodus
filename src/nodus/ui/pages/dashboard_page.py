@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.models.period import Month, Period
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
@@ -24,6 +25,7 @@ from nodus.ui.navigation import PageId
 from nodus.ui.pages.dashboard_cards import (
     LATEST_COUNT,
     LATEST_COUNT_BELOW_UPCOMING,
+    BudgetsCard,
     CashFlowCard,
     ComparisonCard,
     ExpensesCard,
@@ -53,6 +55,7 @@ class DashboardPage(Page):
 
     navigate_requested = Signal(object)  # PageId
     transactions_requested = Signal(object, object)  # Period, category id or None
+    budgets_requested = Signal(object)  # Month
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -77,6 +80,15 @@ class DashboardPage(Page):
             lambda: self.navigate_requested.emit(PageId.RECURRING)
         )
         self.flow_card = CashFlowCard(theme_manager)
+        self.budgets_card = BudgetsCard(services, theme_manager)
+        self.budgets_card.category_clicked.connect(
+            lambda category_id: self.transactions_requested.emit(
+                Period.of_months(self._budgets_month()), category_id
+            )
+        )
+        self.budgets_card.see_all_requested.connect(
+            lambda: self.budgets_requested.emit(self._budgets_month())
+        )
         self.expenses_card = ExpensesCard(theme_manager)
         self.comparison_card = ComparisonCard()
         for card in (self.expenses_card, self.comparison_card):
@@ -90,7 +102,7 @@ class DashboardPage(Page):
         self._grid = QGridLayout(grid_page)
         self._grid.setContentsMargins(0, 0, 0, 0)
         self._grid.setSpacing(16)
-        self._layout: tuple[bool, bool] | None = None
+        self._layout: tuple[bool, bool, bool] | None = None
         # Owned by the grid page from the start, so a card left out of the grid (upcoming
         # payments without charges) never becomes a window of its own when shown.
         for card in self._cards():
@@ -120,6 +132,7 @@ class DashboardPage(Page):
             event_bus.transactions_changed,
             event_bus.exchange_rates_changed,
             event_bus.recurring_changed,
+            event_bus.budgets_changed,
         ):
             signal.connect(self._data_changed)
 
@@ -144,9 +157,14 @@ class DashboardPage(Page):
             LATEST_COUNT_BELOW_UPCOMING if self.upcoming_card.isVisibleTo(self) else LATEST_COUNT,
         )
         self.flow_card.show_data(comparison, dashboard.monthly_flow(period))
+        self.budgets_card.show_month(self._budgets_month(), date.today())
         self.expenses_card.show_data(comparison.current, comparison.expenses_change)
         self.comparison_card.show_data(comparison)
         self._arrange()
+
+    def _budgets_month(self) -> Month:
+        """The month whose budgets the dashboard shows: the last of the period."""
+        return self.period_selector.period().last_month
 
     def open_pay_dialog(self, charge: RecurringCharge) -> None:
         PayChargeDialog(self._services, self._event_bus, charge, parent=self.window()).exec()
@@ -163,19 +181,20 @@ class DashboardPage(Page):
         The top row is what matters at a glance: net worth, with upcoming payments and the
         latest movements beside it. Below come expenses by category next to the comparison
         with the previous period, which belong together, and last the month-by-month cash
-        flow, for a closer look. In a narrow window everything goes one card per row,
-        except the top's side cards.
+        flow, for a closer look, with the budgets beside it when there are any. In a narrow
+        window everything goes one card per row, except the top's side cards.
         The page scrolls instead of squeezing the cards.
         """
         narrow = self.width() < NARROW_WIDTH
         upcoming = self.upcoming_card.isVisibleTo(self)
+        budgets = self.budgets_card.isVisibleTo(self)
         # Expenses take the full width when narrow, four of the six columns otherwise.
         width = self._scroll.viewport().width()
         column = (width - 5 * self._grid.spacing()) / 6
         expenses_width = width if narrow else 4 * column + 3 * self._grid.spacing()
         beside = self.expenses_card.fits_legend_beside(expenses_width)
         self.expenses_card.set_legend_beside(beside)
-        layout = (narrow, upcoming)
+        layout = (narrow, upcoming, budgets)
         if layout != self._layout:
             self._layout = layout
             grid = self._grid
@@ -191,6 +210,8 @@ class DashboardPage(Page):
                     [(self.comparison_card, 2)],
                     [(self.flow_card, 2)],
                 ]
+                if budgets:
+                    rows.append([(self.budgets_card, 2)])
                 self._place(rows)
             else:
                 grid.addWidget(self.net_worth_card, 0, 0, 2, 4)
@@ -201,7 +222,11 @@ class DashboardPage(Page):
                     grid.addWidget(self.latest_card, 0, 4, 2, 2)
                 grid.addWidget(self.expenses_card, 2, 0, 1, 4)
                 grid.addWidget(self.comparison_card, 2, 4, 1, 2)
-                grid.addWidget(self.flow_card, 3, 0, 1, 6)
+                if budgets:
+                    grid.addWidget(self.flow_card, 3, 0, 1, 4)
+                    grid.addWidget(self.budgets_card, 3, 4, 1, 2)
+                else:
+                    grid.addWidget(self.flow_card, 3, 0, 1, 6)
             for column in range(6):
                 grid.setColumnStretch(column, 1 if column < (2 if narrow else 6) else 0)
         self._remeasure()
@@ -220,6 +245,7 @@ class DashboardPage(Page):
             self.upcoming_card,
             self.latest_card,
             self.flow_card,
+            self.budgets_card,
             self.expenses_card,
             self.comparison_card,
         ]

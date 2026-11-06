@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.models.period import Period
+from nodus.models.period import Month, Period
 from nodus.services.container import Services
 from nodus.services.notification_service import Notice, NoticeKind
 from nodus.services.update_service import Release
@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
         dashboard.transactions_requested.connect(self.show_transactions)
         budgets = BudgetsPage(services, event_bus, theme_manager)
         budgets.transactions_requested.connect(self.show_transactions)
+        dashboard.budgets_requested.connect(self.show_budgets)
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
@@ -175,6 +176,11 @@ class MainWindow(QMainWindow):
         """Opens the transactions page on ``period``, filtered by ``category_id`` if given."""
         self._pages[PageId.TRANSACTIONS].focus(period, category_id)
         self.show_page(PageId.TRANSACTIONS)
+
+    def show_budgets(self, month: Month) -> None:
+        """Opens the budgets page on ``month``."""
+        self._pages[PageId.BUDGETS].show_month(month)
+        self.show_page(PageId.BUDGETS)
 
     def open_new_transaction(self) -> None:
         """Opens the transaction dialog, or leads to Cuentas when there is nowhere to record it."""
