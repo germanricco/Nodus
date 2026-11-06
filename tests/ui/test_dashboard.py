@@ -235,3 +235,17 @@ def test_cards_are_never_squeezed_when_the_theme_changes(qtbot, window, theme_ma
         return grid_page.height() >= page._grid.minimumSize().height()
 
     qtbot.waitUntil(fits)
+
+
+def test_expenses_legend_goes_beside_the_ring_when_it_fits(qtbot, window, pesos):
+    page = dashboard(window)
+    card = page.expenses_card
+    assert card.fits_legend_beside(700)
+    assert not card.fits_legend_beside(400)
+
+    window.resize(1000, 900)  # narrow layout: expenses take the full width
+    page.refresh()
+    qtbot.waitUntil(lambda: card.legend_beside)
+
+    window.resize(1300, 900)  # half of the width is too little for both
+    qtbot.waitUntil(lambda: not card.legend_beside)

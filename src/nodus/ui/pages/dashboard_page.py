@@ -168,6 +168,11 @@ class DashboardPage(Page):
         """
         narrow = self.width() < NARROW_WIDTH
         upcoming = self.upcoming_card.isVisibleTo(self)
+        # Expenses take the full width when narrow, half of it otherwise.
+        width = self._scroll.viewport().width()
+        expenses_width = width if narrow else (width - self._grid.spacing()) / 2
+        beside = self.expenses_card.fits_legend_beside(expenses_width)
+        self.expenses_card.set_legend_beside(beside)
         layout = (narrow, upcoming)
         if layout != self._layout:
             self._layout = layout

@@ -7,7 +7,15 @@ from datetime import date
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QEnterEvent, QMouseEvent
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QBoxLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.money import Money
@@ -37,6 +45,8 @@ LATEST_COUNT_BELOW_UPCOMING = 4
 # Categories listed beside the donut; the rest are added up as one line.
 LEGEND_COUNT = 6
 REST_LABEL = "Resto"
+# Narrowest legend that shows names, shares and amounts without cutting them much.
+LEGEND_MIN_WIDTH = 260
 COMPARISON_COUNT = 6
 # Upcoming charges listed on the dashboard; the page has them all.
 UPCOMING_COUNT = 3
@@ -392,10 +402,15 @@ class ExpensesCard(Card):
         self.donut = DonutChart(theme_manager.theme)
         self.donut.segment_hovered.connect(self._highlight_row)
         self.donut.segment_clicked.connect(self._click_item)
-        self.body.addWidget(self.donut, stretch=1)
-        self._legend = QVBoxLayout()
+        self.legend_panel = QWidget()
+        self._legend = QVBoxLayout(self.legend_panel)
+        self._legend.setContentsMargins(0, 0, 0, 0)
         self._legend.setSpacing(0)
-        self.body.addLayout(self._legend)
+        self._chart_area = QBoxLayout(QBoxLayout.Direction.TopToBottom)
+        self._chart_area.setSpacing(16)
+        self._chart_area.addWidget(self.donut, stretch=1)
+        self._chart_area.addWidget(self.legend_panel)
+        self.body.addLayout(self._chart_area, stretch=1)
         self.rows: list[CategoryLine] = []
         self._category_ids: list[int | None] = []
         theme_manager.theme_changed.connect(self.donut.set_theme)
@@ -432,6 +447,31 @@ class ExpensesCard(Card):
             row.clicked.connect(lambda i=index: self._click_item(i))
             self._legend.addWidget(row)
             self.rows.append(row)
+
+    @property
+    def legend_beside(self) -> bool:
+        return self._chart_area.direction() is QBoxLayout.Direction.LeftToRight
+
+    def fits_legend_beside(self, width: float) -> bool:
+        """Whether a card ``width`` wide can show the legend beside the ring uncut."""
+        margins = self.body.contentsMargins()
+        room = width - margins.left() - margins.right()
+        return room >= self.donut.minimumWidth() + self._chart_area.spacing() + LEGEND_MIN_WIDTH
+
+    def set_legend_beside(self, beside: bool) -> None:
+        """The legend to the right of the ring, or below it in narrow cards."""
+        if beside == self.legend_beside:
+            return
+        self._chart_area.setDirection(
+            QBoxLayout.Direction.LeftToRight if beside else QBoxLayout.Direction.TopToBottom
+        )
+        self._chart_area.setAlignment(
+            self.legend_panel,
+            Qt.AlignmentFlag.AlignVCenter if beside else Qt.AlignmentFlag(0),
+        )
+        # Beside the ring, the legend keeps room for whole names.
+        self.legend_panel.setMinimumWidth(LEGEND_MIN_WIDTH if beside else 0)
+        self._chart_area.setStretchFactor(self.legend_panel, 1 if beside else 0)
 
     def _legend_items(
         self, totals: list[CategoryTotal]
