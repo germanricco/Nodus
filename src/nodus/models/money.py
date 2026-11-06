@@ -80,6 +80,12 @@ class Money:
         """The number alone, without symbol: "1.234,56", "-10,00"."""
         return f"{self._sign}{self._unsigned_number()}"
 
+    def format_plain(self) -> str:
+        """The number without thousands separators: "-1234,56". Spreadsheets in Spanish read
+        it as a number, while "1.234,56" may be taken as text."""
+        units, cents = divmod(abs(self.cents), CENTS_PER_UNIT)
+        return f"{self._sign}{units},{cents:02d}"
+
     @property
     def _sign(self) -> str:
         return "-" if self.is_negative else ""

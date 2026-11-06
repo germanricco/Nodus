@@ -7,6 +7,11 @@ from dataclasses import dataclass
 from datetime import date
 
 
+def format_date(day: date) -> str:
+    """Day/month/year, as dates are written in Argentina: "05/11/2026"."""
+    return day.strftime("%d/%m/%Y")
+
+
 @dataclass(frozen=True, order=True)
 class Month:
     """A calendar month, the unit in which personal finances are usually reviewed."""

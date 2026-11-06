@@ -19,6 +19,7 @@ from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
 from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.export import export_transactions
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
@@ -126,6 +127,9 @@ class TransactionsPage(Page):
         self.add_header_widget(self.month_selector)
         self.edit_button = self.add_header_button("Editar")
         self.delete_button = self.add_header_button("Eliminar")
+        self.export_button = self.add_header_button("Exportar")
+        self.export_button.setToolTip("Guarda en un archivo CSV los movimientos que se ven")
+        self.export_button.clicked.connect(self.export_shown)
         self.edit_button.clicked.connect(self.edit_selected)
         self.delete_button.clicked.connect(self.delete_selected)
 
@@ -208,6 +212,16 @@ class TransactionsPage(Page):
         for widget in inputs:
             widget.blockSignals(False)
         self.reload()
+
+    def export_shown(self) -> None:
+        """Exports what the table shows: the month with its filters."""
+        month = self.month_selector.month()
+        export_transactions(
+            self.window(),
+            self._services,
+            self._services.transactions.list_transactions(self.current_filter()),
+            f"nodus-transacciones-{month.year}-{month.month:02d}.csv",
+        )
 
     def _has_filters(self) -> bool:
         combos = (self.account_filter, self.category_filter, self.type_filter)

@@ -2,7 +2,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from factories import ars, expense_draft
 
+from nodus.ui.dialogs import export
 from nodus.ui.pages import settings_page
 from nodus.ui.pages.settings_page import THEME_MODES, RateRow, SettingsPage
 from nodus.ui.theme.theme import ThemeMode
@@ -122,3 +124,14 @@ def test_restore_cancelled_in_the_file_dialog_does_nothing(monkeypatch, services
     page.restore_button.click()
 
     assert [a.name for a in services.accounts.list_accounts()] == ["Banco"]
+
+
+def test_export_all_writes_every_transaction(monkeypatch, tmp_path, services, page, pesos):
+    services.transactions.create(expense_draft(services, pesos.id, ars("10"), date(2020, 1, 1)))
+    services.transactions.create(expense_draft(services, pesos.id, ars("20"), date(2026, 11, 1)))
+    target = tmp_path / "todo.csv"
+    monkeypatch.setattr(export.QFileDialog, "getSaveFileName", lambda *_a: (str(target), ""))
+
+    page.export_all_button.click()
+
+    assert target.read_text(encoding="utf-8-sig").count("\n") == 3

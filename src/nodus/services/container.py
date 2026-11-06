@@ -16,6 +16,7 @@ from nodus.services.backup_service import BackupService
 from nodus.services.category_service import CategoryService
 from nodus.services.dashboard_service import DashboardService
 from nodus.services.exchange_rate_service import ExchangeRateService
+from nodus.services.export_service import ExportService
 from nodus.services.net_worth_service import NetWorthService
 from nodus.services.settings_service import SettingsService
 from nodus.services.transaction_service import TransactionService
@@ -39,6 +40,7 @@ class Services:
     dashboard: DashboardService
     updates: UpdateService
     backups: BackupService
+    export: ExportService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -60,4 +62,5 @@ class Services:
             dashboard=DashboardService(transactions, categories, exchange_rates),
             updates=UpdateService(__version__),
             backups=BackupService(database, database.path.parent / "backups"),
+            export=ExportService(accounts, categories),
         )

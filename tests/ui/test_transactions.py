@@ -9,6 +9,7 @@ from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
 from nodus.services.transaction_service import TransferDraft
 from nodus.ui import main_window as main_window_module
+from nodus.ui.dialogs import export
 from nodus.ui.dialogs.transaction_dialog import (
     EXPENSE_MODE,
     INCOME_MODE,
@@ -267,3 +268,24 @@ class TestAddTransactionButton:
         window.top_bar.add_transaction_requested.emit()
 
         assert len(opened) == 1
+
+
+def test_export_saves_what_is_shown(monkeypatch, tmp_path, services, window, pesos):
+    # Today, so it falls in the month the page opens on.
+    services.transactions.create(expense_draft(services, pesos.id, ars("10"), date.today()))
+    target = tmp_path / "out.csv"
+    suggested = []
+
+    def save_dialog(_parent, _title, path, _filter):
+        suggested.append(path)
+        return str(target), ""
+
+    monkeypatch.setattr(export.QFileDialog, "getSaveFileName", save_dialog)
+    page = window.page(PageId.TRANSACTIONS)
+    window.show_page(PageId.TRANSACTIONS)
+
+    page.export_button.click()
+
+    assert target.read_text(encoding="utf-8-sig").count("\n") == 2
+    month = page.month_selector.month()
+    assert suggested[0].endswith(f"nodus-transacciones-{month.year}-{month.month:02d}.csv")

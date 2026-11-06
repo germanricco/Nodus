@@ -1,18 +1,14 @@
-"""Formatting of values for display."""
+"""Formatting of values for display. ``format_date`` lives in models, so services can use it
+too; it is re-exported here for the interface."""
 
-from datetime import date
+from nodus.models.period import Month, format_date
 
-from nodus.models.period import Month
+__all__ = ["format_date", "format_month"]
 
 _MONTH_NAMES = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ]  # fmt: skip
-
-
-def format_date(day: date) -> str:
-    """Day/month/year, as dates are written in Argentina: "05/11/2026"."""
-    return day.strftime("%d/%m/%Y")
 
 
 def format_month(month: Month) -> str:

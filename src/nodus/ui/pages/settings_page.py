@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus import __version__
+from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.currency import Currency
 from nodus.models.exchange_rate import ExchangeRate
 from nodus.models.money import Money
@@ -29,6 +30,7 @@ from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.services.update_service import REPOSITORY_URL
 from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.export import export_transactions
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.pages.page import Page
@@ -251,6 +253,9 @@ class SettingsPage(Page):
         open_backups_button = QPushButton("Abrir carpeta de copias")
         open_backups_button.setObjectName("SecondaryButton")
         open_backups_button.clicked.connect(self._open_backups_folder)
+        self.export_all_button = QPushButton("Exportar todo a CSV")
+        self.export_all_button.setObjectName("SecondaryButton")
+        self.export_all_button.clicked.connect(self.export_all)
         self.restore_button = QPushButton("Restaurar desde una copia…")
         self.restore_button.setObjectName("SecondaryButton")
         self.restore_button.clicked.connect(self.restore_backup)
@@ -259,6 +264,7 @@ class SettingsPage(Page):
         buttons.addWidget(self.backup_now_button)
         buttons.addWidget(open_backups_button)
         buttons.addWidget(self.restore_button)
+        buttons.addWidget(self.export_all_button)
         buttons.addStretch()
         card.body.addLayout(buttons)
         return card
@@ -284,6 +290,15 @@ class SettingsPage(Page):
         except (OSError, sqlite3.Error) as error:
             QMessageBox.warning(self.window(), "Copia de seguridad", f"No se pudo copiar: {error}")
         self._refresh_backup_status()
+
+    def export_all(self) -> None:
+        """Every transaction ever recorded, for a spreadsheet or another app."""
+        export_transactions(
+            self.window(),
+            self._services,
+            self._services.transactions.list_transactions(TransactionFilter()),
+            f"nodus-transacciones-{date.today():%Y-%m-%d}.csv",
+        )
 
     def _open_backups_folder(self) -> None:
         backups_dir = self._services.backups.backups_dir
