@@ -3,6 +3,8 @@ can move from what they showed to the new data instead of being rebuilt."""
 
 from __future__ import annotations
 
+from datetime import date
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QEnterEvent, QMouseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
@@ -10,9 +12,12 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLay
 from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.money import Money
 from nodus.models.period import Period, format_month
+from nodus.models.recurring_charge import DueStatus, RecurringCharge
 from nodus.services.container import Services
 from nodus.services.dashboard_service import CategoryTotal, Comparison, MonthFlow, PeriodSummary
+from nodus.services.recurring_charge_service import UPCOMING_DAYS
 from nodus.ui.formatting import format_date
+from nodus.ui.labels import due_label
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
@@ -26,10 +31,15 @@ from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 LATEST_COUNT = 6
+# With upcoming payments above it, the latest movements card gets shorter, so the right
+# column stays as tall as the net worth card beside it.
+LATEST_COUNT_BELOW_UPCOMING = 4
 # Categories listed beside the donut; the rest are added up as one line.
 LEGEND_COUNT = 6
 REST_LABEL = "Resto"
 COMPARISON_COUNT = 6
+# Upcoming charges listed on the dashboard; the page has them all.
+UPCOMING_COUNT = 3
 
 
 def muted_label(text: str) -> QLabel:
@@ -43,6 +53,16 @@ def percent(part: Money, whole: Money) -> str:
     if whole.cents <= 0:
         return "—"
     return f"{round(100 * part.cents / whole.cents)} %"
+
+
+def due_status_label(charge: RecurringCharge, today: date) -> QLabel:
+    """When the charge is due, red once it is overdue."""
+    label = QLabel(due_label(charge.days_until(today)))
+    if charge.status(today) is DueStatus.OVERDUE:
+        set_style_property(label, "tone", "negative")
+    else:
+        set_style_property(label, "muted", True)
+    return label
 
 
 def card_header(card: Card, title: str) -> QHBoxLayout:
@@ -177,18 +197,87 @@ class LatestTransactionsCard(Card):
         self.see_all_button.clicked.connect(self.see_all_requested)
         self.body.addWidget(self.see_all_button)
 
-    def show_period(self, period: Period) -> None:
+    def show_period(self, period: Period, count: int = LATEST_COUNT) -> None:
         clear_layout(self._rows)
         # Extra rows leave room for transfers, whose two legs become one item.
         transactions = self._services.transactions.list_transactions(
-            TransactionFilter(start=period.start, end=period.end, limit=LATEST_COUNT * 2)
+            TransactionFilter(start=period.start, end=period.end, limit=count * 2)
         )
-        items = self._builder.build(transactions)[:LATEST_COUNT]
+        items = self._builder.build(transactions)[:count]
         if not items:
             self._rows.addWidget(muted_label("Sin movimientos en el período"))
         transfer_color = self._theme_manager.theme.text_muted
         for item in items:
             self._rows.addWidget(LatestTransactionRow(item, transfer_color))
+
+
+class UpcomingPaymentRow(QWidget):
+    """A charge in the upcoming payments card: name, when it is due, amount and "Pagar"."""
+
+    pay_requested = Signal(object)  # RecurringCharge
+
+    def __init__(self, charge: RecurringCharge, today: date) -> None:
+        super().__init__()
+        self.charge = charge
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 4, 0, 4)
+        layout.setSpacing(8)
+        texts = QVBoxLayout()
+        texts.setSpacing(0)
+        name = QLabel(charge.name)
+        name.setObjectName("RowTitle")
+        texts.addWidget(name)
+        texts.addWidget(due_status_label(charge, today))
+        layout.addLayout(texts, stretch=1)
+        amount = QLabel(charge.amount.format())
+        amount.setObjectName("RowAmount")
+        layout.addWidget(amount)
+        self.pay_button = QPushButton("Pagar")
+        self.pay_button.setObjectName("SmallButton")
+        self.pay_button.clicked.connect(lambda: self.pay_requested.emit(charge))
+        layout.addWidget(self.pay_button)
+
+
+class UpcomingPaymentsCard(Card):
+    """Recurring charges overdue or due in the next days, each with a quick "Pagar"."""
+
+    pay_requested = Signal(object)  # RecurringCharge
+    see_all_requested = Signal()
+
+    def __init__(self, services: Services) -> None:
+        super().__init__()
+        self._services = services
+        header = card_header(self, "Próximos pagos")
+        self.monthly_label = muted_label("")
+        self.monthly_label.setToolTip("Lo que suman tus cargos recurrentes en un mes")
+        header.addWidget(self.monthly_label)
+        self._rows = QVBoxLayout()
+        self._rows.setSpacing(0)
+        self.body.addLayout(self._rows)
+        self.see_all_button = QPushButton("Ver todos")
+        self.see_all_button.setObjectName("SecondaryButton")
+        self.see_all_button.clicked.connect(self.see_all_requested)
+        self.body.addWidget(self.see_all_button)
+        self.rows: list[UpcomingPaymentRow] = []
+
+    def show_data(self, today: date) -> None:
+        """Hides the card when there are no active charges."""
+        recurring = self._services.recurring
+        summary = recurring.summary(today)
+        self.setVisible(summary.active > 0)
+        self.monthly_label.setText(f"~{summary.monthly.format()}/mes")
+        clear_layout(self._rows)
+        charges = recurring.upcoming(today)
+        self.rows = []
+        if not charges:
+            self._rows.addWidget(
+                muted_label(f"Nada que pagar en los próximos {UPCOMING_DAYS} días")
+            )
+        for charge in charges[:UPCOMING_COUNT]:
+            row = UpcomingPaymentRow(charge, today)
+            row.pay_requested.connect(self.pay_requested)
+            self._rows.addWidget(row)
+            self.rows.append(row)
 
 
 class CashFlowCard(Card):

@@ -1,12 +1,13 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
-from factories import ars, category_id, expense_draft, income_draft
+from factories import ars, category_id, charge_draft, expense_draft, income_draft
 from PySide6.QtWidgets import QLabel
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.ui.navigation import PageId
+from nodus.ui.pages import dashboard_page
 from nodus.ui.pages.dashboard_cards import LatestTransactionRow, percent
 from nodus.ui.widgets.elided_label import ElidedLabel
 
@@ -152,3 +153,51 @@ def test_net_worth_currency_switch_redraws_the_trend(qtbot, window, services, pe
 
     assert card.total_label.text() == "US$ 600,00"
     assert card.chart.points()[-1].value == ars("600").cents  # cents of US$ 600
+
+
+def test_upcoming_payments_appear_with_active_charges(
+    qtbot, window, services, event_bus, pesos, monkeypatch
+):
+    page = dashboard(window)
+    page.refresh()
+    assert not page.upcoming_card.isVisibleTo(page)
+
+    charge = services.recurring.create(
+        charge_draft(services, pesos.id, ars("8500"), date.today(), name="Netflix")
+    )
+    event_bus.recurring_changed.emit()
+
+    assert page.upcoming_card.isVisibleTo(page)
+    (row,) = page.upcoming_card.rows
+    assert row.charge.name == "Netflix"
+    assert page.upcoming_card.monthly_label.text() == "~$ 8.500,00/mes"
+
+    opened = []
+    monkeypatch.setattr(
+        dashboard_page,
+        "PayChargeDialog",
+        lambda _s, _e, c, parent=None: opened.append(c) or NoDialog(),
+    )
+    row.pay_button.click()
+    assert opened == [services.recurring.get(charge.id)]
+
+    page.upcoming_card.see_all_button.click()
+    assert window.current_page is window.page(PageId.RECURRING)
+
+
+def test_upcoming_card_says_when_nothing_is_due_soon(qtbot, window, services, pesos):
+    services.recurring.create(
+        charge_draft(services, pesos.id, ars("1"), date.today() + timedelta(days=30))
+    )
+    page = dashboard(window)
+    page.refresh()
+
+    assert page.upcoming_card.rows == []
+    qtbot.waitUntil(
+        lambda: "Nada que pagar en los próximos 14 días" in visible_texts(page.upcoming_card)
+    )
+
+
+class NoDialog:
+    def exec(self) -> int:
+        return 0

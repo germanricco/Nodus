@@ -22,8 +22,8 @@ from nodus.services.recurring_charge_service import RecurringSummary
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import FREQUENCY_LABELS, due_label
-from nodus.ui.pages.dashboard_cards import FigureTile
+from nodus.ui.labels import FREQUENCY_LABELS
+from nodus.ui.pages.dashboard_cards import FigureTile, due_status_label
 from nodus.ui.pages.page import Page
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
@@ -39,16 +39,6 @@ EMPTY_TEXT = (
     "Anota acá lo que pagas todos los meses o todos los años: el alquiler, los servicios, "
     "Netflix, el gimnasio. Nodus te avisa cuándo vence cada uno y cuánto suman por mes."
 )
-
-
-def due_status_label(charge: RecurringCharge, today: date) -> QLabel:
-    """When the charge is due, red once it is overdue."""
-    label = QLabel(due_label(charge.days_until(today)))
-    if charge.status(today) is DueStatus.OVERDUE:
-        set_style_property(label, "tone", "negative")
-    else:
-        set_style_property(label, "muted", True)
-    return label
 
 
 def summary_text(summary: RecurringSummary) -> tuple[str, str]:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QCoreApplication, QEvent, Signal
 from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
@@ -12,17 +12,23 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QStackedWidget,
+    QVBoxLayout,
     QWidget,
 )
 
+from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
+from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.dashboard_cards import (
+    LATEST_COUNT,
+    LATEST_COUNT_BELOW_UPCOMING,
     CashFlowCard,
     ComparisonCard,
     ExpensesCard,
     LatestTransactionsCard,
+    UpcomingPaymentsCard,
     muted_label,
 )
 from nodus.ui.pages.page import Page
@@ -50,6 +56,7 @@ class DashboardPage(Page):
     ) -> None:
         super().__init__("Dashboard")
         self._services = services
+        self._event_bus = event_bus
         self.period_selector = PeriodSelector()
         self.add_header_widget(self.period_selector)
 
@@ -60,6 +67,11 @@ class DashboardPage(Page):
         self.latest_card = LatestTransactionsCard(services, theme_manager)
         self.latest_card.see_all_requested.connect(
             lambda: self.transactions_requested.emit(self.period_selector.period(), None)
+        )
+        self.upcoming_card = UpcomingPaymentsCard(services)
+        self.upcoming_card.pay_requested.connect(self.open_pay_dialog)
+        self.upcoming_card.see_all_requested.connect(
+            lambda: self.navigate_requested.emit(PageId.RECURRING)
         )
         self.flow_card = CashFlowCard(theme_manager)
         self.expenses_card = ExpensesCard(theme_manager)
@@ -76,7 +88,12 @@ class DashboardPage(Page):
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setSpacing(16)
         grid.addWidget(self.net_worth_card, 0, 0, 1, 2)
-        grid.addWidget(self.latest_card, 0, 2)
+        # Upcoming payments sit above the latest movements, and disappear without charges.
+        right_column = QVBoxLayout()
+        right_column.setSpacing(16)
+        right_column.addWidget(self.upcoming_card)
+        right_column.addWidget(self.latest_card, stretch=1)
+        grid.addLayout(right_column, 0, 2)
         grid.addWidget(self.flow_card, 1, 0)
         grid.addWidget(self.expenses_card, 1, 1)
         grid.addWidget(self.comparison_card, 1, 2)
@@ -84,7 +101,7 @@ class DashboardPage(Page):
             grid.setColumnStretch(column, 1)
         grid.setRowStretch(0, 1)
         grid.setRowStretch(1, 1)
-        scroll = QScrollArea()
+        scroll = self._scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(grid_page)
 
@@ -106,6 +123,7 @@ class DashboardPage(Page):
             event_bus.categories_changed,
             event_bus.transactions_changed,
             event_bus.exchange_rates_changed,
+            event_bus.recurring_changed,
         ):
             signal.connect(self._data_changed)
 
@@ -124,10 +142,21 @@ class DashboardPage(Page):
         dashboard = self._services.dashboard
         comparison = dashboard.comparison(period)
         self.net_worth_card.show_day(min(period.end, date.today()), period)
-        self.latest_card.show_period(period)
+        self.upcoming_card.show_data(date.today())
+        self.latest_card.show_period(
+            period,
+            LATEST_COUNT_BELOW_UPCOMING if self.upcoming_card.isVisibleTo(self) else LATEST_COUNT,
+        )
         self.flow_card.show_data(comparison, dashboard.monthly_flow(period))
         self.expenses_card.show_data(comparison.current, comparison.expenses_change)
         self.comparison_card.show_data(comparison)
+        # A card that appears or disappears changes how tall the grid must be; the scroll
+        # area only re-measures its content when asked, so the cards don't get squeezed.
+        self._scroll.widget().layout().activate()
+        QCoreApplication.postEvent(self._scroll, QEvent(QEvent.Type.LayoutRequest))
+
+    def open_pay_dialog(self, charge: RecurringCharge) -> None:
+        PayChargeDialog(self._services, self._event_bus, charge, parent=self.window()).exec()
 
     def _data_changed(self) -> None:
         # Hidden pages are refreshed by the main window when shown.
