@@ -22,15 +22,17 @@ Nodus nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta ti
 
 ## Un recorrido
 
-El **dashboard** responde de un vistazo las tres preguntas de siempre: cuánto tienes, cuánto entró y salió este mes, y en qué se fue. Muestra el patrimonio en pesos y en dólares, el ahorro del mes con la proporción entre ingresos y gastos, un anillo con los gastos por categoría y los últimos movimientos. Con las flechas de arriba recorres los meses anteriores.
+El **dashboard** responde de un vistazo las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Arriba está tu patrimonio, en pesos o en dólares, con una curva de su evolución, cuánto cambió en el período y qué parte tienes en cada moneda. Debajo, el flujo de caja con el ahorro mes a mes, un anillo con los gastos por categoría y la comparación de cada categoría con el período anterior. Eliges qué mirar con el selector de arriba: el mes actual, los últimos 3, 6 o 12 meses, este año o el anterior, y las flechas te llevan al período previo o al siguiente. Los gráficos responden al mouse, y un clic en una categoría te lleva a sus transacciones. Cuando cargas un movimiento, todo se actualiza en el momento, con una transición que muestra qué cambió.
 
 En **Cuentas** registras cada lugar donde tienes dinero, con su saldo inicial y su moneda: el banco, el efectivo, los ahorros en dólares, una tarjeta de crédito. Los saldos se calculan siempre a partir de los movimientos, así que nunca quedan desfasados. Las cuentas que ya no usas se archivan sin perder su historia, y las que creaste por error se eliminan.
 
-**Transacciones** reúne los movimientos de cada mes en una tabla que puedes filtrar por cuenta, categoría, tipo o texto de la nota, y volver a ver completa con un clic. Un mismo formulario sirve para gastos, ingresos y transferencias, y te ofrece de entrada la cuenta que usaste la última vez. Con «Exportar» guardas lo que ves en un archivo CSV que se abre en Excel. Cuando la transferencia es entre pesos y dólares, Nodus pide los dos montos y te muestra la cotización que realmente obtuviste.
+**Transacciones** reúne los movimientos del período que elijas en una tabla que puedes filtrar por cuenta, categoría, tipo o texto de la nota, y volver a ver completa con un clic. Un mismo formulario sirve para gastos, ingresos y transferencias, y te ofrece de entrada la cuenta que usaste la última vez. Con «Exportar» guardas lo que ves en un archivo CSV que se abre en Excel. Cuando la transferencia es entre pesos y dólares, Nodus pide los dos montos y te muestra la cotización que realmente obtuviste.
 
 Las **categorías** vienen con un set corto pensado para el día a día, separado en gastos e ingresos, y puedes crear las tuyas con su color o abrir subcategorías dentro de una existente. Si borras una categoría, sus movimientos pasan a «Otros» en lugar de perderse.
 
 En **Ajustes** eliges entre tema claro, oscuro o el del sistema y de dónde sale la cotización del dólar: con MEP, Blue u Oficial, Nodus trae el valor del día al abrirse; con Manual, la cargas tú con su fecha. En los dos casos guarda el historial y usa en cada día la que correspondía. Ahí también están tus datos: cada día Nodus guarda una copia de seguridad, y desde Ajustes puedes hacer una en el momento, restaurar una anterior o exportar todos tus movimientos. Por último, ves qué versión tienes y decides si Nodus busca actualizaciones al abrirse.
+
+La campana de la barra superior junta lo que merece tu atención: una versión nueva para descargar, una cotización del dólar que quedó vieja o una copia de seguridad que no se pudo hacer. Al lado, el engranaje te lleva a Ajustes.
 
 ## Estado del proyecto
 
@@ -44,7 +46,7 @@ La primera vez es probable que Windows muestre «Windows protegió tu PC». Apar
 
 Tus datos se guardan aparte del programa, en `%APPDATA%\Nodus\nodus.db`. Para actualizar basta con instalar la versión nueva encima de la anterior, y desinstalar Nodus desde la configuración de Windows tampoco toca ese archivo. Las copias de seguridad diarias quedan al lado, en `%APPDATA%\Nodus\backups`.
 
-Al abrirse, Nodus consulta en GitHub cuál es la última versión publicada y, si hay una más nueva, lo avisa con una franja debajo de la barra superior y un enlace para descargarla. Esa consulta solo pide el número de versión: no envía ningún dato tuyo. Si no la quieres, se desactiva en Ajustes. De la misma forma, si elegiste una cotización automática, Nodus pide a [DolarApi](https://dolarapi.com) los valores del día; con la cotización en Manual no se conecta.
+Al abrirse, Nodus consulta en GitHub cuál es la última versión publicada y, si hay una más nueva, lo avisa en la campana de la barra superior con un enlace para descargarla. Esa consulta solo pide el número de versión: no envía ningún dato tuyo. Si no la quieres, se desactiva en Ajustes. De la misma forma, si elegiste una cotización automática, Nodus pide a [DolarApi](https://dolarapi.com) los valores del día; con la cotización en Manual no se conecta.
 
 ## Desarrollo
 
