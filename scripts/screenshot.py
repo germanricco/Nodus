@@ -96,12 +96,14 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         app.processEvents()
         save(window, args.out / f"dashboard-full-{mode.value}.png")
         window.resize(window.width(), height)
-        # The new version notice, over the dashboard.
+        # The notifications panel, with a new version announced.
         window.show_page(PageId.DASHBOARD)
-        window.update_banner.show_release(Release("0.3.0", ""))
+        window._show_release(Release("9.9.0", ""))
+        window.open_notifications()
         app.processEvents()
-        save(window, args.out / f"update-banner-{mode.value}.png")
-        window.update_banner.hide()
+        save(window.notification_panel, args.out / f"notifications-{mode.value}.png")
+        window.notification_panel.hide()
+        window._show_release(None)
     window.close()
 
 

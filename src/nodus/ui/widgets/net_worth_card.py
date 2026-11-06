@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWi
 
 from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.models.period import Period
+from nodus.models.period import Month, Period
 from nodus.services.container import Services
 from nodus.services.dashboard_service import relative_change
 from nodus.services.net_worth_service import NetWorth, NetWorthPoint
@@ -241,7 +241,8 @@ class NetWorthCard(Card):
         has_total: bool,
     ) -> None:
         """The chart along the period, and the change from the opening balance (the end of
-        the day before it starts) to its last point."""
+        the day before it starts) to its last point. Without a rate for that day, the
+        change is measured from the first point that has one."""
         assert self.chart is not None
         self.chart.setVisible(has_total)
         # Month-end points are labelled by month, daily ones by day.
@@ -253,6 +254,8 @@ class NetWorthCard(Card):
         self.chart.set_points(points)
         known = [p.value for p in points if p.value is not None]
         first = opening.total_in[currency] if opening else None
+        if first is None and len(known) >= 2:
+            first = Money(int(known[0]), currency)
         if has_total and known and first is not None:
             last = Money(int(known[-1]), currency)
             difference = last - first
@@ -273,7 +276,7 @@ class NetWorthCard(Card):
         return format_compact(cents, self.currency())
 
     def _format_axis_day(self, day: date) -> str:
-        return f"{day:%d/%m}" if self._daily else f"{day:%m/%y}"
+        return f"{day:%d/%m}" if self._daily else Month.of(day).short_name
 
     # Reactions
 

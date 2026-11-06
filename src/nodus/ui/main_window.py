@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import date
+
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
@@ -13,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from nodus.models.period import Period
 from nodus.services.container import Services
+from nodus.services.notification_service import Notice, NoticeKind
 from nodus.services.update_service import Release
 from nodus.ui.background import BackgroundCall
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
@@ -26,9 +31,9 @@ from nodus.ui.pages.settings_page import SettingsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.rate_updater import RateUpdater
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.notification_panel import NotificationPanel
 from nodus.ui.widgets.sidebar import Sidebar
 from nodus.ui.widgets.top_bar import TopBar
-from nodus.ui.widgets.update_banner import UpdateBanner
 
 
 class MainWindow(QMainWindow):
@@ -46,7 +51,10 @@ class MainWindow(QMainWindow):
 
         self.sidebar = Sidebar(services, event_bus, theme_manager)
         self.top_bar = TopBar(theme_manager)
-        self.update_banner = UpdateBanner()
+        self.notification_panel = NotificationPanel(self)
+        self.notification_panel.action_requested.connect(self._act_on_notice)
+        self.notification_panel.dismiss_requested.connect(self._dismiss_notice)
+        self._release: Release | None = None
         self._stack = QStackedWidget()
         self._stack.setObjectName("PageStack")
         dashboard = DashboardPage(services, event_bus, theme_manager)
@@ -70,7 +78,6 @@ class MainWindow(QMainWindow):
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
         content_layout.addWidget(self.top_bar)
-        content_layout.addWidget(self.update_banner)
         content_layout.addWidget(self._stack, stretch=1)
 
         central = QWidget()
@@ -83,7 +90,12 @@ class MainWindow(QMainWindow):
 
         self.sidebar.page_requested.connect(self.show_page)
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
+        self.top_bar.notifications_requested.connect(self.open_notifications)
+        self.top_bar.settings_requested.connect(lambda: self.show_page(PageId.SETTINGS))
+        for signal in (event_bus.exchange_rates_changed, event_bus.accounts_changed):
+            signal.connect(self.refresh_notifications)
         self.show_page(PageId.DASHBOARD)
+        self.refresh_notifications()
 
     def check_for_updates(self) -> None:
         """Looks for a new version in the background, unless the user turned it off.
@@ -104,8 +116,35 @@ class MainWindow(QMainWindow):
         self._rate_updater.update()
 
     def _show_release(self, release: Release | None) -> None:
-        if release is not None:
-            self.update_banner.show_release(release)
+        self._release = release
+        self.refresh_notifications()
+
+    # Notifications
+
+    def notices(self) -> list[Notice]:
+        return self._services.notifications.notices(date.today(), self._release)
+
+    def refresh_notifications(self) -> None:
+        """Updates the count on the bell, and the panel if it is open."""
+        notices = self.notices()
+        self.top_bar.set_notification_count(len(notices))
+        if self.notification_panel.isVisible():
+            self.notification_panel.set_notices(notices)
+
+    def open_notifications(self) -> None:
+        self.notification_panel.set_notices(self.notices())
+        self.notification_panel.open_below(self.top_bar.notifications_button)
+
+    def _act_on_notice(self, notice: Notice) -> None:
+        if notice.kind is NoticeKind.UPDATE:
+            QDesktopServices.openUrl(QUrl(notice.url))
+        else:
+            self.show_page(PageId.SETTINGS)
+
+    def _dismiss_notice(self, _notice: Notice) -> None:
+        if self._release is not None:
+            self._services.notifications.dismiss(self._release)
+        self.refresh_notifications()
 
     @property
     def current_page(self) -> Page:

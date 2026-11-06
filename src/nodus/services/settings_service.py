@@ -22,6 +22,7 @@ class SettingsService:
     RATE_SOURCE_KEY = "rate_source"
     LAST_ACCOUNT_KEY = "last_account_id"
     NET_WORTH_CURRENCY_KEY = "net_worth_currency"
+    DISMISSED_VERSION_KEY = "dismissed_version"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -65,6 +66,14 @@ class SettingsService:
     def set_net_worth_currency(self, currency: Currency) -> None:
         with self._database.transaction():
             self._settings.set(self.NET_WORTH_CURRENCY_KEY, currency.value)
+
+    def dismissed_version(self) -> str | None:
+        """The new version the user chose not to hear about again, if any."""
+        return self._settings.get(self.DISMISSED_VERSION_KEY)
+
+    def set_dismissed_version(self, version: str) -> None:
+        with self._database.transaction():
+            self._settings.set(self.DISMISSED_VERSION_KEY, version)
 
     def rate_source(self) -> str | None:
         """Where the dollar rate comes from ("manual", "bolsa"…), or None if never chosen."""
