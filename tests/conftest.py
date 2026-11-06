@@ -16,6 +16,14 @@ from nodus.database.database import Database  # noqa: E402
 from nodus.models.account import Account, AccountType  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
+from nodus.ui.widgets import chart_base  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def no_animations(monkeypatch):
+    """Charts and figures jump to their final state, so tests can check it right away.
+    Tests of the transitions themselves set a duration again."""
+    monkeypatch.setattr(chart_base, "DURATION_MS", 0)
 
 
 @pytest.fixture

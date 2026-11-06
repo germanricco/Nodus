@@ -193,9 +193,10 @@ class DashboardPage(Page):
         legend_items = self._legend_items(summary.expenses_by_category)
         donut = DonutChart(self._theme_manager.theme)
         donut.set_data(
-            [Segment(color, total.cents) for _name, color, total in legend_items],
+            [Segment(color, total.cents, name) for name, color, total in legend_items],
             "Total" if legend_items else "Sin gastos",
-            summary.expenses.format() if legend_items else "en el período",
+            summary.expenses if legend_items else None,
+            "en el período",
         )
         card.body.addWidget(donut, stretch=1)
         for name, color, total in legend_items:

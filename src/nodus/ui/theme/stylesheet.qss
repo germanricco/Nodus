@@ -465,3 +465,24 @@ QToolTip {
     border: 1px solid $border;
     padding: 4px;
 }
+
+/* Relative change pill (ChangeBadge) */
+
+QLabel#ChangeBadge {
+    border-radius: 9px;
+    padding: 2px 8px;
+    font-size: 9pt;
+    font-weight: 600;
+    background: $hover;
+    color: $text_muted;
+}
+
+QLabel#ChangeBadge[tone="good"] {
+    background: $income_soft;
+    color: $income;
+}
+
+QLabel#ChangeBadge[tone="bad"] {
+    background: $expense_soft;
+    color: $expense;
+}
