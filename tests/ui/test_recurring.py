@@ -1,0 +1,165 @@
+from datetime import date
+
+import pytest
+from factories import TODAY, ars, category_id, charge_draft
+from PySide6.QtCore import Qt
+
+from nodus.models.recurring_charge import Frequency
+from nodus.models.transaction import TransactionType
+from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
+from nodus.ui.labels import due_label
+from nodus.ui.navigation import PageId
+from nodus.ui.pages import recurring_page
+from nodus.ui.pages.recurring_page import RecurringChargeRow, RecurringPage
+
+
+@pytest.fixture
+def page(qtbot, services, event_bus) -> RecurringPage:
+    recurring = RecurringPage(services, event_bus)
+    qtbot.addWidget(recurring)
+    recurring.refresh(TODAY)
+    return recurring
+
+
+def create(services, account_id, amount="1000", due=TODAY, **overrides):
+    return services.recurring.create(
+        charge_draft(services, account_id, ars(amount), due, **overrides)
+    )
+
+
+def make(qtbot, dialog):
+    qtbot.addWidget(dialog)
+    return dialog
+
+
+def click(qtbot, button):
+    qtbot.mouseClick(button, Qt.MouseButton.LeftButton)
+
+
+@pytest.mark.parametrize(
+    ("days", "text"),
+    [(-3, "Vencido hace 3 días"), (-1, "Vencido ayer"), (0, "Hoy"), (1, "Mañana"),
+     (5, "en 5 días")],
+)  # fmt: skip
+def test_due_label(days, text):
+    assert due_label(days) == text
+
+
+class TestChargeDialog:
+    def test_creates_a_charge(self, qtbot, services, event_bus, pesos):
+        dialog = make(qtbot, RecurringChargeDialog(services, event_bus))
+        dialog.name_input.setText("Netflix")
+        dialog.amount_input.line_edit.setText("8.500")
+        dialog.category_input.select(category_id(services, "Ocio", TransactionType.EXPENSE))
+        dialog.frequency_input.setCurrentIndex(dialog.frequency_input.findData(Frequency.ANNUAL))
+        dialog.due_input.set_day(date(2026, 12, 1))
+
+        with qtbot.waitSignal(event_bus.recurring_changed):
+            click(qtbot, dialog.save_button)
+
+        (charge,) = services.recurring.list_charges()
+        assert (charge.name, charge.amount, charge.frequency) == (
+            "Netflix",
+            ars("8500"),
+            Frequency.ANNUAL,
+        )
+        assert charge.account_id == pesos.id
+        assert charge.next_due_on == date(2026, 12, 1)
+
+    def test_amount_follows_the_account_currency(self, qtbot, services, event_bus, pesos, dollars):
+        dialog = make(qtbot, RecurringChargeDialog(services, event_bus))
+
+        dialog.account_input.select(dollars.id)
+
+        dialog.amount_input.line_edit.setText("10")
+        assert dialog.amount_input.money().currency.value == "USD"
+
+    def test_edits_a_charge(self, qtbot, services, event_bus, pesos):
+        charge = create(services, pesos.id)
+        dialog = make(qtbot, RecurringChargeDialog(services, event_bus, charge))
+        assert dialog.name_input.text() == "Internet"
+
+        dialog.name_input.setText("Fibra óptica")
+        click(qtbot, dialog.save_button)
+
+        assert services.recurring.get(charge.id).name == "Fibra óptica"
+
+    def test_shows_validation_errors(self, qtbot, services, event_bus, pesos):
+        dialog = make(qtbot, RecurringChargeDialog(services, event_bus))
+        dialog.amount_input.line_edit.setText("100")
+
+        click(qtbot, dialog.save_button)
+
+        assert "nombre" in dialog.error_label.text()
+        assert services.recurring.list_charges() == []
+
+
+class TestPayDialog:
+    def test_comes_filled_in_and_records_the_payment(self, qtbot, services, event_bus, pesos):
+        charge = create(services, pesos.id, "15000", date(2026, 11, 1))
+        dialog = make(qtbot, PayChargeDialog(services, event_bus, charge, today=TODAY))
+        assert dialog.amount_input.money() == ars("15000")
+        assert dialog.date_input.day() == TODAY
+        assert "01/12/2026" in dialog.next_hint.text()
+
+        dialog.amount_input.line_edit.setText("16.000")
+        with qtbot.waitSignals([event_bus.transactions_changed, event_bus.recurring_changed]):
+            click(qtbot, dialog.save_button)
+
+        assert services.accounts.balance(pesos.id) == ars("84000")
+        assert services.recurring.get(charge.id).next_due_on == date(2026, 12, 1)
+
+
+class TestPage:
+    def test_empty_state(self, page):
+        assert page.rows == []
+
+    def test_groups_charges_by_when_they_are_due(self, qtbot, services, event_bus, pesos):
+        create(services, pesos.id, due=date(2026, 11, 1), name="Vencido")
+        create(services, pesos.id, due=date(2026, 11, 8), name="Pronto")
+        create(services, pesos.id, due=date(2026, 12, 20), name="Después")
+        paused = create(services, pesos.id, name="Pausado")
+        services.recurring.set_active(paused.id, False)
+        page = RecurringPage(services, event_bus)
+        qtbot.addWidget(page)
+
+        page.refresh(TODAY)
+
+        assert [row.charge.name for row in page.rows] == ["Vencido", "Pronto", "Después", "Pausado"]
+        overdue, *_rest, paused_row = page.rows
+        assert overdue.status_label.text() == "Vencido hace 4 días"
+        assert paused_row.pay_button is None
+        assert page.active_label.text() == "3"
+        assert page.monthly_label.text() == "$ 3.000,00"
+
+    def test_skip_pause_and_delete(self, qtbot, services, event_bus, pesos, monkeypatch):
+        charge = create(services, pesos.id)
+        page = RecurringPage(services, event_bus)
+        qtbot.addWidget(page)
+        page.refresh(TODAY)
+
+        click(qtbot, page.rows[0].skip_button)
+        assert services.recurring.get(charge.id).next_due_on == date(2026, 12, 5)
+
+        page.toggle_pause(services.recurring.get(charge.id))
+        assert not services.recurring.get(charge.id).is_active
+
+        monkeypatch.setattr(recurring_page, "confirm", lambda *_args: True)
+        page.delete_charge(services.recurring.get(charge.id))
+        assert services.recurring.list_charges() == []
+
+    def test_row_menu_offers_resume_for_paused_charges(self, services, pesos):
+        charge = create(services, pesos.id)
+        services.recurring.set_active(charge.id, False)
+        charge = services.recurring.get(charge.id)
+        category = services.categories.get(charge.category_id)
+
+        row = RecurringChargeRow(charge, category, "Banco", TODAY)
+
+        assert [a.text() for a in row.menu.actions()] == ["Editar", "Reanudar", "Eliminar"]
+
+
+def test_page_is_in_the_sidebar(window):
+    window.show_page(PageId.RECURRING)
+
+    assert isinstance(window.current_page, RecurringPage)

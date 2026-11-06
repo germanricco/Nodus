@@ -27,6 +27,7 @@ from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.dashboard_page import DashboardPage
 from nodus.ui.pages.page import Page
+from nodus.ui.pages.recurring_page import RecurringPage
 from nodus.ui.pages.settings_page import SettingsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.rate_updater import RateUpdater
@@ -66,6 +67,7 @@ class MainWindow(QMainWindow):
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
             PageId.TRANSACTIONS: TransactionsPage(services, event_bus, theme_manager),
+            PageId.RECURRING: RecurringPage(services, event_bus),
             PageId.CATEGORIES: CategoriesPage(services, event_bus),
             PageId.SETTINGS: SettingsPage(services, event_bus, theme_manager),
         }

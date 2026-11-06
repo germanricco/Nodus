@@ -14,6 +14,7 @@ from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.services.transaction_service import TransactionDraft, TransferDraft
+from nodus.ui.dialogs.account_fields import required_account, selectable_accounts
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.amount_input import AmountInput
@@ -93,11 +94,10 @@ class TransactionDialog(FormDialog):
 
     def _load_accounts(self) -> None:
         """Active accounts, plus the archived ones the edited movement already uses."""
-        accounts = self._services.accounts.list_accounts()
-        if self._transaction:
-            used = {leg.account_id for leg in self._legs(self._transaction)}
-            active_ids = {account.id for account in accounts}
-            accounts += [self._services.accounts.get(i) for i in sorted(used - active_ids)]
+        used = (
+            [leg.account_id for leg in self._legs(self._transaction)] if self._transaction else []
+        )
+        accounts = selectable_accounts(self._services, used)
         self.account_input.set_accounts(accounts)
         self.to_account_input.set_accounts(accounts)
 
@@ -195,7 +195,7 @@ class TransactionDialog(FormDialog):
         if category_id is None:
             raise ValidationError("Elige una categoría.")
         draft = TransactionDraft(
-            account_id=self._required_account(self.account_input).id,
+            account_id=required_account(self.account_input).id,
             type=_MODE_TYPES[self.mode_input.index()],
             amount=self.amount_input.money(),
             occurred_on=self.date_input.day(),
@@ -209,8 +209,8 @@ class TransactionDialog(FormDialog):
             self._services.settings.set_last_account_id(draft.account_id)
 
     def _save_transfer(self) -> None:
-        source = self._required_account(self.account_input)
-        destination = self._required_account(self.to_account_input)
+        source = required_account(self.account_input)
+        destination = required_account(self.to_account_input)
         draft = TransferDraft(
             from_account_id=source.id,
             to_account_id=destination.id,
@@ -226,13 +226,6 @@ class TransactionDialog(FormDialog):
         else:
             self._services.transactions.create_transfer(draft)
             self._services.settings.set_last_account_id(source.id)
-
-    @staticmethod
-    def _required_account(combo: AccountComboBox) -> Account:
-        account = combo.current_account()
-        if account is None:
-            raise ValidationError("Elige una cuenta.")
-        return account
 
 
 def _currencies_differ(first: Account | None, second: Account | None) -> bool:

@@ -175,6 +175,11 @@ class AccountsPage(Page):
             sentences.append(
                 f"Incluye {transfers} transferencias, así que cambia el saldo de las otras cuentas."
             )
+        charges = self._services.recurring.count_for_account(account.id)
+        if charges == 1:
+            sentences.append("También se elimina su cargo recurrente.")
+        elif charges > 1:
+            sentences.append(f"También se eliminan sus {charges} cargos recurrentes.")
         if movements:
             sentences.append("Para conservar el historial, archívala en su lugar.")
         return " ".join(sentences)

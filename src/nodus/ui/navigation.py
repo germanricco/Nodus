@@ -9,6 +9,7 @@ class PageId(Enum):
     DASHBOARD = ("Dashboard", "dashboard")
     ACCOUNTS = ("Cuentas", "accounts")
     TRANSACTIONS = ("Transacciones", "transactions")
+    RECURRING = ("Recurrentes", "repeat")
     CATEGORIES = ("Categorías", "categories")
     SETTINGS = ("Ajustes", "settings")
 

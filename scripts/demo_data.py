@@ -8,8 +8,10 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.period import Month
+from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
+from nodus.services.recurring_charge_service import RecurringChargeDraft
 from nodus.services.transaction_service import TransactionDraft, TransferDraft
 
 # Months of history before the current one, so the dashboard has trends to show.
@@ -101,3 +103,19 @@ def load_demo_data(services: Services, today: date) -> None:
         TransferDraft(banco.id, ahorro.id, ars("243100"), days_ago(1),
                       amount_in=usd("200"), note="Compra de dólares MEP")
     )  # fmt: skip
+
+    def charge(name, account, amount, category, frequency, due):
+        services.recurring.create(
+            RecurringChargeDraft(name, amount, account.id, categories[(expense, category)],
+                                 frequency, due)
+        )  # fmt: skip
+
+    monthly = Frequency.MONTHLY
+    next_month = current.next()
+    charge("Alquiler", banco, ars("420000"), "Alquiler", monthly, next_month.start.replace(day=5))
+    charge("Internet", banco, ars("24900"), "Servicios", monthly, days_ago(2))
+    charge("Netflix", banco, ars("8500"), "Ocio", monthly, today + timedelta(days=2))
+    charge("Spotify", banco, ars("4200"), "Ocio", monthly, today + timedelta(days=9))
+    charge("Gimnasio", efectivo, ars("35000"), "Salud", monthly, today + timedelta(days=12))
+    charge("Seguro del auto", ahorro, usd("180"), "Transporte", Frequency.SEMIANNUAL,
+           today + timedelta(days=40))  # fmt: skip

@@ -48,7 +48,15 @@ class RecurringSummary:
 
     @property
     def yearly(self) -> Money:
-        return Money(self.monthly.cents * 12, self.monthly.currency)
+        return _times_twelve(self.monthly)
+
+    @property
+    def unconverted_yearly(self) -> Money:
+        return _times_twelve(self.unconverted_monthly)
+
+
+def _times_twelve(money: Money) -> Money:
+    return Money(money.cents * 12, money.currency)
 
 
 class RecurringChargeService:
