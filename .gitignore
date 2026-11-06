@@ -17,6 +17,7 @@ venv/
 build/
 dist/
 *.spec
+!packaging/nodus.spec
 
 # Bases de datos locales: contienen datos financieros reales, nunca van al repo
 *.db
