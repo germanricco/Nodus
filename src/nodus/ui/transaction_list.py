@@ -11,6 +11,7 @@ from datetime import date
 
 from nodus.models.money import Money
 from nodus.models.period import format_date
+from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 
@@ -41,6 +42,7 @@ class TransactionListItem:
     amount_text: str
     tone: str  # "positive", "negative" or "neutral", as MoneyLabel uses it
     refund_text: str = ""  # what the refund pays back, or what was refunded of the expense
+    tags: tuple[Tag, ...] = ()
 
     @property
     def occurred_on(self) -> date:
@@ -70,6 +72,7 @@ class TransactionListBuilder:
         self._categories = {c.id: c for c in self._services.categories.list_categories()}
         self._payee_names = {p.id: p.name for p in self._services.payees.list_payees()}
         self._refunded = self._services.transactions.refund_totals()
+        self._tags = self._services.transactions.tags_for([t.id for t in transactions])
         items: list[TransactionListItem] = []
         seen_transfers: set[str] = set()
         for transaction in transactions:
@@ -104,6 +107,7 @@ class TransactionListBuilder:
             amount_text=transaction.signed_amount.format(),
             tone="positive" if transaction.type is TransactionType.INCOME else "negative",
             refund_text=self._refund_text(transaction),
+            tags=tuple(self._tags.get(transaction.id, [])),
         )
 
     def _transfer_item(self, transfer_id: str) -> TransactionListItem:

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
 
 from nodus.models.payee import Payee
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.dialogs.merge_dialog import MergeDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.selectors import CategoryComboBox
 
@@ -66,7 +67,7 @@ class PayeeDialog(FormDialog):
         self._event_bus.payees_changed.emit()
 
 
-class MergePayeeDialog(FormDialog):
+class MergePayeeDialog(MergeDialog):
     """Moves the transactions of ``payee`` to another payee and deletes it, for duplicates
     such as "Coto" and "Coto Online"."""
 
@@ -77,37 +78,14 @@ class MergePayeeDialog(FormDialog):
         payee: Payee,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__(f"Unir «{payee.name}» con…", parent)
+        others = [(p.name, p.id) for p in services.payees.list_payees() if p.id != payee.id]
+        count = services.payees.transaction_count(payee.id)
+        super().__init__(payee.name, "Beneficiario", others, count, parent)
         self._services = services
         self._event_bus = event_bus
         self._payee = payee
-        self._count = services.payees.transaction_count(payee.id)
 
-        self.target_input = QComboBox()
-        for other in services.payees.list_payees():
-            if other.id != payee.id:
-                self.target_input.addItem(other.name, other.id)
-        self.result_label = QLabel()
-        self.result_label.setObjectName("FieldHint")
-        self.result_label.setWordWrap(True)
-        self.form.addRow("Beneficiario", self.target_input)
-        self.form.addRow("", self.result_label)
-        self.save_button.setText("Unir")
-
-        self.target_input.currentIndexChanged.connect(self._update_result)
-        self._update_result()
-
-    def _update_result(self) -> None:
-        target, name = self.target_input.currentText(), self._payee.name
-        if self._count == 0:
-            text = f"«{name}» no tiene movimientos y se elimina."
-        elif self._count == 1:
-            text = f"Su movimiento pasa a «{target}» y «{name}» se elimina."
-        else:
-            text = f"Sus {self._count} movimientos pasan a «{target}» y «{name}» se elimina."
-        self.result_label.setText(text)
-
-    def save(self) -> None:
-        self._services.payees.merge(self._payee.id, self.target_input.currentData())
+    def merge(self, target_id: int) -> None:
+        self._services.payees.merge(self._payee.id, target_id)
         self._event_bus.payees_changed.emit()
         self._event_bus.transactions_changed.emit()

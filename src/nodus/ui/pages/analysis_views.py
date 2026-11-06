@@ -23,6 +23,7 @@ from nodus.services.dashboard_service import (
 from nodus.services.net_worth_service import NetWorth, NetWorthPoint
 from nodus.ui.formatting import format_date
 from nodus.ui.labels import movements_text, unconverted_note
+from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.dashboard_cards import (
     CategoryLine,
     FigureTile,
@@ -89,7 +90,7 @@ def chart_card(title: str, chart: QWidget) -> tuple[Card, QLabel, QLabel]:
 class AnalysisView(QWidget):
     """A report: shows a period and asks for the transactions behind its figures."""
 
-    transactions_requested = Signal(object, object, object)  # Period, category id, payee id
+    transactions_requested = Signal(object)  # TransactionFocus
 
     def show_period(self, period: Period) -> None:
         raise NotImplementedError
@@ -224,7 +225,7 @@ class TrendsView(AnalysisView):
 
     def _bar_clicked(self, index: int, category_id: int | None) -> None:
         month = self._trends.months[index].month
-        self.transactions_requested.emit(Period.of_months(month), category_id, None)
+        self.transactions_requested.emit(TransactionFocus(Period.of_months(month), category_id))
 
     # Breakdown
 
@@ -238,7 +239,7 @@ class TrendsView(AnalysisView):
             row.add(amount_label(total.total))
             row.clicked.connect(
                 lambda category_id=total.category.id: self.transactions_requested.emit(
-                    self._period, category_id, None
+                    TransactionFocus(self._period, category_id=category_id)
                 )
             )
             self._category_rows.addWidget(row)
@@ -259,7 +260,7 @@ class TrendsView(AnalysisView):
             if total.payee is not None:
                 row.clicked.connect(
                     lambda payee_id=total.payee.id: self.transactions_requested.emit(
-                        self._period, None, payee_id
+                        TransactionFocus(self._period, payee_id=payee_id)
                     )
                 )
             self._payee_rows.addWidget(row)
@@ -399,7 +400,7 @@ class CashFlowView(AnalysisView):
 
     def _open_month(self, index: int) -> None:
         month = self.model.month(index).month
-        self.transactions_requested.emit(Period.of_months(month), None, None)
+        self.transactions_requested.emit(TransactionFocus(Period.of_months(month)))
 
     def _set_theme(self, theme: Theme) -> None:
         self.chart.set_theme(theme)

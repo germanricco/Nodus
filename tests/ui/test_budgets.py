@@ -8,7 +8,7 @@ from nodus.models.budget import BudgetState
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
-from nodus.ui.navigation import PageId
+from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages import budgets_page
 from nodus.ui.pages.budgets_page import BudgetsPage
 
@@ -146,7 +146,7 @@ class TestPage:
         with qtbot.waitSignal(page.transactions_requested) as signal:
             qtbot.mouseClick(page.rows[0].line, Qt.MouseButton.LeftButton)
 
-        assert signal.args == [Period.of_months(NOVEMBER), food]
+        assert signal.args == [TransactionFocus(Period.of_months(NOVEMBER), food)]
 
 
 def test_page_is_in_the_sidebar(window):

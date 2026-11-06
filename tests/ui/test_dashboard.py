@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QLabel
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
-from nodus.ui.navigation import PageId
+from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages import dashboard_page
 from nodus.ui.pages.dashboard_cards import LatestTransactionRow, percent
 from nodus.ui.widgets.elided_label import ElidedLabel
@@ -110,8 +110,8 @@ def test_clicking_a_donut_slice_and_a_comparison_row(qtbot, window, services, pe
     with qtbot.waitSignal(page.transactions_requested) as from_comparison:
         page.comparison_card.rows[0].clicked.emit()
 
-    assert from_donut.args[1] == supermarket
-    assert from_comparison.args[1] == supermarket
+    assert from_donut.args[0].category_id == supermarket
+    assert from_comparison.args[0].category_id == supermarket
 
 
 def test_new_transaction_updates_the_same_cards(qtbot, window, services, event_bus, pesos):
@@ -273,7 +273,7 @@ def test_budgets_card_lists_the_closest_to_their_limit(qtbot, window, services, 
 
     with qtbot.waitSignal(page.transactions_requested) as signal:
         card.rows[0].clicked.emit()
-    assert signal.args == [Period.of_months(month), leisure]
+    assert signal.args == [TransactionFocus(Period.of_months(month), leisure)]
 
     card.see_all_button.click()
     assert window.current_page is window.page(PageId.BUDGETS)

@@ -11,13 +11,20 @@ from nodus.models.palette import PALETTE
 
 def color_icon(color: str, size: int = 12) -> QIcon:
     """A filled circle in ``color``, for item views and combo boxes that take icons."""
-    pixmap = QPixmap(size, size)
+    return colors_icon([color], size)
+
+
+def colors_icon(colors: list[str], size: int = 12) -> QIcon:
+    """Filled circles in ``colors``, side by side, as a cell with several tags shows them."""
+    gap = size // 3
+    pixmap = QPixmap(len(colors) * (size + gap) - gap, size)
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QColor(color))
-    painter.drawEllipse(0, 0, size, size)
+    for index, color in enumerate(colors):
+        painter.setBrush(QColor(color))
+        painter.drawEllipse(index * (size + gap), 0, size, size)
     painter.end()
     return QIcon(pixmap)
 

@@ -24,7 +24,7 @@ class AnalysisPage(Page):
     """One report at a time, chosen with the tabs, over a period shared by all of them
     (the last 12 months at first). Only the report on screen is computed."""
 
-    transactions_requested = Signal(object, object, object)  # Period, category id, payee id
+    transactions_requested = Signal(object)  # TransactionFocus
     navigate_requested = Signal(object)  # PageId
 
     def __init__(

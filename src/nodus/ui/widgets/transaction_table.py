@@ -8,10 +8,12 @@ from PySide6.QtGui import QColor
 from nodus.ui.formatting import format_date
 from nodus.ui.theme.theme import Theme
 from nodus.ui.transaction_list import REFUND_MARK, TransactionListItem
-from nodus.ui.widgets.color import color_icon
+from nodus.ui.widgets.color import color_icon, colors_icon
 
-DATE, DESCRIPTION, PAYEE, CATEGORY, ACCOUNT, AMOUNT = range(6)
-COLUMN_TITLES = ["Fecha", "Descripción", "Beneficiario", "Categoría", "Cuenta", "Monto"]
+DATE, DESCRIPTION, PAYEE, CATEGORY, TAGS, ACCOUNT, AMOUNT = range(7)
+COLUMN_TITLES = [
+    "Fecha", "Descripción", "Beneficiario", "Categoría", "Etiquetas", "Cuenta", "Monto"
+]  # fmt: skip
 
 
 _ModelIndex = QModelIndex | QPersistentModelIndex
@@ -58,6 +60,8 @@ class TransactionTableModel(QAbstractTableModel):
             return self._text(item, column)
         if role == Qt.ItemDataRole.DecorationRole and column == CATEGORY and item.category_color:
             return color_icon(item.category_color)
+        if role == Qt.ItemDataRole.DecorationRole and column == TAGS and item.tags:
+            return colors_icon([tag.color for tag in item.tags])
         if role == Qt.ItemDataRole.ForegroundRole and column == AMOUNT:
             return QColor(self._theme.tone_color(item.tone))
         if role == Qt.ItemDataRole.ToolTipRole and column == DESCRIPTION and item.refund_text:
@@ -73,6 +77,7 @@ class TransactionTableModel(QAbstractTableModel):
             f"{REFUND_MARK} {item.description}" if item.refund_text else item.description,
             item.payee_name,
             item.category_name,
+            ", ".join(tag.name for tag in item.tags),
             item.account_text,
             item.amount_text,
         ][column]

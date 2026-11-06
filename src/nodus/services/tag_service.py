@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import date
 
 from nodus.database.database import Database
 from nodus.database.repositories.tag_repository import TagRepository
@@ -25,12 +26,15 @@ from nodus.services.transaction_service import TransactionService
 class TagSummary:
     """A tag with its transactions added up, for the tags page. ``net`` is income minus
     expenses in pesos, as for payees; ``unconverted`` counts the dollar movements left out
-    for lack of a rate."""
+    for lack of a rate. ``first_on`` and ``last_on`` are the dates of its first and latest
+    transactions (None while it has none)."""
 
     tag: Tag
     count: int
     net: Money
     unconverted: int
+    first_on: date | None
+    last_on: date | None
 
 
 class TagService:
@@ -108,8 +112,15 @@ class TagService:
                 by_tag[tag.id].append(transaction)
         summaries = []
         for tag in self._tags.list():
-            net, unconverted = net_in_pesos(by_tag[tag.id], self._exchange_rates)
-            summaries.append(TagSummary(tag, len(by_tag[tag.id]), net, unconverted))
+            tagged = by_tag[tag.id]
+            net, unconverted = net_in_pesos(tagged, self._exchange_rates)
+            dates = [t.occurred_on for t in tagged]
+            summaries.append(
+                TagSummary(
+                    tag, len(tagged), net, unconverted,
+                    min(dates, default=None), max(dates, default=None),
+                )
+            )  # fmt: skip
         return sorted(summaries, key=lambda s: (-s.count, name_sort_key(s.tag.name)))
 
     def _checked(self, tag: Tag) -> Tag:

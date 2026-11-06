@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt
 
 from nodus.models.period import Month, Period, format_month
 from nodus.models.transaction import TransactionType
-from nodus.ui.navigation import PageId
+from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.analysis_page import AnalysisPage
 from nodus.ui.pages.analysis_views import (
     NO_PAYEE_LABEL,
@@ -121,11 +121,11 @@ def test_bar_and_rows_lead_to_transactions(qtbot, filled, services):
 
     with qtbot.waitSignal(page.transactions_requested) as from_bar:
         view.chart.clicked.emit(1, servicios)
-    assert from_bar.args == [Period.of_months(Month(2026, 10)), servicios, None]
+    assert from_bar.args == [TransactionFocus(Period.of_months(Month(2026, 10)), servicios)]
 
     with qtbot.waitSignal(page.transactions_requested) as from_payee:
         view._payee_rows.itemAt(0).widget().clicked.emit()
-    assert from_payee.args == [SEP_NOV, None, services.payees.find("Coto").id]
+    assert from_payee.args == [TransactionFocus(SEP_NOV, payee_id=services.payees.find("Coto").id)]
 
 
 def test_window_opens_transactions_filtered(window, services, movements):
@@ -182,11 +182,11 @@ def test_cash_flow_month_opens_its_transactions(qtbot, filled):
 
     with qtbot.waitSignal(filled.transactions_requested) as from_bar:
         view.chart.clicked.emit(1)
-    assert from_bar.args == [october, None, None]
+    assert from_bar.args == [TransactionFocus(october)]
 
     with qtbot.waitSignal(filled.transactions_requested) as from_row:
         view.table.doubleClicked.emit(view.model.index(1, 0))
-    assert from_row.args == [october, None, None]
+    assert from_row.args == [TransactionFocus(october)]
 
 
 def test_cash_flow_empty_period(page):

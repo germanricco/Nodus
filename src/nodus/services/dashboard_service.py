@@ -6,6 +6,7 @@ service, so both screens count the same way.
 
 from __future__ import annotations
 
+import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -66,16 +67,25 @@ class ConvertedMovements:
     unconverted: int
 
 
+def period_filter(period: Period) -> TransactionFilter:
+    """Every transaction of ``period``."""
+    return TransactionFilter(start=period.start, end=period.end)
+
+
 def converted_movements(
-    transactions: TransactionService, exchange_rates: ExchangeRateService, period: Period
+    transactions: TransactionService,
+    exchange_rates: ExchangeRateService,
+    criteria: TransactionFilter,
 ) -> ConvertedMovements:
-    """Income and expenses of ``period`` in pesos; transfers only move money between
-    accounts, so they are left out. Refunds are turned into less spending."""
+    """Income and expenses matching ``criteria``, in pesos; transfers only move money
+    between accounts, so they are left out. Refunds are turned into less spending."""
     movements: list[ConvertedMovement] = []
     unconverted = 0
+    if criteria.is_transfer:
+        return ConvertedMovements(movements, unconverted)
     refunded_categories: dict[int, int] = {}
     for transaction in transactions.list_transactions(
-        TransactionFilter(start=period.start, end=period.end, is_transfer=False)
+        dataclasses.replace(criteria, is_transfer=False)
     ):
         amount = exchange_rates.convert(
             transaction.amount, SUMMARY_CURRENCY, transaction.occurred_on
@@ -121,6 +131,20 @@ def positive_totals(totals: dict[int, Money]) -> list[tuple[int, Money]]:
     spending in a period has nothing to show for it."""
     kept = [(key, total) for key, total in totals.items() if total.cents > 0]
     return sorted(kept, key=lambda item: item[1].cents, reverse=True)
+
+
+@dataclass(frozen=True)
+class FilteredTotals:
+    """Income and expenses in pesos of the movements a filter shows, for the foot of the
+    transactions list. Refunds count as less spending, as everywhere else."""
+
+    income: Money
+    expenses: Money
+    unconverted: int
+
+    @property
+    def net(self) -> Money:
+        return self.income - self.expenses
 
 
 @dataclass(frozen=True)
@@ -267,5 +291,15 @@ class DashboardService:
         converted = self._converted(Period.of_months(months[0], months[-1]))
         return month_flows(converted.movements, months)
 
+    def totals(self, criteria: TransactionFilter) -> FilteredTotals:
+        """What the movements matching ``criteria`` add up to, transfers aside."""
+        totals = {kind: Money.zero(self.CURRENCY) for kind in TransactionType}
+        converted = converted_movements(self._transactions, self._exchange_rates, criteria)
+        for movement in converted.movements:
+            totals[movement.kind] += movement.amount
+        return FilteredTotals(
+            totals[TransactionType.INCOME], totals[TransactionType.EXPENSE], converted.unconverted
+        )
+
     def _converted(self, period: Period) -> ConvertedMovements:
-        return converted_movements(self._transactions, self._exchange_rates, period)
+        return converted_movements(self._transactions, self._exchange_rates, period_filter(period))

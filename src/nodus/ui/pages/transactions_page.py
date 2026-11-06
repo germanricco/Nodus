@@ -9,28 +9,50 @@ from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.period import Period
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
+from nodus.services.dashboard_service import FilteredTotals
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import export_transactions
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
+from nodus.ui.labels import movements_text, unconverted_note
+from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.period_selector import PeriodSelector
-from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox, PayeeComboBox
+from nodus.ui.widgets.selectors import (
+    AccountComboBox,
+    CategoryComboBox,
+    PayeeComboBox,
+    TagComboBox,
+)
 from nodus.ui.widgets.table import record_table
 from nodus.ui.widgets.transaction_table import DESCRIPTION, TransactionTableModel
 
 # Type filter: label -> (transaction type, is_transfer, refund_linked) criteria.
 TYPE_FILTERS = {
-    "Todos los tipos": (None, None, None),
+    "Tipos": (None, None, None),
     "Gastos": (TransactionType.EXPENSE, False, None),
     "Ingresos": (TransactionType.INCOME, False, None),
     "Transferencias": (None, True, None),
     "Reembolsos": (None, False, True),
 }
+
+
+def totals_text(count: int, totals: FilteredTotals) -> str:
+    """The foot of the list: "24 movimientos · Ingresos $ … · Gastos $ … · Neto $ …"."""
+    parts = [movements_text(count)]
+    if count and (totals.income.cents or totals.expenses.cents):
+        parts += [
+            f"Ingresos {totals.income.format()}",
+            f"Gastos {totals.expenses.format()}",
+            f"Neto {totals.net.format()}",
+        ]
+    if totals.unconverted:
+        parts.append(unconverted_note(totals.unconverted))
+    return " · ".join(parts)
 
 
 def export_filename(period: Period) -> str:
@@ -41,8 +63,8 @@ def export_filename(period: Period) -> str:
 
 
 class TransactionsPage(Page):
-    """The movements of a period, newest first, narrowed by account, category, payee, type
-    or text.
+    """The movements of a period, newest first, narrowed by account, category, payee, tag,
+    type or text, with what they add up to at the foot.
 
     Double-clicking a row edits it. A transfer shows as one row for both of its legs.
     """
@@ -70,11 +92,14 @@ class TransactionsPage(Page):
         self.account_filter = AccountComboBox()
         self.category_filter = CategoryComboBox()
         self.payee_filter = PayeeComboBox()
+        self.tag_filter = TagComboBox()
         self.type_filter = QComboBox()
         self.type_filter.addItems(list(TYPE_FILTERS))
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Buscar…")
-        self.search_input.setToolTip("Busca en la nota y en el nombre del beneficiario")
+        self.search_input.setToolTip(
+            "Busca en la nota y en los nombres del beneficiario y las etiquetas"
+        )
         self.search_input.setMinimumWidth(140)
         self.search_input.setClearButtonEnabled(True)
         self.clear_filters_button = QPushButton("Limpiar filtros")
@@ -97,12 +122,17 @@ class TransactionsPage(Page):
         card.body.setContentsMargins(8, 8, 8, 8)
         card.body.addWidget(self.table)
         card.body.addWidget(self.empty_label, stretch=1)
+        self.totals_label = QLabel()
+        self.totals_label.setObjectName("FieldHint")
+        self.totals_label.setContentsMargins(8, 4, 8, 0)
+        card.body.addWidget(self.totals_label)
         self.content_layout.addWidget(card, stretch=1)
 
         self.period_selector.period_changed.connect(self.reload)
         self.account_filter.currentIndexChanged.connect(self.reload)
         self.category_filter.currentIndexChanged.connect(self.reload)
         self.payee_filter.currentIndexChanged.connect(self.reload)
+        self.tag_filter.currentIndexChanged.connect(self.reload)
         self.type_filter.currentIndexChanged.connect(self.reload)
         self.search_input.textChanged.connect(self.reload)
         theme_manager.theme_changed.connect(self.model.set_theme)
@@ -111,6 +141,8 @@ class TransactionsPage(Page):
             event_bus.accounts_changed,
             event_bus.categories_changed,
             event_bus.payees_changed,
+            event_bus.tags_changed,
+            event_bus.exchange_rates_changed,
         ):
             signal.connect(self.refresh)
 
@@ -121,7 +153,7 @@ class TransactionsPage(Page):
 
     def _load_filter_choices(self) -> None:
         self.account_filter.set_accounts(
-            self._services.accounts.list_accounts(include_archived=True), "Todas las cuentas"
+            self._services.accounts.list_accounts(include_archived=True), "Cuentas"
         )
         categories = self._services.categories
         self.category_filter.set_categories(
@@ -129,15 +161,21 @@ class TransactionsPage(Page):
                 ("Gastos", categories.category_tree(TransactionType.EXPENSE)),
                 ("Ingresos", categories.category_tree(TransactionType.INCOME)),
             ],
-            "Todas las categorías",
+            "Categorías",
         )
-        self.payee_filter.set_payees(self._services.payees.list_payees(), "Todos los beneficiarios")
+        self.payee_filter.set_payees(self._services.payees.list_payees(), "Beneficiarios")
+        self.tag_filter.set_tags(self._services.tags.list_tags(), "Etiquetas")
 
     def reload(self) -> None:
         """Lists the movements matching the current filters."""
-        transactions = self._services.transactions.list_transactions(self.current_filter())
+        criteria = self.current_filter()
+        transactions = self._services.transactions.list_transactions(criteria)
         self.model.set_items(self._builder.build(transactions))
         has_rows = self.model.rowCount() > 0
+        self.totals_label.setText(
+            totals_text(self.model.rowCount(), self._services.dashboard.totals(criteria))
+        )
+        self.totals_label.setVisible(has_rows)
         self.table.setVisible(has_rows)
         self.empty_label.setVisible(not has_rows)
         self._update_actions()
@@ -148,27 +186,35 @@ class TransactionsPage(Page):
         self._reset_filters()
         self.reload()
 
-    def focus(
-        self, period: Period, category_id: int | None = None, payee_id: int | None = None
-    ) -> None:
-        """Shows ``period`` with only ``category_id`` or ``payee_id`` filtered, as the
-        dashboard, budgets and payees pages ask for.
+    def focus(self, focus: TransactionFocus) -> None:
+        """Shows the period of ``focus`` with only its category, payee or tag filtered, as
+        other pages ask for.
 
         Does not reload: the caller shows the page, which refreshes it.
         """
         self._load_filter_choices()
         self._reset_filters()
         self.period_selector.blockSignals(True)
-        self.period_selector.set_period(period)
+        self.period_selector.set_period(focus.period)
         self.period_selector.blockSignals(False)
-        for combo, item_id in ((self.category_filter, category_id), (self.payee_filter, payee_id)):
+        for combo, item_id in (
+            (self.category_filter, focus.category_id),
+            (self.payee_filter, focus.payee_id),
+            (self.tag_filter, focus.tag_id),
+        ):
             if item_id is not None:
                 combo.blockSignals(True)
                 combo.select(item_id)
                 combo.blockSignals(False)
 
     def _filter_combos(self) -> tuple[QComboBox, ...]:
-        return (self.account_filter, self.category_filter, self.payee_filter, self.type_filter)
+        return (
+            self.account_filter,
+            self.category_filter,
+            self.payee_filter,
+            self.tag_filter,
+            self.type_filter,
+        )
 
     def _reset_filters(self) -> None:
         inputs = (*self._filter_combos(), self.search_input)
@@ -202,6 +248,7 @@ class TransactionsPage(Page):
             account_id=self.account_filter.current_id(),
             category_id=self.category_filter.current_id(),
             payee_id=self.payee_filter.current_id(),
+            tag_id=self.tag_filter.current_id(),
             type=transaction_type,
             is_transfer=is_transfer,
             refund_linked=refund_linked,

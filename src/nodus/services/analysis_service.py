@@ -24,6 +24,7 @@ from nodus.services.dashboard_service import (
     MonthFlow,
     converted_movements,
     month_flows,
+    period_filter,
     positive_totals,
     relative_change,
     savings_rate,
@@ -177,7 +178,7 @@ class AnalysisService:
         )
 
     def _converted(self, period: Period):
-        return converted_movements(self._transactions, self._exchange_rates, period)
+        return converted_movements(self._transactions, self._exchange_rates, period_filter(period))
 
     def _month_trend(
         self, month: Month, movements: list[ConvertedMovement], categories: dict[int, Category]

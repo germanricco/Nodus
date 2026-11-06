@@ -9,8 +9,10 @@ from PySide6.QtCore import Qt
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.ui.dialogs.payee_dialogs import NO_DEFAULT_CATEGORY, MergePayeeDialog, PayeeDialog
+from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages import payees_page
-from nodus.ui.pages.payees_page import COUNT, NAME, NO_PAYEES_TEXT, TOTAL, PayeesPage
+from nodus.ui.pages.payees_page import NO_PAYEES_TEXT, PayeesPage
+from nodus.ui.pages.summary_page import COUNT, NAME, TOTAL
 
 EXPENSE = TransactionType.EXPENSE
 
@@ -98,9 +100,8 @@ def test_see_transactions_spans_the_whole_history(qtbot, page, populated, servic
     with qtbot.waitSignal(page.transactions_requested) as signal:
         page.transactions_button.click()
 
-    period, payee_id = signal.args
-    assert period == Period.of_months(Month(2026, 10), Month.of(date.today()))
-    assert payee_id == services.payees.find("Coto").id
+    period = Period.of_months(Month(2026, 10), Month.of(date.today()))
+    assert signal.args == [TransactionFocus(period, payee_id=services.payees.find("Coto").id)]
 
 
 def test_delete_after_confirmation(monkeypatch, qtbot, services, event_bus, page, populated):

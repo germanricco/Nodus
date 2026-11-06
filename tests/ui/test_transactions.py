@@ -215,7 +215,7 @@ class TestTransactionsPage:
         page.type_filter.setCurrentText("Gastos")
         assert column(page, AMOUNT) == ["-$ 2.500,00"]
 
-        page.type_filter.setCurrentText("Todos los tipos")
+        page.type_filter.setCurrentText("Tipos")
         page.search_input.setText("viejo")
         assert column(page, AMOUNT) == []
         assert page.empty_label.isVisibleTo(page)

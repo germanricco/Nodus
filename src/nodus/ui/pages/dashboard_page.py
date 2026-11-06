@@ -21,7 +21,7 @@ from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import PageId
+from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.dashboard_cards import (
     LATEST_COUNT,
     LATEST_COUNT_BELOW_UPCOMING,
@@ -54,7 +54,7 @@ class DashboardPage(Page):
     """
 
     navigate_requested = Signal(object)  # PageId
-    transactions_requested = Signal(object, object)  # Period, category id or None
+    transactions_requested = Signal(object)  # TransactionFocus
     budgets_requested = Signal(object)  # Month
 
     def __init__(
@@ -72,7 +72,9 @@ class DashboardPage(Page):
         )
         self.latest_card = LatestTransactionsCard(services, theme_manager)
         self.latest_card.see_all_requested.connect(
-            lambda: self.transactions_requested.emit(self.period_selector.period(), None)
+            lambda: self.transactions_requested.emit(
+                TransactionFocus(self.period_selector.period())
+            )
         )
         self.upcoming_card = UpcomingPaymentsCard(services)
         self.upcoming_card.pay_requested.connect(self.open_pay_dialog)
@@ -83,7 +85,7 @@ class DashboardPage(Page):
         self.budgets_card = BudgetsCard(services, theme_manager)
         self.budgets_card.category_clicked.connect(
             lambda category_id: self.transactions_requested.emit(
-                Period.of_months(self._budgets_month()), category_id
+                TransactionFocus(Period.of_months(self._budgets_month()), category_id)
             )
         )
         self.budgets_card.see_all_requested.connect(
@@ -94,7 +96,7 @@ class DashboardPage(Page):
         for card in (self.expenses_card, self.comparison_card):
             card.category_clicked.connect(
                 lambda category_id: self.transactions_requested.emit(
-                    self.period_selector.period(), category_id
+                    TransactionFocus(self.period_selector.period(), category_id)
                 )
             )
 

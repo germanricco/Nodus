@@ -25,6 +25,7 @@ from nodus.ui.dialogs.budget_dialog import BudgetDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import days_left_text, unconverted_note
+from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.dashboard_cards import BudgetRow, CategoryLine, FigureTile, muted_label
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme import Theme
@@ -66,7 +67,7 @@ class BudgetsPage(Page):
     """A month at a time: the totals on top, the budgets from the most to the least used,
     and the spending of categories that have no budget."""
 
-    transactions_requested = Signal(object, object)  # Period, category id
+    transactions_requested = Signal(object)  # TransactionFocus
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -146,7 +147,9 @@ class BudgetsPage(Page):
         self._event_bus.budgets_changed.emit()
 
     def _show_transactions(self, category: Category) -> None:
-        self.transactions_requested.emit(Period.of_months(self.month), category.id)
+        self.transactions_requested.emit(
+            TransactionFocus(Period.of_months(self.month), category.id)
+        )
 
     # Building
 

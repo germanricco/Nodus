@@ -18,7 +18,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder
 from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.table import record_table
-from nodus.ui.widgets.transaction_table import DESCRIPTION, TransactionTableModel
+from nodus.ui.widgets.transaction_table import DESCRIPTION, TAGS, TransactionTableModel
 
 # The expenses offered first: refunds usually come within a few months.
 CANDIDATE_MONTHS = 6
@@ -64,6 +64,7 @@ class RefundPickerDialog(FormDialog):
 
         self.model = TransactionTableModel(theme_manager.theme)
         self.table = record_table(self.model, DESCRIPTION)
+        self.table.hideColumn(TAGS)  # the picker only needs to recognize the expense
         self.table.doubleClicked.connect(lambda _index: self._on_save())
         self.empty_label = QLabel("Sin gastos para reembolsar en este período")
         self.empty_label.setObjectName("FieldHint")

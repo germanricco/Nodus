@@ -15,14 +15,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.models.period import Month, Period
+from nodus.models.period import Month
 from nodus.services.container import Services
 from nodus.services.notification_service import Notice, NoticeKind
 from nodus.services.update_service import Release
 from nodus.ui.background import BackgroundCall
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import PageId
+from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.analysis_page import AnalysisPage
 from nodus.ui.pages.budgets_page import BudgetsPage
@@ -32,6 +32,7 @@ from nodus.ui.pages.page import Page
 from nodus.ui.pages.payees_page import PayeesPage
 from nodus.ui.pages.recurring_page import RecurringPage
 from nodus.ui.pages.settings_page import SettingsPage
+from nodus.ui.pages.tags_page import TagsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.rate_updater import RateUpdater
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -74,9 +75,9 @@ class MainWindow(QMainWindow):
         analysis.transactions_requested.connect(self.show_transactions)
         analysis.navigate_requested.connect(self.show_page)
         payees = PayeesPage(services, event_bus, theme_manager)
-        payees.transactions_requested.connect(
-            lambda period, payee_id: self.show_transactions(period, payee_id=payee_id)
-        )
+        payees.transactions_requested.connect(self.show_transactions)
+        tags = TagsPage(services, event_bus, theme_manager)
+        tags.transactions_requested.connect(self.show_transactions)
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
@@ -86,6 +87,7 @@ class MainWindow(QMainWindow):
             PageId.ANALYSIS: analysis,
             PageId.CATEGORIES: CategoriesPage(services, event_bus),
             PageId.PAYEES: payees,
+            PageId.TAGS: tags,
             PageId.SETTINGS: SettingsPage(services, event_bus, theme_manager),
         }
         for page in self._pages.values():
@@ -189,12 +191,9 @@ class MainWindow(QMainWindow):
         self._stack.setCurrentWidget(page)
         self.sidebar.select(page_id)
 
-    def show_transactions(
-        self, period: Period, category_id: int | None = None, payee_id: int | None = None
-    ) -> None:
-        """Opens the transactions page on ``period``, filtered by ``category_id`` or
-        ``payee_id`` if given."""
-        self._pages[PageId.TRANSACTIONS].focus(period, category_id, payee_id)
+    def show_transactions(self, focus: TransactionFocus) -> None:
+        """Opens the transactions page on what ``focus`` asks for."""
+        self._pages[PageId.TRANSACTIONS].focus(focus)
         self.show_page(PageId.TRANSACTIONS)
 
     def show_budgets(self, month: Month) -> None:
