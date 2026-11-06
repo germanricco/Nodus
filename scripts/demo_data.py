@@ -98,6 +98,7 @@ def load_demo_data(services: Services, today: date) -> None:
            "Supermercado")  # fmt: skip
     record(efectivo.id, expense, "Transporte", ars("12000"), days_ago(1), "SUBE")
     record(efectivo.id, expense, "Ocio", ars("18500"), days_ago(1), "Cine")
+    record(banco.id, expense, "Ocio", ars("52000"), days_ago(0), "Entradas recital")
     record(banco.id, expense, "Educación", ars("65000"), days_ago(0), "Curso de inglés")
     services.transactions.create_transfer(
         TransferDraft(banco.id, ahorro.id, ars("243100"), days_ago(1),
@@ -119,3 +120,13 @@ def load_demo_data(services: Services, today: date) -> None:
     charge("Gimnasio", efectivo, ars("35000"), "Salud", monthly, today + timedelta(days=12))
     charge("Seguro del auto", ahorro, usd("180"), "Transporte", Frequency.SEMIANNUAL,
            today + timedelta(days=40))  # fmt: skip
+
+    # Budgets in every state: on track, ahead of the month, over the limit, and a limit
+    # raised this month, so earlier months show the previous one.
+    since = current.shifted(-(HISTORY_MONTHS - 1))
+    for category, amount in (("Supermercado y comida", "350000"), ("Ocio", "60000"),
+                             ("Servicios", "45000"), ("Transporte", "25000"),
+                             ("Salud", "50000")):  # fmt: skip
+        services.budgets.set_limit(categories[(expense, category)], since, ars(amount))
+    services.budgets.set_limit(categories[(expense, "Supermercado y comida")], current,
+                               ars("400000"))  # fmt: skip

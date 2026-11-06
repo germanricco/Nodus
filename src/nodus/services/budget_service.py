@@ -86,6 +86,10 @@ class BudgetService:
         with self._database.transaction():
             self._budgets.set(category_id, month, None)
 
+    def categories(self) -> list[Category]:
+        """The categories that can carry a budget, in display order."""
+        return [node.category for node in self._categories.category_tree(TransactionType.EXPENSE)]
+
     def limits_on(self, month: Month) -> dict[int, Money]:
         return self._budgets.limits_on(month)
 

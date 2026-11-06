@@ -45,6 +45,8 @@ class Theme:
     income_soft: str
     expense: str
     expense_soft: str
+    warning: str
+    warning_soft: str
 
     def tokens(self) -> dict[str, str]:
         return asdict(self)
@@ -68,6 +70,8 @@ LIGHT = Theme(
     income_soft="#e2f3e8",
     expense="#d9453b",
     expense_soft="#fbe7e5",
+    warning="#c47d0e",
+    warning_soft="#fbefdc",
 )
 
 DARK = Theme(
@@ -87,4 +91,6 @@ DARK = Theme(
     income_soft="#1b3326",
     expense="#ef6b60",
     expense_soft="#3b2325",
+    warning="#e8a33d",
+    warning_soft="#3a2e1c",
 )

@@ -23,9 +23,11 @@ if sys.platform == "win32":
 from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
+from nodus.models.period import Month  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
 from nodus.services.update_service import Release  # noqa: E402
 from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
+from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
@@ -51,6 +53,9 @@ DIALOGS = {
     ),
     "transfer-dialog": lambda services, event_bus, window: transfer_dialog(
         services, event_bus, window
+    ),
+    "budget-dialog": lambda services, event_bus, window: BudgetDialog(
+        services, event_bus, Month.of(date.today()), parent=window
     ),
 }
 

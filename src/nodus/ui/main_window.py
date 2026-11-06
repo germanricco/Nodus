@@ -24,6 +24,7 @@ from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.accounts_page import AccountsPage
+from nodus.ui.pages.budgets_page import BudgetsPage
 from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.dashboard_page import DashboardPage
 from nodus.ui.pages.page import Page
@@ -63,11 +64,14 @@ class MainWindow(QMainWindow):
         accounts = AccountsPage(services, event_bus, theme_manager)
         accounts.navigate_requested.connect(self.show_page)
         dashboard.transactions_requested.connect(self.show_transactions)
+        budgets = BudgetsPage(services, event_bus, theme_manager)
+        budgets.transactions_requested.connect(self.show_transactions)
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
             PageId.TRANSACTIONS: TransactionsPage(services, event_bus, theme_manager),
             PageId.RECURRING: RecurringPage(services, event_bus),
+            PageId.BUDGETS: budgets,
             PageId.CATEGORIES: CategoriesPage(services, event_bus),
             PageId.SETTINGS: SettingsPage(services, event_bus, theme_manager),
         }

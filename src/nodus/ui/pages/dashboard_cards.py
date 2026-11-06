@@ -25,7 +25,7 @@ from nodus.services.container import Services
 from nodus.services.dashboard_service import CategoryTotal, Comparison, MonthFlow, PeriodSummary
 from nodus.services.recurring_charge_service import UPCOMING_DAYS
 from nodus.ui.formatting import format_date
-from nodus.ui.labels import due_label
+from nodus.ui.labels import due_label, unconverted_note
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
@@ -352,11 +352,7 @@ class CashFlowCard(Card):
         self.income_label.set_money(summary.income)
         self.expenses_label.set_money(-summary.expenses)
         self.saved_label.setText(percent(summary.savings, summary.income))
-        self.unconverted_label.setText(
-            f"{summary.unconverted} movimiento(s) en dólares sin cotización no se incluyen."
-            if summary.unconverted
-            else ""
-        )
+        self.unconverted_label.setText(unconverted_note(summary.unconverted))
         self.unconverted_label.setVisible(bool(summary.unconverted))
         single_month = len(summary.period.months()) == 1
         self.chart.set_groups(

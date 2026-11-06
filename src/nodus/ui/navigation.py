@@ -10,6 +10,7 @@ class PageId(Enum):
     ACCOUNTS = ("Cuentas", "accounts")
     TRANSACTIONS = ("Transacciones", "transactions")
     RECURRING = ("Recurrentes", "repeat")
+    BUDGETS = ("Presupuestos", "budget")
     CATEGORIES = ("Categorías", "categories")
     SETTINGS = ("Ajustes", "settings")
 

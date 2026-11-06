@@ -15,6 +15,7 @@ class EventBus(QObject):
     transactions_changed = Signal()
     exchange_rates_changed = Signal()
     recurring_changed = Signal()
+    budgets_changed = Signal()
 
     def emit_all(self) -> None:
         """Announces that everything may have changed, as after restoring a backup."""
@@ -23,3 +24,4 @@ class EventBus(QObject):
         self.transactions_changed.emit()
         self.exchange_rates_changed.emit()
         self.recurring_changed.emit()
+        self.budgets_changed.emit()

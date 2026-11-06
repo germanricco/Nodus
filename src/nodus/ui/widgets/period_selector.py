@@ -14,12 +14,20 @@ class PeriodSelector(QWidget):
     """Shows "‹ Noviembre 2026 ▾ ›". The arrows move by the period's length; the middle
     button offers the quick choices (current month, last 3 months, this year…).
 
+    With ``quick_choices`` off it moves month by month only, and the middle button
+    returns to the current month, for screens that always show a single month.
+
     Emits ``period_changed`` whenever the period changes.
     """
 
     period_changed = Signal(object)  # Period
 
-    def __init__(self, period: Period | None = None, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        period: Period | None = None,
+        quick_choices: bool = True,
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -33,7 +41,11 @@ class PeriodSelector(QWidget):
         for quick in QuickPeriod:
             action = self.quick_menu.addAction(quick.value)
             action.triggered.connect(lambda _=False, q=quick: self.choose(q))
-        self.period_button.setMenu(self.quick_menu)
+        if quick_choices:
+            self.period_button.setMenu(self.quick_menu)
+        else:
+            self.period_button.setToolTip("Volver al mes actual")
+            self.period_button.clicked.connect(lambda: self.choose(QuickPeriod.CURRENT_MONTH))
         layout.addWidget(self.previous_button)
         layout.addWidget(self.period_button)
         layout.addWidget(self.next_button)

@@ -499,6 +499,11 @@ QLabel#ChangeBadge[tone="bad"] {
     color: $expense;
 }
 
+QLabel#ChangeBadge[tone="warning"] {
+    background: $warning_soft;
+    color: $warning;
+}
+
 /* Dashboard: category rows that light up under the mouse, and boxed figures */
 
 QFrame#CategoryLine {
