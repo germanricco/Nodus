@@ -1,4 +1,8 @@
-"""Figures for the dashboard: how a period went and how it compares with the one before."""
+"""Figures for the dashboard: how a period went and how it compares with the one before.
+
+The movements converted to pesos and the month-by-month flow are shared with the analysis
+service, so both screens count the same way.
+"""
 
 from __future__ import annotations
 
@@ -17,6 +21,7 @@ from nodus.services.transaction_service import TransactionService
 
 # A single month shows the trend of the months leading to it.
 TREND_MONTHS = 6
+SUMMARY_CURRENCY = Currency.ARS
 
 
 def relative_change(current: Money, previous: Money) -> float | None:
@@ -27,6 +32,51 @@ def relative_change(current: Money, previous: Money) -> float | None:
     if previous.is_zero:
         return None
     return (current.cents - previous.cents) / abs(previous.cents)
+
+
+def savings_rate(income: Money, expenses: Money) -> float | None:
+    """The share of ``income`` that was not spent (0.2 is 20 %); None without income."""
+    if income.cents <= 0:
+        return None
+    return (income.cents - expenses.cents) / income.cents
+
+
+@dataclass(frozen=True)
+class ConvertedMovement:
+    """An income or expense with its amount in pesos, converted at the rate of its day."""
+
+    transaction: Transaction
+    amount: Money
+
+
+@dataclass(frozen=True)
+class ConvertedMovements:
+    """The income and expenses of a period in pesos. Dollar movements of days without a
+    rate cannot be converted: they are left out and counted in ``unconverted``, so the
+    screen can say so instead of showing a wrong total."""
+
+    movements: list[ConvertedMovement]
+    unconverted: int
+
+
+def converted_movements(
+    transactions: TransactionService, exchange_rates: ExchangeRateService, period: Period
+) -> ConvertedMovements:
+    """Income and expenses of ``period`` in pesos; transfers only move money between
+    accounts, so they are left out."""
+    movements: list[ConvertedMovement] = []
+    unconverted = 0
+    for transaction in transactions.list_transactions(
+        TransactionFilter(start=period.start, end=period.end, is_transfer=False)
+    ):
+        amount = exchange_rates.convert(
+            transaction.amount, SUMMARY_CURRENCY, transaction.occurred_on
+        )
+        if amount is None:
+            unconverted += 1
+        else:
+            movements.append(ConvertedMovement(transaction, amount))
+    return ConvertedMovements(movements, unconverted)
 
 
 @dataclass(frozen=True)
@@ -100,9 +150,29 @@ class MonthFlow:
     def savings(self) -> Money:
         return self.income - self.expenses
 
+    @property
+    def savings_rate(self) -> float | None:
+        return savings_rate(self.income, self.expenses)
+
+
+def month_flows(movements: list[ConvertedMovement], months: list[Month]) -> list[MonthFlow]:
+    """Income and expenses of each of ``months``, from movements already in pesos."""
+    zero = Money.zero(SUMMARY_CURRENCY)
+    totals = {month: {kind: zero for kind in TransactionType} for month in months}
+    for movement in movements:
+        month = Month.of(movement.transaction.occurred_on)
+        if month in totals:
+            totals[month][movement.transaction.type] += movement.amount
+    return [
+        MonthFlow(
+            month, totals[month][TransactionType.INCOME], totals[month][TransactionType.EXPENSE]
+        )
+        for month in months
+    ]
+
 
 class DashboardService:
-    CURRENCY = Currency.ARS
+    CURRENCY = SUMMARY_CURRENCY
 
     def __init__(
         self,
@@ -118,23 +188,20 @@ class DashboardService:
         categories = {c.id: c for c in self._categories.list_categories()}
         totals = {kind: Money.zero(self.CURRENCY) for kind in TransactionType}
         by_category: dict[int, Money] = defaultdict(lambda: Money.zero(self.CURRENCY))
-        unconverted = 0
-        for transaction in self._movements(period):
-            amount = self._in_summary_currency(transaction)
-            if amount is None:
-                unconverted += 1
-                continue
-            totals[transaction.type] += amount
+        converted = self._converted(period)
+        for movement in converted.movements:
+            transaction = movement.transaction
+            totals[transaction.type] += movement.amount
             if transaction.type is TransactionType.EXPENSE:
                 category = categories[transaction.category_id]
-                by_category[category.parent_id or category.id] += amount
+                by_category[category.parent_id or category.id] += movement.amount
         ranked = sorted(by_category.items(), key=lambda item: item[1].cents, reverse=True)
         return PeriodSummary(
             period=period,
             income=totals[TransactionType.INCOME],
             expenses=totals[TransactionType.EXPENSE],
             expenses_by_category=[CategoryTotal(categories[i], total) for i, total in ranked],
-            unconverted=unconverted,
+            unconverted=converted.unconverted,
         )
 
     def comparison(self, period: Period) -> Comparison:
@@ -154,26 +221,8 @@ class DashboardService:
         months = period.months()
         if len(months) == 1:
             months = [months[0].shifted(-i) for i in reversed(range(TREND_MONTHS))]
-        zero = Money.zero(self.CURRENCY)
-        totals = {month: {kind: zero for kind in TransactionType} for month in months}
-        for transaction in self._movements(Period.of_months(months[0], months[-1])):
-            amount = self._in_summary_currency(transaction)
-            if amount is not None:
-                totals[Month.of(transaction.occurred_on)][transaction.type] += amount
-        return [
-            MonthFlow(
-                month, totals[month][TransactionType.INCOME], totals[month][TransactionType.EXPENSE]
-            )
-            for month in months
-        ]
+        converted = self._converted(Period.of_months(months[0], months[-1]))
+        return month_flows(converted.movements, months)
 
-    def _movements(self, period: Period) -> list[Transaction]:
-        """Income and expenses of ``period``; transfers only move money between accounts."""
-        return self._transactions.list_transactions(
-            TransactionFilter(start=period.start, end=period.end, is_transfer=False)
-        )
-
-    def _in_summary_currency(self, transaction: Transaction) -> Money | None:
-        return self._exchange_rates.convert(
-            transaction.amount, self.CURRENCY, transaction.occurred_on
-        )
+    def _converted(self, period: Period) -> ConvertedMovements:
+        return converted_movements(self._transactions, self._exchange_rates, period)

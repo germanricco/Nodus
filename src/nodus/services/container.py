@@ -15,6 +15,7 @@ from nodus.database.repositories.recurring_charge_repository import RecurringCha
 from nodus.database.repositories.settings_repository import SettingsRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
 from nodus.services.account_service import AccountService
+from nodus.services.analysis_service import AnalysisService
 from nodus.services.backup_service import BackupService
 from nodus.services.budget_service import BudgetService
 from nodus.services.category_service import CategoryService
@@ -55,6 +56,7 @@ class Services:
     recurring: RecurringChargeService
     budgets: BudgetService
     payees: PayeeService
+    analysis: AnalysisService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -102,4 +104,5 @@ class Services:
             recurring=recurring,
             budgets=budgets,
             payees=payees,
+            analysis=AnalysisService(transactions, categories, payees, exchange_rates),
         )
