@@ -124,6 +124,31 @@ QMainWindow, #ContentArea, #PageStack {
     font-size: 11pt;
 }
 
+/* New version notice under the top bar */
+
+#UpdateBanner {
+    background: $accent_soft;
+    border-bottom: 1px solid $border;
+}
+
+#UpdateBanner QLabel {
+    color: $accent;
+    font-weight: 600;
+}
+
+QPushButton#BannerClose {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 13pt;
+    color: $accent;
+}
+
+QPushButton#BannerClose:hover {
+    background: $hover;
+}
+
 /* Buttons */
 
 QPushButton#PrimaryButton {
@@ -219,6 +244,30 @@ QComboBox QAbstractItemView {
     border: 1px solid $border;
     selection-background-color: $accent_soft;
     selection-color: $text;
+}
+
+/* Check boxes: a box with the theme border, filled with the accent when checked. */
+
+QCheckBox {
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid $border;
+    border-radius: 4px;
+    background: $background;
+}
+
+QCheckBox::indicator:hover {
+    border: 1px solid $accent;
+}
+
+QCheckBox::indicator:checked {
+    border: 1px solid $accent;
+    background: $accent;
+    image: url($icons/check.svg);
 }
 
 /* Segmented control (e.g. Gasto / Ingreso / Transferencia) */

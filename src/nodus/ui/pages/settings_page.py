@@ -7,6 +7,7 @@ from datetime import date
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
+    QCheckBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -15,11 +16,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus import __version__
 from nodus.models.currency import Currency
 from nodus.models.exchange_rate import ExchangeRate
 from nodus.models.money import Money
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
+from nodus.services.update_service import REPOSITORY_URL
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
@@ -81,6 +84,7 @@ class SettingsPage(Page):
         sections.addWidget(self._appearance_card())
         sections.addWidget(self._rate_card())
         sections.addWidget(self._data_card())
+        sections.addWidget(self._about_card())
         sections.addStretch()
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -92,6 +96,7 @@ class SettingsPage(Page):
     def refresh(self) -> None:
         self.theme_input.set_index(THEME_MODES.index(self._theme_manager.mode))
         self._refresh_rates()
+        self.check_updates_input.setChecked(self._services.settings.check_updates())
 
     # Appearance
 
@@ -226,5 +231,32 @@ class SettingsPage(Page):
         row.addWidget(self.data_path_label, stretch=1)
         row.addWidget(open_button)
         card.body.addWidget(text)
+        card.body.addLayout(row)
+        return card
+
+    # About
+
+    def _about_card(self) -> Card:
+        card = Card("Acerca de Nodus")
+        version = QLabel(f"Versión {__version__}")
+        version.setObjectName("RowTitle")
+        card.body.addWidget(version)
+        self.check_updates_input = QCheckBox("Buscar actualizaciones al iniciar")
+        self.check_updates_input.clicked.connect(self._services.settings.set_check_updates)
+        card.body.addWidget(self.check_updates_input)
+        hint = QLabel(
+            "Al abrir Nodus se consulta en GitHub cuál es la última versión publicada."
+            " No se envía ningún dato tuyo."
+        )
+        hint.setObjectName("FieldHint")
+        hint.setWordWrap(True)
+        card.body.addWidget(hint)
+        repository_button = QPushButton("Ver el proyecto en GitHub")
+        repository_button.setObjectName("SecondaryButton")
+        repository_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(REPOSITORY_URL)))
+        row = QHBoxLayout()
+        row.addWidget(repository_button)
+        row.addStretch()
+        card.body.addSpacing(4)
         card.body.addLayout(row)
         return card

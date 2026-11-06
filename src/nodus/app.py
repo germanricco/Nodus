@@ -46,6 +46,7 @@ class NodusApp:
             theme_manager = ThemeManager(self._qt_app, theme_mode)
             window = MainWindow(services, EventBus(), theme_manager)
             window.show()
+            window.check_for_updates()
             return self._qt_app.exec()
         finally:
             database.close()

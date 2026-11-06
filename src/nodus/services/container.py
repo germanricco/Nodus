@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from nodus import __version__
 from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.category_repository import CategoryRepository
@@ -17,6 +18,7 @@ from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.net_worth_service import NetWorthService
 from nodus.services.settings_service import SettingsService
 from nodus.services.transaction_service import TransactionService
+from nodus.services.update_service import UpdateService
 
 
 @dataclass(frozen=True)
@@ -34,6 +36,7 @@ class Services:
     net_worth: NetWorthService
     settings: SettingsService
     dashboard: DashboardService
+    updates: UpdateService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -53,4 +56,5 @@ class Services:
             net_worth=NetWorthService(accounts, exchange_rates),
             settings=SettingsService(database, SettingsRepository(database)),
             dashboard=DashboardService(transactions, categories, exchange_rates),
+            updates=UpdateService(__version__),
         )

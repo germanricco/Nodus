@@ -24,6 +24,7 @@ from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
+from nodus.services.update_service import Release  # noqa: E402
 from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
@@ -83,6 +84,12 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
             app.processEvents()
             save(dialog, args.out / f"{name}-{mode.value}.png")
             dialog.close()
+        # The new version notice, over the dashboard.
+        window.show_page(PageId.DASHBOARD)
+        window.update_banner.show_release(Release("0.3.0", ""))
+        app.processEvents()
+        save(window, args.out / f"update-banner-{mode.value}.png")
+        window.update_banner.hide()
     window.close()
 
 

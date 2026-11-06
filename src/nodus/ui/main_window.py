@@ -23,8 +23,10 @@ from nodus.ui.pages.page import Page
 from nodus.ui.pages.settings_page import SettingsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.update_check import UpdateCheck
 from nodus.ui.widgets.sidebar import Sidebar
 from nodus.ui.widgets.top_bar import TopBar
+from nodus.ui.widgets.update_banner import UpdateBanner
 
 
 class MainWindow(QMainWindow):
@@ -42,6 +44,7 @@ class MainWindow(QMainWindow):
 
         self.sidebar = Sidebar(services, event_bus, theme_manager)
         self.top_bar = TopBar(theme_manager)
+        self.update_banner = UpdateBanner()
         self._stack = QStackedWidget()
         self._stack.setObjectName("PageStack")
         dashboard = DashboardPage(services, event_bus, theme_manager)
@@ -63,6 +66,7 @@ class MainWindow(QMainWindow):
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
         content_layout.addWidget(self.top_bar)
+        content_layout.addWidget(self.update_banner)
         content_layout.addWidget(self._stack, stretch=1)
 
         central = QWidget()
@@ -76,6 +80,17 @@ class MainWindow(QMainWindow):
         self.sidebar.page_requested.connect(self.show_page)
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
         self.show_page(PageId.DASHBOARD)
+
+    def check_for_updates(self) -> None:
+        """Looks for a new version in the background, unless the user turned it off.
+
+        Called by the app once the window is open, not on construction, so tests and
+        screenshots never reach the network."""
+        if not self._services.settings.check_updates():
+            return
+        self._update_check = UpdateCheck(self._services.updates, parent=self)
+        self._update_check.found.connect(self.update_banner.show_release)
+        self._update_check.start()
 
     @property
     def current_page(self) -> Page:

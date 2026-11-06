@@ -60,3 +60,11 @@ def test_delete_rate_after_confirmation(monkeypatch, services, page):
 
 def test_shows_data_file(services, page):
     assert page.data_path_label.text() == str(services.settings.data_file)
+
+
+def test_about_card_turns_update_check_off(services, page):
+    assert page.check_updates_input.isChecked()
+
+    page.check_updates_input.click()
+
+    assert not services.settings.check_updates()

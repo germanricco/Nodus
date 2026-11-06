@@ -17,6 +17,7 @@ class SettingsService:
     """
 
     THEME_KEY = "theme"
+    CHECK_UPDATES_KEY = "check_updates"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -34,3 +35,11 @@ class SettingsService:
     def set_theme_preference(self, value: str) -> None:
         with self._database.transaction():
             self._settings.set(self.THEME_KEY, value)
+
+    def check_updates(self) -> bool:
+        """Whether to look for a new version on startup; on unless the user turned it off."""
+        return self._settings.get(self.CHECK_UPDATES_KEY) != "false"
+
+    def set_check_updates(self, enabled: bool) -> None:
+        with self._database.transaction():
+            self._settings.set(self.CHECK_UPDATES_KEY, "true" if enabled else "false")
