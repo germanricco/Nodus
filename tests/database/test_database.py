@@ -91,10 +91,10 @@ def test_corrupt_file_raises_database_error(db_path):
         Database.open(db_path)
 
 
-@pytest.mark.parametrize("released", [1, 2, 3, 4, 5])
+@pytest.mark.parametrize("released", [1, 2, 3, 4, 5, 6])
 def test_migrations_keep_existing_data(db_path, released):
     """A database from an earlier release (schema 1 is v0.4, 2 is v0.5, 3 is v0.6, 4 is
-    v0.7 and v0.8, 5 is v0.9) with data gets the new tables and keeps its rows."""
+    v0.7 and v0.8, 5 is v0.9, 6 is v0.9.1) with data gets the new tables and keeps its rows."""
     migrations = [m for m in load_packaged_migrations() if m.version <= released]
     database = Database.open(db_path, migrations)
     with database.transaction():
@@ -106,10 +106,15 @@ def test_migrations_keep_existing_data(db_path, released):
 
     database = Database.open(db_path)
 
-    assert database.schema_version == 6
-    assert {"recurring_charges", "budget_limits", "payees", "tags", "transaction_tags"} <= (
-        table_names(database)
-    )
+    assert database.schema_version == 7
+    assert {
+        "recurring_charges",
+        "budget_limits",
+        "payees",
+        "tags",
+        "transaction_tags",
+        "value_adjustments",
+    } <= table_names(database)
     row = database.connection.execute("SELECT name, initial_balance_cents FROM accounts").fetchone()
     assert tuple(row) == ("Banco", 500)
     database.close()

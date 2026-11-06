@@ -15,6 +15,7 @@ from nodus.database.repositories.recurring_charge_repository import RecurringCha
 from nodus.database.repositories.settings_repository import SettingsRepository
 from nodus.database.repositories.tag_repository import TagRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
+from nodus.database.repositories.value_adjustment_repository import ValueAdjustmentRepository
 from nodus.services.account_service import AccountService
 from nodus.services.analysis_service import AnalysisService
 from nodus.services.backup_service import BackupService
@@ -65,7 +66,7 @@ class Services:
     def create(cls, database: Database) -> Services:
         account_repository = AccountRepository(database)
         category_repository = CategoryRepository(database)
-        accounts = AccountService(database, account_repository)
+        accounts = AccountService(database, account_repository, ValueAdjustmentRepository(database))
         exchange_rates = ExchangeRateService(database, ExchangeRateRepository(database))
         categories = CategoryService(database, category_repository)
         transaction_repository = TransactionRepository(database)

@@ -9,7 +9,6 @@ from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.period import Period
-from nodus.models.transaction import TransactionType
 from nodus.services.account_service import AccountService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.transaction_service import TransactionService
@@ -94,23 +93,27 @@ class NetWorthService:
         by_currency = {currency: Money.zero(currency) for currency in Currency}
         for account_id, currency in currencies.items():
             by_currency[currency] += balances[account_id]
-        movements = self._transactions.list_transactions(
-            TransactionFilter(start=period.start, end=end)
-        )
-        movements.sort(key=lambda t: t.occurred_on)
+        # Every change to a balance in the period: movements and value adjustments.
+        changes = [
+            (t.occurred_on, t.account_id, t.signed_amount)
+            for t in self._transactions.list_transactions(
+                TransactionFilter(start=period.start, end=end)
+            )
+        ]
+        changes += [
+            (a.occurred_on, a.account_id, a.amount)
+            for a in self._accounts.value_adjustments(period=Period(period.start, end))
+        ]
+        changes.sort(key=lambda change: change[0])
 
         points = []
         index = 0
         for day in days:
-            while index < len(movements) and movements[index].occurred_on <= day:
-                movement = movements[index]
+            while index < len(changes) and changes[index][0] <= day:
+                _day, account_id, amount = changes[index]
                 index += 1
-                if movement.account_id not in currencies:  # archived account
-                    continue
-                income = movement.type is TransactionType.INCOME
-                by_currency[movement.amount.currency] += (
-                    movement.amount if income else -movement.amount
-                )
+                if account_id in currencies:  # archived accounts are left out
+                    by_currency[amount.currency] += amount
             points.append(NetWorthPoint(day, self._net_worth(dict(by_currency), day)))
         return points
 

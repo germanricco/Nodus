@@ -18,6 +18,12 @@ class AccountType(Enum):
     SAVINGS = "savings"
     INVESTMENT = "investment"
 
+    @property
+    def changes_value(self) -> bool:
+        """Savings and investments earn interest or follow prices, so their value moves by
+        itself and is brought up to date with value adjustments."""
+        return self in {AccountType.SAVINGS, AccountType.INVESTMENT}
+
 
 @dataclass(frozen=True)
 class Account:
