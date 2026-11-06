@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 import json
-import urllib.request
-from collections.abc import Callable
 from dataclasses import dataclass
+
+from nodus.services.http import Fetch, downloader
 
 REPOSITORY = "germanricco/Nodus"
 REPOSITORY_URL = f"https://github.com/{REPOSITORY}"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
-_TIMEOUT_SECONDS = 5
-
-# Downloads a URL and returns the body; replaced in tests so they never touch the network.
-Fetch = Callable[[str], bytes]
+GITHUB_JSON = "application/vnd.github+json"
 
 
 @dataclass(frozen=True)
@@ -40,7 +37,7 @@ class UpdateService:
 
     def __init__(self, current_version: str, fetch: Fetch | None = None) -> None:
         self.current_version = current_version
-        self._fetch = fetch or self._download
+        self._fetch = fetch or downloader(f"Nodus/{current_version}", GITHUB_JSON)
 
     def check(self) -> Release | None:
         """The latest release if it is newer than the running version, otherwise None.
@@ -55,14 +52,3 @@ class UpdateService:
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             return None
         return latest if is_newer else None
-
-    def _download(self, url: str) -> bytes:
-        request = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": f"Nodus/{self.current_version}",
-                "Accept": "application/vnd.github+json",
-            },
-        )
-        with urllib.request.urlopen(request, timeout=_TIMEOUT_SECONDS) as response:
-            return response.read()

@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
 
 from nodus.models.period import Month
 from nodus.services.container import Services
+from nodus.services.update_service import Release
+from nodus.ui.background import BackgroundCall
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
@@ -23,7 +25,6 @@ from nodus.ui.pages.page import Page
 from nodus.ui.pages.settings_page import SettingsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.update_check import UpdateCheck
 from nodus.ui.widgets.sidebar import Sidebar
 from nodus.ui.widgets.top_bar import TopBar
 from nodus.ui.widgets.update_banner import UpdateBanner
@@ -88,9 +89,13 @@ class MainWindow(QMainWindow):
         screenshots never reach the network."""
         if not self._services.settings.check_updates():
             return
-        self._update_check = UpdateCheck(self._services.updates, parent=self)
-        self._update_check.found.connect(self.update_banner.show_release)
+        self._update_check = BackgroundCall(self._services.updates.check, parent=self)
+        self._update_check.done.connect(self._show_release)
         self._update_check.start()
+
+    def _show_release(self, release: Release | None) -> None:
+        if release is not None:
+            self.update_banner.show_release(release)
 
     @property
     def current_page(self) -> Page:
