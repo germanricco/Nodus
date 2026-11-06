@@ -12,6 +12,7 @@ ACTION_LABELS = {
     NoticeKind.UPDATE: "Descargar",
     NoticeKind.STALE_RATE: "Ir a Ajustes",
     NoticeKind.BACKUP_FAILED: "Ir a Ajustes",
+    NoticeKind.CHARGES_DUE: "Ver cargos",
 }
 WIDTH = 340
 

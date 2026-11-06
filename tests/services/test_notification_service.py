@@ -1,7 +1,7 @@
 from datetime import timedelta
 from decimal import Decimal
 
-from factories import TODAY
+from factories import TODAY, ars, charge_draft
 
 from nodus.services.notification_service import STALE_RATE_DAYS, NoticeKind
 from nodus.services.update_service import Release
@@ -55,3 +55,48 @@ def test_failed_backup(services):
 
     assert [n.kind for n in notices] == [NoticeKind.BACKUP_FAILED]
     assert "disco lleno" in notices[0].detail
+
+
+def charges_notice(services):
+    return next(
+        (
+            n
+            for n in services.notifications.notices(TODAY, None)
+            if n.kind is NoticeKind.CHARGES_DUE
+        ),
+        None,
+    )
+
+
+def test_one_charge_due_soon(services, pesos):
+    services.recurring.create(
+        charge_draft(services, pesos.id, ars("8500"), TODAY + timedelta(days=1), name="Netflix")
+    )
+
+    notice = charges_notice(services)
+
+    assert notice.title == "Netflix vence mañana"
+    assert notice.detail.startswith("$ 8.500,00")
+
+
+def test_several_charges_with_overdue_ones(services, pesos):
+    for name, days in (("Internet", -2), ("Netflix", 0), ("Spotify", 3), ("Gimnasio", 4)):
+        services.recurring.create(
+            charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=days), name=name)
+        )
+
+    notice = charges_notice(services)
+
+    assert notice.title == "3 cargos por pagar (1 vencido)"
+    assert notice.detail == "Internet, Netflix, Spotify."
+
+
+def test_no_charges_notice_for_paused_or_distant_charges(services, pesos):
+    later = services.recurring.create(
+        charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=10))
+    )
+    paused = services.recurring.create(charge_draft(services, pesos.id, ars("1"), TODAY))
+    services.recurring.set_active(paused.id, False)
+
+    assert charges_notice(services) is None
+    assert later.id

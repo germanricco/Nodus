@@ -94,7 +94,11 @@ class MainWindow(QMainWindow):
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
         self.top_bar.notifications_requested.connect(self.open_notifications)
         self.top_bar.settings_requested.connect(lambda: self.show_page(PageId.SETTINGS))
-        for signal in (event_bus.exchange_rates_changed, event_bus.accounts_changed):
+        for signal in (
+            event_bus.exchange_rates_changed,
+            event_bus.accounts_changed,
+            event_bus.recurring_changed,
+        ):
             signal.connect(self.refresh_notifications)
         self.show_page(PageId.DASHBOARD)
         self.refresh_notifications()
@@ -140,6 +144,8 @@ class MainWindow(QMainWindow):
     def _act_on_notice(self, notice: Notice) -> None:
         if notice.kind is NoticeKind.UPDATE:
             QDesktopServices.openUrl(QUrl(notice.url))
+        elif notice.kind is NoticeKind.CHARGES_DUE:
+            self.show_page(PageId.RECURRING)
         else:
             self.show_page(PageId.SETTINGS)
 

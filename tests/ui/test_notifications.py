@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
+from factories import ars, charge_draft
 
 from nodus.services.notification_service import NoticeKind
 from nodus.services.update_service import UpdateService
@@ -115,3 +116,21 @@ def test_gear_opens_settings(offline_window):
     offline_window.top_bar.settings_button.click()
 
     assert offline_window.current_page is offline_window.page(PageId.SETTINGS)
+
+
+def test_charges_notice_follows_payments_and_leads_to_the_charges(
+    qtbot, services, event_bus, offline_window, pesos
+):
+    charge = services.recurring.create(
+        charge_draft(services, pesos.id, ars("100"), date.today(), name="Netflix")
+    )
+    event_bus.recurring_changed.emit()
+    assert count(offline_window) == "1"
+    offline_window.open_notifications()
+
+    offline_window.notification_panel.rows[0].action_button.click()
+    assert offline_window.current_page is offline_window.page(PageId.RECURRING)
+
+    services.recurring.pay(charge.id, ars("100"), date.today(), pesos.id)
+    event_bus.recurring_changed.emit()
+    assert not offline_window.top_bar.notification_count.isVisibleTo(offline_window)
