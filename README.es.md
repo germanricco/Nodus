@@ -65,7 +65,7 @@ Cuando un comercio te devuelve dinero o un amigo te paga su parte, vinculas ese 
 <!-- Captura (v1.0): docs/images/transaction-dialog-refund-light.png | docs/images/transaction-dialog-refund-dark.png -->
 
 ### No olvidarte de lo que pagas todos los meses
-Anotas el alquiler, los servicios o las suscripciones una sola vez, y Nodus te muestra cuánto suman por mes, qué vence pronto y qué está atrasado. Pagar uno toma dos clics: el gasto queda registrado y el cargo pasa a su próxima fecha.
+Anotas el alquiler, los servicios o las suscripciones una sola vez, y Nodus te muestra cuánto suman por mes, qué vence pronto y qué está atrasado. Pagar uno toma dos clics: el gasto queda registrado y el cargo pasa a su próxima fecha. Una suscripción con precio fijo en dólares puede pagarse desde una cuenta en pesos: Nodus estima los pesos con la cotización de tu último pago, impuestos de la tarjeta incluidos, y tú anotas lo que realmente salió.
 
 <!-- Captura (v1.0): docs/images/recurring-light.png | docs/images/recurring-dark.png -->
 

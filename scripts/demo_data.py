@@ -128,7 +128,7 @@ def load_demo_data(services: Services, today: date) -> None:
     )  # fmt: skip
 
     def charge(name, account, amount, category, frequency, due):
-        services.recurring.create(
+        return services.recurring.create(
             RecurringChargeDraft(name, amount, account.id, categories[(expense, category)],
                                  frequency, due)
         )  # fmt: skip
@@ -142,6 +142,11 @@ def load_demo_data(services: Services, today: date) -> None:
     charge("Gimnasio", efectivo, ars("35000"), "Salud", monthly, today + timedelta(days=12))
     charge("Seguro del auto", ahorro, usd("180"), "Transporte", Frequency.SEMIANNUAL,
            today + timedelta(days=40))  # fmt: skip
+    # A subscription in dollars charged to a peso card: last month's payment, taxes
+    # included, sets the estimate of the next one.
+    subscription = charge("Suscripción en dólares", banco, usd("20"), "Servicios", monthly,
+                          days_ago(26))  # fmt: skip
+    services.recurring.pay(subscription.id, ars("33000"), days_ago(26), banco.id)
 
     # Budgets in every state: on track, ahead of the month, over the limit, and a limit
     # raised this month, so earlier months show the previous one.
