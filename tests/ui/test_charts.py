@@ -7,7 +7,7 @@ from PySide6.QtCore import QPoint, QPointF, Qt
 from nodus.models.currency import Currency
 from nodus.ui.theme.theme import LIGHT
 from nodus.ui.widgets import chart_base
-from nodus.ui.widgets.bar_chart import Bar, BarChart
+from nodus.ui.widgets.bar_chart import BarChart, BarGroup
 from nodus.ui.widgets.change_badge import ChangeBadge, format_change
 from nodus.ui.widgets.chart_base import format_compact, resample
 from nodus.ui.widgets.charts import (
@@ -144,7 +144,7 @@ def test_hidden_chart_plays_its_transition_when_shown(qtbot, monkeypatch):
     chart = BarChart(LIGHT)
     qtbot.addWidget(chart)
 
-    chart.set_bars([Bar("Nov", 100, "Noviembre", ("+$ 1",))])
+    chart.set_groups([BarGroup("Nov", 100, 40, "Noviembre", ("+$ 1",))])
 
     assert chart.progress == 0
     chart.show()
@@ -153,11 +153,11 @@ def test_hidden_chart_plays_its_transition_when_shown(qtbot, monkeypatch):
 
 def test_bars_grow_from_zero_and_keep_place_on_update(qtbot):
     chart = make(qtbot, BarChart(LIGHT))
-    chart.set_bars([Bar("Oct", 100, "", ()), Bar("Nov", -50, "", (), selected=True)])
+    chart.set_groups([BarGroup("Oct", 100, 60, "", ()), BarGroup("Nov", 0, 50, "", (), True)])
 
-    chart.set_bars([Bar("Oct", 300, "", ()), Bar("Nov", 50, "", (), selected=True)])
+    chart.set_groups([BarGroup("Oct", 300, 80, "", ()), BarGroup("Nov", 40, 50, "", (), True)])
 
-    assert chart._values_at(0.5) == [200, 0]
+    assert chart._values_at(0.5) == [(200, 70), (20, 50)]
     assert chart.index_at(chart.width() * 0.75) == 1
     qtbot.mouseMove(chart, QPoint(10, 50))
     assert chart.hover_index == 0

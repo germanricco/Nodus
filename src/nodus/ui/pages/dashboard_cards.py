@@ -16,7 +16,7 @@ from nodus.ui.formatting import format_date
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
-from nodus.ui.widgets.bar_chart import Bar, BarChart
+from nodus.ui.widgets.bar_chart import BarChart, BarGroup
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts import DonutChart, ProportionBar, Segment
@@ -258,11 +258,12 @@ class CashFlowCard(Card):
         )
         self.unconverted_label.setVisible(bool(summary.unconverted))
         single_month = len(summary.period.months()) == 1
-        self.chart.set_bars(
+        self.chart.set_groups(
             [
-                Bar(
+                BarGroup(
                     month.month.short_name,
-                    month.savings.cents,
+                    month.income.cents,
+                    month.expenses.cents,
                     format_month(month.month),
                     (
                         f"Ingresos {month.income.format()}",

@@ -1,4 +1,4 @@
-"""Bars standing on a zero line, for the month-by-month cash flow."""
+"""Paired income and expense bars, for the month-by-month cash flow."""
 
 from __future__ import annotations
 
@@ -13,59 +13,68 @@ from nodus.ui.widgets.chart_base import AnimatedChart, lerp, rounded_bar_path, w
 
 
 @dataclass(frozen=True)
-class Bar:
-    """One bar: its label under the axis, its value (positive goes up, negative down) and
-    the lines of its tooltip. ``selected`` marks the bar of the period being viewed."""
+class BarGroup:
+    """One month: its label under the axis, what came in and what went out (both as
+    positive amounts) and the lines of its tooltip. ``selected`` marks the month being
+    viewed."""
 
     label: str
-    value: float
+    income: float
+    expenses: float
     tooltip_title: str
     tooltip_lines: tuple[str, ...]
     selected: bool = False
 
 
 class BarChart(AnimatedChart):
-    """Green bars for positive values and red ones for negative, like the reference.
+    """A green income bar next to a red expense bar for each month, so both sides of the
+    result can be compared at a glance.
 
-    Bars grow from the zero line the first time and resize to new values afterwards. The
-    bar under the mouse lights up, the others fade, and a box shows its details.
+    Bars grow from the baseline the first time and resize to new values afterwards. The
+    month under the mouse lights up, the others fade, and a box shows its details.
     """
 
     BOTTOM, TOP = 22.0, 8.0
-    GAP_RATIO = 0.35
+    GROUP_GAP_RATIO = 0.3
+    PAIR_GAP = 3.0
+    MAX_BAR_WIDTH = 22.0
 
     def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
         super().__init__(theme, parent)
-        self._bars: list[Bar] = []
-        self._previous: list[float] = []
+        self._groups: list[BarGroup] = []
+        self._previous: list[tuple[float, float]] = []
         self.hover_index: int | None = None
         self.setMinimumHeight(120)
 
     def sizeHint(self) -> QSize:  # noqa: N802
         return QSize(320, 150)
 
-    def set_bars(self, bars: list[Bar]) -> None:
-        if bars == self._bars:
+    def set_groups(self, groups: list[BarGroup]) -> None:
+        if groups == self._groups:
             return
         shown = self._values_at(self.progress)
         # Bars keep their place when the count stays; otherwise they grow from zero.
-        self._previous = shown if len(shown) == len(bars) else [0.0] * len(bars)
-        self._bars = bars
+        self._previous = shown if len(shown) == len(groups) else [(0.0, 0.0)] * len(groups)
+        self._groups = groups
         self.hover_index = None
         self._start_transition()
 
-    def bars(self) -> list[Bar]:
-        return self._bars
+    def groups(self) -> list[BarGroup]:
+        return self._groups
 
-    def _values_at(self, progress: float) -> list[float]:
-        targets = [bar.value for bar in self._bars]
+    def _values_at(self, progress: float) -> list[tuple[float, float]]:
+        """The (income, expenses) heights on screen at ``progress``, never below zero."""
+        targets = [(max(g.income, 0.0), max(g.expenses, 0.0)) for g in self._groups]
         if len(self._previous) != len(targets):
             return targets
-        return [lerp(a, b, progress) for a, b in zip(self._previous, targets, strict=True)]
+        return [
+            (lerp(begin[0], end[0], progress), lerp(begin[1], end[1], progress))
+            for begin, end in zip(self._previous, targets, strict=True)
+        ]
 
     def _slots(self) -> list[QRectF]:
-        """The column each bar occupies, full height."""
-        count = len(self._bars)
+        """The column each month occupies, full height."""
+        count = len(self._groups)
         if count == 0:
             return []
         width = self.width() / count
@@ -75,54 +84,47 @@ class BarChart(AnimatedChart):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         values = self._values_at(self.progress)
-        top, bottom = self.TOP, self.height() - self.BOTTOM
-        largest = max([abs(b.value) for b in self._bars] + [abs(v) for v in values] + [1.0])
-        has_negative = any(b.value < 0 for b in self._bars)
-        has_positive = any(b.value > 0 for b in self._bars) or not has_negative
-        if has_negative and has_positive:
-            zero = top + (bottom - top) * 0.62
-        else:
-            zero = bottom if has_positive else top
-        up_room, down_room = zero - top, bottom - zero
-        scale_room = max(up_room, down_room)
+        top, baseline = self.TOP, self.height() - self.BOTTOM
+        room = baseline - top
+        largest = max([v for pair in values for v in pair] + [1.0])
 
         small = QFont(self.font())
         small.setPointSizeF(self.font().pointSizeF() * 0.85)
-        painter.setFont(small)
-        for index, (slot, bar, value) in enumerate(
-            zip(self._slots(), self._bars, values, strict=True)
+        for index, (slot, group, pair) in enumerate(
+            zip(self._slots(), self._groups, values, strict=True)
         ):
-            inset = slot.width() * self.GAP_RATIO / 2
-            height = scale_room * abs(value) / largest
-            height = min(height, up_room if value >= 0 else down_room)
-            if value >= 0:
-                rect = QRectF(slot.left() + inset, zero - height, slot.width() - 2 * inset, height)
-            else:
-                rect = QRectF(slot.left() + inset, zero, slot.width() - 2 * inset, height)
-            color = self._theme.income if bar.value >= 0 else self._theme.expense
             faded = self.hover_index is not None and index != self.hover_index
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(with_alpha(color, 0.35 if faded else 0.9))
-            if height < 2 and abs(bar.value) > 0:
-                rect = QRectF(rect.left(), zero - (2 if value >= 0 else 0), rect.width(), 2)
-            painter.drawPath(rounded_bar_path(rect, 5, value >= 0))
+            inner = slot.width() * (1 - self.GROUP_GAP_RATIO)
+            bar_width = min((inner - self.PAIR_GAP) / 2, self.MAX_BAR_WIDTH)
+            left = slot.center().x() - bar_width - self.PAIR_GAP / 2
+            for offset, value, color in (
+                (0.0, pair[0], self._theme.income),
+                (bar_width + self.PAIR_GAP, pair[1], self._theme.expense),
+            ):
+                if value <= 0:
+                    continue
+                height = max(room * value / largest, 2.0)
+                rect = QRectF(left + offset, baseline - height, bar_width, height)
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.setBrush(with_alpha(color, 0.35 if faded else 0.9))
+                painter.drawPath(rounded_bar_path(rect, 4, True))
             font = QFont(small)
-            font.setWeight(QFont.Weight.DemiBold if bar.selected else QFont.Weight.Normal)
+            font.setWeight(QFont.Weight.DemiBold if group.selected else QFont.Weight.Normal)
             painter.setFont(font)
-            painter.setPen(QColor(self._theme.text if bar.selected else self._theme.text_muted))
+            painter.setPen(QColor(self._theme.text if group.selected else self._theme.text_muted))
             painter.drawText(
-                QRectF(slot.left(), bottom + 4, slot.width(), self.BOTTOM - 4),
+                QRectF(slot.left(), baseline + 4, slot.width(), self.BOTTOM - 4),
                 Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
-                bar.label,
+                group.label,
             )
         painter.setPen(QPen(with_alpha(self._theme.border, 1), 1))
-        painter.drawLine(QPointF(0, zero), QPointF(self.width(), zero))
+        painter.drawLine(QPointF(0, baseline), QPointF(self.width(), baseline))
         if self.hover_index is not None:
             slot = self._slots()[self.hover_index]
-            bar = self._bars[self.hover_index]
+            group = self._groups[self.hover_index]
             self.paint_tooltip(
-                painter, QPointF(slot.center().x(), self.height() / 2), bar.tooltip_title,
-                bar.tooltip_lines,
+                painter, QPointF(slot.center().x(), self.height() / 2), group.tooltip_title,
+                group.tooltip_lines,
             )  # fmt: skip
         painter.end()
 
