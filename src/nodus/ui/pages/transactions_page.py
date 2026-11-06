@@ -4,16 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QComboBox,
-    QHBoxLayout,
-    QHeaderView,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QTableView,
-)
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableView
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.period import Period
@@ -32,6 +23,7 @@ from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import color_icon
 from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
+from nodus.ui.widgets.table import record_table
 
 # Type filter: label -> (transaction type, is_transfer) criteria.
 TYPE_FILTERS = {
@@ -97,7 +89,7 @@ class TransactionTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DecorationRole and column == CATEGORY and item.category_color:
             return color_icon(item.category_color)
         if role == Qt.ItemDataRole.ForegroundRole and column == AMOUNT:
-            return self._amount_color(item.tone)
+            return QColor(self._theme.tone_color(item.tone))
         if role == Qt.ItemDataRole.TextAlignmentRole and column == AMOUNT:
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
@@ -111,10 +103,6 @@ class TransactionTableModel(QAbstractTableModel):
             item.account_text,
             item.amount_text,
         ][column]
-
-    def _amount_color(self, tone: str) -> QColor:
-        colors = {"positive": self._theme.income, "negative": self._theme.expense}
-        return QColor(colors.get(tone, self._theme.text))
 
 
 class TransactionsPage(Page):
@@ -294,21 +282,7 @@ class TransactionsPage(Page):
             self._event_bus.transactions_changed.emit()
 
     def _build_table(self) -> QTableView:
-        table = QTableView()
-        table.setModel(self.model)
-        table.setShowGrid(False)
-        table.setWordWrap(False)
-        table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        table.verticalHeader().hide()
-        table.verticalHeader().setDefaultSectionSize(40)
-        header = table.horizontalHeader()
-        header.setHighlightSections(False)
-        header.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        for column in range(len(COLUMN_TITLES)):
-            header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(DESCRIPTION, QHeaderView.ResizeMode.Stretch)
+        table = record_table(self.model, DESCRIPTION)
         table.doubleClicked.connect(lambda _index: self.edit_selected())
         table.selectionModel().selectionChanged.connect(self._update_actions)
         return table

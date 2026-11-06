@@ -28,8 +28,8 @@ class PayeeSummary:
 
     ``net`` is income minus expenses in pesos, with dollars converted at the rate of their
     day; those without a rate yet are left out and counted in ``unconverted``.
-    ``top_category`` is the one used most with this payee, and ``first_on`` the date of
-    its first transaction (None for both while it has none).
+    ``top_category`` is the one used most with this payee, and ``first_on`` and
+    ``last_on`` the dates of its first and latest transactions (None while it has none).
     """
 
     payee: Payee
@@ -38,6 +38,7 @@ class PayeeSummary:
     unconverted: int
     top_category: Category | None
     first_on: date | None
+    last_on: date | None
 
 
 class PayeeService:
@@ -168,6 +169,7 @@ class PayeeService:
             unconverted=unconverted,
             top_category=categories[usage[0][0]] if usage else None,
             first_on=min((t.occurred_on for t in transactions), default=None),
+            last_on=max((t.occurred_on for t in transactions), default=None),
         )
 
     def _checked(self, payee: Payee) -> Payee:

@@ -253,7 +253,7 @@ class TestSummaries:
         assert coto.net == ars("-2400")
         assert coto.unconverted == 1
         assert coto.top_category.id == groceries
-        assert coto.first_on == date(2026, 11, 1)
+        assert (coto.first_on, coto.last_on) == (date(2026, 11, 1), date(2026, 11, 4))
         assert (unused.count, unused.net, unused.top_category, unused.first_on) == (
             0, ars("0"), None, None,
         )  # fmt: skip

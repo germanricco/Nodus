@@ -51,6 +51,10 @@ class Theme:
     def tokens(self) -> dict[str, str]:
         return asdict(self)
 
+    def tone_color(self, tone: str) -> str:
+        """The color of an amount's tone ("positive", "negative" or "neutral")."""
+        return {"positive": self.income, "negative": self.expense}.get(tone, self.text)
+
 
 # Inspired by MoneyMatter: warm neutral surfaces with a violet accent.
 LIGHT = Theme(

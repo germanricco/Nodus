@@ -12,6 +12,7 @@ class PageId(Enum):
     RECURRING = ("Recurrentes", "repeat")
     BUDGETS = ("Presupuestos", "budget")
     CATEGORIES = ("Categorías", "categories")
+    PAYEES = ("Beneficiarios", "payee")
     SETTINGS = ("Ajustes", "settings")
 
     @property

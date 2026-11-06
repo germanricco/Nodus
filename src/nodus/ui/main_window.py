@@ -28,6 +28,7 @@ from nodus.ui.pages.budgets_page import BudgetsPage
 from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.dashboard_page import DashboardPage
 from nodus.ui.pages.page import Page
+from nodus.ui.pages.payees_page import PayeesPage
 from nodus.ui.pages.recurring_page import RecurringPage
 from nodus.ui.pages.settings_page import SettingsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
@@ -74,6 +75,7 @@ class MainWindow(QMainWindow):
             PageId.RECURRING: RecurringPage(services, event_bus),
             PageId.BUDGETS: budgets,
             PageId.CATEGORIES: CategoriesPage(services, event_bus),
+            PageId.PAYEES: PayeesPage(services, event_bus, theme_manager),
             PageId.SETTINGS: SettingsPage(services, event_bus, theme_manager),
         }
         for page in self._pages.values():

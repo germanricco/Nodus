@@ -49,6 +49,11 @@ def due_label(days: int) -> str:
     return f"en {days} días"
 
 
+def movements_text(count: int) -> str:
+    """ "1 movimiento", "3 movimientos"."""
+    return "1 movimiento" if count == 1 else f"{count} movimientos"
+
+
 def unconverted_note(count: int) -> str:
     """Why a total may fall short: dollar movements left out for lack of a rate."""
     return f"{count} movimiento(s) en dólares sin cotización no se incluyen."
