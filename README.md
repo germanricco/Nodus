@@ -28,11 +28,13 @@ En **Cuentas** registras cada lugar donde tienes dinero, con su saldo inicial y 
 
 **Transacciones** reúne los movimientos del período que elijas en una tabla que puedes filtrar por cuenta, categoría, tipo o texto de la nota, y volver a ver completa con un clic. Un mismo formulario sirve para gastos, ingresos y transferencias, y te ofrece de entrada la cuenta que usaste la última vez. Con «Exportar» guardas lo que ves en un archivo CSV que se abre en Excel. Cuando la transferencia es entre pesos y dólares, Nodus pide los dos montos y te muestra la cotización que realmente obtuviste.
 
+En **Recurrentes** anotas lo que pagas siempre: el alquiler, los servicios, Netflix, el gimnasio, el seguro del auto. Cada cargo tiene su monto, su cuenta, su categoría y cada cuánto se cobra, de semanal a anual, y Nodus te muestra cuánto suman por mes y por año y los agrupa en vencidos, próximos y más adelante. Pagar uno toma dos clics: el formulario ya viene con el monto, la cuenta y la fecha de hoy, y si la factura llegó distinta corriges el monto antes de guardar. El gasto queda registrado y el cargo pasa a su próxima fecha, contada desde la que vencía y no desde el día en que pagaste, así un pago atrasado no corre el calendario; un cargo del 31 cae el 30 en los meses cortos y vuelve al 31 cuando corresponde. Si un mes no hay que pagarlo, lo omites, y si lo dejas de usar por un tiempo, lo pausas. Los próximos pagos también aparecen arriba a la derecha del dashboard, cada uno con su botón «Pagar».
+
 Las **categorías** vienen con un set corto pensado para el día a día, separado en gastos e ingresos, y puedes crear las tuyas con su color o abrir subcategorías dentro de una existente. Si borras una categoría, sus movimientos pasan a «Otros» en lugar de perderse.
 
 En **Ajustes** eliges entre tema claro, oscuro o el del sistema y de dónde sale la cotización del dólar: con MEP, Blue u Oficial, Nodus trae el valor del día al abrirse; con Manual, la cargas tú con su fecha. En los dos casos guarda el historial y usa en cada día la que correspondía. Ahí también están tus datos: cada día Nodus guarda una copia de seguridad, y desde Ajustes puedes hacer una en el momento, restaurar una anterior o exportar todos tus movimientos. Por último, ves qué versión tienes y decides si Nodus busca actualizaciones al abrirse.
 
-La campana de la barra superior junta lo que merece tu atención: una versión nueva para descargar, una cotización del dólar que quedó vieja o una copia de seguridad que no se pudo hacer. Al lado, el engranaje te lleva a Ajustes.
+La campana de la barra superior junta lo que merece tu atención: una versión nueva para descargar, cargos recurrentes vencidos o que vencen en los próximos tres días, una cotización del dólar que quedó vieja o una copia de seguridad que no se pudo hacer. Al lado, el engranaje te lleva a Ajustes.
 
 ## Estado del proyecto
 
