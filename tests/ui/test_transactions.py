@@ -45,6 +45,23 @@ def buy_dollars(services, pesos, dollars):
 
 
 class TestTransactionDialog:
+    def test_new_dialog_offers_the_last_account_used(
+        self, qtbot, services, event_bus, pesos, dollars
+    ):
+        first = make_dialog(qtbot, services, event_bus)
+        assert first.account_input.current_id() == dollars.id  # alphabetical: Ahorro, Banco
+        first.account_input.select(pesos.id)
+        first.amount_input.line_edit.setText("100")
+        save(qtbot, first)
+
+        assert make_dialog(qtbot, services, event_bus).account_input.current_id() == pesos.id
+
+    def test_archived_last_account_is_not_offered(self, qtbot, services, event_bus, pesos, dollars):
+        services.settings.set_last_account_id(pesos.id)
+        services.accounts.set_archived(pesos.id, True)
+
+        assert make_dialog(qtbot, services, event_bus).account_input.current_id() == dollars.id
+
     def test_records_expense_in_chosen_category(self, qtbot, services, event_bus, pesos):
         dialog = make_dialog(qtbot, services, event_bus)
         dialog.amount_input.line_edit.setText("1.500,50")

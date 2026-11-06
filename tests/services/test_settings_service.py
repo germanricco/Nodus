@@ -19,3 +19,11 @@ def test_update_check_is_on_until_turned_off(services):
 
     services.settings.set_check_updates(True)
     assert services.settings.check_updates()
+
+
+def test_last_account_is_remembered(services):
+    assert services.settings.last_account_id() is None
+
+    services.settings.set_last_account_id(7)
+
+    assert services.settings.last_account_id() == 7

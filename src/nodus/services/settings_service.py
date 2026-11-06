@@ -46,6 +46,15 @@ class SettingsService:
         with self._database.transaction():
             self._settings.set(self.CHECK_UPDATES_KEY, "true" if enabled else "false")
 
+    def last_account_id(self) -> int | None:
+        """The account of the last movement recorded, offered first in the next one."""
+        value = self._settings.get(self.LAST_ACCOUNT_KEY)
+        return int(value) if value and value.isdigit() else None
+
+    def set_last_account_id(self, account_id: int) -> None:
+        with self._database.transaction():
+            self._settings.set(self.LAST_ACCOUNT_KEY, str(account_id))
+
     def rate_source(self) -> str | None:
         """Where the dollar rate comes from ("manual", "bolsa"…), or None if never chosen."""
         return self._settings.get(self.RATE_SOURCE_KEY)

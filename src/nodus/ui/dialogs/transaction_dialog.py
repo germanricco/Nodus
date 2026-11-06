@@ -79,6 +79,10 @@ class TransactionDialog(FormDialog):
 
         if transaction:
             self._load(transaction)
+        else:
+            # Most movements go to the same account as the previous one. An archived or
+            # deleted account is not in the list, so the first one stays selected.
+            self.account_input.select(services.settings.last_account_id())
         self._update_mode()
 
     @property
@@ -203,6 +207,7 @@ class TransactionDialog(FormDialog):
             self._services.transactions.update(self._transaction.id, draft)
         else:
             self._services.transactions.create(draft)
+            self._services.settings.set_last_account_id(draft.account_id)
 
     def _save_transfer(self) -> None:
         source = self._required_account(self.account_input)
@@ -221,6 +226,7 @@ class TransactionDialog(FormDialog):
             self._services.transactions.update_transfer(self._transaction.transfer_id, draft)
         else:
             self._services.transactions.create_transfer(draft)
+            self._services.settings.set_last_account_id(source.id)
 
     @staticmethod
     def _required_account(combo: AccountComboBox) -> Account:
