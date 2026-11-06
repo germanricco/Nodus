@@ -22,7 +22,7 @@ class Transaction:
 
     ``amount`` is always positive; ``type`` gives the direction. Its currency is the
     account's currency. A transaction with a ``transfer_id`` is one leg of a transfer and
-    has no category; every other transaction has one.
+    has no category or payee; every other transaction has a category and may have a payee.
     """
 
     id: int | None
@@ -33,12 +33,15 @@ class Transaction:
     category_id: int | None
     note: str = ""
     transfer_id: str | None = None
+    payee_id: int | None = None
 
     def __post_init__(self) -> None:
         if self.amount.cents <= 0:
             raise ValueError("Transaction amount must be positive")
         if self.is_transfer == (self.category_id is not None):
             raise ValueError("A transaction has either a category or a transfer_id, not both")
+        if self.is_transfer and self.payee_id is not None:
+            raise ValueError("A transfer has no payee")
 
     @property
     def is_transfer(self) -> bool:

@@ -10,6 +10,7 @@ from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.budget_repository import BudgetRepository
 from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.database.repositories.exchange_rate_repository import ExchangeRateRepository
+from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.database.repositories.recurring_charge_repository import RecurringChargeRepository
 from nodus.database.repositories.settings_repository import SettingsRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
@@ -23,6 +24,7 @@ from nodus.services.export_service import ExportService
 from nodus.services.http import downloader
 from nodus.services.net_worth_service import NetWorthService
 from nodus.services.notification_service import NotificationService
+from nodus.services.payee_service import PayeeService
 from nodus.services.rate_feed_service import RateFeedService
 from nodus.services.recurring_charge_service import RecurringChargeService
 from nodus.services.settings_service import SettingsService
@@ -52,6 +54,7 @@ class Services:
     notifications: NotificationService
     recurring: RecurringChargeService
     budgets: BudgetService
+    payees: PayeeService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -61,9 +64,15 @@ class Services:
         exchange_rates = ExchangeRateService(database, ExchangeRateRepository(database))
         categories = CategoryService(database, category_repository)
         transaction_repository = TransactionRepository(database)
+        payee_repository = PayeeRepository(database)
         transactions = TransactionService(
-            database, transaction_repository, account_repository, category_repository
+            database,
+            transaction_repository,
+            account_repository,
+            category_repository,
+            payee_repository,
         )
+        payees = PayeeService(database, payee_repository, transactions, categories, exchange_rates)
         recurring = RecurringChargeService(
             database,
             RecurringChargeRepository(database),
@@ -85,11 +94,12 @@ class Services:
             dashboard=dashboard,
             updates=UpdateService(__version__),
             backups=backups,
-            export=ExportService(accounts, categories),
+            export=ExportService(accounts, categories, payees),
             rate_feed=RateFeedService(exchange_rates, settings, downloader(f"Nodus/{__version__}")),
             notifications=NotificationService(
                 settings, accounts, exchange_rates, backups, recurring, budgets
             ),
             recurring=recurring,
             budgets=budgets,
+            payees=payees,
         )

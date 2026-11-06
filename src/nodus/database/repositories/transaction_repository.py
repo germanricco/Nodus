@@ -10,17 +10,23 @@ from datetime import date
 from nodus.database.repositories.base import Repository
 from nodus.models.currency import Currency
 from nodus.models.money import Money
+from nodus.models.payee import normalize_name
 from nodus.models.transaction import Transaction, TransactionType
 
-# The amount's currency is the account's, so every read joins accounts.
-_SELECT = "SELECT t.*, a.currency FROM transactions t JOIN accounts a ON a.id = t.account_id"
+# The amount's currency is the account's, so every read joins accounts. The payee is
+# joined so the text search can match its name.
+_SELECT = (
+    "SELECT t.*, a.currency FROM transactions t JOIN accounts a ON a.id = t.account_id"
+    " LEFT JOIN payees p ON p.id = t.payee_id"
+)
 
 
 @dataclass(frozen=True)
 class TransactionFilter:
     """Criteria for listing transactions. Unset fields do not filter.
 
-    ``category_id`` also matches the category's subcategories, and ``text`` searches the note.
+    ``category_id`` also matches the category's subcategories, and ``text`` searches the note
+    and the payee's name, the latter ignoring case and accents.
     ``is_transfer`` keeps only transfer legs (True) or only income and expenses (False).
     Dates are inclusive.
     """
@@ -29,6 +35,7 @@ class TransactionFilter:
     end: date | None = None
     account_id: int | None = None
     category_id: int | None = None
+    payee_id: int | None = None
     type: TransactionType | None = None
     text: str | None = None
     is_transfer: bool | None = None
@@ -39,8 +46,9 @@ class TransactionRepository(Repository):
     def add(self, transaction: Transaction) -> Transaction:
         transaction_id = self._insert(
             "INSERT INTO transactions"
-            " (account_id, type, amount_cents, occurred_on, category_id, note, transfer_id)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            " (account_id, type, amount_cents, occurred_on, category_id, note, transfer_id,"
+            " payee_id)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             self._values(transaction),
         )
         return dataclasses.replace(transaction, id=transaction_id)
@@ -48,7 +56,7 @@ class TransactionRepository(Repository):
     def update(self, transaction: Transaction) -> None:
         self._execute(
             "UPDATE transactions SET account_id = ?, type = ?, amount_cents = ?, occurred_on = ?,"
-            " category_id = ?, note = ?, transfer_id = ?,"
+            " category_id = ?, note = ?, transfer_id = ?, payee_id = ?,"
             " updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')"
             " WHERE id = ?",
             (*self._values(transaction), transaction.id),
@@ -98,6 +106,9 @@ class TransactionRepository(Repository):
                 "t.category_id IN (SELECT id FROM categories WHERE id = ? OR parent_id = ?)"
             )
             params.extend([criteria.category_id, criteria.category_id])
+        if criteria.payee_id is not None:
+            conditions.append("t.payee_id = ?")
+            params.append(criteria.payee_id)
         if criteria.type is not None:
             conditions.append("t.type = ?")
             params.append(criteria.type.value)
@@ -106,8 +117,13 @@ class TransactionRepository(Repository):
                 "t.transfer_id IS NOT NULL" if criteria.is_transfer else "t.transfer_id IS NULL"
             )
         if criteria.text:
-            conditions.append("t.note LIKE ?")
-            params.append(f"%{criteria.text}%")
+            payee_text = normalize_name(criteria.text)
+            if payee_text:
+                conditions.append("(t.note LIKE ? OR p.normalized_name LIKE ?)")
+                params.extend([f"%{criteria.text}%", f"%{payee_text}%"])
+            else:
+                conditions.append("t.note LIKE ?")
+                params.append(f"%{criteria.text}%")
         return conditions, params
 
     @staticmethod
@@ -120,6 +136,7 @@ class TransactionRepository(Repository):
             transaction.category_id,
             transaction.note,
             transaction.transfer_id,
+            transaction.payee_id,
         )
 
     @staticmethod
@@ -133,4 +150,5 @@ class TransactionRepository(Repository):
             category_id=row["category_id"],
             note=row["note"],
             transfer_id=row["transfer_id"],
+            payee_id=row["payee_id"],
         )

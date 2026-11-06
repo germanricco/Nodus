@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import uuid
 from dataclasses import dataclass
 from datetime import date
@@ -9,19 +10,25 @@ from datetime import date
 from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.category_repository import CategoryRepository
+from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.database.repositories.transaction_repository import (
     TransactionFilter,
     TransactionRepository,
 )
 from nodus.models.account import Account
 from nodus.models.money import Money
+from nodus.models.payee import Payee, normalize_name
 from nodus.models.transaction import Transaction, TransactionType, Transfer
 from nodus.services.errors import ValidationError, require_found
 
 
 @dataclass(frozen=True)
 class TransactionDraft:
-    """What the user fills in for an income or an expense."""
+    """What the user fills in for an income or an expense.
+
+    ``payee_name`` is the name as typed: saving finds the payee with that name, or creates
+    it. An empty name leaves the transaction without a payee.
+    """
 
     account_id: int
     type: TransactionType
@@ -29,6 +36,7 @@ class TransactionDraft:
     occurred_on: date
     category_id: int
     note: str = ""
+    payee_name: str = ""
 
 
 @dataclass(frozen=True)
@@ -55,22 +63,24 @@ class TransactionService:
         transactions: TransactionRepository,
         accounts: AccountRepository,
         categories: CategoryRepository,
+        payees: PayeeRepository,
     ) -> None:
         self._database = database
         self._transactions = transactions
         self._accounts = accounts
         self._categories = categories
+        self._payees = payees
 
     # Income and expenses
 
     def create(self, draft: TransactionDraft) -> Transaction:
         transaction = self._build_transaction(None, draft)
         with self._database.transaction():
-            return self._transactions.add(transaction)
+            return self._transactions.add(self._with_payee(transaction, draft.payee_name))
 
     def validated(self, draft: TransactionDraft) -> Transaction:
         """The transaction ``draft`` describes, checked against the rules but not saved, for
-        services that save it together with other changes."""
+        services that save it together with other changes. Its payee is not resolved."""
         return self._build_transaction(None, draft)
 
     def update(self, transaction_id: int, draft: TransactionDraft) -> None:
@@ -78,7 +88,7 @@ class TransactionService:
             raise ValidationError("Las transferencias se editan como transferencia.")
         transaction = self._build_transaction(transaction_id, draft)
         with self._database.transaction():
-            self._transactions.update(transaction)
+            self._transactions.update(self._with_payee(transaction, draft.payee_name))
 
     def delete(self, transaction_id: int) -> None:
         """Deletes a transaction. Deleting either leg of a transfer deletes the whole transfer."""
@@ -121,6 +131,20 @@ class TransactionService:
             raise ValidationError("La transferencia no existe.")
         outgoing, incoming = sorted(legs, key=lambda leg: leg.type is TransactionType.INCOME)
         return Transfer(outgoing=outgoing, incoming=incoming)
+
+    def _with_payee(self, transaction: Transaction, payee_name: str) -> Transaction:
+        """``transaction`` linked to the payee called ``payee_name``, creating it if needed.
+
+        Runs inside the caller's database transaction, so a save that fails leaves no
+        orphan payee behind.
+        """
+        normalized = normalize_name(payee_name)
+        if not normalized:
+            return dataclasses.replace(transaction, payee_id=None)
+        payee = self._payees.find_by_normalized(normalized) or self._payees.add(
+            Payee(None, payee_name.strip())
+        )
+        return dataclasses.replace(transaction, payee_id=payee.id)
 
     # Validation
 
