@@ -5,7 +5,7 @@ from factories import ars, category_id, expense_draft, income_draft, usd
 from PySide6.QtCore import Qt
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
-from nodus.models.period import Month
+from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.services.transaction_service import TransferDraft
 from nodus.ui import main_window as main_window_module
@@ -172,7 +172,7 @@ class TestTransactionDialog:
 def page(qtbot, services, event_bus, theme_manager) -> TransactionsPage:
     transactions = TransactionsPage(services, event_bus, theme_manager)
     qtbot.addWidget(transactions)
-    transactions.month_selector.set_month(NOVEMBER)
+    transactions.period_selector.set_period(Period.of_months(NOVEMBER))
     transactions.refresh()
     return transactions
 
@@ -219,7 +219,7 @@ class TestTransactionsPage:
         assert column(page, AMOUNT) == []
         assert page.empty_label.isVisibleTo(page)
 
-        page.month_selector.set_month(NOVEMBER.previous())
+        page.period_selector.set_period(Period.of_months(NOVEMBER.previous()))
         assert column(page, AMOUNT) == ["-$ 99,00"]
 
     def test_clear_filters_keeps_month_and_shows_everything(self, services, page, pesos, dollars):
@@ -306,5 +306,5 @@ def test_export_saves_what_is_shown(monkeypatch, tmp_path, services, window, pes
     page.export_button.click()
 
     assert target.read_text(encoding="utf-8-sig").count("\n") == 2
-    month = page.month_selector.month()
-    assert suggested[0].endswith(f"nodus-transacciones-{month.year}-{month.month:02d}.csv")
+    month = page.period_selector.period().start
+    assert suggested[0].endswith(f"nodus-transacciones-{month:%Y-%m}.csv")

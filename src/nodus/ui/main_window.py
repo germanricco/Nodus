@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.models.period import Month
+from nodus.models.period import Period
 from nodus.services.container import Services
 from nodus.services.update_service import Release
 from nodus.ui.background import BackgroundCall
@@ -118,9 +118,9 @@ class MainWindow(QMainWindow):
         self._stack.setCurrentWidget(page)
         self.sidebar.select(page_id)
 
-    def show_transactions(self, month: Month) -> None:
-        """Opens the transactions page on ``month``."""
-        self._pages[PageId.TRANSACTIONS].month_selector.set_month(month)
+    def show_transactions(self, period: Period, category_id: int | None = None) -> None:
+        """Opens the transactions page on ``period``, filtered by ``category_id`` if given."""
+        self._pages[PageId.TRANSACTIONS].focus(period, category_id)
         self.show_page(PageId.TRANSACTIONS)
 
     def open_new_transaction(self) -> None:

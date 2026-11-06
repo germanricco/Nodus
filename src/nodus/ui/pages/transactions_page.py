@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
+from nodus.models.period import Period
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
 from nodus.ui.dialogs.confirm import confirm
@@ -29,7 +30,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import color_icon
-from nodus.ui.widgets.month_selector import MonthSelector
+from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
 
 # Type filter: label -> (transaction type, is_transfer) criteria.
@@ -42,6 +43,14 @@ TYPE_FILTERS = {
 
 DATE, DESCRIPTION, CATEGORY, ACCOUNT, AMOUNT = range(5)
 COLUMN_TITLES = ["Fecha", "Descripción", "Categoría", "Cuenta", "Monto"]
+
+
+def export_filename(period: Period) -> str:
+    """ "nodus-transacciones-2026-11.csv" for a month, start and end dates otherwise."""
+    if period.is_whole_months and period.first_month == period.last_month:
+        return f"nodus-transacciones-{period.start:%Y-%m}.csv"
+    return f"nodus-transacciones-{period.start:%Y-%m-%d}_{period.end:%Y-%m-%d}.csv"
+
 
 _ModelIndex = QModelIndex | QPersistentModelIndex
 
@@ -122,9 +131,9 @@ class TransactionsPage(Page):
         self._event_bus = event_bus
         self._builder = TransactionListBuilder(services)
 
-        # The month goes in the header, as on the dashboard, to leave the row to the filters.
-        self.month_selector = MonthSelector()
-        self.add_header_widget(self.month_selector)
+        # The period goes in the header, as on the dashboard, to leave the row to the filters.
+        self.period_selector = PeriodSelector()
+        self.add_header_widget(self.period_selector)
         self.edit_button = self.add_header_button("Editar")
         self.delete_button = self.add_header_button("Eliminar")
         self.export_button = self.add_header_button("Exportar")
@@ -163,7 +172,7 @@ class TransactionsPage(Page):
         card.body.addWidget(self.empty_label, stretch=1)
         self.content_layout.addWidget(card, stretch=1)
 
-        self.month_selector.month_changed.connect(self.reload)
+        self.period_selector.period_changed.connect(self.reload)
         self.account_filter.currentIndexChanged.connect(self.reload)
         self.category_filter.currentIndexChanged.connect(self.reload)
         self.type_filter.currentIndexChanged.connect(self.reload)
@@ -202,7 +211,25 @@ class TransactionsPage(Page):
         self.clear_filters_button.setEnabled(self._has_filters())
 
     def clear_filters(self) -> None:
-        """Back to every movement of the month shown; the month itself is kept."""
+        """Back to every movement of the period shown; the period itself is kept."""
+        self._reset_filters()
+        self.reload()
+
+    def focus(self, period: Period, category_id: int | None = None) -> None:
+        """Shows ``period`` with only ``category_id`` filtered, as the dashboard asks for.
+
+        Does not reload: the caller shows the page, which refreshes it.
+        """
+        self._reset_filters()
+        self.period_selector.blockSignals(True)
+        self.period_selector.set_period(period)
+        self.period_selector.blockSignals(False)
+        if category_id is not None:
+            self.category_filter.blockSignals(True)
+            self.category_filter.select(category_id)
+            self.category_filter.blockSignals(False)
+
+    def _reset_filters(self) -> None:
         inputs = (self.account_filter, self.category_filter, self.type_filter, self.search_input)
         for widget in inputs:  # one reload at the end instead of one per filter
             widget.blockSignals(True)
@@ -211,16 +238,14 @@ class TransactionsPage(Page):
         self.search_input.clear()
         for widget in inputs:
             widget.blockSignals(False)
-        self.reload()
 
     def export_shown(self) -> None:
-        """Exports what the table shows: the month with its filters."""
-        month = self.month_selector.month()
+        """Exports what the table shows: the period with its filters."""
         export_transactions(
             self.window(),
             self._services,
             self._services.transactions.list_transactions(self.current_filter()),
-            f"nodus-transacciones-{month.year}-{month.month:02d}.csv",
+            export_filename(self.period_selector.period()),
         )
 
     def _has_filters(self) -> bool:
@@ -228,11 +253,11 @@ class TransactionsPage(Page):
         return any(combo.currentIndex() > 0 for combo in combos) or bool(self.search_input.text())
 
     def current_filter(self) -> TransactionFilter:
-        month = self.month_selector.month()
+        period = self.period_selector.period()
         transaction_type, is_transfer = TYPE_FILTERS[self.type_filter.currentText()]
         return TransactionFilter(
-            start=month.start,
-            end=month.end,
+            start=period.start,
+            end=period.end,
             account_id=self.account_filter.current_id(),
             category_id=self.category_filter.current_id(),
             type=transaction_type,

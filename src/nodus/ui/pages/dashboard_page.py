@@ -1,4 +1,4 @@
-"""Dashboard: how much there is, how the month went and where the money went."""
+"""Dashboard: how much there is, how the period went and where the money went."""
 
 from __future__ import annotations
 
@@ -17,11 +17,11 @@ from PySide6.QtWidgets import (
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.money import Money
-from nodus.models.period import Month
+from nodus.models.period import Period
 from nodus.services.container import Services
-from nodus.services.dashboard_service import CategoryTotal, MonthSummary
+from nodus.services.dashboard_service import CategoryTotal, PeriodSummary
 from nodus.ui.event_bus import EventBus
-from nodus.ui.formatting import format_date, format_month
+from nodus.ui.formatting import format_date
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -31,8 +31,8 @@ from nodus.ui.widgets.charts import DonutChart, ProportionBar, Segment
 from nodus.ui.widgets.color import ColorDot
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.money_label import MoneyLabel
-from nodus.ui.widgets.month_selector import MonthSelector
 from nodus.ui.widgets.net_worth_card import NetWorthCard
+from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 LATEST_COUNT = 6
@@ -90,7 +90,7 @@ class DashboardPage(Page):
     """
 
     navigate_requested = Signal(object)  # PageId
-    transactions_requested = Signal(object)  # Month
+    transactions_requested = Signal(object, object)  # Period, category id or None
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -99,8 +99,8 @@ class DashboardPage(Page):
         self._services = services
         self._theme_manager = theme_manager
         self._builder = TransactionListBuilder(services)
-        self.month_selector = MonthSelector()
-        self.add_header_widget(self.month_selector)
+        self.period_selector = PeriodSelector()
+        self.add_header_widget(self.period_selector)
 
         container = QWidget()
         self._grid = QGridLayout(container)
@@ -111,7 +111,7 @@ class DashboardPage(Page):
         scroll.setWidget(container)
         self.content_layout.addWidget(scroll)
 
-        self.month_selector.month_changed.connect(self.refresh)
+        self.period_selector.period_changed.connect(self.refresh)
         theme_manager.theme_changed.connect(self.refresh)
         for signal in (
             event_bus.accounts_changed,
@@ -124,14 +124,14 @@ class DashboardPage(Page):
     def refresh(self) -> None:
         clear_layout(self._grid)
         if not self._services.accounts.list_accounts(include_archived=True):
-            self.month_selector.hide()
+            self.period_selector.hide()
             self._grid.addWidget(self._welcome_card(), 0, 0)
             self._grid.setRowStretch(1, 1)
             return
-        self.month_selector.show()
-        month = self.month_selector.month()
-        summary = self._services.dashboard.month_summary(month)
-        net_worth_day = min(month.end, date.today())
+        self.period_selector.show()
+        period = self.period_selector.period()
+        summary = self._services.dashboard.summary(period)
+        net_worth_day = min(period.end, date.today())
         title = (
             "Patrimonio"
             if net_worth_day == date.today()
@@ -140,21 +140,21 @@ class DashboardPage(Page):
         self._grid.addWidget(NetWorthCard(self._services, net_worth_day, title), 0, 0, 1, 2)
         self._grid.addWidget(self._flow_card(summary), 1, 0)
         self._grid.addWidget(self._expenses_card(summary), 1, 1)
-        self._grid.addWidget(self._latest_card(month), 0, 2, 2, 1)
+        self._grid.addWidget(self._latest_card(period), 0, 2, 2, 1)
         self._grid.setRowStretch(1, 1)
         for column in range(3):
             self._grid.setColumnStretch(column, 1)
 
     # Cards
 
-    def _flow_card(self, summary: MonthSummary) -> Card:
+    def _flow_card(self, summary: PeriodSummary) -> Card:
         theme = self._theme_manager.theme
-        card = Card("Flujo del mes")
+        card = Card("Flujo de caja")
         savings = MoneyLabel(summary.savings, highlight_positive=True)
         savings.setObjectName("StatValueLarge")
         savings.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         card.body.addWidget(savings)
-        card.body.addWidget(muted_label(f"Ahorro de {format_month(summary.month).lower()}"))
+        card.body.addWidget(muted_label(f"Ahorro · {summary.period.label()}"))
         card.body.addSpacing(8)
         card.body.addWidget(
             ProportionBar(
@@ -188,14 +188,14 @@ class DashboardPage(Page):
         row.addWidget(value)
         card.body.addLayout(row)
 
-    def _expenses_card(self, summary: MonthSummary) -> Card:
+    def _expenses_card(self, summary: PeriodSummary) -> Card:
         card = Card("Gastos por categoría")
         legend_items = self._legend_items(summary.expenses_by_category)
         donut = DonutChart(self._theme_manager.theme)
         donut.set_data(
             [Segment(color, total.cents) for _name, color, total in legend_items],
             "Total" if legend_items else "Sin gastos",
-            summary.expenses.format() if legend_items else "este mes",
+            summary.expenses.format() if legend_items else "en el período",
         )
         card.body.addWidget(donut, stretch=1)
         for name, color, total in legend_items:
@@ -219,22 +219,22 @@ class DashboardPage(Page):
             items.append((REST_LABEL, self._theme_manager.theme.text_muted, rest_total))
         return items
 
-    def _latest_card(self, month: Month) -> Card:
+    def _latest_card(self, period: Period) -> Card:
         card = Card("Últimas transacciones")
         # Extra rows leave room for transfers, whose two legs become one item.
         transactions = self._services.transactions.list_transactions(
-            TransactionFilter(start=month.start, end=month.end, limit=LATEST_COUNT * 2)
+            TransactionFilter(start=period.start, end=period.end, limit=LATEST_COUNT * 2)
         )
         items = self._builder.build(transactions)[:LATEST_COUNT]
         if not items:
-            card.body.addWidget(muted_label("No hay movimientos este mes."))
+            card.body.addWidget(muted_label("Sin movimientos en el período"))
         transfer_color = self._theme_manager.theme.text_muted
         for item in items:
             card.body.addWidget(LatestTransactionRow(item, transfer_color))
         card.body.addStretch()
         self.see_all_button = QPushButton("Ver todas")
         self.see_all_button.setObjectName("SecondaryButton")
-        self.see_all_button.clicked.connect(lambda: self.transactions_requested.emit(month))
+        self.see_all_button.clicked.connect(lambda: self.transactions_requested.emit(period, None))
         card.body.addWidget(self.see_all_button)
         return card
 

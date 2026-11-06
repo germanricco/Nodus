@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QLabel
 from nodus.database.database import Database
 from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.currency import Currency
-from nodus.models.period import Month
+from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
 from nodus.ui.dialogs.account_dialog import AccountDialog
@@ -79,7 +79,7 @@ def test_first_month_with_nodus(qtbot, qapp, tmp_path):
     balances = services.accounts.balances()
     assert balances[banco.id] == ars("674999.50")
     assert balances[ahorro.id] == usd("700")
-    summary = services.dashboard.month_summary(Month.of(today))
+    summary = services.dashboard.summary(Period.of_months(Month.of(today)))
     assert (summary.income, summary.expenses) == (ars("900000"), ars("85000.50"))
     window.show_page(PageId.DASHBOARD)
     dashboard_texts = [label.text() for label in window.page(PageId.DASHBOARD).findChildren(QLabel)]

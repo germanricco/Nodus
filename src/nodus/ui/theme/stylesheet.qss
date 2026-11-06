@@ -310,9 +310,46 @@ QPushButton#Segment:disabled {
     color: $border;
 }
 
-#MonthLabel {
+/* Period selector: "‹ Noviembre 2026 ▾ ›" */
+
+QPushButton#PeriodButton {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 4px 28px 4px 12px;
     font-weight: 600;
     min-width: 130px;
+}
+
+QPushButton#PeriodButton:hover {
+    background: $hover;
+    border-color: $border;
+}
+
+QPushButton#PeriodButton::menu-indicator {
+    image: url($icons/chevron-down.svg);
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    right: 8px;
+    width: 14px;
+    height: 14px;
+}
+
+QMenu {
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+QMenu::item {
+    padding: 7px 24px 7px 12px;
+    border-radius: 6px;
+}
+
+QMenu::item:selected {
+    background: $accent_soft;
+    color: $accent;
 }
 
 /* Tables */

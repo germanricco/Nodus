@@ -1,4 +1,4 @@
-"""Figures for the dashboard: how a month went."""
+"""Figures for the dashboard: how a period went."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.category import Category
 from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.models.period import Month
+from nodus.models.period import Period
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.category_service import CategoryService
 from nodus.services.exchange_rate_service import ExchangeRateService
@@ -25,15 +25,15 @@ class CategoryTotal:
 
 
 @dataclass(frozen=True)
-class MonthSummary:
-    """Income and expenses of a month, in pesos.
+class PeriodSummary:
+    """Income and expenses of a period, in pesos.
 
     Dollar movements are converted at the rate of their day. Those without a rate yet
     cannot be converted: they are left out and counted in ``unconverted``, so the screen
     can say so instead of showing a wrong total. Transfers are not income or expenses.
     """
 
-    month: Month
+    period: Period
     income: Money
     expenses: Money
     expenses_by_category: list[CategoryTotal]  # largest first
@@ -57,9 +57,9 @@ class DashboardService:
         self._categories = categories
         self._exchange_rates = exchange_rates
 
-    def month_summary(self, month: Month) -> MonthSummary:
+    def summary(self, period: Period) -> PeriodSummary:
         movements = self._transactions.list_transactions(
-            TransactionFilter(start=month.start, end=month.end, is_transfer=False)
+            TransactionFilter(start=period.start, end=period.end, is_transfer=False)
         )
         categories = {c.id: c for c in self._categories.list_categories()}
         totals = {kind: Money.zero(self.CURRENCY) for kind in TransactionType}
@@ -75,8 +75,8 @@ class DashboardService:
                 category = categories[transaction.category_id]
                 by_category[category.parent_id or category.id] += amount
         ranked = sorted(by_category.items(), key=lambda item: item[1].cents, reverse=True)
-        return MonthSummary(
-            month=month,
+        return PeriodSummary(
+            period=period,
             income=totals[TransactionType.INCOME],
             expenses=totals[TransactionType.EXPENSE],
             expenses_by_category=[CategoryTotal(categories[i], total) for i, total in ranked],

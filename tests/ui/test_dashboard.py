@@ -3,7 +3,7 @@ from datetime import date
 from factories import ars, expense_draft, income_draft
 from PySide6.QtWidgets import QLabel
 
-from nodus.models.period import Month
+from nodus.models.period import Month, Period
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.dashboard_page import LatestTransactionRow, percent
 from nodus.ui.widgets.elided_label import ElidedLabel
@@ -47,16 +47,16 @@ def test_shows_month_flow_and_latest_movements(qtbot, window, services, event_bu
     assert "Verdulería" in descriptions and "Sueldo" in descriptions
 
 
-def test_see_all_opens_transactions_on_the_same_month(qtbot, window, pesos):
+def test_see_all_opens_transactions_on_the_same_period(qtbot, window, pesos):
     page = dashboard(window)
     page.refresh()
-    previous = Month.of(date.today()).previous()
-    page.month_selector.set_month(previous)
+    previous = Period.of_months(Month.of(date.today()).previous())
+    page.period_selector.set_period(previous)
 
     page.see_all_button.click()
 
     assert window.current_page is window.page(PageId.TRANSACTIONS)
-    assert window.page(PageId.TRANSACTIONS).month_selector.month() == previous
+    assert window.page(PageId.TRANSACTIONS).period_selector.period() == previous
 
 
 def test_percent_needs_positive_whole():
