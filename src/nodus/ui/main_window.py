@@ -24,6 +24,7 @@ from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.accounts_page import AccountsPage
+from nodus.ui.pages.analysis_page import AnalysisPage
 from nodus.ui.pages.budgets_page import BudgetsPage
 from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.dashboard_page import DashboardPage
@@ -68,6 +69,8 @@ class MainWindow(QMainWindow):
         budgets = BudgetsPage(services, event_bus, theme_manager)
         budgets.transactions_requested.connect(self.show_transactions)
         dashboard.budgets_requested.connect(self.show_budgets)
+        analysis = AnalysisPage(services, event_bus, theme_manager)
+        analysis.transactions_requested.connect(self.show_transactions)
         payees = PayeesPage(services, event_bus, theme_manager)
         payees.transactions_requested.connect(
             lambda period, payee_id: self.show_transactions(period, payee_id=payee_id)
@@ -78,6 +81,7 @@ class MainWindow(QMainWindow):
             PageId.TRANSACTIONS: TransactionsPage(services, event_bus, theme_manager),
             PageId.RECURRING: RecurringPage(services, event_bus),
             PageId.BUDGETS: budgets,
+            PageId.ANALYSIS: analysis,
             PageId.CATEGORIES: CategoriesPage(services, event_bus),
             PageId.PAYEES: payees,
             PageId.SETTINGS: SettingsPage(services, event_bus, theme_manager),

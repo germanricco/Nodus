@@ -203,12 +203,15 @@ class StackedBarChart(AnimatedChart):
         pen = QPen(QColor(self._theme.warning), 1.5, Qt.PenStyle.DashLine)
         painter.setPen(pen)
         painter.drawLine(QPointF(0, y), QPointF(self.width(), y))
+        # The label sits on a patch of the card's color, so it reads over a bar.
+        text = f"Promedio {self._format_value(self.average)}"
+        width = painter.fontMetrics().horizontalAdvance(text) + 12
+        box = QRectF(self.width() - width, y - 18, width, 16)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(self._theme.surface))
+        painter.drawRoundedRect(box, 4, 4)
         painter.setPen(QColor(self._theme.warning))
-        painter.drawText(
-            QRectF(0, y - 16, self.width() - 2, 14),
-            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom,
-            f"Promedio {self._format_value(self.average)}",
-        )
+        painter.drawText(box, Qt.AlignmentFlag.AlignCenter, text)
 
     # Mouse
 

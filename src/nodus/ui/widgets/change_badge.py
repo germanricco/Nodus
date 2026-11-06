@@ -31,6 +31,10 @@ class ChangeBadge(QLabel):
         self._higher_is_better = higher_is_better
         self._none_text = none_text
 
+    def set_higher_is_better(self, higher_is_better: bool) -> None:
+        """For a badge whose figure changes meaning, as income versus expenses."""
+        self._higher_is_better = higher_is_better
+
     def set_change(self, change: float | None, detail: str = "") -> None:
         """``detail`` is added after the percentage, e.g. "+$ 118.400"."""
         if change is None:

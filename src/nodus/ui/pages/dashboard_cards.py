@@ -145,9 +145,10 @@ class CategoryLine(QFrame):
 
 
 class FigureTile(QFrame):
-    """A boxed caption and value, like the Income / Expenses / Saved boxes of the reference."""
+    """A boxed caption and value, like the Income / Expenses / Saved boxes of the reference,
+    optionally with a ``badge`` under the value (e.g. a ``ChangeBadge``)."""
 
-    def __init__(self, caption: str, value: QLabel) -> None:
+    def __init__(self, caption: str, value: QLabel, badge: QWidget | None = None) -> None:
         super().__init__()
         self.setObjectName("FigureTile")
         layout = QVBoxLayout(self)
@@ -160,6 +161,8 @@ class FigureTile(QFrame):
         self.value = value
         layout.addWidget(caption_label)
         layout.addWidget(value)
+        if badge is not None:
+            layout.addWidget(badge, alignment=Qt.AlignmentFlag.AlignLeft)
 
 
 class LatestTransactionRow(QWidget):
