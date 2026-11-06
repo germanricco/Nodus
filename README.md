@@ -30,27 +30,33 @@ En **Cuentas** registras cada lugar donde tienes dinero, con su saldo inicial y 
 
 Las **categorías** vienen con un set corto pensado para el día a día, separado en gastos e ingresos, y puedes crear las tuyas con su color o abrir subcategorías dentro de una existente. Si borras una categoría, sus movimientos pasan a «Otros» en lugar de perderse.
 
-En **Ajustes** eliges entre tema claro, oscuro o el del sistema, cargas la cotización del dólar con su fecha (Nodus guarda el historial y usa en cada día la que correspondía) y ves dónde está el archivo con tus datos, para respaldarlo cuando quieras.
+En **Ajustes** eliges entre tema claro, oscuro o el del sistema, cargas la cotización del dólar con su fecha (Nodus guarda el historial y usa en cada día la que correspondía) y ves dónde está el archivo con tus datos, para respaldarlo cuando quieras. Ahí también ves qué versión tienes y decides si Nodus busca actualizaciones al abrirse.
 
 ## Estado del proyecto
 
-La versión **v0.1** es la primera usable: cubre cuentas en pesos y dólares, ingresos, gastos y transferencias, categorías, cotización manual y el dashboard. Por ahora se ejecuta desde el código fuente. La próxima versión traerá un ejecutable listo para descargar desde GitHub, con aviso de actualizaciones, y después llegarán presupuestos, importación de movimientos, la cotización automática y reportes.
+La versión **v0.2** es la primera que se instala como cualquier programa de Windows: cubre cuentas en pesos y dólares, ingresos, gastos y transferencias, categorías, cotización manual y el dashboard, y avisa cuando sale una versión nueva. Lo que sigue son presupuestos, importación de movimientos, la cotización automática y reportes.
 
-## Instalación
+## Descargar Nodus
 
-Nodus necesita Python 3.11. En Windows, conviene instalarlo desde [python.org](https://www.python.org/downloads/) y no desde la Microsoft Store: esa versión guarda los archivos de `AppData` en una carpeta privada, donde el Explorador no los encuentra. Desde una terminal, en la carpeta del proyecto:
+Nodus funciona en Windows 10 y 11 de 64 bits. Descarga `Nodus-Setup-<versión>.exe` desde la [última versión publicada](https://github.com/germanricco/Nodus/releases/latest), ábrelo y sigue el asistente. Se instala solo para tu usuario, sin pedir permisos de administrador, y queda en el menú Inicio.
 
-```bash
-python -m venv .venv
-.venv/Scripts/python -m pip install -e .        # en Linux o macOS: .venv/bin/python
-.venv/Scripts/python -m nodus
-```
+La primera vez es probable que Windows muestre «Windows protegió tu PC». Aparece con los programas que no están firmados con un certificado comercial, que tiene un costo anual difícil de justificar para un proyecto personal y gratuito. Para seguir, haz clic en «Más información» y luego en «Ejecutar de todas formas». Si prefieres revisar lo que instalas, el código completo está en este repositorio y cada instalador se compila automáticamente en GitHub a partir de él.
 
-La primera vez, Nodus crea su archivo de datos en la carpeta de aplicaciones de tu usuario (en Windows, `%APPDATA%\Nodus\nodus.db`). Si quieres probarlo sin tocar ese archivo, define la variable de entorno `NODUS_DATA_DIR` con otra carpeta antes de abrirlo.
+Tus datos se guardan aparte del programa, en `%APPDATA%\Nodus\nodus.db`. Para actualizar basta con instalar la versión nueva encima de la anterior, y desinstalar Nodus desde la configuración de Windows tampoco toca ese archivo.
+
+Al abrirse, Nodus consulta en GitHub cuál es la última versión publicada y, si hay una más nueva, lo avisa con una franja debajo de la barra superior y un enlace para descargarla. Esa consulta solo pide el número de versión: no envía ningún dato tuyo. Si no la quieres, se desactiva en Ajustes.
 
 ## Desarrollo
 
-Las herramientas de desarrollo se instalan con `pip install -e ".[dev]"`. Estos son los comandos de uso diario:
+Para ejecutar Nodus desde el código hace falta Python 3.11. En Windows, conviene instalarlo desde [python.org](https://www.python.org/downloads/) y no desde la Microsoft Store: esa versión guarda los archivos de `AppData` en una carpeta privada, donde el Explorador no los encuentra. Desde una terminal, en la carpeta del proyecto:
+
+```bash
+python -m venv .venv
+.venv/Scripts/python -m pip install -e ".[dev]"   # en Linux o macOS: .venv/bin/python
+.venv/Scripts/python -m nodus
+```
+
+Para probar sin tocar tus datos reales, define la variable de entorno `NODUS_DATA_DIR` con otra carpeta antes de abrirlo. Estos son los comandos de uso diario:
 
 ```bash
 .venv/Scripts/python -m pytest                       # tests
@@ -59,11 +65,13 @@ Las herramientas de desarrollo se instalan con `pip install -e ".[dev]"`. Estos 
 .venv/Scripts/python scripts/screenshot.py --demo    # capturas de cada pantalla, claras y oscuras
 ```
 
+El instalador se arma con `pip install -e ".[build]"` y `.venv/Scripts/python scripts/build.py`, que congela la aplicación con PyInstaller en `dist/Nodus` y, si encuentra [Inno Setup 6](https://jrsoftware.org/isinfo.php), genera `dist/Nodus-Setup-<versión>.exe`. Para publicar una versión se sube una etiqueta anotada con el número de `nodus.__version__` (por ejemplo `v0.2.0`, con las novedades en el mensaje): GitHub Actions corre los tests, compila el instalador y crea el release.
+
 El código está organizado en capas que solo dependen hacia abajo: la interfaz (`ui`) usa los servicios con las reglas de negocio (`services`), que usan los repositorios sobre SQLite (`database`), que trabajan con el dominio puro (`models`). Los montos se guardan en centavos enteros, nunca en números de punto flotante.
 
 ## Tecnología
 
-Nodus está escrito en Python, por su rapidez de desarrollo y su ecosistema para el manejo de datos. La interfaz usa PySide6, la versión oficial de Qt para Python, que permite construir aplicaciones nativas con un diseño moderno sin cargar un navegador entero. Los datos se guardan en SQLite, una base de datos de un solo archivo que no necesita instalación ni servidor y que resiste años de uso diario.
+Nodus está escrito en Python, por su rapidez de desarrollo y su ecosistema para el manejo de datos. La interfaz usa PySide6, la versión oficial de Qt para Python, que permite construir aplicaciones nativas con un diseño moderno sin cargar un navegador entero. Los datos se guardan en SQLite, una base de datos de un solo archivo que no necesita instalación ni servidor y que resiste años de uso diario. El instalador se arma con PyInstaller e Inno Setup.
 
 ## Referencias
 
