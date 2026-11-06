@@ -12,25 +12,37 @@ from nodus.models.money import Money
 from nodus.services.container import Services
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.money_label import MoneyLabel
-from nodus.ui.widgets.net_worth_card import NetWorthCard
+from nodus.ui.widgets.money_label import MoneyLabel, masked
+from nodus.ui.widgets.net_worth_card import NetWorthCard, signed
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 
 class AccountRow(QWidget):
-    """One account: currency badge, name and type, balance, and its actions."""
+    """One account: currency badge, name and type, balance, and its actions.
+
+    A savings or investment account also shows what it gained by itself and offers to
+    update its value.
+    """
 
     edit_requested = Signal(object)  # Account
+    value_update_requested = Signal(object)  # Account
     archive_toggled = Signal(object)  # Account
     delete_requested = Signal(object)  # Account
 
-    def __init__(self, account: Account, balance: Money, hide_balance: bool = False) -> None:
+    def __init__(
+        self,
+        account: Account,
+        balance: Money,
+        hide_balance: bool = False,
+        value_change: Money | None = None,
+    ) -> None:
         super().__init__()
         self.account = account
         layout = QHBoxLayout(self)
@@ -45,7 +57,11 @@ class AccountRow(QWidget):
         texts.setSpacing(0)
         name = QLabel(account.name)
         name.setObjectName("RowTitle")
-        subtitle = QLabel(f"{ACCOUNT_TYPE_LABELS[account.type]} · {account.currency.value}")
+        details = [ACCOUNT_TYPE_LABELS[account.type], account.currency.value]
+        if value_change is not None and not value_change.is_zero:
+            change = masked(value_change) if hide_balance else signed(value_change)
+            details.append(f"Rendimiento {change}")
+        subtitle = QLabel(" · ".join(details))
         set_style_property(subtitle, "muted", True)
         texts.addWidget(name)
         texts.addWidget(subtitle)
@@ -57,6 +73,17 @@ class AccountRow(QWidget):
         balance_label.setObjectName("RowAmount")
         layout.addWidget(balance_label)
 
+        self.value_button = self._small_button("Actualizar valor")
+        self.value_button.setToolTip(
+            "Anota lo que vale hoy; la diferencia es rendimiento, no un ingreso"
+        )
+        self.value_button.clicked.connect(lambda: self.value_update_requested.emit(account))
+        # Hidden but keeping its room, so every balance lines up.
+        policy = self.value_button.sizePolicy()
+        policy.setRetainSizeWhenHidden(True)
+        self.value_button.setSizePolicy(policy)
+        self.value_button.setVisible(account.type.changes_value and not account.is_archived)
+        layout.addWidget(self.value_button)
         self.edit_button = self._small_button("Editar")
         self.edit_button.clicked.connect(lambda: self.edit_requested.emit(account))
         self.archive_button = self._small_button(
@@ -136,6 +163,9 @@ class AccountsPage(Page):
     def open_account_dialog(self, account: Account | None = None) -> None:
         AccountDialog(self._services, self._event_bus, account, parent=self.window()).exec()
 
+    def open_value_dialog(self, account: Account) -> None:
+        ValueAdjustmentDialog(self._services, self._event_bus, account, parent=self.window()).exec()
+
     def _accounts_card(
         self, title: str, accounts: list[Account], balances: dict[int, Money]
     ) -> Card:
@@ -145,10 +175,19 @@ class AccountsPage(Page):
             set_style_property(empty, "muted", True)
             card.body.addWidget(empty)
         for account in accounts:
+            value_change = (
+                self._services.accounts.value_change(account.id)
+                if account.type.changes_value
+                else None
+            )
             row = AccountRow(
-                account, balances[account.id], self._services.settings.amounts_hidden()
+                account,
+                balances[account.id],
+                self._services.settings.amounts_hidden(),
+                value_change,
             )
             row.edit_requested.connect(self.open_account_dialog)
+            row.value_update_requested.connect(self.open_value_dialog)
             row.archive_toggled.connect(self._toggle_archived)
             row.delete_requested.connect(self.delete_account)
             card.body.addWidget(row)

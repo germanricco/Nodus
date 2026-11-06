@@ -57,6 +57,15 @@ def load_demo_data(services: Services, today: date) -> None:
                                       usd("400"))  # fmt: skip
 
     current = Month.of(today)
+    # An investment that grows a little each month, brought up to date at each month end.
+    inversiones = services.accounts.create(
+        "Inversiones", AccountType.INVESTMENT, Currency.ARS, ars("800000")
+    )
+    value = 800_000
+    for back in range(HISTORY_MONTHS, 0, -1):
+        value = round(value * 1.025)
+        services.accounts.adjust_value(inversiones.id, ars(value), current.shifted(-back).end)
+
     trip_month = 2  # months back
     trip = (f"Vacaciones {current.shifted(-trip_month).year}",)
     random_ = random.Random(7)

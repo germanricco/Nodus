@@ -24,6 +24,7 @@ from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
 from nodus.database.repositories.transaction_repository import TransactionFilter  # noqa: E402
+from nodus.models.money import Money  # noqa: E402
 from nodus.models.period import Month  # noqa: E402
 from nodus.models.transaction import TransactionType  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
@@ -33,6 +34,7 @@ from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
+from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
 from nodus.ui.navigation import PageId  # noqa: E402
@@ -66,7 +68,20 @@ DIALOGS = {
     "refund-picker": lambda services, event_bus, window: RefundPickerDialog(
         services, window.theme_manager, parent=window
     ),
+    "value-adjustment-dialog": lambda services, event_bus, window: value_dialog(
+        services, event_bus, window
+    ),
 }
+
+
+def value_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
+    """The demo investment, with a new value typed in."""
+    account = next(a for a in services.accounts.list_accounts() if a.type.changes_value
+                   and a.currency.value == "ARS")  # fmt: skip
+    dialog = ValueAdjustmentDialog(services, event_bus, account, parent=window)
+    balance = services.accounts.balance(account.id)
+    dialog.value_input.set_money(balance + Money(balance.cents // 50, balance.currency))
+    return dialog
 
 
 def refund_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:

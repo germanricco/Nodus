@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QLabel
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.ui.dialogs.account_dialog import AccountDialog
+from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.navigation import PageId
 from nodus.ui.pages import accounts_page
 from nodus.ui.pages.accounts_page import AccountRow, AccountsPage
@@ -172,3 +173,51 @@ class TestAccountsPage:
         qtbot.mouseClick(rows(page)[0].delete_button, Qt.MouseButton.LeftButton)
 
         assert services.accounts.list_accounts() == [pesos]
+
+
+@pytest.fixture
+def investment(services):
+    return services.accounts.create(
+        "MP Inversiones", AccountType.INVESTMENT, Currency.ARS, ars("1000000")
+    )
+
+
+class TestValueAdjustment:
+    def make(self, qtbot, services, event_bus, account) -> ValueAdjustmentDialog:
+        dialog = ValueAdjustmentDialog(services, event_bus, account, today=TODAY)
+        qtbot.addWidget(dialog)
+        return dialog
+
+    def test_only_savings_and_investments_offer_it(self, page, event_bus, pesos, investment):
+        event_bus.accounts_changed.emit()
+
+        offered = {row.account.name: row.value_button.isVisibleTo(row) for row in rows(page)}
+
+        assert offered == {"Banco": False, "MP Inversiones": True}
+
+    def test_shows_the_difference_and_saves_it_as_gain(
+        self, qtbot, services, event_bus, investment
+    ):
+        dialog = self.make(qtbot, services, event_bus, investment)
+        assert dialog.value_input.money() == ars("1000000")
+
+        dialog.value_input.line_edit.setText("1.012.300")
+
+        assert dialog.difference_label.text() == "Ganancia: +$ 12.300,00"
+        with qtbot.waitSignal(event_bus.accounts_changed):
+            dialog.save_button.click()
+        assert services.accounts.balance(investment.id) == ars("1012300")
+
+    def test_row_shows_the_gain(self, page, services, event_bus, investment):
+        services.accounts.adjust_value(investment.id, ars("1012300"), TODAY)
+        event_bus.accounts_changed.emit()
+
+        assert "Inversión · ARS · Rendimiento +$ 12.300,00" in texts(page)
+
+    def test_undo_removes_the_last_adjustment(self, qtbot, services, event_bus, investment):
+        services.accounts.adjust_value(investment.id, ars("1012300"), TODAY)
+        dialog = self.make(qtbot, services, event_bus, investment)
+
+        dialog.undo_button.click()
+
+        assert services.accounts.balance(investment.id) == ars("1000000")
