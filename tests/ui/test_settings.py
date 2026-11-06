@@ -68,3 +68,57 @@ def test_about_card_turns_update_check_off(services, page):
     page.check_updates_input.click()
 
     assert not services.settings.check_updates()
+
+
+def test_backup_now_creates_a_copy_and_shows_it(services, page):
+    page.backup_now_button.click()
+
+    assert services.backups.last_backup() == date.today()
+    assert page.backup_status_label.text() == f"Última copia: {date.today():%d/%m/%Y}"
+
+
+def test_failed_daily_backup_is_shown(services, page):
+    services.backups.last_error = "No se pudo hacer la copia del día: disco lleno"
+
+    page.refresh()
+
+    assert "disco lleno" in page.backup_status_label.text()
+
+
+def test_restore_replaces_data_and_announces_it(
+    monkeypatch, qtbot, services, event_bus, page, pesos
+):
+    backup = services.backups.create(date(2026, 11, 1))
+    services.accounts.delete(pesos.id)
+    monkeypatch.setattr(settings_page.QFileDialog, "getOpenFileName", lambda *_a: (str(backup), ""))
+    monkeypatch.setattr(settings_page, "confirm", lambda *_a, **_k: True)
+    monkeypatch.setattr(settings_page.QMessageBox, "information", lambda *_a: None)
+
+    with qtbot.waitSignal(event_bus.accounts_changed):
+        page.restore_button.click()
+
+    assert [a.name for a in services.accounts.list_accounts()] == ["Banco"]
+
+
+def test_restore_of_an_invalid_file_warns_and_keeps_data(
+    monkeypatch, tmp_path, services, page, pesos
+):
+    bogus = tmp_path / "bogus.db"
+    bogus.write_bytes(b"no soy una base")
+    warnings = []
+    monkeypatch.setattr(settings_page.QFileDialog, "getOpenFileName", lambda *_a: (str(bogus), ""))
+    monkeypatch.setattr(settings_page, "confirm", lambda *_a, **_k: True)
+    monkeypatch.setattr(settings_page.QMessageBox, "warning", lambda *a: warnings.append(a[2]))
+
+    page.restore_button.click()
+
+    assert warnings == ["El archivo no es una copia válida de Nodus."]
+    assert [a.name for a in services.accounts.list_accounts()] == ["Banco"]
+
+
+def test_restore_cancelled_in_the_file_dialog_does_nothing(monkeypatch, services, page, pesos):
+    monkeypatch.setattr(settings_page.QFileDialog, "getOpenFileName", lambda *_a: ("", ""))
+
+    page.restore_button.click()
+
+    assert [a.name for a in services.accounts.list_accounts()] == ["Banco"]

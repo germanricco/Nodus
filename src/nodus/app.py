@@ -2,6 +2,7 @@
 
 import ctypes
 import sys
+from datetime import date
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
@@ -42,6 +43,7 @@ class NodusApp:
             return 1
         try:
             services = Services.create(database)
+            services.backups.create_if_due(date.today())
             theme_mode = ThemeMode.from_setting(services.settings.theme_preference())
             theme_manager = ThemeManager(self._qt_app, theme_mode)
             window = MainWindow(services, EventBus(), theme_manager)

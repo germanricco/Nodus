@@ -113,6 +113,36 @@ class Database:
         finally:
             target.close()
 
+    def restore_from(self, source: Path, migrations: list[Migration] | None = None) -> None:
+        """Replaces every table with the contents of the database file ``source``.
+
+        Works on the open connection, so the app keeps running; a copy made by an older
+        Nodus is then migrated like any other database.
+        """
+        copy = sqlite3.connect(f"file:{source.as_posix()}?mode=ro", uri=True)
+        try:
+            copy.backup(self._connection)
+        finally:
+            copy.close()
+        self.migrate(migrations if migrations is not None else load_packaged_migrations())
+
+    @staticmethod
+    def inspect(path: Path) -> int:
+        """Schema version of the database file at ``path``, after checking its integrity.
+
+        Raises DatabaseError if the file is not a readable SQLite database.
+        """
+        try:
+            connection = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
+            try:
+                if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+                    raise DatabaseError(f"{path}: integrity check failed")
+                return connection.execute("PRAGMA user_version").fetchone()[0]
+            finally:
+                connection.close()
+        except sqlite3.DatabaseError as error:
+            raise DatabaseError(f"{path}: {error}") from error
+
     def _apply(self, migration: Migration) -> None:
         script = f"BEGIN;\n{migration.sql}\nPRAGMA user_version = {migration.version};\nCOMMIT;"
         try:
@@ -135,3 +165,8 @@ def load_packaged_migrations() -> list[Migration]:
             version, name = match.groups()
             migrations.append(Migration(int(version), name, entry.read_text(encoding="utf-8")))
     return migrations
+
+
+def latest_schema_version() -> int:
+    """The schema version this build of Nodus migrates databases to."""
+    return max(migration.version for migration in load_packaged_migrations())

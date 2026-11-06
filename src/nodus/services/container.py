@@ -12,6 +12,7 @@ from nodus.database.repositories.exchange_rate_repository import ExchangeRateRep
 from nodus.database.repositories.settings_repository import SettingsRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
 from nodus.services.account_service import AccountService
+from nodus.services.backup_service import BackupService
 from nodus.services.category_service import CategoryService
 from nodus.services.dashboard_service import DashboardService
 from nodus.services.exchange_rate_service import ExchangeRateService
@@ -37,6 +38,7 @@ class Services:
     settings: SettingsService
     dashboard: DashboardService
     updates: UpdateService
+    backups: BackupService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -57,4 +59,5 @@ class Services:
             settings=SettingsService(database, SettingsRepository(database)),
             dashboard=DashboardService(transactions, categories, exchange_rates),
             updates=UpdateService(__version__),
+            backups=BackupService(database, database.path.parent / "backups"),
         )

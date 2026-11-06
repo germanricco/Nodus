@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import date
+import sqlite3
+from datetime import date, datetime
+from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
+    QFileDialog,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QVBoxLayout,
@@ -20,6 +24,7 @@ from nodus import __version__
 from nodus.models.currency import Currency
 from nodus.models.exchange_rate import ExchangeRate
 from nodus.models.money import Money
+from nodus.services.backup_service import BackupService
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.services.update_service import REPOSITORY_URL
@@ -38,6 +43,10 @@ from nodus.ui.widgets.style import clear_layout, set_style_property
 # Segment order of the theme selector.
 THEME_MODES = [ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM]
 THEME_LABELS = ["Claro", "Oscuro", "Según el sistema"]
+
+
+def open_folder(folder: Path) -> None:
+    QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
 
 def format_rate(rate: ExchangeRate) -> str:
@@ -96,6 +105,7 @@ class SettingsPage(Page):
     def refresh(self) -> None:
         self.theme_input.set_index(THEME_MODES.index(self._theme_manager.mode))
         self._refresh_rates()
+        self._refresh_backup_status()
         self.check_updates_input.setChecked(self._services.settings.check_updates())
 
     # Appearance
@@ -214,8 +224,9 @@ class SettingsPage(Page):
         card = Card("Tus datos")
         data_file = self._services.settings.data_file
         text = QLabel(
-            "Todo lo que cargas en Nodus vive en un único archivo en tu computadora. Para"
-            " hacer una copia de seguridad, copia ese archivo con Nodus cerrado."
+            "Todo lo que cargas en Nodus vive en un único archivo en tu computadora. Cada día,"
+            " al abrir Nodus, se guarda una copia de seguridad; se conservan las últimas"
+            f" {BackupService.KEEP}."
         )
         text.setWordWrap(True)
         set_style_property(text, "muted", True)
@@ -224,15 +235,86 @@ class SettingsPage(Page):
         self.data_path_label.setWordWrap(True)
         open_button = QPushButton("Abrir carpeta")
         open_button.setObjectName("SecondaryButton")
-        open_button.clicked.connect(
-            lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(data_file.parent)))
-        )
+        open_button.clicked.connect(lambda: open_folder(data_file.parent))
         row = QHBoxLayout()
         row.addWidget(self.data_path_label, stretch=1)
         row.addWidget(open_button)
         card.body.addWidget(text)
         card.body.addLayout(row)
+
+        self.backup_status_label = QLabel()
+        card.body.addSpacing(8)
+        card.body.addWidget(self.backup_status_label)
+        self.backup_now_button = QPushButton("Hacer una copia ahora")
+        self.backup_now_button.setObjectName("SecondaryButton")
+        self.backup_now_button.clicked.connect(self.backup_now)
+        open_backups_button = QPushButton("Abrir carpeta de copias")
+        open_backups_button.setObjectName("SecondaryButton")
+        open_backups_button.clicked.connect(self._open_backups_folder)
+        self.restore_button = QPushButton("Restaurar desde una copia…")
+        self.restore_button.setObjectName("SecondaryButton")
+        self.restore_button.clicked.connect(self.restore_backup)
+        buttons = QHBoxLayout()
+        buttons.setSpacing(8)
+        buttons.addWidget(self.backup_now_button)
+        buttons.addWidget(open_backups_button)
+        buttons.addWidget(self.restore_button)
+        buttons.addStretch()
+        card.body.addLayout(buttons)
         return card
+
+    def _refresh_backup_status(self) -> None:
+        backups = self._services.backups
+        if backups.last_error:
+            self.backup_status_label.setText(backups.last_error)
+            self.backup_status_label.setObjectName("ErrorLabel")
+        else:
+            last = backups.last_backup()
+            self.backup_status_label.setText(
+                f"Última copia: {format_date(last)}" if last else "Todavía no hay copias."
+            )
+            self.backup_status_label.setObjectName("RowTitle")
+        # The object name drives the style; re-polish so the change shows.
+        self.backup_status_label.style().unpolish(self.backup_status_label)
+        self.backup_status_label.style().polish(self.backup_status_label)
+
+    def backup_now(self) -> None:
+        try:
+            self._services.backups.create(date.today())
+        except (OSError, sqlite3.Error) as error:
+            QMessageBox.warning(self.window(), "Copia de seguridad", f"No se pudo copiar: {error}")
+        self._refresh_backup_status()
+
+    def _open_backups_folder(self) -> None:
+        backups_dir = self._services.backups.backups_dir
+        backups_dir.mkdir(parents=True, exist_ok=True)
+        open_folder(backups_dir)
+
+    def restore_backup(self) -> None:
+        """Replaces the data with a copy the user picks, after confirming."""
+        backups_dir = self._services.backups.backups_dir
+        path, _filter = QFileDialog.getOpenFileName(
+            self.window(), "Restaurar desde una copia", str(backups_dir), "Copias de Nodus (*.db)"
+        )
+        if not path:
+            return
+        text = (
+            f"Tus datos actuales se van a reemplazar por los de «{Path(path).name}». Antes se"
+            " guarda una copia de cómo están ahora, en la carpeta de copias."
+        )
+        if not confirm(self.window(), "Restaurar copia", text, action="Restaurar"):
+            return
+        try:
+            self._services.backups.restore(Path(path), datetime.now())
+        except ValidationError as error:
+            QMessageBox.warning(self.window(), "Restaurar copia", str(error))
+            return
+        self._theme_manager.set_mode(
+            ThemeMode.from_setting(self._services.settings.theme_preference())
+        )
+        self._event_bus.emit_all()
+        self.refresh()
+        QMessageBox.information(self.window(), "Restaurar copia", "Se restauró la copia.")
 
     # About
 
