@@ -9,7 +9,14 @@ from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPe
 from PySide6.QtWidgets import QWidget
 
 from nodus.ui.theme.theme import Theme
-from nodus.ui.widgets.chart_base import AnimatedChart, lerp, rounded_bar_path, with_alpha
+from nodus.ui.widgets.chart_base import (
+    AnimatedChart,
+    column_slots,
+    lerp,
+    rounded_bar_path,
+    slot_index,
+    with_alpha,
+)
 
 
 @dataclass(frozen=True)
@@ -74,11 +81,7 @@ class BarChart(AnimatedChart):
 
     def _slots(self) -> list[QRectF]:
         """The column each month occupies, full height."""
-        count = len(self._groups)
-        if count == 0:
-            return []
-        width = self.width() / count
-        return [QRectF(i * width, 0, width, self.height()) for i in range(count)]
+        return column_slots(len(self._groups), self.width(), self.height())
 
     def paintEvent(self, _event: QPaintEvent) -> None:  # noqa: N802
         painter = QPainter(self)
@@ -129,10 +132,7 @@ class BarChart(AnimatedChart):
         painter.end()
 
     def index_at(self, x: float) -> int | None:
-        for index, slot in enumerate(self._slots()):
-            if slot.left() <= x < slot.right():
-                return index
-        return None
+        return slot_index(self._slots(), x)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         index = self.index_at(event.position().x())

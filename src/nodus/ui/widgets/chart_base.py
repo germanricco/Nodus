@@ -168,6 +168,19 @@ class AnimatedChart(QWidget):
         painter.restore()
 
 
+def column_slots(count: int, width: float, height: float) -> list[QRectF]:
+    """``count`` equal columns across a chart, full height: the place of each bar group."""
+    if count == 0:
+        return []
+    column = width / count
+    return [QRectF(i * column, 0, column, height) for i in range(count)]
+
+
+def slot_index(slots: list[QRectF], x: float) -> int | None:
+    """The column under ``x``, if any."""
+    return next((i for i, slot in enumerate(slots) if slot.left() <= x < slot.right()), None)
+
+
 def rounded_bar_path(rect: QRectF, radius: float, round_top: bool) -> QPainterPath:
     """A bar with only its outer end rounded: the top for positive values, the bottom for
     negative ones, so bars stand on the baseline."""
