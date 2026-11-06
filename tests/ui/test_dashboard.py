@@ -155,6 +155,18 @@ def test_net_worth_currency_switch_redraws_the_trend(qtbot, window, services, pe
     assert card.chart.points()[-1].value == ars("600").cents  # cents of US$ 600
 
 
+def test_net_worth_names_the_day_only_when_it_is_not_today(qtbot, window, services, pesos):
+    page = dashboard(window)
+    window.show_page(PageId.DASHBOARD)
+    card = page.net_worth_card
+    assert not card.day_label.isVisibleTo(card)
+
+    card.show_day(date(2026, 9, 30))
+
+    assert card.day_label.isVisibleTo(card)
+    assert card.day_label.text() == "al 30/09/2026"
+
+
 def test_upcoming_payments_appear_with_active_charges(
     qtbot, window, services, event_bus, pesos, monkeypatch
 ):

@@ -130,10 +130,15 @@ class NetWorthCard(Card):
         self.total_label = AnimatedMoneyLabel()
         self.total_label.setObjectName("StatValueHero")
         self.total_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        # Only past days are named, beside the amount; today's net worth needs no caption.
         self.day_label = QLabel()
         set_style_property(self.day_label, "muted", True)
-        self.body.addWidget(self.total_label)
-        self.body.addWidget(self.day_label)
+        row = QHBoxLayout()
+        row.setSpacing(10)
+        row.addWidget(self.total_label)
+        row.addWidget(self.day_label, alignment=Qt.AlignmentFlag.AlignBottom)
+        row.addStretch()
+        self.body.addLayout(row)
 
     def _build_missing_rate(self) -> None:
         """Both subtotals side by side, for when they cannot be added up."""
@@ -186,12 +191,13 @@ class NetWorthCard(Card):
         net_worth = self._services.net_worth.net_worth(day)
         total = net_worth.total_in[currency]
         has_total = total is not None
-        for widget in (self.total_label, self.day_label, self.composition):
+        for widget in (self.total_label, self.composition):
             widget.setVisible(has_total)
+        self.day_label.setVisible(has_total and day != date.today())
         self.missing_rate.setVisible(not has_total)
         if total is not None:
             self.total_label.set_money(total)
-            self.day_label.setText("Hoy" if day == date.today() else f"Al {format_date(day)}")
+            self.day_label.setText(f"al {format_date(day)}")
         else:
             for held, label in self.subtotal_labels.items():
                 label.set_money(net_worth.by_currency[held])

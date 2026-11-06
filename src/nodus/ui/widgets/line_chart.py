@@ -24,6 +24,8 @@ from nodus.ui.widgets.chart_base import AnimatedChart, lerp, resample, with_alph
 
 # Up/down dots are drawn only while they stay readable.
 MAX_CHANGE_DOTS = 31
+# Minimum room between two day labels under the chart, in pixels.
+AXIS_LABEL_GAP = 16
 
 
 @dataclass(frozen=True)
@@ -45,6 +47,23 @@ def value_range(values: list[float]) -> tuple[float, float]:
         return low - margin, high + margin
     margin = (high - low) * 0.12
     return low - margin, high + margin
+
+
+def axis_indexes(count: int, fit: int) -> list[int]:
+    """The points to label under the chart: every point when they all fit, otherwise one
+    every few at a regular step. The last point (usually today) is always labeled; it takes
+    the place of the previous label when the two would be too close."""
+    if count == 0:
+        return []
+    step = max(1, -(-count // max(fit, 1)))
+    indexes = list(range(0, count, step))
+    last = count - 1
+    if indexes[-1] != last:
+        if last - indexes[-1] < step / 2 and len(indexes) > 1:
+            indexes[-1] = last
+        else:
+            indexes.append(last)
+    return indexes
 
 
 def change_directions(values: list[float | None]) -> list[int]:
@@ -187,7 +206,7 @@ class LineChart(AnimatedChart):
                     self._format_axis(lerp(low, high, step / 2)),
                 )
         painter.setPen(QColor(self._theme.text_muted))
-        for index in self._axis_indexes():
+        for index in self._axis_indexes(plot, painter):
             # Centered under its point, but kept inside the widget at both ends.
             left = min(max(self._x(index, plot) - 40, 0), self.width() - 80)
             painter.drawText(
@@ -196,15 +215,13 @@ class LineChart(AnimatedChart):
                 self._format_day(self._points[index].day),
             )
 
-    def _axis_indexes(self) -> list[int]:
-        """Up to five evenly spread days to label under the chart."""
-        count = len(self._points)
-        if count == 0:
+    def _axis_indexes(self, plot: QRectF, painter: QPainter) -> list[int]:
+        """As many days as fit side by side under the plot without overlapping."""
+        if not self._points:
             return []
-        labels = min(count, 5)
-        if labels == 1:
-            return [0]
-        return sorted({round(i * (count - 1) / (labels - 1)) for i in range(labels)})
+        metrics = painter.fontMetrics()
+        widest = max(metrics.horizontalAdvance(self._format_day(p.day)) for p in self._points)
+        return axis_indexes(len(self._points), int(plot.width() // (widest + AXIS_LABEL_GAP)) + 1)
 
     @staticmethod
     def _runs(positions: list[QPointF | None]) -> list[list[QPointF]]:

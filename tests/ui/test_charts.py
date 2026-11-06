@@ -18,7 +18,13 @@ from nodus.ui.widgets.charts import (
     index_at_angle,
     segment_spans,
 )
-from nodus.ui.widgets.line_chart import LineChart, LinePoint, change_directions, value_range
+from nodus.ui.widgets.line_chart import (
+    LineChart,
+    LinePoint,
+    axis_indexes,
+    change_directions,
+    value_range,
+)
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 
 # Pure helpers
@@ -49,6 +55,20 @@ def test_value_range_pads_and_handles_flat_series():
     assert value_range([100, 200]) == pytest.approx((88, 212))
     low, high = value_range([500, 500])
     assert low < 500 < high
+
+
+@pytest.mark.parametrize(
+    ("count", "fit", "indexes"),
+    [
+        (6, 9, [0, 1, 2, 3, 4, 5]),  # every day when all fit: none is skipped
+        (30, 9, [0, 4, 8, 12, 16, 20, 24, 29]),  # today replaces a label too close to it
+        (30, 6, [0, 5, 10, 15, 20, 25, 29]),
+        (1, 9, [0]),
+        (0, 9, []),
+    ],
+)
+def test_axis_labels_go_at_a_regular_step_and_end_on_the_last_day(count, fit, indexes):
+    assert axis_indexes(count, fit) == indexes
 
 
 def test_change_directions_skip_unknown_values():
