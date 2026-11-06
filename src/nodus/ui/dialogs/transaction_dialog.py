@@ -10,6 +10,7 @@ from nodus.models.account import Account
 from nodus.models.currency import Currency
 from nodus.models.exchange_rate import implied_ars_per_usd
 from nodus.models.money import Money
+from nodus.models.payee import Payee
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
@@ -19,6 +20,7 @@ from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.date_input import DateInput
+from nodus.ui.widgets.payee_input import PayeeInput
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
 
@@ -35,6 +37,9 @@ class TransactionDialog(FormDialog):
     between accounts of different currencies also asks for the amount that arrives and
     shows the rate it implies. When editing, an expense can become an income and vice
     versa, but a transfer stays a transfer, since they are stored differently.
+
+    Choosing a known payee fills in its suggested category, unless the user already
+    picked one by hand, which an edited transaction counts as.
     """
 
     def __init__(
@@ -48,6 +53,7 @@ class TransactionDialog(FormDialog):
         self._services = services
         self._event_bus = event_bus
         self._transaction = transaction
+        self._category_picked = transaction is not None
 
         self.mode_input = SegmentedControl(MODE_LABELS)
         self.add_above_form(self.mode_input)
@@ -57,6 +63,7 @@ class TransactionDialog(FormDialog):
         self.amount_in_input = AmountInput(Currency.USD)
         self.rate_hint = QLabel()
         self.rate_hint.setObjectName("FieldHint")
+        self.payee_input = PayeeInput(services.payees)
         self.category_input = CategoryComboBox()
         self.date_input = DateInput()
         self.note_input = QLineEdit()
@@ -67,6 +74,7 @@ class TransactionDialog(FormDialog):
         self.form.addRow("Monto", self.amount_input)
         self.form.addRow("Entra", self.amount_in_input)
         self.form.addRow("", self.rate_hint)
+        self.form.addRow("Beneficiario", self.payee_input)
         self.form.addRow("Categoría", self.category_input)
         self.form.addRow("Fecha", self.date_input)
         self.form.addRow("Nota", self.note_input)
@@ -77,6 +85,8 @@ class TransactionDialog(FormDialog):
         self.to_account_input.currentIndexChanged.connect(self._update_currencies)
         self.amount_input.line_edit.textChanged.connect(self._update_rate_hint)
         self.amount_in_input.line_edit.textChanged.connect(self._update_rate_hint)
+        self.payee_input.payee_chosen.connect(self._suggest_category)
+        self.category_input.activated.connect(self._mark_category_picked)
 
         if transaction:
             self._load(transaction)
@@ -117,6 +127,8 @@ class TransactionDialog(FormDialog):
             self.mode_input.set_segment_enabled(TRANSFER_MODE, False)
             self.account_input.select(transaction.account_id)
             self.amount_input.set_money(transaction.amount)
+            if transaction.payee_id is not None:
+                self.payee_input.set_text(self._services.payees.get(transaction.payee_id).name)
         self.date_input.set_day(transaction.occurred_on)
         self.note_input.setText(transaction.note)
 
@@ -133,6 +145,7 @@ class TransactionDialog(FormDialog):
         self.form.labelForField(self.account_input).setText("Desde" if transfer else "Cuenta")
         self.form.labelForField(self.amount_input).setText("Sale" if transfer else "Monto")
         self.form.setRowVisible(self.to_account_input, transfer)
+        self.form.setRowVisible(self.payee_input, not transfer)
         self.form.setRowVisible(self.category_input, not transfer)
         if transfer:
             self._pick_distinct_destination()
@@ -143,7 +156,21 @@ class TransactionDialog(FormDialog):
             )
             if self._transaction and not self._transaction.is_transfer:
                 self.category_input.select(self._transaction.category_id)
+            payee = self._services.payees.find(self.payee_input.text())
+            if payee is not None:
+                self._suggest_category(payee)
         self._update_currencies()
+
+    def _mark_category_picked(self) -> None:
+        self._category_picked = True
+
+    def _suggest_category(self, payee: Payee) -> None:
+        if self._category_picked or self.is_transfer_mode:
+            return
+        kind = _MODE_TYPES[self.mode_input.index()]
+        category_id = self._services.payees.suggested_category(payee.id, kind)
+        if category_id is not None:
+            self.category_input.select(category_id)
 
     def _pick_distinct_destination(self) -> None:
         """For a new transfer, starts with a destination other than the source."""
@@ -201,6 +228,7 @@ class TransactionDialog(FormDialog):
             occurred_on=self.date_input.day(),
             category_id=category_id,
             note=self.note_input.text(),
+            payee_name=self.payee_input.text(),
         )
         if self._transaction:
             self._services.transactions.update(self._transaction.id, draft)
