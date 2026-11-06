@@ -83,5 +83,5 @@ def test_failed_fetch_is_reported_in_settings(qtbot, offline_services, answer, o
 
     page.refresh_rate_button.click()
 
-    qtbot.waitUntil(lambda: "No se pudo" in page.rate_feed_label.text())
+    qtbot.waitUntil(lambda: page.rate_source_row.detail.text() == "Sin conexión")
     assert todays_rate(offline_services) is None

@@ -97,11 +97,13 @@ class TestAccountsPage:
         shown = texts(page)
         assert "$ 600.000,00" in shown
         assert "US$ 600,00" in shown
+        assert f"US$ 1 = $ 1.000,00 · {TODAY:%d/%m}" in shown
 
     def test_shows_missing_rate_instead_of_inventing_totals(self, page, pesos, dollars):
         page.refresh()
 
         assert texts(page).count("Sin cotización") == 2
+        assert "Sin cotización: cárgala en Ajustes" in texts(page)
 
     def test_archive_moves_account_to_archived_section(
         self, qtbot, services, event_bus, page, pesos, dollars

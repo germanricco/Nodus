@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QComboBox, QLineEdit, QWidget
 
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
@@ -44,17 +44,11 @@ class AccountDialog(FormDialog):
         self.currency_input.currentIndexChanged.connect(
             lambda: self.balance_input.set_currency(self.currency_input.currentData())
         )
-        balance_hint = QLabel(
-            "Lo que tiene la cuenta hoy. Puede ser negativo (por ejemplo, una tarjeta)."
-        )
-        balance_hint.setObjectName("FieldHint")
-        balance_hint.setWordWrap(True)
 
         self.form.addRow("Nombre", self.name_input)
         self.form.addRow("Tipo", self.type_input)
         self.form.addRow("Moneda", self.currency_input)
         self.form.addRow("Saldo inicial", self.balance_input)
-        self.form.addRow("", balance_hint)
 
         if account:
             self._load(account)

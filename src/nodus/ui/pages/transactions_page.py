@@ -154,7 +154,7 @@ class TransactionsPage(Page):
 
         self.model = TransactionTableModel(theme_manager.theme)
         self.table = self._build_table()
-        self.empty_label = QLabel("No hay transacciones que coincidan con los filtros.")
+        self.empty_label = QLabel("Sin transacciones con estos filtros")
         self.empty_label.setObjectName("EmptyState")
         self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         card = Card()

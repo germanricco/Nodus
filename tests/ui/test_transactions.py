@@ -96,9 +96,11 @@ class TestTransactionDialog:
         dialog.account_input.select(pesos.id)
         dialog.to_account_input.select(dollars.id)
         dialog.amount_input.line_edit.setText("121.550")
+        assert not dialog.rate_hint.isVisibleTo(dialog)
         dialog.amount_in_input.line_edit.setText("100")
 
         assert dialog.amount_in_input.isVisibleTo(dialog)
+        assert dialog.rate_hint.isVisibleTo(dialog)
         assert not dialog.category_input.isVisibleTo(dialog)
         assert dialog.rate_hint.text() == "Cotización implícita: US$ 1 = $ 1.215,50"
 

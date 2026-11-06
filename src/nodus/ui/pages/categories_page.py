@@ -14,10 +14,10 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.pages.page import Page
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout
 
 SECTION_TITLES = {TransactionType.EXPENSE: "Gastos", TransactionType.INCOME: "Ingresos"}
-SYSTEM_HINT = "Recibe las transacciones de las categorías que se eliminan"
+SYSTEM_HINT = "Recibe las transacciones de las categorías que se eliminan."
 
 
 class CategoryRow(QWidget):
@@ -43,9 +43,10 @@ class CategoryRow(QWidget):
         name.setObjectName("RowTitle")
         layout.addWidget(name)
         if category.is_system:
-            hint = QLabel(SYSTEM_HINT)
-            set_style_property(hint, "muted", True)
-            layout.addWidget(hint)
+            tag = QLabel("sistema")
+            tag.setObjectName("Tag")
+            tag.setToolTip(SYSTEM_HINT)
+            layout.addWidget(tag)
         layout.addStretch()
 
         self.buttons: dict[str, QPushButton] = {}

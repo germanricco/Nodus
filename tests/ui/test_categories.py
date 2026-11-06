@@ -1,6 +1,7 @@
 import pytest
 from factories import ars, category_id, expense_draft
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLabel
 
 from nodus.models.transaction import TransactionType
 from nodus.ui.dialogs.category_dialog import NO_PARENT_LABEL, CategoryDialog
@@ -108,7 +109,11 @@ class TestCategoriesPage:
         services.categories.create("Alquiler", EXPENSE, "#000000", parent_id=vivienda)
         page.refresh()
 
-        assert row_named(page, "Otros").buttons == {}
+        otros = row_named(page, "Otros")
+        assert otros.buttons == {}
+        tags = [label for label in otros.findChildren(QLabel) if label.objectName() == "Tag"]
+        assert [tag.text() for tag in tags] == ["sistema"]
+        assert tags[0].toolTip() == categories_page.SYSTEM_HINT
         assert set(row_named(page, "Alquiler").buttons) == {"Editar", "Eliminar"}
         assert "+ Subcategoría" in row_named(page, "Vivienda").buttons
 

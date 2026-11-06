@@ -168,10 +168,7 @@ class AccountsPage(Page):
         card = Card()
         title = QLabel("Todavía no hay cuentas")
         title.setObjectName("RowTitle")
-        text = QLabel(
-            "Crea una cuenta por cada lugar donde tengas dinero: el banco, el efectivo,"
-            " los ahorros en dólares. Después vas a poder registrar sus movimientos."
-        )
+        text = QLabel("Una por cada lugar donde tengas dinero: banco, efectivo, dólares.")
         text.setWordWrap(True)
         set_style_property(text, "muted", True)
         card.body.addWidget(title)

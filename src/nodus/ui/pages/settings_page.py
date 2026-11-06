@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -43,6 +44,7 @@ from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.segmented import SegmentedControl
+from nodus.ui.widgets.setting_row import SettingRow
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 # Segment order of the theme selector.
@@ -57,6 +59,13 @@ def open_folder(folder: Path) -> None:
 def format_rate(rate: ExchangeRate) -> str:
     """ "US$ 1 = $ 1.215,50", how the dollar rate is quoted in Argentina."""
     return f"US$ 1 = {Money.from_decimal(rate.rate, Currency.ARS).format()}"
+
+
+def secondary_button(text: str, on_click: Callable[[], object]) -> QPushButton:
+    button = QPushButton(text)
+    button.setObjectName("SecondaryButton")
+    button.clicked.connect(on_click)
+    return button
 
 
 class RateRow(QWidget):
@@ -140,49 +149,43 @@ class SettingsPage(Page):
 
     def _rate_card(self) -> Card:
         card = Card("Cotización del dólar")
-        intro = QLabel(
-            "Cuántos pesos vale un dólar. Se usa para ver el patrimonio en las dos monedas;"
-            " cada fecha usa la última cotización cargada hasta ese día. Con MEP, Blue u"
-            " Oficial, Nodus trae el valor de venta del día desde DolarApi al abrirse; con"
-            " Manual, la cargas tú."
-        )
-        intro.setWordWrap(True)
-        set_style_property(intro, "muted", True)
-        card.body.addWidget(intro)
-
-        self.rate_source_input = SegmentedControl(list(SOURCES.values()))
+        self.rate_source_row = SettingRow("Fuente")
+        self.rate_source_input = self.rate_source_row.add(SegmentedControl(list(SOURCES.values())))
         self.rate_source_input.changed.connect(self._set_rate_source)
-        self.refresh_rate_button = QPushButton("Actualizar ahora")
-        self.refresh_rate_button.setObjectName("SecondaryButton")
-        self.refresh_rate_button.clicked.connect(self.refresh_rate)
-        self.rate_feed_label = QLabel()
-        self.rate_feed_label.setObjectName("FieldHint")
-        source_row = QHBoxLayout()
-        source_row.setSpacing(8)
-        source_row.addWidget(QLabel("Fuente"))
-        source_row.addWidget(self.rate_source_input)
-        source_row.addWidget(self.refresh_rate_button)
-        source_row.addWidget(self.rate_feed_label)
-        source_row.addStretch()
-        card.body.addLayout(source_row)
+        self.rate_source_input.setToolTip(
+            "Con MEP, Blue u Oficial, Nodus trae el valor de venta del día desde DolarApi"
+            " al abrirse. Con Manual, la cargas tú."
+        )
+        self.refresh_rate_button = self.rate_source_row.add(
+            secondary_button("Actualizar", self.refresh_rate)
+        )
+        card.body.addWidget(self.rate_source_row)
 
         self.current_rate_label = QLabel()
-        self.current_rate_label.setObjectName("RowTitle")
-        card.body.addWidget(self.current_rate_label)
+        self.current_rate_label.setObjectName("StatValueLarge")
+        self.current_rate_date_label = QLabel()
+        set_style_property(self.current_rate_date_label, "muted", True)
+        current = QHBoxLayout()
+        current.setSpacing(12)
+        current.addWidget(self.current_rate_label)
+        current.addWidget(self.current_rate_date_label, alignment=Qt.AlignmentFlag.AlignBottom)
+        current.addStretch()
+        card.body.addSpacing(4)
+        card.body.addLayout(current)
+        card.body.addSpacing(4)
 
         self.rate_date_input = DateInput()
         self.rate_value_input = AmountInput(Currency.ARS)
         self.rate_value_input.line_edit.setPlaceholderText("Pesos por dólar")
         self.rate_value_input.setFixedWidth(200)
-        self.save_rate_button = QPushButton("Guardar cotización")
+        self.save_rate_button = QPushButton("Guardar")
         self.save_rate_button.setObjectName("PrimaryButton")
+        self.save_rate_button.setToolTip("Si ya hay una cotización para esa fecha, se reemplaza.")
         self.save_rate_button.clicked.connect(self.save_rate)
         self.rate_value_input.line_edit.returnPressed.connect(self.save_rate)
         form = QHBoxLayout()
         form.setSpacing(8)
-        form.addWidget(QLabel("Fecha"))
         form.addWidget(self.rate_date_input)
-        form.addSpacing(8)
         form.addWidget(QLabel("US$ 1 ="))
         form.addWidget(self.rate_value_input)
         form.addWidget(self.save_rate_button)
@@ -193,9 +196,6 @@ class SettingsPage(Page):
         self.rate_error_label.setObjectName("ErrorLabel")
         self.rate_error_label.hide()
         card.body.addWidget(self.rate_error_label)
-        hint = QLabel("Si ya hay una cotización para esa fecha, se reemplaza.")
-        hint.setObjectName("FieldHint")
-        card.body.addWidget(hint)
 
         history_title = QLabel("HISTORIAL")
         history_title.setObjectName("CardTitle")
@@ -218,21 +218,23 @@ class SettingsPage(Page):
     def refresh_rate(self) -> None:
         """Replaces today's rate with the one the chosen source publishes now."""
         if self._services.rate_feed.is_automatic():
-            self.rate_feed_label.setText("Consultando…")
+            self.rate_source_row.set_detail("Consultando…")
             self._rate_updater.update(force=True)
 
     def _on_rate_updated(self, value: Decimal) -> None:
-        self.rate_feed_label.setText("Cotización de hoy actualizada.")
+        self.rate_source_row.set_detail("Actualizada hoy")
 
     def _on_rate_failed(self) -> None:
-        self.rate_feed_label.setText("No se pudo consultar DolarApi; se usa la última guardada.")
+        self.rate_source_row.set_detail("Sin conexión", error=True)
 
     def _refresh_rate_source(self) -> None:
         feed = self._services.rate_feed
         self.rate_source_input.set_index(list(SOURCES).index(feed.source()))
         automatic = feed.is_automatic()
         self.refresh_rate_button.setVisible(automatic)
-        self.rate_feed_label.setText("Se actualiza al abrir Nodus." if automatic else "")
+        self.rate_source_row.set_detail(
+            "Actualizada hoy" if automatic and not feed.is_due(date.today()) else ""
+        )
 
     def save_rate(self) -> None:
         try:
@@ -250,11 +252,8 @@ class SettingsPage(Page):
         self.rate_error_label.hide()
         self.rate_date_input.set_day(today)
         current = self._services.exchange_rates.rate_on(today)
-        self.current_rate_label.setText(
-            f"Vigente hoy: {format_rate(current)} (del {format_date(current.rate_date)})"
-            if current
-            else "Todavía no hay una cotización cargada."
-        )
+        self.current_rate_label.setText(format_rate(current) if current else "Sin cotización")
+        self.current_rate_date_label.setText(format_date(current.rate_date) if current else "")
         clear_layout(self._history)
         history = self._services.exchange_rates.history()
         if not history:
@@ -277,64 +276,39 @@ class SettingsPage(Page):
     def _data_card(self) -> Card:
         card = Card("Tus datos")
         data_file = self._services.settings.data_file
-        text = QLabel(
-            "Todo lo que cargas en Nodus vive en un único archivo en tu computadora. Cada día,"
-            " al abrir Nodus, se guarda una copia de seguridad; se conservan las últimas"
+        data_row = SettingRow("Archivo de datos", str(data_file))
+        self.data_path_label = data_row.detail
+        self.data_path_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        data_row.add(secondary_button("Abrir carpeta", lambda: open_folder(data_file.parent)))
+
+        self.backup_row = SettingRow("Copia de seguridad")
+        self.backup_row.setToolTip(
+            "Nodus guarda una copia por día al abrirse y conserva las últimas"
             f" {BackupService.KEEP}."
         )
-        text.setWordWrap(True)
-        set_style_property(text, "muted", True)
-        self.data_path_label = QLabel(str(data_file))
-        self.data_path_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.data_path_label.setWordWrap(True)
-        open_button = QPushButton("Abrir carpeta")
-        open_button.setObjectName("SecondaryButton")
-        open_button.clicked.connect(lambda: open_folder(data_file.parent))
-        row = QHBoxLayout()
-        row.addWidget(self.data_path_label, stretch=1)
-        row.addWidget(open_button)
-        card.body.addWidget(text)
-        card.body.addLayout(row)
+        self.backup_now_button = self.backup_row.add(
+            secondary_button("Hacer copia", self.backup_now)
+        )
+        self.backup_row.add(secondary_button("Abrir carpeta", self._open_backups_folder))
 
-        self.backup_status_label = QLabel()
-        card.body.addSpacing(8)
-        card.body.addWidget(self.backup_status_label)
-        self.backup_now_button = QPushButton("Hacer una copia ahora")
-        self.backup_now_button.setObjectName("SecondaryButton")
-        self.backup_now_button.clicked.connect(self.backup_now)
-        open_backups_button = QPushButton("Abrir carpeta de copias")
-        open_backups_button.setObjectName("SecondaryButton")
-        open_backups_button.clicked.connect(self._open_backups_folder)
-        self.export_all_button = QPushButton("Exportar todo a CSV")
-        self.export_all_button.setObjectName("SecondaryButton")
-        self.export_all_button.clicked.connect(self.export_all)
-        self.restore_button = QPushButton("Restaurar desde una copia…")
-        self.restore_button.setObjectName("SecondaryButton")
-        self.restore_button.clicked.connect(self.restore_backup)
-        buttons = QHBoxLayout()
-        buttons.setSpacing(8)
-        buttons.addWidget(self.backup_now_button)
-        buttons.addWidget(open_backups_button)
-        buttons.addWidget(self.restore_button)
-        buttons.addWidget(self.export_all_button)
-        buttons.addStretch()
-        card.body.addLayout(buttons)
+        restore_row = SettingRow("Restaurar")
+        self.restore_button = restore_row.add(
+            secondary_button("Elegir copia…", self.restore_backup)
+        )
+        export_row = SettingRow("Exportar transacciones")
+        self.export_all_button = export_row.add(secondary_button("Exportar CSV", self.export_all))
+
+        for row in (data_row, self.backup_row, restore_row, export_row):
+            card.body.addWidget(row)
         return card
 
     def _refresh_backup_status(self) -> None:
         backups = self._services.backups
         if backups.last_error:
-            self.backup_status_label.setText(backups.last_error)
-            self.backup_status_label.setObjectName("ErrorLabel")
-        else:
-            last = backups.last_backup()
-            self.backup_status_label.setText(
-                f"Última copia: {format_date(last)}" if last else "Todavía no hay copias."
-            )
-            self.backup_status_label.setObjectName("RowTitle")
-        # The object name drives the style; re-polish so the change shows.
-        self.backup_status_label.style().unpolish(self.backup_status_label)
-        self.backup_status_label.style().polish(self.backup_status_label)
+            self.backup_row.set_detail(backups.last_error, error=True)
+            return
+        last = backups.last_backup()
+        self.backup_row.set_detail(f"Última: {format_date(last)}" if last else "Sin copias")
 
     def backup_now(self) -> None:
         try:
@@ -387,25 +361,17 @@ class SettingsPage(Page):
 
     def _about_card(self) -> Card:
         card = Card("Acerca de Nodus")
-        version = QLabel(f"Versión {__version__}")
-        version.setObjectName("RowTitle")
-        card.body.addWidget(version)
+        version_row = SettingRow(f"Versión {__version__}")
+        version_row.add(
+            secondary_button(
+                "Ver en GitHub", lambda: QDesktopServices.openUrl(QUrl(REPOSITORY_URL))
+            )
+        )
+        card.body.addWidget(version_row)
         self.check_updates_input = QCheckBox("Buscar actualizaciones al iniciar")
+        self.check_updates_input.setToolTip(
+            "Consulta en GitHub cuál es la última versión publicada. No envía ningún dato tuyo."
+        )
         self.check_updates_input.clicked.connect(self._services.settings.set_check_updates)
         card.body.addWidget(self.check_updates_input)
-        hint = QLabel(
-            "Al abrir Nodus se consulta en GitHub cuál es la última versión publicada."
-            " No se envía ningún dato tuyo."
-        )
-        hint.setObjectName("FieldHint")
-        hint.setWordWrap(True)
-        card.body.addWidget(hint)
-        repository_button = QPushButton("Ver el proyecto en GitHub")
-        repository_button.setObjectName("SecondaryButton")
-        repository_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(REPOSITORY_URL)))
-        row = QHBoxLayout()
-        row.addWidget(repository_button)
-        row.addStretch()
-        card.body.addSpacing(4)
-        card.body.addLayout(row)
         return card

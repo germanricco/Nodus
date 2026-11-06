@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QGridLayout, QLabel
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.services.container import Services
-from nodus.ui.formatting import format_date
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.stat import Stat
 from nodus.ui.widgets.style import set_style_property
@@ -48,6 +47,6 @@ class NetWorthCard(Card):
     def _rate_note(services: Services, day: date) -> str:
         rate = services.exchange_rates.rate_on(day)
         if rate is None:
-            return "Carga una cotización del dólar en Ajustes para ver el patrimonio convertido."
+            return "Sin cotización: cárgala en Ajustes"
         value = Money.from_decimal(rate.rate, Currency.ARS).format()
-        return f"Cotización usada: US$ 1 = {value} (del {format_date(rate.rate_date)})"
+        return f"US$ 1 = {value} · {rate.rate_date:%d/%m}"

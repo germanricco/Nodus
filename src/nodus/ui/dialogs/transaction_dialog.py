@@ -59,7 +59,7 @@ class TransactionDialog(FormDialog):
         self.category_input = CategoryComboBox()
         self.date_input = DateInput()
         self.note_input = QLineEdit()
-        self.note_input.setPlaceholderText("Opcional. Ej.: Supermercado del sábado")
+        self.note_input.setPlaceholderText("Opcional")
 
         self.form.addRow("Cuenta", self.account_input)
         self.form.addRow("Hacia", self.to_account_input)
@@ -165,16 +165,15 @@ class TransactionDialog(FormDialog):
             self.amount_in_input.set_currency(destination.currency)
         needs_amount_in = self.is_transfer_mode and _currencies_differ(source, destination)
         self.form.setRowVisible(self.amount_in_input, needs_amount_in)
-        self.form.setRowVisible(self.rate_hint, needs_amount_in)
         self._update_rate_hint()
 
     def _update_rate_hint(self) -> None:
-        rate = self._implied_rate()
-        self.rate_hint.setText(
-            f"Cotización implícita: US$ 1 = {Money.from_decimal(rate, Currency.ARS).format()}"
-            if rate is not None
-            else "Indica los dos montos para ver la cotización que obtuviste."
-        )
+        """Shows the rate the transfer implies, once both amounts are filled in."""
+        rate = self._implied_rate() if self.form.isRowVisible(self.amount_in_input) else None
+        if rate is not None:
+            value = Money.from_decimal(rate, Currency.ARS).format()
+            self.rate_hint.setText(f"Cotización implícita: US$ 1 = {value}")
+        self.form.setRowVisible(self.rate_hint, rate is not None)
 
     def _implied_rate(self) -> Decimal | None:
         try:

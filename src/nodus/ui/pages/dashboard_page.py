@@ -243,10 +243,7 @@ class DashboardPage(Page):
         title = QLabel("Te damos la bienvenida a Nodus")
         title.setObjectName("DialogTitle")
         text = muted_label(
-            "Para empezar, crea una cuenta por cada lugar donde tengas dinero: el banco, el"
-            " efectivo, los ahorros en dólares. Si tienes cuentas en dólares, carga también"
-            " la cotización en Ajustes para ver tu patrimonio en las dos monedas. Después,"
-            " registra tus movimientos con «Agregar transacción»."
+            "Crea una cuenta por cada lugar donde tengas dinero y registra tus movimientos."
         )
         text.setWordWrap(True)
         self.create_account_button = QPushButton("Crear mi primera cuenta")

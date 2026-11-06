@@ -37,7 +37,7 @@ def test_saving_rate_adds_it_to_history(qtbot, services, event_bus, page):
 
     assert services.exchange_rates.rate_on(date.today()).rate == Decimal("1215.50")
     assert [row.rate.rate for row in rate_rows(page)] == [Decimal("1215.50")]
-    assert page.current_rate_label.text().startswith("Vigente hoy: US$ 1 = $ 1.215,50")
+    assert page.current_rate_label.text() == "US$ 1 = $ 1.215,50"
     assert page.rate_value_input.line_edit.text() == ""
 
 
@@ -76,7 +76,7 @@ def test_backup_now_creates_a_copy_and_shows_it(services, page):
     page.backup_now_button.click()
 
     assert services.backups.last_backup() == date.today()
-    assert page.backup_status_label.text() == f"Última copia: {date.today():%d/%m/%Y}"
+    assert page.backup_row.detail.text() == f"Última: {date.today():%d/%m/%Y}"
 
 
 def test_failed_daily_backup_is_shown(services, page):
@@ -84,7 +84,7 @@ def test_failed_daily_backup_is_shown(services, page):
 
     page.refresh()
 
-    assert "disco lleno" in page.backup_status_label.text()
+    assert "disco lleno" in page.backup_row.detail.text()
 
 
 def test_restore_replaces_data_and_announces_it(
