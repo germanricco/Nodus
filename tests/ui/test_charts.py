@@ -224,3 +224,16 @@ def test_animated_money_label_counts_to_the_new_amount(qtbot, monkeypatch):
     assert label.text() != "$ 300,00" or label.money() == ars("300")
     qtbot.waitUntil(lambda: label.text() == "$ 300,00", timeout=2000)
     assert label.money() == ars("300")
+
+
+def test_money_label_shortens_an_amount_that_does_not_fit(qtbot):
+    label = make(qtbot, AnimatedMoneyLabel(compact_when_narrow=True), (60, 20))
+    label.set_money(ars("8835000"))
+
+    assert label.text() == "$ 8,8 M"
+    assert label.toolTip() == "$ 8.835.000,00"
+    # The layout still asks for room for the full figure.
+    assert label.minimumSizeHint().width() > 60
+
+    label.resize(400, 20)
+    assert label.text() == "$ 8.835.000,00"

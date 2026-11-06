@@ -212,8 +212,8 @@ class CashFlowCard(Card):
         self.body.addWidget(self.proportion)
         self.body.addSpacing(6)
 
-        self.income_label = AnimatedMoneyLabel(highlight_positive=True)
-        self.expenses_label = AnimatedMoneyLabel()
+        self.income_label = AnimatedMoneyLabel(highlight_positive=True, compact_when_narrow=True)
+        self.expenses_label = AnimatedMoneyLabel(compact_when_narrow=True)
         self.saved_label = QLabel()
         tiles = QHBoxLayout()
         tiles.setSpacing(8)
