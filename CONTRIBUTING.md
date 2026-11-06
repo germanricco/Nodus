@@ -23,7 +23,7 @@ Para probar sin tocar tus datos reales, define la variable de entorno `NODUS_DAT
 .venv/Scripts/python scripts/screenshot.py --demo    # capturas de cada pantalla, claras y oscuras
 ```
 
-Las capturas se generan sobre una base temporal con datos de demostración (`scripts/demo_data.py`), así que muestran todas las pantallas con contenido sin tocar ningún dato real. Después de cambiar la interfaz, conviene generarlas y revisarlas en los dos temas.
+Las capturas se generan sobre una base temporal con datos de demostración (`scripts/demo_data.py`), así que muestran todas las pantallas con contenido sin tocar ningún dato real. Después de cambiar la interfaz, conviene generarlas y revisarlas en los dos temas. Las que muestran los README viven en `docs/images/` y se renuevan al cerrar cada versión.
 
 ## Cómo está organizado el código
 

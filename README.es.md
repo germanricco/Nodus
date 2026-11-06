@@ -19,12 +19,10 @@ Sin nube, sin cuentas, sin suscripciones.
 
 </div>
 
-<!-- Captura principal (v1.0): copiar a docs/images/ las capturas de `scripts/screenshot.py --demo` y quitar este comentario.
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-full-dark.png">
   <img src="docs/images/dashboard-full-light.png" alt="El dashboard de Nodus: patrimonio, próximos pagos, gastos por categoría y presupuestos">
 </picture>
--->
 
 ## Por qué Nodus
 
@@ -35,54 +33,84 @@ Nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta tiene su
 ## Qué puedes hacer
 
 ### Ver tu situación de un vistazo
-El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría te lleva a sus movimientos.
+El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría te lleva a sus movimientos. Si alguien mira tu pantalla, el ojo de la barra superior oculta tus saldos y tu patrimonio, y el panel lateral se contrae a sus íconos cuando quieres más espacio.
 
-<!-- Captura (v1.0): docs/images/dashboard-light.png | docs/images/dashboard-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
+  <img src="docs/images/dashboard-light.png" alt="El dashboard: patrimonio, próximos pagos y gastos por categoría">
+</picture>
 
 ### Llevar tus cuentas en pesos y en dólares
-Registras cada lugar donde tienes dinero, sea el banco, el efectivo, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. La cotización del día puede llegar sola o la cargas a mano.
+Registras cada lugar donde tienes dinero, sea el banco, el efectivo, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. La cotización del día puede llegar sola o la cargas a mano. Los ahorros y las inversiones crecen solos, con intereses o precios: anotas cuánto vale hoy una, como lo muestra su app, y Nodus guarda la diferencia como rendimiento, que mueve tu saldo y tu patrimonio sin contar como ingreso.
 
-<!-- Captura (v1.0): docs/images/accounts-light.png | docs/images/accounts-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">
+  <img src="docs/images/accounts-light.png" alt="Cuentas en pesos y en dólares con el patrimonio y el rendimiento de una inversión">
+</picture>
 
 ### Registrar y encontrar tus movimientos
 Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la última cuenta que usaste. La lista se filtra por período, cuenta, categoría, beneficiario, etiqueta, tipo o texto, suma al pie los movimientos que muestra, y lo que ves se exporta a un archivo que se abre en Excel.
 
-<!-- Captura (v1.0): docs/images/transactions-light.png | docs/images/transactions-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/transactions-dark.png">
+  <img src="docs/images/transactions-light.png" alt="La lista de movimientos con sus filtros y los totales al pie">
+</picture>
 
 ### Saber a quién va tu dinero
 Cada gasto o ingreso puede decir a quién le pagaste o quién te pagó: el supermercado, la empresa de luz, tu empleador. Escribes unas letras para elegirlo, o un nombre nuevo para sumarlo, y Nodus completa la categoría que sueles usar con él. La página Beneficiarios muestra cuántos movimientos y cuánto dinero fue o vino de cada uno, así que una pregunta como «¿cuánto gasto en el supermercado?» se responde con un clic. Los repetidos, como «Coto» y «Coto Online», se pueden unir en uno.
 
-<!-- Captura (v1.0): docs/images/payees-light.png | docs/images/payees-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/payees-dark.png">
+  <img src="docs/images/payees-light.png" alt="La página de beneficiarios con los movimientos y el total de cada uno">
+</picture>
 
 ### Agrupar lo que va junto
 Un viaje mezcla pasajes, hotel y comidas; un trabajo aparte trae ingresos y los gastos que lo acompañan. Las etiquetas agrupan movimientos de distintas categorías: escribes unas letras en el formulario para elegir una, o un nombre nuevo para crearla, y cada movimiento lleva las que necesite. La página Etiquetas muestra cuántos movimientos y cuánto dinero suma cada una, la lista de movimientos se filtra por etiqueta y Análisis también reparte tus gastos por etiqueta. Puedes renombrarlas, cambiarles el color, unirlas o borrarlas sin perder ningún movimiento.
 
-<!-- Captura (v1.0): docs/images/tags-light.png | docs/images/tags-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/tags-dark.png">
+  <img src="docs/images/tags-light.png" alt="La página de etiquetas con los movimientos y el total de cada una">
+</picture>
 
 ### Contar los reembolsos como lo que son
 Cuando un comercio te devuelve dinero o un amigo te paga su parte, vinculas ese ingreso con el gasto que devuelve. Nodus lo cuenta entonces como un gasto menor, en la categoría del gasto original y en el mes en que volvió el dinero, en lugar de como un ingreso, así que tus presupuestos, el dashboard y Análisis muestran lo que realmente gastaste. La lista marca los dos lados y, al editar el gasto, ves cuánto te devolvieron.
 
-<!-- Captura (v1.0): docs/images/transaction-dialog-refund-light.png | docs/images/transaction-dialog-refund-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/transaction-dialog-refund-dark.png">
+  <img src="docs/images/transaction-dialog-refund-light.png" alt="Un ingreso vinculado como reembolso de un gasto">
+</picture>
 
 ### No olvidarte de lo que pagas todos los meses
 Anotas el alquiler, los servicios o las suscripciones una sola vez, y Nodus te muestra cuánto suman por mes, qué vence pronto y qué está atrasado. Pagar uno toma dos clics: el gasto queda registrado y el cargo pasa a su próxima fecha. Una suscripción con precio fijo en dólares puede pagarse desde una cuenta en pesos: Nodus estima los pesos con la cotización de tu último pago, impuestos de la tarjeta incluidos, y tú anotas lo que realmente salió.
 
-<!-- Captura (v1.0): docs/images/recurring-light.png | docs/images/recurring-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/recurring-dark.png">
+  <img src="docs/images/recurring-light.png" alt="Los cargos recurrentes con sus próximas fechas y el total mensual">
+</picture>
 
 ### Ponerle un límite a lo que gastas
 Defines un presupuesto mensual para las categorías que quieres cuidar y ves cuánto llevas y cuánto te queda. La barra se pone amarilla cuando gastas más rápido de lo que avanza el mes y roja cuando te pasas, a tiempo para frenar. Para elegir el límite, Nodus te sugiere tu promedio de los últimos meses.
 
-<!-- Captura (v1.0): docs/images/budgets-light.png | docs/images/budgets-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/budgets-dark.png">
+  <img src="docs/images/budgets-light.png" alt="Presupuestos mensuales con lo gastado y lo que queda">
+</picture>
 
 ### Mirar el año completo
 La página Análisis toma distancia: por defecto, los últimos doce meses. Tendencias muestra tus gastos, ingresos o ahorro mes a mes, apilados por categoría y frente a tu promedio mensual, junto con en qué se fue el dinero por categoría, por beneficiario y por etiqueta. Flujo de caja pone lado a lado ingresos, gastos, ahorro y tasa de ahorro con los del período anterior, y Patrimonio sigue cómo creció lo que tienes, fin de mes tras fin de mes, en pesos o en dólares. Un clic en cualquier barra o fila te lleva a los movimientos que la forman.
 
-<!-- Captura (v1.0): docs/images/analysis-trends-light.png | docs/images/analysis-trends-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/analysis-trends-dark.png">
+  <img src="docs/images/analysis-trends-light.png" alt="Análisis: gastos mes a mes, por categoría, beneficiario y etiqueta">
+</picture>
 
 ### Enterarte de lo importante
 Una campana junta lo que merece tu atención: un pago que vence, un presupuesto excedido, una cotización vieja o una versión nueva para instalar. Además, cada día Nodus guarda una copia de seguridad de tus datos, y puedes restaurar cualquiera desde Ajustes. Todo funciona en tema claro u oscuro.
 
-<!-- Captura (v1.0): docs/images/notifications-light.png | docs/images/notifications-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/notifications-dark.png">
+  <img src="docs/images/notifications-light.png" alt="El panel de notificaciones">
+</picture>
 
 ## Tus datos son tuyos
 
@@ -100,7 +128,7 @@ Para actualizar, instala la versión nueva encima de la anterior: tus datos se c
 
 ## Hoja de ruta
 
-Nodus crece por versiones pequeñas y estables. La **v0.9** ya incluye cuentas, transacciones, cotización del dólar, dashboard, cargos recurrentes, presupuestos, beneficiarios, etiquetas, reembolsos, análisis, copias de seguridad y exportación. Lo que viene:
+Nodus crece por versiones pequeñas y estables. La **v1.0**, la primera estable, incluye cuentas, transacciones, cotización del dólar, rendimiento de inversiones, dashboard, cargos recurrentes, presupuestos, beneficiarios, etiquetas, reembolsos, análisis, copias de seguridad y exportación. Lo que viene:
 
 - **Metas y grupos de cuentas:** ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.
 

@@ -19,12 +19,10 @@ No cloud, no accounts, no subscriptions.
 
 </div>
 
-<!-- Main screenshot (v1.0): copy the `scripts/screenshot.py --demo` captures to docs/images/ and remove this comment.
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-full-dark.png">
   <img src="docs/images/dashboard-full-light.png" alt="The Nodus dashboard: net worth, upcoming payments, spending by category and budgets">
 </picture>
--->
 
 > The app's interface is in Spanish: Nodus was built for people in Argentina who keep their money in both pesos and US dollars.
 
@@ -37,54 +35,84 @@ It was born for people who manage money in pesos and dollars at the same time. E
 ## What you can do
 
 ### See where you stand at a glance
-The dashboard answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to see its transactions.
+The dashboard answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to see its transactions. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
 
-<!-- Screenshot (v1.0): docs/images/dashboard-light.png | docs/images/dashboard-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
+  <img src="docs/images/dashboard-light.png" alt="The dashboard: net worth, upcoming payments and spending by category">
+</picture>
 
 ### Keep accounts in pesos and dollars
-Add every place where you keep money, from your bank and cash to dollar savings or a credit card, and balances are always computed from your transactions. When you buy dollars, Nodus stores both amounts and shows the rate you actually got. Today's exchange rate can be fetched automatically or entered by hand.
+Add every place where you keep money, from your bank and cash to dollar savings or a credit card, and balances are always computed from your transactions. When you buy dollars, Nodus stores both amounts and shows the rate you actually got. Today's exchange rate can be fetched automatically or entered by hand. Savings and investments grow on their own, with interest or prices: write down what one is worth today, as its app shows it, and Nodus records the difference as a return that moves your balance and net worth without counting as income.
 
-<!-- Screenshot (v1.0): docs/images/accounts-light.png | docs/images/accounts-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">
+  <img src="docs/images/accounts-light.png" alt="Accounts in pesos and dollars with the net worth and an investment's return">
+</picture>
 
 ### Record and find your transactions
 One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, tag, type or text, adds up at the foot the transactions it shows, and whatever you see exports to a file that opens in Excel.
 
-<!-- Screenshot (v1.0): docs/images/transactions-light.png | docs/images/transactions-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/transactions-dark.png">
+  <img src="docs/images/transactions-light.png" alt="The transactions list with its filters and the totals at the foot">
+</picture>
 
 ### Know who your money goes to
 Each expense or income can say who you paid or who paid you: the supermarket, the power company, your employer. Type a few letters to pick one, or a new name to add it, and Nodus fills in the category you usually use with it. The Payees page shows how many transactions and how much money went to or came from each one, so a question like "how much do I spend at the supermarket?" takes one click. Duplicates such as "Coto" and "Coto Online" can be merged into one.
 
-<!-- Screenshot (v1.0): docs/images/payees-light.png | docs/images/payees-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/payees-dark.png">
+  <img src="docs/images/payees-light.png" alt="The payees page with transactions and totals for each one">
+</picture>
 
 ### Tag what belongs together
 A trip mixes flights, a hotel and meals; a side job brings income and the expenses that come with it. Tags group transactions across categories: type a few letters in the form to pick one, or a new name to create it, and give each transaction as many as it needs. The Tags page shows how many transactions and how much money each tag adds up to, the transactions list filters by tag, and Analysis splits your spending by tag too. Tags can be renamed, recolored, merged or deleted without losing a single transaction.
 
-<!-- Screenshot (v1.0): docs/images/tags-light.png | docs/images/tags-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/tags-dark.png">
+  <img src="docs/images/tags-light.png" alt="The tags page with transactions and totals for each tag">
+</picture>
 
 ### Count refunds for what they are
 When a store gives your money back or a friend pays you their share, link that income to the expense it pays back. Nodus then counts it as less spending, in the category of the original expense and in the month the money came back, instead of as income, so your budgets, the dashboard and Analysis show what you really spent. The list marks both sides, and editing the expense shows how much of it was refunded.
 
-<!-- Screenshot (v1.0): docs/images/transaction-dialog-refund-light.png | docs/images/transaction-dialog-refund-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/transaction-dialog-refund-dark.png">
+  <img src="docs/images/transaction-dialog-refund-light.png" alt="An income linked as the refund of an expense">
+</picture>
 
 ### Never forget what you pay every month
 Enter rent, utilities or subscriptions once, and Nodus shows what they add up to per month, what is due soon and what is overdue. Paying one takes two clicks: the expense is recorded and the charge moves on to its next date. A subscription with a fixed price in dollars can be paid from a peso account: Nodus estimates the pesos at the rate of your last payment, card taxes included, and you write down what actually came out.
 
-<!-- Screenshot (v1.0): docs/images/recurring-light.png | docs/images/recurring-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/recurring-dark.png">
+  <img src="docs/images/recurring-light.png" alt="Recurring charges with their next dates and monthly total">
+</picture>
 
 ### Put a limit on your spending
 Set a monthly budget for the categories you want to watch and see how much you have spent and how much is left. The bar turns amber when you spend faster than the month goes by and red when you go over, early enough to slow down. To choose a limit, Nodus suggests your average of the last few months.
 
-<!-- Screenshot (v1.0): docs/images/budgets-light.png | docs/images/budgets-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/budgets-dark.png">
+  <img src="docs/images/budgets-light.png" alt="Monthly budgets with how much has been spent and how much is left">
+</picture>
 
 ### Look back over the year
 The Analysis page takes the long view, the last twelve months by default. Trends shows your spending, income or savings month by month, stacked by category against your monthly average, along with where the money went by category, by payee and by tag. Cash flow puts income, expenses, savings and your savings rate side by side with the previous period, and Net worth follows how what you own grew, month end by month end, in pesos or in dollars. Click any bar or row to see the transactions behind it.
 
-<!-- Screenshot (v1.0): docs/images/analysis-trends-light.png | docs/images/analysis-trends-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/analysis-trends-dark.png">
+  <img src="docs/images/analysis-trends-light.png" alt="Analysis: spending month by month, by category, payee and tag">
+</picture>
 
 ### Hear about what matters
 A bell gathers what needs your attention: a payment coming due, a budget passed, a stale exchange rate or a new version to install. Nodus also backs up your data every day, and you can restore any copy from Settings. Everything works in light or dark mode.
 
-<!-- Screenshot (v1.0): docs/images/notifications-light.png | docs/images/notifications-dark.png -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/notifications-dark.png">
+  <img src="docs/images/notifications-light.png" alt="The notifications panel">
+</picture>
 
 ## Your data stays yours
 
@@ -102,7 +130,7 @@ To update, install the new version over the old one: your data is kept. Nodus le
 
 ## Roadmap
 
-Nodus grows in small, stable releases. **v0.9** already covers accounts, transactions, dollar exchange rates, the dashboard, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. Coming next:
+Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the dashboard, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. Coming next:
 
 - **Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
 
