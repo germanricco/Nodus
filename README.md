@@ -26,15 +26,15 @@ El **dashboard** responde de un vistazo las tres preguntas de siempre: cuánto t
 
 En **Cuentas** registras cada lugar donde tienes dinero, con su saldo inicial y su moneda: el banco, el efectivo, los ahorros en dólares, una tarjeta de crédito. Los saldos se calculan siempre a partir de los movimientos, así que nunca quedan desfasados. Las cuentas que ya no usas se archivan sin perder su historia, y las que creaste por error se eliminan.
 
-**Transacciones** reúne los movimientos de cada mes en una tabla que puedes filtrar por cuenta, categoría, tipo o texto de la nota, y volver a ver completa con un clic. Un mismo formulario sirve para gastos, ingresos y transferencias. Cuando la transferencia es entre pesos y dólares, Nodus pide los dos montos y te muestra la cotización que realmente obtuviste.
+**Transacciones** reúne los movimientos de cada mes en una tabla que puedes filtrar por cuenta, categoría, tipo o texto de la nota, y volver a ver completa con un clic. Un mismo formulario sirve para gastos, ingresos y transferencias, y te ofrece de entrada la cuenta que usaste la última vez. Con «Exportar» guardas lo que ves en un archivo CSV que se abre en Excel. Cuando la transferencia es entre pesos y dólares, Nodus pide los dos montos y te muestra la cotización que realmente obtuviste.
 
 Las **categorías** vienen con un set corto pensado para el día a día, separado en gastos e ingresos, y puedes crear las tuyas con su color o abrir subcategorías dentro de una existente. Si borras una categoría, sus movimientos pasan a «Otros» en lugar de perderse.
 
-En **Ajustes** eliges entre tema claro, oscuro o el del sistema, cargas la cotización del dólar con su fecha (Nodus guarda el historial y usa en cada día la que correspondía) y ves dónde está el archivo con tus datos, para respaldarlo cuando quieras. Ahí también ves qué versión tienes y decides si Nodus busca actualizaciones al abrirse.
+En **Ajustes** eliges entre tema claro, oscuro o el del sistema y de dónde sale la cotización del dólar: con MEP, Blue u Oficial, Nodus trae el valor del día al abrirse; con Manual, la cargas tú con su fecha. En los dos casos guarda el historial y usa en cada día la que correspondía. Ahí también están tus datos: cada día Nodus guarda una copia de seguridad, y desde Ajustes puedes hacer una en el momento, restaurar una anterior o exportar todos tus movimientos. Por último, ves qué versión tienes y decides si Nodus busca actualizaciones al abrirse.
 
 ## Estado del proyecto
 
-La versión **v0.2** es la primera que se instala como cualquier programa de Windows: cubre cuentas en pesos y dólares, ingresos, gastos y transferencias, categorías, cotización manual y el dashboard, y avisa cuando sale una versión nueva. Lo que sigue son presupuestos, importación de movimientos, la cotización automática y reportes.
+La versión **v0.3** cubre cuentas en pesos y dólares, ingresos, gastos y transferencias, categorías, la cotización del dólar automática o manual, el dashboard, copias de seguridad diarias y exportación a CSV, y se instala como cualquier programa de Windows. Lo que sigue es un dashboard más completo, los cargos recurrentes y los presupuestos.
 
 ## Descargar Nodus
 
@@ -42,9 +42,9 @@ Nodus funciona en Windows 10 y 11 de 64 bits. Descarga `Nodus-Setup-<versión>.e
 
 La primera vez es probable que Windows muestre «Windows protegió tu PC». Aparece con los programas que no están firmados con un certificado comercial, que tiene un costo anual difícil de justificar para un proyecto personal y gratuito. Para seguir, haz clic en «Más información» y luego en «Ejecutar de todas formas». Si prefieres revisar lo que instalas, el código completo está en este repositorio y cada instalador se compila automáticamente en GitHub a partir de él.
 
-Tus datos se guardan aparte del programa, en `%APPDATA%\Nodus\nodus.db`. Para actualizar basta con instalar la versión nueva encima de la anterior, y desinstalar Nodus desde la configuración de Windows tampoco toca ese archivo.
+Tus datos se guardan aparte del programa, en `%APPDATA%\Nodus\nodus.db`. Para actualizar basta con instalar la versión nueva encima de la anterior, y desinstalar Nodus desde la configuración de Windows tampoco toca ese archivo. Las copias de seguridad diarias quedan al lado, en `%APPDATA%\Nodus\backups`.
 
-Al abrirse, Nodus consulta en GitHub cuál es la última versión publicada y, si hay una más nueva, lo avisa con una franja debajo de la barra superior y un enlace para descargarla. Esa consulta solo pide el número de versión: no envía ningún dato tuyo. Si no la quieres, se desactiva en Ajustes.
+Al abrirse, Nodus consulta en GitHub cuál es la última versión publicada y, si hay una más nueva, lo avisa con una franja debajo de la barra superior y un enlace para descargarla. Esa consulta solo pide el número de versión: no envía ningún dato tuyo. Si no la quieres, se desactiva en Ajustes. De la misma forma, si elegiste una cotización automática, Nodus pide a [DolarApi](https://dolarapi.com) los valores del día; con la cotización en Manual no se conecta.
 
 ## Desarrollo
 
