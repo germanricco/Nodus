@@ -25,7 +25,6 @@ def test_create_sets_the_anchor_day_from_the_due_date(services, pesos):
     [
         ("  ", ars("100"), "nombre"),
         ("Internet", ars("0"), "mayor que cero"),
-        ("Internet", usd("10"), "moneda"),
     ],
 )
 def test_create_validates_like_an_expense(services, pesos, name, amount, message):
@@ -154,3 +153,53 @@ def test_deleting_an_account_deletes_its_charges(services, pesos):
     assert services.recurring.list_charges() == []
     with pytest.raises(ValidationError):
         services.recurring.get(charge.id)
+
+
+class TestDollarChargesPaidInPesos:
+    """A fixed amount in dollars, such as a subscription, charged to a peso account."""
+
+    @pytest.fixture
+    def subscription(self, services, pesos):
+        return create(services, pesos.id, usd("100"), date(2026, 11, 20), name="Suscripción")
+
+    def test_only_dollars_can_be_paid_from_another_currency(self, services, dollars):
+        with pytest.raises(ValidationError, match="solo los cargos en dólares"):
+            create(services, dollars.id, ars("100"))
+
+    def test_first_estimate_uses_the_saved_rate(self, services, subscription):
+        assert services.recurring.estimated_payment(subscription, TODAY) is None
+        assert services.recurring.summary(TODAY).unconverted_monthly == usd("100")
+
+        services.exchange_rates.set_rate(date(2026, 11, 1), Decimal("1500"))
+
+        assert services.recurring.estimated_payment(subscription, TODAY) == ars("150000")
+        assert services.recurring.summary(TODAY).monthly == ars("150000")
+
+    def test_paying_keeps_the_rate_for_the_next_estimate(self, services, pesos, subscription):
+        services.exchange_rates.set_rate(date(2026, 11, 1), Decimal("1500"))
+
+        paid = services.recurring.pay(subscription.id, ars("165000"), TODAY, pesos.id)
+
+        assert (paid.amount, paid.note) == (ars("165000"), "Suscripción (US$ 100,00)")
+        charge = services.recurring.get(subscription.id)
+        assert charge.amount == usd("100")
+        assert charge.last_paid_rate == Decimal("1650")
+        assert charge.next_due_on == date(2026, 12, 20)
+        assert services.recurring.estimated_payment(charge, TODAY) == ars("165000")
+        assert services.recurring.summary(TODAY).monthly == ars("165000")
+
+    def test_editing_keeps_the_rate_per_dollar(self, services, pesos, subscription):
+        services.recurring.pay(subscription.id, ars("165000"), TODAY, pesos.id)
+
+        services.recurring.update(
+            subscription.id,
+            charge_draft(services, pesos.id, usd("120"), date(2026, 12, 20), name="Suscripción"),
+        )
+
+        charge = services.recurring.get(subscription.id)
+        assert services.recurring.estimated_payment(charge, TODAY) == ars("198000")
+
+    def test_paying_from_a_dollar_account_keeps_no_rate(self, services, dollars, subscription):
+        services.recurring.pay(subscription.id, usd("100"), TODAY, dollars.id)
+
+        assert services.recurring.get(subscription.id).last_paid_rate is None

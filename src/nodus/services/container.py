@@ -85,6 +85,7 @@ class Services:
             RecurringChargeRepository(database),
             transaction_repository,
             transactions,
+            accounts,
             exchange_rates,
         )
         settings = SettingsService(database, SettingsRepository(database))

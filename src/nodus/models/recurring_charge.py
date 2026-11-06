@@ -95,10 +95,12 @@ class RecurringCharge:
         if not 1 <= self.anchor_day <= 31:
             raise ValueError(f"Invalid anchor day: {self.anchor_day}")
 
-    def monthly_amount(self) -> Money:
-        """What the charge costs in an average month, rounded to the cent."""
-        cents = Fraction(self.amount.cents) * self.frequency.per_month
-        return Money(round(cents), self.amount.currency)
+    def monthly_amount(self, payment: Money | None = None) -> Money:
+        """What the charge costs in an average month, rounded to the cent: its amount, or
+        ``payment`` when what each payment takes is known in another currency."""
+        payment = payment or self.amount
+        cents = Fraction(payment.cents) * self.frequency.per_month
+        return Money(round(cents), payment.currency)
 
     def following_due(self) -> date:
         """The due date after the current one."""

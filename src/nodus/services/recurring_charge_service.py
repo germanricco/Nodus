@@ -5,20 +5,25 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass
 from datetime import date
+from decimal import Decimal
 
 from nodus.database.database import Database
 from nodus.database.repositories.recurring_charge_repository import RecurringChargeRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
+from nodus.models.account import Account
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.recurring_charge import Frequency, RecurringCharge
 from nodus.models.transaction import Transaction, TransactionType
+from nodus.services.account_service import AccountService
 from nodus.services.errors import ValidationError, clean_name, require_found
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.transaction_service import TransactionDraft, TransactionService
 
 # The dashboard and the notifications look this many days ahead.
 UPCOMING_DAYS = 14
+# The rate of a payment is kept to this many decimals.
+RATE_PLACES = Decimal("0.0001")
 
 
 @dataclass(frozen=True)
@@ -68,9 +73,11 @@ class RecurringChargeService:
         charges: RecurringChargeRepository,
         transaction_repository: TransactionRepository,
         transactions: TransactionService,
+        accounts: AccountService,
         exchange_rates: ExchangeRateService,
     ) -> None:
         self._database = database
+        self._accounts = accounts
         self._charges = charges
         self._transaction_repository = transaction_repository
         self._transactions = transactions
@@ -91,6 +98,8 @@ class RecurringChargeService:
         )
         anchor_day = current.anchor_day if same_schedule else draft.next_due_on.day
         charge = self._build(charge_id, draft, anchor_day, current.is_active)
+        if self._paid_in_other_currency(charge):  # the rate per dollar is still good
+            charge = dataclasses.replace(charge, last_paid_rate=current.last_paid_rate)
         with self._database.transaction():
             self._charges.update(charge)
 
@@ -113,19 +122,39 @@ class RecurringChargeService:
     def count_for_account(self, account_id: int) -> int:
         return self._charges.count_for_account(account_id)
 
+    def estimated_payment(self, charge: RecurringCharge, today: date) -> Money | None:
+        """What a payment is expected to take from the charge's account, in its currency.
+
+        A dollar charge paid in pesos takes its dollars at the rate of its last payment,
+        card taxes included, or at the saved rate before the first one; None without any.
+        """
+        account = self._accounts.get(charge.account_id)
+        if charge.amount.currency is account.currency:
+            return charge.amount
+        if charge.last_paid_rate is None:
+            return self._exchange_rates.convert(charge.amount, account.currency, today)
+        return Money(round(charge.amount.cents * charge.last_paid_rate), account.currency)
+
     def pay(self, charge_id: int, amount: Money, day: date, account_id: int) -> Transaction:
         """Records the expense and moves the charge to its next date.
 
         The next date follows the one that was due, not the payment day, so paying late
-        doesn't shift the calendar. Both changes are saved together or not at all.
+        doesn't shift the calendar. A dollar charge paid in pesos keeps the rate of this
+        payment, for the next estimate, and its note says the dollars. Everything is saved
+        together or not at all.
         """
         charge = self._require_active(charge_id)
+        note = charge.name
+        advanced = dataclasses.replace(charge, next_due_on=charge.following_due())
+        if amount.currency is not charge.amount.currency:
+            note = f"{charge.name} ({charge.amount.format()})"
+            rate = (Decimal(amount.cents) / Decimal(charge.amount.cents)).quantize(RATE_PLACES)
+            advanced = dataclasses.replace(advanced, last_paid_rate=rate)
         transaction = self._transactions.validated(
             TransactionDraft(
-                account_id, TransactionType.EXPENSE, amount, day, charge.category_id, charge.name
+                account_id, TransactionType.EXPENSE, amount, day, charge.category_id, note
             )
         )
-        advanced = dataclasses.replace(charge, next_due_on=charge.following_due())
         with self._database.transaction():
             saved = self._transaction_repository.add(transaction)
             self._charges.update(advanced)
@@ -141,7 +170,7 @@ class RecurringChargeService:
         unconverted = Money.zero(Currency.USD)
         active = [c for c in self._charges.list() if c.is_active]
         for charge in active:
-            amount = charge.monthly_amount()
+            amount = charge.monthly_amount(self.estimated_payment(charge, today))
             converted = self._exchange_rates.convert(amount, self.CURRENCY, today)
             if converted is None:
                 unconverted += amount
@@ -159,6 +188,17 @@ class RecurringChargeService:
             raise ValidationError(f"«{charge.name}» está en pausa; reanúdalo para pagarlo.")
         return charge
 
+    def _paid_in_other_currency(self, charge: RecurringCharge) -> bool:
+        return charge.amount.currency is not self._accounts.get(charge.account_id).currency
+
+    @staticmethod
+    def _require_dollars_from_pesos(amount: Money, account: Account) -> None:
+        if (amount.currency, account.currency) != (Currency.USD, Currency.ARS):
+            raise ValidationError(
+                f"Un cargo en {amount.currency.value} se paga desde una cuenta en"
+                f" {amount.currency.value}; solo los cargos en dólares pueden pagarse en pesos."
+            )
+
     def _save(self, charge: RecurringCharge) -> None:
         with self._database.transaction():
             self._charges.update(charge)
@@ -171,13 +211,18 @@ class RecurringChargeService:
         is_active: bool = True,
     ) -> RecurringCharge:
         """Checks the draft with the same rules as an expense: an active account in the
-        amount's currency and an expense category."""
+        amount's currency, or dollars with a peso account, and an expense category."""
         name = clean_name(draft.name)
+        account = self._accounts.get(draft.account_id)
+        payment = draft.amount
+        if payment.currency is not account.currency:
+            self._require_dollars_from_pesos(payment, account)
+            payment = Money(payment.cents, account.currency)  # only checked, never saved
         self._transactions.validated(
             TransactionDraft(
                 draft.account_id,
                 TransactionType.EXPENSE,
-                draft.amount,
+                payment,
                 draft.next_due_on,
                 draft.category_id,
             )
