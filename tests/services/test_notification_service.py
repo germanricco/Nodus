@@ -1,8 +1,10 @@
 from datetime import timedelta
 from decimal import Decimal
 
-from factories import TODAY, ars, charge_draft
+from factories import TODAY, ars, category_id, charge_draft, expense_draft
 
+from nodus.models.period import Month
+from nodus.models.transaction import TransactionType
 from nodus.services.notification_service import STALE_RATE_DAYS, NoticeKind
 from nodus.services.update_service import Release
 
@@ -100,3 +102,34 @@ def test_no_charges_notice_for_paused_or_distant_charges(services, pesos):
 
     assert charges_notice(services) is None
     assert later.id
+
+
+def budget(services, name, limit):
+    category = category_id(services, name, TransactionType.EXPENSE)
+    services.budgets.set_limit(category, Month.of(TODAY), ars(limit))
+    return category
+
+
+def test_a_budget_passed_this_month(services, pesos):
+    food = budget(services, "Supermercado y comida", "1000")
+    services.transactions.create(expense_draft(services, pesos.id, ars("1000")))
+    assert kinds(services) == []  # right at the limit is fine
+
+    services.transactions.create(expense_draft(services, pesos.id, ars("250"), category_id=food))
+
+    (notice,) = services.notifications.notices(TODAY, None)
+    assert notice.kind is NoticeKind.BUDGET_OVER
+    assert notice.title == "Supermercado y comida pasó su límite"
+    assert notice.detail == "Excedido en $ 250,00 este mes."
+
+
+def test_several_budgets_passed_in_one_notice(services, pesos):
+    for name in ("Ocio", "Ropa"):
+        category = budget(services, name, "10")
+        services.transactions.create(
+            expense_draft(services, pesos.id, ars("20"), category_id=category)
+        )
+
+    (notice,) = services.notifications.notices(TODAY, None)
+    assert notice.title == "2 presupuestos excedidos"
+    assert notice.detail == "Ocio, Ropa."

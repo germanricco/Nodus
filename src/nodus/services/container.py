@@ -88,7 +88,7 @@ class Services:
             export=ExportService(accounts, categories),
             rate_feed=RateFeedService(exchange_rates, settings, downloader(f"Nodus/{__version__}")),
             notifications=NotificationService(
-                settings, accounts, exchange_rates, backups, recurring
+                settings, accounts, exchange_rates, backups, recurring, budgets
             ),
             recurring=recurring,
             budgets=budgets,

@@ -9,6 +9,7 @@ from enum import Enum
 from nodus.models.currency import Currency
 from nodus.services.account_service import AccountService
 from nodus.services.backup_service import BackupService
+from nodus.services.budget_service import BudgetService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.recurring_charge_service import RecurringChargeService
 from nodus.services.settings_service import SettingsService
@@ -25,6 +26,7 @@ class NoticeKind(Enum):
     STALE_RATE = "stale_rate"
     BACKUP_FAILED = "backup_failed"
     CHARGES_DUE = "charges_due"
+    BUDGET_OVER = "budget_over"
 
 
 @dataclass(frozen=True)
@@ -48,12 +50,14 @@ class NotificationService:
         exchange_rates: ExchangeRateService,
         backups: BackupService,
         recurring: RecurringChargeService,
+        budgets: BudgetService,
     ) -> None:
         self._settings = settings
         self._accounts = accounts
         self._exchange_rates = exchange_rates
         self._backups = backups
         self._recurring = recurring
+        self._budgets = budgets
 
     def notices(self, today: date, release: Release | None) -> list[Notice]:
         notices = []
@@ -69,9 +73,9 @@ class NotificationService:
         rate_notice = self._rate_notice(today)
         if rate_notice:
             notices.append(rate_notice)
-        charges_notice = self._charges_notice(today)
-        if charges_notice:
-            notices.append(charges_notice)
+        for notice in (self._charges_notice(today), self._budgets_notice(today)):
+            if notice:
+                notices.append(notice)
         if self._backups.last_error:
             notices.append(
                 Notice(NoticeKind.BACKUP_FAILED, "La copia de hoy falló", self._backups.last_error)
@@ -119,6 +123,24 @@ class NotificationService:
         if overdue:
             title += f" ({overdue} vencido{'s' if overdue > 1 else ''})"
         return Notice(NoticeKind.CHARGES_DUE, title, ", ".join(c.name for c in charges) + ".")
+
+    def _budgets_notice(self, today: date) -> Notice | None:
+        """The budgets already passed this month, in a single notice."""
+        over = self._budgets.over_limit(today)
+        if not over:
+            return None
+        if len(over) == 1:
+            budget = over[0]
+            return Notice(
+                NoticeKind.BUDGET_OVER,
+                f"{budget.category.name} pasó su límite",
+                f"Excedido en {(-budget.remaining).format()} este mes.",
+            )
+        return Notice(
+            NoticeKind.BUDGET_OVER,
+            f"{len(over)} presupuestos excedidos",
+            ", ".join(b.category.name for b in over) + ".",
+        )
 
 
 def _due_phrase(days: int) -> str:

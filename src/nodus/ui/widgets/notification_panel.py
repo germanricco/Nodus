@@ -13,6 +13,7 @@ ACTION_LABELS = {
     NoticeKind.STALE_RATE: "Ir a Ajustes",
     NoticeKind.BACKUP_FAILED: "Ir a Ajustes",
     NoticeKind.CHARGES_DUE: "Ver cargos",
+    NoticeKind.BUDGET_OVER: "Ver presupuestos",
 }
 WIDTH = 340
 

@@ -103,6 +103,9 @@ class MainWindow(QMainWindow):
             event_bus.exchange_rates_changed,
             event_bus.accounts_changed,
             event_bus.recurring_changed,
+            event_bus.transactions_changed,
+            event_bus.budgets_changed,
+            event_bus.categories_changed,
         ):
             signal.connect(self.refresh_notifications)
         self.show_page(PageId.DASHBOARD)
@@ -151,6 +154,8 @@ class MainWindow(QMainWindow):
             QDesktopServices.openUrl(QUrl(notice.url))
         elif notice.kind is NoticeKind.CHARGES_DUE:
             self.show_page(PageId.RECURRING)
+        elif notice.kind is NoticeKind.BUDGET_OVER:
+            self.show_budgets(Month.of(date.today()))
         else:
             self.show_page(PageId.SETTINGS)
 

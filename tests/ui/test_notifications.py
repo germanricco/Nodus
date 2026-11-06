@@ -4,8 +4,10 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
-from factories import ars, charge_draft
+from factories import ars, category_id, charge_draft, expense_draft
 
+from nodus.models.period import Month
+from nodus.models.transaction import TransactionType
 from nodus.services.notification_service import NoticeKind
 from nodus.services.update_service import UpdateService
 from nodus.ui import main_window as main_window_module
@@ -134,3 +136,20 @@ def test_charges_notice_follows_payments_and_leads_to_the_charges(
     services.recurring.pay(charge.id, ars("100"), date.today(), pesos.id)
     event_bus.recurring_changed.emit()
     assert not offline_window.top_bar.notification_count.isVisibleTo(offline_window)
+
+
+def test_budget_notice_appears_when_an_expense_passes_the_limit(
+    qtbot, services, event_bus, offline_window, pesos
+):
+    food = category_id(services, "Supermercado y comida", TransactionType.EXPENSE)
+    services.budgets.set_limit(food, Month.of(date.today()), ars("100"))
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("150"), on=date.today(), category_id=food)
+    )
+    event_bus.transactions_changed.emit()
+    assert count(offline_window) == "1"
+    offline_window.open_notifications()
+
+    offline_window.notification_panel.rows[0].action_button.click()
+
+    assert offline_window.current_page is offline_window.page(PageId.BUDGETS)
