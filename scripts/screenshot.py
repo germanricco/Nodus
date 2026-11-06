@@ -135,6 +135,18 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
             save(window, args.out / f"analysis-{name}-{mode.value}.png")
         analysis.tabs.set_index(0)
         window.resize(window.width(), height)
+        # The sidebar collapsed to its icons.
+        window.sidebar.set_collapsed(True)
+        app.processEvents()
+        save(window, args.out / f"sidebar-collapsed-{mode.value}.png")
+        window.sidebar.set_collapsed(False)
+        # The category filter open, with its expense and income sections.
+        window.show_page(PageId.TRANSACTIONS)
+        category_filter = window.page(PageId.TRANSACTIONS).category_filter
+        category_filter.showPopup()
+        app.processEvents()
+        save(category_filter.view().window(), args.out / f"category-filter-{mode.value}.png")
+        category_filter.hidePopup()
         # The notifications panel, with a new version announced.
         window.show_page(PageId.DASHBOARD)
         window._show_release(Release("9.9.0", ""))

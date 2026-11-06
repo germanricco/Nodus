@@ -19,6 +19,7 @@ from nodus.ui.dialogs.transaction_dialog import (
 from nodus.ui.navigation import PageId
 from nodus.ui.pages import transactions_page
 from nodus.ui.pages.transactions_page import TransactionsPage
+from nodus.ui.widgets.selectors import HEADING_ROLE
 from nodus.ui.widgets.transaction_table import AMOUNT, CATEGORY, PAYEE
 
 EXPENSE = TransactionType.EXPENSE
@@ -215,7 +216,7 @@ class TestTransactionsPage:
         page.type_filter.setCurrentText("Gastos")
         assert column(page, AMOUNT) == ["-$ 2.500,00"]
 
-        page.type_filter.setCurrentText("Tipos")
+        page.type_filter.setCurrentText("Tipo")
         page.search_input.setText("viejo")
         assert column(page, AMOUNT) == []
         assert page.empty_label.isVisibleTo(page)
@@ -237,6 +238,26 @@ class TestTransactionsPage:
         assert page.current_filter() == TransactionFilter(start=NOVEMBER.start, end=NOVEMBER.end)
         assert len(column(page, AMOUNT)) == 3
         assert not page.clear_filters_button.isEnabled()
+
+    def test_unused_filters_show_their_name_and_active_ones_stand_out(self, page, pesos):
+        page.refresh()
+        assert page.category_filter.currentText() == "Categoría"
+        assert page.category_filter.property("filter") == "idle"
+
+        page.account_filter.select(pesos.id)
+
+        assert page.account_filter.property("filter") == "active"
+        assert page.type_filter.property("filter") == "idle"
+        page.clear_filters_button.click()
+        assert page.account_filter.property("filter") == "idle"
+
+    def test_category_filter_splits_sections_with_unselectable_headings(self, page):
+        page.refresh()
+        combo = page.category_filter
+        headings = [i for i in range(combo.count()) if combo.itemData(i, HEADING_ROLE)]
+
+        assert [combo.itemText(i) for i in headings] == ["GASTOS", "INGRESOS"]
+        assert not any(combo.model().item(i).isEnabled() for i in headings)
 
     def test_account_filter_still_shows_both_ends_of_transfer(self, services, page, pesos, dollars):
         populate(services, pesos, dollars)

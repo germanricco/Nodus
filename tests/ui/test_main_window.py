@@ -4,7 +4,9 @@ from PySide6.QtWidgets import QLabel
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
+from nodus.ui.widgets.sidebar import Sidebar
 
 
 def sidebar_texts(window) -> list[str]:
@@ -50,3 +52,25 @@ def test_sidebar_refreshes_when_data_changes(window, services, event_bus, qtbot,
 
     qtbot.waitUntil(lambda: "$ 97.500,00" in sidebar_texts(window))
     assert "Efectivo" in sidebar_texts(window)
+
+
+def test_sidebar_collapses_to_icons_and_remembers_it(
+    window, qtbot, services, event_bus, theme_manager, pesos
+):
+    window.sidebar.refresh_accounts()
+    button = window.sidebar.nav_button(PageId.BUDGETS)
+
+    window.sidebar.collapse_button.click()
+
+    assert window.sidebar.width() == Sidebar.COLLAPSED_WIDTH
+    assert button.text() == ""
+    assert button.toolTip() == PageId.BUDGETS.label
+    assert "Banco" not in sidebar_texts(window)
+    reopened = MainWindow(services, event_bus, theme_manager)
+    qtbot.addWidget(reopened)
+    assert reopened.sidebar.is_collapsed
+
+    window.sidebar.collapse_button.click()
+
+    assert button.text() == PageId.BUDGETS.label
+    assert not services.settings.sidebar_collapsed()

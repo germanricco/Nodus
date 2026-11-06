@@ -23,6 +23,7 @@ class SettingsService:
     LAST_ACCOUNT_KEY = "last_account_id"
     NET_WORTH_CURRENCY_KEY = "net_worth_currency"
     DISMISSED_VERSION_KEY = "dismissed_version"
+    SIDEBAR_COLLAPSED_KEY = "sidebar_collapsed"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -43,11 +44,17 @@ class SettingsService:
 
     def check_updates(self) -> bool:
         """Whether to look for a new version on startup; on unless the user turned it off."""
-        return self._settings.get(self.CHECK_UPDATES_KEY) != "false"
+        return self._flag(self.CHECK_UPDATES_KEY, default=True)
 
     def set_check_updates(self, enabled: bool) -> None:
-        with self._database.transaction():
-            self._settings.set(self.CHECK_UPDATES_KEY, "true" if enabled else "false")
+        self._set_flag(self.CHECK_UPDATES_KEY, enabled)
+
+    def sidebar_collapsed(self) -> bool:
+        """Whether the sidebar shows only its icons."""
+        return self._flag(self.SIDEBAR_COLLAPSED_KEY, default=False)
+
+    def set_sidebar_collapsed(self, collapsed: bool) -> None:
+        self._set_flag(self.SIDEBAR_COLLAPSED_KEY, collapsed)
 
     def last_account_id(self) -> int | None:
         """The account of the last movement recorded, offered first in the next one."""
@@ -82,3 +89,11 @@ class SettingsService:
     def set_rate_source(self, source: str) -> None:
         with self._database.transaction():
             self._settings.set(self.RATE_SOURCE_KEY, source)
+
+    def _flag(self, key: str, default: bool) -> bool:
+        value = self._settings.get(key)
+        return default if value is None else value != "false"
+
+    def _set_flag(self, key: str, value: bool) -> None:
+        with self._database.transaction():
+            self._settings.set(key, "true" if value else "false")

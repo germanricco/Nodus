@@ -28,12 +28,13 @@ from nodus.ui.widgets.selectors import (
     PayeeComboBox,
     TagComboBox,
 )
+from nodus.ui.widgets.style import set_style_property
 from nodus.ui.widgets.table import record_table
 from nodus.ui.widgets.transaction_table import DESCRIPTION, TAGS, TransactionTableModel
 
 # Type filter: label -> (transaction type, is_transfer, refund_linked) criteria.
 TYPE_FILTERS = {
-    "Tipos": (None, None, None),
+    "Tipo": (None, None, None),
     "Gastos": (TransactionType.EXPENSE, False, None),
     "Ingresos": (TransactionType.INCOME, False, None),
     "Transferencias": (None, True, None),
@@ -153,7 +154,7 @@ class TransactionsPage(Page):
 
     def _load_filter_choices(self) -> None:
         self.account_filter.set_accounts(
-            self._services.accounts.list_accounts(include_archived=True), "Cuentas"
+            self._services.accounts.list_accounts(include_archived=True), "Cuenta"
         )
         categories = self._services.categories
         self.category_filter.set_categories(
@@ -161,10 +162,10 @@ class TransactionsPage(Page):
                 ("Gastos", categories.category_tree(TransactionType.EXPENSE)),
                 ("Ingresos", categories.category_tree(TransactionType.INCOME)),
             ],
-            "Categorías",
+            "Categoría",
         )
-        self.payee_filter.set_payees(self._services.payees.list_payees(), "Beneficiarios")
-        self.tag_filter.set_tags(self._services.tags.list_tags(), "Etiquetas")
+        self.payee_filter.set_payees(self._services.payees.list_payees(), "Beneficiario")
+        self.tag_filter.set_tags(self._services.tags.list_tags(), "Etiqueta")
 
     def reload(self) -> None:
         """Lists the movements matching the current filters."""
@@ -183,6 +184,8 @@ class TransactionsPage(Page):
         self.empty_label.setVisible(not has_rows)
         self._update_actions()
         self.clear_filters_button.setEnabled(self._has_filters())
+        for combo in self._filter_combos():
+            set_style_property(combo, "filter", "active" if combo.currentIndex() > 0 else "idle")
 
     def clear_filters(self) -> None:
         """Back to every movement of the period shown; the period itself is kept."""

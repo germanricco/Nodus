@@ -31,6 +31,11 @@ QMainWindow, #ContentArea, #PageStack {
     background: transparent;
 }
 
+#NavButton[collapsed="true"] {
+    text-align: center;
+    padding: 8px;
+}
+
 #NavButton:hover {
     background: $hover;
 }
@@ -259,6 +264,19 @@ QComboBox::down-arrow, QDateEdit::down-arrow {
    the current item, so it could jump up or down. */
 QComboBox {
     combobox-popup: 0;
+}
+
+/* List filters: an unused one shows its name in gray, an active one gets the accent. */
+QComboBox[filter="idle"] {
+    color: $text_muted;
+}
+
+QComboBox[filter="active"] {
+    border: 1px solid $accent;
+}
+
+QComboBox[filter] QAbstractItemView {
+    color: $text;
 }
 
 QComboBox QAbstractItemView {
