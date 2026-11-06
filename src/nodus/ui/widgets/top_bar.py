@@ -10,9 +10,11 @@ from nodus.ui.theme.theme_manager import ThemeManager
 
 class TopBar(QFrame):
     """ "Agregar transacción" on the left, always visible because it is the most frequent
-    action; the notifications bell, with how many there are, and settings on the right."""
+    action; on the right, the eye that hides amounts, the notifications bell with how many
+    there are, and settings."""
 
     add_transaction_requested = Signal()
+    hide_amounts_toggled = Signal()
     notifications_requested = Signal()
     settings_requested = Signal()
 
@@ -40,11 +42,21 @@ class TopBar(QFrame):
         self.notification_count.hide()
         self.settings_button = self._icon_button("Ajustes")
         self.settings_button.clicked.connect(self.settings_requested)
+        self.hide_amounts_button = self._icon_button("")
+        self.hide_amounts_button.clicked.connect(self.hide_amounts_toggled)
+        self._amounts_hidden = False
+        layout.addWidget(self.hide_amounts_button)
         layout.addWidget(self.notifications_button)
         layout.addWidget(self.settings_button)
 
         self._apply_theme(theme_manager.theme)
         theme_manager.theme_changed.connect(self._apply_theme)
+
+    def set_amounts_hidden(self, hidden: bool) -> None:
+        """Shows the eye that would undo the current state."""
+        self._amounts_hidden = hidden
+        self.hide_amounts_button.setToolTip("Mostrar montos" if hidden else "Ocultar montos")
+        self._apply_theme(self._theme)
 
     def set_notification_count(self, count: int) -> None:
         self.notification_count.setText(str(count) if count < 10 else "9+")
@@ -61,6 +73,9 @@ class TopBar(QFrame):
         return button
 
     def _apply_theme(self, theme: Theme) -> None:
+        self._theme = theme
         self._add_button.setIcon(icon("plus", theme.on_accent))
+        eye = "eye-off" if self._amounts_hidden else "eye"
+        self.hide_amounts_button.setIcon(icon(eye, theme.text_muted))
         self.notifications_button.setIcon(icon("bell", theme.text_muted))
         self.settings_button.setIcon(icon("settings", theme.text_muted))

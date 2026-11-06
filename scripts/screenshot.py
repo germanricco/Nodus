@@ -140,6 +140,12 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         app.processEvents()
         save(window, args.out / f"sidebar-collapsed-{mode.value}.png")
         window.sidebar.set_collapsed(False)
+        # Balances and the net worth hidden with the eye.
+        window.show_page(PageId.DASHBOARD)
+        window.toggle_amounts_hidden()
+        app.processEvents()
+        save(window, args.out / f"amounts-hidden-{mode.value}.png")
+        window.toggle_amounts_hidden()
         # The category filter open, with its expense and income sections.
         window.show_page(PageId.TRANSACTIONS)
         category_filter = window.page(PageId.TRANSACTIONS).category_filter

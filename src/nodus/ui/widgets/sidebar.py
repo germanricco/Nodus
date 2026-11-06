@@ -52,8 +52,11 @@ class Sidebar(QFrame):
 
         self._nav_buttons = self._build_nav_buttons(layout)
 
-        self._accounts_title = QLabel("CUENTAS")
-        self._accounts_title.setObjectName("SectionLabel")
+        self._accounts_title = QPushButton()
+        self._accounts_title.setObjectName("SectionToggle")
+        self._accounts_title.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._accounts_title.clicked.connect(self.toggle_accounts_folded)
+        self._accounts_folded = services.settings.accounts_folded()
         layout.addWidget(self._accounts_title)
         self._accounts_area = self._build_accounts_area()
         layout.addWidget(self._accounts_area, stretch=1)
@@ -68,6 +71,7 @@ class Sidebar(QFrame):
         theme_manager.theme_changed.connect(self._apply_theme)
         event_bus.accounts_changed.connect(self.refresh_accounts)
         event_bus.transactions_changed.connect(self.refresh_accounts)
+        event_bus.amounts_hidden_changed.connect(lambda _hidden: self.refresh_accounts())
         self.refresh_accounts()
 
     @property
@@ -82,8 +86,9 @@ class Sidebar(QFrame):
             button.setText("" if collapsed else page_id.label)
             button.setToolTip(page_id.label if collapsed else "")
             set_style_property(button, "collapsed", collapsed)
-        for widget in (self._logo_name, self._accounts_title, self._accounts_area, self._footer):
+        for widget in (self._logo_name, self._accounts_title, self._footer):
             widget.setVisible(not collapsed)
+        self._show_accounts_state()
         self._logo_row.setContentsMargins(*((2, 4, 2, 12) if collapsed else (8, 4, 8, 12)))
         self.collapse_button.setToolTip("Expandir el panel" if collapsed else "Contraer el panel")
         self._apply_collapse_icon()
@@ -91,6 +96,20 @@ class Sidebar(QFrame):
     def toggle_collapsed(self) -> None:
         self.set_collapsed(not self._collapsed)
         self._services.settings.set_sidebar_collapsed(self._collapsed)
+
+    @property
+    def accounts_folded(self) -> bool:
+        return self._accounts_folded
+
+    def toggle_accounts_folded(self) -> None:
+        """Folds the list of accounts under its title, or unfolds it; the choice is saved."""
+        self._accounts_folded = not self._accounts_folded
+        self._services.settings.set_accounts_folded(self._accounts_folded)
+        self._show_accounts_state()
+
+    def _show_accounts_state(self) -> None:
+        self._accounts_title.setText(f"CUENTAS  {'▸' if self._accounts_folded else '▾'}")
+        self._accounts_area.setVisible(not (self._collapsed or self._accounts_folded))
 
     def select(self, page_id: PageId) -> None:
         self._nav_buttons[page_id].setChecked(True)
@@ -108,8 +127,11 @@ class Sidebar(QFrame):
             set_style_property(empty, "muted", True)
             self._accounts_layout.addWidget(empty)
         balances = self._services.accounts.balances()
+        hidden = self._services.settings.amounts_hidden()
         for account in accounts:
-            self._accounts_layout.addWidget(self._account_row(account.name, balances[account.id]))
+            self._accounts_layout.addWidget(
+                self._account_row(account.name, balances[account.id], hidden)
+            )
         self._accounts_layout.addStretch()
 
     def _build_logo(self) -> QWidget:
@@ -170,14 +192,17 @@ class Sidebar(QFrame):
         return scroll
 
     @staticmethod
-    def _account_row(name: str, balance: Money) -> QWidget:
+    def _account_row(name: str, balance: Money, hidden: bool) -> QWidget:
         row = QWidget()
         layout = QHBoxLayout(row)
         layout.setContentsMargins(0, 2, 4, 2)
         label = QLabel(name)
         label.setObjectName("SidebarItem")
         layout.addWidget(label, stretch=1)
-        layout.addWidget(MoneyLabel(balance))
+        amount = MoneyLabel()
+        amount.set_hidden(hidden)
+        amount.set_money(balance)
+        layout.addWidget(amount)
         return row
 
     def _apply_theme(self, theme: Theme) -> None:

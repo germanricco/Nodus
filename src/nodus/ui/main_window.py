@@ -113,6 +113,8 @@ class MainWindow(QMainWindow):
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
         self.top_bar.notifications_requested.connect(self.open_notifications)
         self.top_bar.settings_requested.connect(lambda: self.show_page(PageId.SETTINGS))
+        self.top_bar.set_amounts_hidden(services.settings.amounts_hidden())
+        self.top_bar.hide_amounts_toggled.connect(self.toggle_amounts_hidden)
         for signal in (
             event_bus.exchange_rates_changed,
             event_bus.accounts_changed,
@@ -158,6 +160,13 @@ class MainWindow(QMainWindow):
         self.top_bar.set_notification_count(len(notices))
         if self.notification_panel.isVisible():
             self.notification_panel.set_notices(notices)
+
+    def toggle_amounts_hidden(self) -> None:
+        """Hides balances and the net worth, or shows them again; the choice is saved."""
+        hidden = not self._services.settings.amounts_hidden()
+        self._services.settings.set_amounts_hidden(hidden)
+        self.top_bar.set_amounts_hidden(hidden)
+        self._event_bus.amounts_hidden_changed.emit(hidden)
 
     def open_notifications(self) -> None:
         self.notification_panel.set_notices(self.notices())

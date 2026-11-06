@@ -30,7 +30,7 @@ class AccountRow(QWidget):
     archive_toggled = Signal(object)  # Account
     delete_requested = Signal(object)  # Account
 
-    def __init__(self, account: Account, balance: Money) -> None:
+    def __init__(self, account: Account, balance: Money, hide_balance: bool = False) -> None:
         super().__init__()
         self.account = account
         layout = QHBoxLayout(self)
@@ -51,7 +51,9 @@ class AccountRow(QWidget):
         texts.addWidget(subtitle)
         layout.addLayout(texts, stretch=1)
 
-        balance_label = MoneyLabel(balance)
+        balance_label = MoneyLabel()
+        balance_label.set_hidden(hide_balance)
+        balance_label.set_money(balance)
         balance_label.setObjectName("RowAmount")
         layout.addWidget(balance_label)
 
@@ -93,6 +95,8 @@ class AccountsPage(Page):
         page_layout.setSpacing(16)
         # The net worth card lives as long as the page, so its figures count to new values.
         self.net_worth_card = NetWorthCard(services, theme_manager, compact=True)
+        self.net_worth_card.set_amounts_hidden(services.settings.amounts_hidden())
+        event_bus.amounts_hidden_changed.connect(self.net_worth_card.set_amounts_hidden)
         self.net_worth_card.rate_requested.connect(
             lambda: self.navigate_requested.emit(PageId.SETTINGS)
         )
@@ -110,6 +114,7 @@ class AccountsPage(Page):
             event_bus.accounts_changed,
             event_bus.transactions_changed,
             event_bus.exchange_rates_changed,
+            event_bus.amounts_hidden_changed,
         ):
             signal.connect(self.refresh)
 
@@ -140,7 +145,9 @@ class AccountsPage(Page):
             set_style_property(empty, "muted", True)
             card.body.addWidget(empty)
         for account in accounts:
-            row = AccountRow(account, balances[account.id])
+            row = AccountRow(
+                account, balances[account.id], self._services.settings.amounts_hidden()
+            )
             row.edit_requested.connect(self.open_account_dialog)
             row.archive_toggled.connect(self._toggle_archived)
             row.delete_requested.connect(self.delete_account)

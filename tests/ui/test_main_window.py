@@ -74,3 +74,42 @@ def test_sidebar_collapses_to_icons_and_remembers_it(
 
     assert button.text() == PageId.BUDGETS.label
     assert not services.settings.sidebar_collapsed()
+
+
+def test_eye_hides_balances_and_net_worth_and_remembers_it(
+    window, qtbot, services, event_bus, theme_manager, pesos
+):
+    window.sidebar.refresh_accounts()
+    window.show_page(PageId.ACCOUNTS)
+    accounts = window.page(PageId.ACCOUNTS)
+
+    window.top_bar.hide_amounts_button.click()
+
+    qtbot.waitUntil(lambda: "$ ••••" in sidebar_texts(window))
+    assert "$ 100.000,00" not in sidebar_texts(window)
+    balances = [label.text() for label in accounts.findChildren(QLabel) if label.isVisible()]
+    assert "$ 100.000,00" not in balances
+    assert accounts.net_worth_card.total_label.text() == "$ ••••"
+    window.show_page(PageId.DASHBOARD)
+    assert window.page(PageId.DASHBOARD).net_worth_card.total_label.text() == "$ ••••"
+    assert window.top_bar.hide_amounts_button.toolTip() == "Mostrar montos"
+    reopened = MainWindow(services, event_bus, theme_manager)
+    qtbot.addWidget(reopened)
+    assert reopened.top_bar.hide_amounts_button.toolTip() == "Mostrar montos"
+
+    window.top_bar.hide_amounts_button.click()
+
+    qtbot.waitUntil(lambda: "$ 100.000,00" in sidebar_texts(window))
+    assert not services.settings.amounts_hidden()
+
+
+def test_accounts_fold_under_their_title(window, qtbot, services, pesos):
+    window.sidebar.refresh_accounts()
+    qtbot.waitUntil(lambda: "Banco" in sidebar_texts(window))
+
+    window.sidebar.toggle_accounts_folded()
+
+    assert "Banco" not in sidebar_texts(window)
+    assert services.settings.accounts_folded()
+    window.sidebar.toggle_accounts_folded()
+    assert "Banco" in sidebar_texts(window)

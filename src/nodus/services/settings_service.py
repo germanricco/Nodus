@@ -24,6 +24,8 @@ class SettingsService:
     NET_WORTH_CURRENCY_KEY = "net_worth_currency"
     DISMISSED_VERSION_KEY = "dismissed_version"
     SIDEBAR_COLLAPSED_KEY = "sidebar_collapsed"
+    ACCOUNTS_FOLDED_KEY = "accounts_folded"
+    AMOUNTS_HIDDEN_KEY = "amounts_hidden"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -55,6 +57,20 @@ class SettingsService:
 
     def set_sidebar_collapsed(self, collapsed: bool) -> None:
         self._set_flag(self.SIDEBAR_COLLAPSED_KEY, collapsed)
+
+    def accounts_folded(self) -> bool:
+        """Whether the sidebar keeps its list of accounts folded."""
+        return self._flag(self.ACCOUNTS_FOLDED_KEY, default=False)
+
+    def set_accounts_folded(self, folded: bool) -> None:
+        self._set_flag(self.ACCOUNTS_FOLDED_KEY, folded)
+
+    def amounts_hidden(self) -> bool:
+        """Whether balances and the net worth show as "$ ••••", for privacy."""
+        return self._flag(self.AMOUNTS_HIDDEN_KEY, default=False)
+
+    def set_amounts_hidden(self, hidden: bool) -> None:
+        self._set_flag(self.AMOUNTS_HIDDEN_KEY, hidden)
 
     def last_account_id(self) -> int | None:
         """The account of the last movement recorded, offered first in the next one."""

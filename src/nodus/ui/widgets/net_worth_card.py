@@ -22,7 +22,7 @@ from nodus.ui.widgets.chart_base import format_compact
 from nodus.ui.widgets.charts import ProportionBar, Segment
 from nodus.ui.widgets.color import ColorDot
 from nodus.ui.widgets.line_chart import LineChart, LinePoint
-from nodus.ui.widgets.money_label import AnimatedMoneyLabel
+from nodus.ui.widgets.money_label import AnimatedMoneyLabel, masked
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.style import set_style_property
 
@@ -82,6 +82,7 @@ class NetWorthCard(Card):
         self._compact = compact
         self._shown: tuple[date, Period | None] | None = None
         self._daily = True
+        self._hidden = False
         self._build_header()
         self._build_total()
         self._build_missing_rate()
@@ -184,6 +185,17 @@ class NetWorthCard(Card):
     def currency(self) -> Currency:
         return CURRENCIES[self.currency_input.index()]
 
+    def set_amounts_hidden(self, hidden: bool) -> None:
+        """Masks every figure, the chart's included; the shares and the change in percent
+        stay, since they tell nothing about how much there is."""
+        self._hidden = hidden
+        amounts = [self.total_label, *self.subtotal_labels.values()]
+        amounts += [legend.amount for legend in self.legends.values()]
+        for label in amounts:
+            label.set_hidden(hidden)
+        if self._shown:
+            self.show_day(*self._shown)
+
     def show_day(self, day: date, period: Period | None = None) -> None:
         """The net worth at the end of ``day``; with ``period``, also its trend along it."""
         self._shown = (day, period)
@@ -266,7 +278,8 @@ class NetWorthCard(Card):
             last = Money(int(known[-1]), currency)
             difference = last - first
             self.change_badge.set_change(
-                relative_change(last, first), "" if difference.is_zero else signed(difference)
+                relative_change(last, first),
+                "" if difference.is_zero or self._hidden else signed(difference),
             )
             self.change_caption.show()
         else:
@@ -276,10 +289,11 @@ class NetWorthCard(Card):
     # Chart formatting
 
     def _format_value(self, cents: float) -> str:
-        return Money(round(cents), self.currency()).format()
+        money = Money(round(cents), self.currency())
+        return masked(money) if self._hidden else money.format()
 
     def _format_axis(self, cents: float) -> str:
-        return format_compact(cents, self.currency())
+        return "" if self._hidden else format_compact(cents, self.currency())
 
     def _format_axis_day(self, day: date) -> str:
         return f"{day:%d/%m}" if self._daily else Month.of(day).short_name

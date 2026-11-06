@@ -11,11 +11,17 @@ from nodus.ui.widgets import chart_base
 from nodus.ui.widgets.style import set_style_property
 
 
+def masked(money: Money) -> str:
+    """ "$ ••••": only the currency of an amount the user chose to hide."""
+    return f"{money.currency.symbol} ••••"
+
+
 class MoneyLabel(QLabel):
     """Shows a ``Money`` in Argentine format, red when negative.
 
     With ``highlight_positive`` positive amounts turn green too, which suits income and
-    expense lists; balances leave them in the normal text color.
+    expense lists; balances leave them in the normal text color. ``set_hidden`` masks the
+    figure, for when someone else can see the screen.
     """
 
     def __init__(
@@ -23,13 +29,24 @@ class MoneyLabel(QLabel):
     ) -> None:
         super().__init__(parent)
         self._highlight_positive = highlight_positive
+        self._hidden = False
+        self._value: Money | None = None
         self.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         if money is not None:
             self.set_money(money)
 
     def set_money(self, money: Money) -> None:
-        self.setText(money.format())
+        self._value = money
+        self.setText(self._text(money))
         set_style_property(self, "tone", self._tone(money))
+
+    def set_hidden(self, hidden: bool) -> None:
+        self._hidden = hidden
+        if self._value is not None:
+            self.set_money(self._value)
+
+    def _text(self, money: Money) -> str:
+        return masked(money) if self._hidden else money.format()
 
     def _tone(self, money: Money) -> str:
         if money.is_negative:
@@ -69,7 +86,7 @@ class AnimatedMoneyLabel(MoneyLabel):
         self._money = money
         set_style_property(self, "tone", self._tone(money))
         if self._compact_when_narrow:
-            self.setToolTip(money.format())
+            self.setToolTip("" if self._hidden else money.format())
             self.updateGeometry()
         if self._animation:
             self._animation.stop()
@@ -92,10 +109,18 @@ class AnimatedMoneyLabel(MoneyLabel):
         self._animation.finished.connect(lambda: self._show(money))
         self._animation.start()
 
+    def set_hidden(self, hidden: bool) -> None:
+        self._hidden = hidden
+        if self._money is not None:
+            if self._animation:
+                self._animation.stop()
+            self._shown = None  # shown at once, without counting
+            self.set_money(self._money)
+
     def _show(self, money: Money) -> None:
         self._shown = money
-        text = money.format()
-        if self._compact_when_narrow and not self._fits(text):
+        text = self._text(money)
+        if self._compact_when_narrow and not self._hidden and not self._fits(text):
             text = chart_base.format_compact(money.cents, money.currency)
         self.setText(text)
 

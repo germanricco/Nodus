@@ -53,6 +53,20 @@ QMainWindow, #ContentArea, #PageStack {
     padding: 16px 8px 4px 8px;
 }
 
+#SectionToggle {
+    color: $text_muted;
+    font-size: 8pt;
+    font-weight: 600;
+    text-align: left;
+    padding: 16px 8px 4px 8px;
+    border: none;
+    background: transparent;
+}
+
+#SectionToggle:hover {
+    color: $text;
+}
+
 #SidebarAccounts {
     background: transparent;
 }
