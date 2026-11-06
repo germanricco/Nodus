@@ -4,6 +4,7 @@ from datetime import date
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.models.money import Money
 from nodus.models.period import Month
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
@@ -47,6 +48,20 @@ def due_label(days: int) -> str:
     if days == 1:
         return "Mañana"
     return f"en {days} días"
+
+
+def estimate_text(amount: Money, estimate: Money | None) -> str:
+    """ "≈ $ 165.000,00", what a payment of a charge in another currency is expected to
+    take; empty when it is paid in its own currency or there is no estimate."""
+    if estimate is None or estimate.currency is amount.currency:
+        return ""
+    return f"≈ {estimate.format()}"
+
+
+def charge_amount_text(amount: Money, estimate: Money | None) -> str:
+    """ "US$ 100,00 ≈ $ 165.000,00" for a charge paid in another currency; the plain
+    amount otherwise."""
+    return f"{amount.format()} {estimate_text(amount, estimate)}".rstrip()
 
 
 def movements_text(count: int) -> str:

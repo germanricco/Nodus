@@ -1,8 +1,10 @@
 from datetime import date
+from decimal import Decimal
 
 import pytest
-from factories import TODAY, ars, category_id, charge_draft
+from factories import TODAY, ars, category_id, charge_draft, usd
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLabel
 
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
@@ -163,3 +165,68 @@ def test_page_is_in_the_sidebar(window):
     window.show_page(PageId.RECURRING)
 
     assert isinstance(window.current_page, RecurringPage)
+
+
+class TestDollarChargesPaidInPesos:
+    @pytest.fixture
+    def subscription(self, services, pesos):
+        return services.recurring.create(
+            charge_draft(services, pesos.id, usd("100"), TODAY, name="Suscripción")
+        )
+
+    def test_dollars_are_offered_only_for_peso_accounts(
+        self, qtbot, services, event_bus, pesos, dollars
+    ):
+        dialog = make(qtbot, RecurringChargeDialog(services, event_bus))
+        dialog.account_input.select(pesos.id)
+        assert dialog.form.isRowVisible(dialog.dollars_input)
+
+        dialog.dollars_input.setChecked(True)
+        dialog.name_input.setText("Suscripción")
+        dialog.amount_input.line_edit.setText("100")
+        assert dialog.amount_input.money() == usd("100")
+        dialog.account_input.select(dollars.id)
+        assert not dialog.form.isRowVisible(dialog.dollars_input)
+        dialog.account_input.select(pesos.id)
+        click(qtbot, dialog.save_button)
+
+        (charge,) = services.recurring.list_charges()
+        assert (charge.amount, charge.account_id) == (usd("100"), pesos.id)
+
+    def test_editing_keeps_the_box_checked(self, qtbot, services, event_bus, subscription):
+        dialog = make(qtbot, RecurringChargeDialog(services, event_bus, subscription))
+
+        assert dialog.dollars_input.isChecked()
+        assert dialog.amount_input.money() == usd("100")
+
+    def test_pay_asks_for_the_pesos_with_an_estimate(
+        self, qtbot, services, event_bus, pesos, subscription
+    ):
+        services.exchange_rates.set_rate(TODAY, Decimal("1500"))
+        dialog = make(qtbot, PayChargeDialog(services, event_bus, subscription, TODAY))
+
+        assert dialog.charge_label.text() == "US$ 100,00"
+        assert dialog.form.labelForField(dialog.amount_input).text() == "Pesos que salieron"
+        assert dialog.amount_input.money() == ars("150000")
+        assert "cotización guardada" in dialog.rate_hint.text()
+        dialog.amount_input.line_edit.setText("165.000")
+        click(qtbot, dialog.save_button)
+
+        charge = services.recurring.get(subscription.id)
+        again = make(qtbot, PayChargeDialog(services, event_bus, charge, TODAY))
+        assert again.amount_input.money() == ars("165000")
+        assert again.rate_hint.text() == "A $ 1.650,00 por dólar, como el último pago."
+
+    def test_without_a_rate_the_pesos_start_empty(self, qtbot, services, event_bus, subscription):
+        dialog = make(qtbot, PayChargeDialog(services, event_bus, subscription, TODAY))
+
+        assert dialog.amount_input.line_edit.text() == ""
+        assert "Sin cotización" in dialog.rate_hint.text()
+
+    def test_page_shows_the_estimate(self, services, page, subscription):
+        services.exchange_rates.set_rate(TODAY, Decimal("1500"))
+        page.refresh(TODAY)
+
+        (row,) = page.rows
+        texts = [label.text() for label in row.findChildren(QLabel)]
+        assert "US$ 100,00 ≈ $ 150.000,00" in texts

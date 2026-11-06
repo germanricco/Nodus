@@ -22,7 +22,7 @@ from nodus.services.recurring_charge_service import RecurringSummary
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import FREQUENCY_LABELS
+from nodus.ui.labels import FREQUENCY_LABELS, charge_amount_text
 from nodus.ui.pages.dashboard_cards import FigureTile, due_status_label
 from nodus.ui.pages.page import Page
 from nodus.ui.widgets.card import Card
@@ -63,7 +63,12 @@ class RecurringChargeRow(QWidget):
     delete_requested = Signal(object)
 
     def __init__(
-        self, charge: RecurringCharge, category: Category, account_name: str, today: date
+        self,
+        charge: RecurringCharge,
+        category: Category,
+        account_name: str,
+        today: date,
+        amount_text: str | None = None,
     ) -> None:
         super().__init__()
         self.charge = charge
@@ -84,7 +89,7 @@ class RecurringChargeRow(QWidget):
 
         amounts = QVBoxLayout()
         amounts.setSpacing(0)
-        amount = QLabel(charge.amount.format())
+        amount = QLabel(amount_text or charge.amount.format())
         amount.setObjectName("RowAmount")
         amount.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.status_label = (
@@ -183,8 +188,11 @@ class RecurringPage(Page):
             card = Card(f"{title} ({len(members)})")
             for charge in members:
                 row = RecurringChargeRow(
-                    charge, categories[charge.category_id], accounts[charge.account_id], today
-                )
+                    charge, categories[charge.category_id], accounts[charge.account_id], today,
+                    charge_amount_text(
+                        charge.amount, self._services.recurring.estimated_payment(charge, today)
+                    ),
+                )  # fmt: skip
                 self._connect(row)
                 card.body.addWidget(row)
                 self.rows.append(row)

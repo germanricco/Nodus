@@ -26,7 +26,7 @@ from nodus.services.container import Services
 from nodus.services.dashboard_service import CategoryTotal, Comparison, MonthFlow, PeriodSummary
 from nodus.services.recurring_charge_service import UPCOMING_DAYS
 from nodus.ui.formatting import format_date
-from nodus.ui.labels import days_left_text, due_label, unconverted_note
+from nodus.ui.labels import days_left_text, due_label, estimate_text, unconverted_note
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
@@ -252,7 +252,7 @@ class UpcomingPaymentRow(QWidget):
 
     pay_requested = Signal(object)  # RecurringCharge
 
-    def __init__(self, charge: RecurringCharge, today: date) -> None:
+    def __init__(self, charge: RecurringCharge, today: date, estimate: str = "") -> None:
         super().__init__()
         self.charge = charge
         layout = QHBoxLayout(self)
@@ -265,9 +265,17 @@ class UpcomingPaymentRow(QWidget):
         texts.addWidget(name)
         texts.addWidget(due_status_label(charge, today))
         layout.addLayout(texts, stretch=1)
+        amounts = QVBoxLayout()
+        amounts.setSpacing(0)
         amount = QLabel(charge.amount.format())
         amount.setObjectName("RowAmount")
-        layout.addWidget(amount)
+        amount.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        amounts.addWidget(amount)
+        if estimate:  # on a line of its own, so the narrow card keeps its width
+            estimate_label = muted_label(estimate)
+            estimate_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            amounts.addWidget(estimate_label)
+        layout.addLayout(amounts)
         self.pay_button = QPushButton("Pagar")
         self.pay_button.setObjectName("SmallButton")
         self.pay_button.clicked.connect(lambda: self.pay_requested.emit(charge))
@@ -312,7 +320,8 @@ class UpcomingPaymentsCard(Card):
                 muted_label(f"Nada que pagar en los próximos {UPCOMING_DAYS} días")
             )
         for charge in charges[:UPCOMING_COUNT]:
-            row = UpcomingPaymentRow(charge, today)
+            estimate = self._services.recurring.estimated_payment(charge, today)
+            row = UpcomingPaymentRow(charge, today, estimate_text(charge.amount, estimate))
             row.pay_requested.connect(self.pay_requested)
             self._rows.addWidget(row)
             self.rows.append(row)
