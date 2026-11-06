@@ -85,9 +85,8 @@ Para actualizar, instala la versión nueva encima de la anterior: tus datos se c
 
 ## Hoja de ruta
 
-Nodus crece por versiones pequeñas y estables. La **v0.6** ya incluye cuentas, transacciones, cotización del dólar, dashboard, cargos recurrentes, presupuestos, copias de seguridad y exportación. Lo que viene:
+Nodus crece por versiones pequeñas y estables. La **v0.7** ya incluye cuentas, transacciones, cotización del dólar, dashboard, cargos recurrentes, presupuestos, beneficiarios, copias de seguridad y exportación. Lo que viene:
 
-- **Beneficiarios:** a quién le pagas y de quién cobras.
 - **Análisis:** la evolución de ingresos, gastos y patrimonio en detalle.
 - **Reembolsos y etiquetas:** gastos que te devuelven y etiquetas como «Vacaciones 2026».
 - **Metas y grupos de cuentas:** ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.

@@ -87,9 +87,8 @@ To update, install the new version over the old one: your data is kept. Nodus le
 
 ## Roadmap
 
-Nodus grows in small, stable releases. **v0.6** already covers accounts, transactions, dollar exchange rates, the dashboard, recurring charges, budgets, backups and export. Coming next:
+Nodus grows in small, stable releases. **v0.7** already covers accounts, transactions, dollar exchange rates, the dashboard, recurring charges, budgets, payees, backups and export. Coming next:
 
-- **Payees:** who you pay and who pays you.
 - **Analysis:** income, spending and net worth over time, in detail.
 - **Refunds and tags:** expenses that get paid back, and tags such as "Vacation 2026".
 - **Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
