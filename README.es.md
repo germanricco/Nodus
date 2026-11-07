@@ -124,7 +124,7 @@ Nodus funciona en **Windows 10 y 11 de 64 bits**.
 2. Ábrelo y sigue el asistente. Se instala solo para tu usuario, sin permisos de administrador, y queda en el menú Inicio.
 3. Si Windows muestra «Windows protegió tu PC», haz clic en «Más información» y luego en «Ejecutar de todas formas». Aparece porque el instalador no tiene una firma comercial, que tiene un costo anual. Cada instalador se compila automáticamente en GitHub a partir del código de este repositorio.
 
-Para actualizar, instala la versión nueva encima de la anterior: tus datos se conservan. Cuando haya una nueva, Nodus te avisa. Si quieres que te espere abierto cada mañana, activa «Abrir Nodus al iniciar Windows» en Ajustes; al desinstalarlo, esa opción se quita sola.
+Para actualizar, instala la versión nueva encima de la anterior: tus datos se conservan. Cuando haya una nueva, Nodus te avisa y te cuenta qué trae, y después de actualizar te muestra una vez qué cambió; la historia completa está en [CHANGELOG.md](CHANGELOG.md). Si quieres que te espere abierto cada mañana, activa «Abrir Nodus al iniciar Windows» en Ajustes; al desinstalarlo, esa opción se quita sola.
 
 ## Hoja de ruta
 
@@ -138,7 +138,11 @@ Nodus está escrito en **Python**. La interfaz usa **PySide6**, la versión ofic
 
 ## Contribuir
 
-Las ideas y los reportes de errores son bienvenidos en [Issues](https://github.com/germanricco/Nodus/issues). Para ejecutar Nodus desde el código, correr las pruebas o compilar el instalador, mira [CONTRIBUTING.md](CONTRIBUTING.md).
+Las ideas y los reportes de errores son bienvenidos en [Issues](https://github.com/germanricco/Nodus/issues), o directo desde la aplicación con el globo de diálogo de la barra superior, que abre un formulario corto sin pedir cuenta. Para ejecutar Nodus desde el código, correr las pruebas o compilar el instalador, mira [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Apoyar
+
+Nodus es gratis y lo va a seguir siendo. Si te ayuda a ordenar tus finanzas y quieres devolver algo, puedes [invitarme un cafecito](https://cafecito.app/germanricco), también desde Ajustes en la aplicación.
 
 ## Agradecimientos
 

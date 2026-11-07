@@ -36,6 +36,11 @@ class NoticeRow(QWidget):
         layout.addWidget(detail)
         buttons = QHBoxLayout()
         buttons.setSpacing(6)
+        self.news_button: QPushButton | None = None
+        if notice.kind is NoticeKind.UPDATE and notice.notes:
+            self.news_button = QPushButton("Qué trae")
+            self.news_button.setObjectName("SmallButton")
+            buttons.addWidget(self.news_button)
         self.action_button = QPushButton(ACTION_LABELS[notice.kind])
         self.action_button.setObjectName("SmallButton")
         buttons.addWidget(self.action_button)
@@ -58,6 +63,7 @@ class NotificationPanel(QFrame):
 
     action_requested = Signal(object)  # Notice
     dismiss_requested = Signal(object)  # Notice
+    news_requested = Signal(object)  # Notice
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent, Qt.WindowType.Popup)
@@ -90,6 +96,8 @@ class NotificationPanel(QFrame):
                 self._rows.addWidget(separator)
             row = NoticeRow(notice)
             row.action_button.clicked.connect(lambda _=False, n=notice: self._act(n))
+            if row.news_button is not None:
+                row.news_button.clicked.connect(lambda _=False, n=notice: self._show_news(n))
             if row.dismiss_button is not None:
                 row.dismiss_button.clicked.connect(
                     lambda _=False, n=notice: self.dismiss_requested.emit(n)
@@ -104,6 +112,10 @@ class NotificationPanel(QFrame):
         corner = anchor.mapToGlobal(QPoint(anchor.width(), anchor.height() + 6))
         self.move(corner.x() - self.width(), corner.y())
         self.show()
+
+    def _show_news(self, notice: Notice) -> None:
+        self.hide()
+        self.news_requested.emit(notice)
 
     def _act(self, notice: Notice) -> None:
         self.hide()

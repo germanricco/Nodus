@@ -5,20 +5,21 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 
+from nodus.links import REPOSITORY
 from nodus.services.http import Fetch, downloader
 
-REPOSITORY = "germanricco/Nodus"
-REPOSITORY_URL = f"https://github.com/{REPOSITORY}"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
 GITHUB_JSON = "application/vnd.github+json"
 
 
 @dataclass(frozen=True)
 class Release:
-    """A published version: its number ("0.2.0") and the page to download it from."""
+    """A published version: its number ("0.2.0"), the page to download it from and its
+    release notes in Markdown (what it brings)."""
 
     version: str
     url: str
+    notes: str = ""
 
 
 def parse_version(text: str) -> tuple[int, ...]:
@@ -47,7 +48,10 @@ class UpdateService:
         """
         try:
             data = json.loads(self._fetch(LATEST_RELEASE_API))
-            latest = Release(data["tag_name"].removeprefix("v"), data["html_url"])
+            version = data["tag_name"].removeprefix("v")
+            # The notes open with the tag's subject line, which repeats the version.
+            notes = (data.get("body") or "").strip().removeprefix(f"Nodus {version}").strip()
+            latest = Release(version, data["html_url"], notes)
             is_newer = parse_version(latest.version) > parse_version(self.current_version)
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             return None

@@ -52,3 +52,16 @@ def test_network_error_is_ignored():
         raise OSError("sin conexión")
 
     assert UpdateService("0.2.0", fetch).check() is None
+
+
+def test_release_notes_come_without_the_repeated_subject_line():
+    body = "Nodus 0.3.0\n\nNovedades:\n\n- Algo nuevo."
+    data = {"tag_name": "v0.3.0", "html_url": RELEASE_PAGE, "body": body}
+
+    release = UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check()
+
+    assert release.notes == "Novedades:\n\n- Algo nuevo."
+
+
+def test_release_without_notes_has_empty_notes():
+    assert UpdateService("0.2.0", lambda _url: answer("v0.3.0")).check().notes == ""

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import QUrl
-from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
@@ -15,11 +13,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.links import feedback_url
 from nodus.models.period import Month
 from nodus.services.container import Services
 from nodus.services.notification_service import Notice, NoticeKind
 from nodus.services.update_service import Release
 from nodus.ui.background import BackgroundCall
+from nodus.ui.browser import open_url
+from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
@@ -60,6 +61,7 @@ class MainWindow(QMainWindow):
         self.notification_panel = NotificationPanel(self)
         self.notification_panel.action_requested.connect(self._act_on_notice)
         self.notification_panel.dismiss_requested.connect(self._dismiss_notice)
+        self.notification_panel.news_requested.connect(self._show_release_news)
         self._release: Release | None = None
         self._stack = QStackedWidget()
         self._stack.setObjectName("PageStack")
@@ -115,6 +117,7 @@ class MainWindow(QMainWindow):
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
         self.top_bar.notifications_requested.connect(self.open_notifications)
         self.top_bar.settings_requested.connect(lambda: self.show_page(PageId.SETTINGS))
+        self.top_bar.feedback_requested.connect(lambda: open_url(feedback_url()))
         self.top_bar.set_amounts_hidden(services.settings.amounts_hidden())
         self.top_bar.hide_amounts_toggled.connect(self.toggle_amounts_hidden)
         for signal in (
@@ -147,6 +150,14 @@ class MainWindow(QMainWindow):
         self._rate_updater = RateUpdater(self._services, self._event_bus, parent=self)
         self._rate_updater.update()
 
+    def show_unseen_news(self) -> None:
+        """After an update, tells once what changed since the version opened last.
+
+        Called by the app once the window is open, like ``check_for_updates``."""
+        entries = self._services.news.take_unseen()
+        if entries:
+            NewsDialog.for_entries(entries, parent=self).exec()
+
     def _show_release(self, release: Release | None) -> None:
         self._release = release
         self.refresh_notifications()
@@ -176,13 +187,17 @@ class MainWindow(QMainWindow):
 
     def _act_on_notice(self, notice: Notice) -> None:
         if notice.kind is NoticeKind.UPDATE:
-            QDesktopServices.openUrl(QUrl(notice.url))
+            open_url(notice.url)
         elif notice.kind is NoticeKind.CHARGES_DUE:
             self.show_page(PageId.RECURRING)
         elif notice.kind is NoticeKind.BUDGET_OVER:
             self.show_budgets(Month.of(date.today()))
         else:
             self.show_page(PageId.SETTINGS)
+
+    def _show_release_news(self, _notice: Notice) -> None:
+        if self._release is not None:
+            NewsDialog.for_release(self._release, parent=self).exec()
 
     def _dismiss_notice(self, _notice: Notice) -> None:
         if self._release is not None:

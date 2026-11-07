@@ -37,6 +37,9 @@ class Database:
     def __init__(self, path: Path, connection: sqlite3.Connection) -> None:
         self.path = path
         self._connection = connection
+        # True when this run created the file, so the app can tell a first start from
+        # an update (both lack settings written by newer versions).
+        self.created = False
 
     @classmethod
     def open(cls, path: Path, migrations: list[Migration] | None = None) -> Database:
@@ -47,6 +50,7 @@ class Database:
         try:
             database = cls(path, cls._connect(path))
             database.check_integrity()
+            database.created = database.schema_version == 0
             database.migrate(migrations if migrations is not None else load_packaged_migrations())
         except sqlite3.DatabaseError as error:
             raise DatabaseError(f"{path}: {error}") from error

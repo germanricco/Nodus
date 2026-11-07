@@ -26,6 +26,7 @@ from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.export_service import ExportService
 from nodus.services.http import downloader
 from nodus.services.net_worth_service import NetWorthService
+from nodus.services.news_service import NewsService
 from nodus.services.notification_service import NotificationService
 from nodus.services.payee_service import PayeeService
 from nodus.services.rate_feed_service import RateFeedService
@@ -63,6 +64,7 @@ class Services:
     analysis: AnalysisService
     tags: TagService
     startup: StartupService
+    news: NewsService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -118,4 +120,5 @@ class Services:
             analysis=AnalysisService(transactions, categories, payees, exchange_rates),
             tags=TagService(database, tag_repository, transactions, exchange_rates),
             startup=StartupService.for_this_program(),
+            news=NewsService(settings, __version__, first_start=database.created),
         )

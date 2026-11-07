@@ -39,12 +39,14 @@ class NoticeKind(Enum):
 
 @dataclass(frozen=True)
 class Notice:
-    """One notification: a short title, a detail line and, for a new version, its page."""
+    """One notification: a short title, a detail line and, for a new version, its page
+    and release notes."""
 
     kind: NoticeKind
     title: str
     detail: str
     url: str = ""
+    notes: str = ""
 
 
 class NotificationService:
@@ -76,6 +78,7 @@ class NotificationService:
                     f"Nodus {release.version} está disponible",
                     "Instálala encima de la actual; tus datos se conservan.",
                     release.url,
+                    release.notes,
                 )
             )
         notices.extend(self._rate_notices(today))

@@ -239,6 +239,11 @@ QDialog {
     font-weight: 600;
 }
 
+QTextBrowser#NewsText {
+    background: transparent;
+    border: none;
+}
+
 #ErrorLabel {
     color: $expense;
 }

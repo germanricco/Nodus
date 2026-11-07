@@ -23,6 +23,7 @@ class SettingsService:
     LAST_ACCOUNT_KEY = "last_account_id"
     NET_WORTH_CURRENCY_KEY = "net_worth_currency"
     DISMISSED_VERSION_KEY = "dismissed_version"
+    LAST_SEEN_VERSION_KEY = "last_seen_version"
     SIDEBAR_COLLAPSED_KEY = "sidebar_collapsed"
     ACCOUNTS_FOLDED_KEY = "accounts_folded"
     AMOUNTS_HIDDEN_KEY = "amounts_hidden"
@@ -97,6 +98,14 @@ class SettingsService:
     def set_dismissed_version(self, version: str) -> None:
         with self._database.transaction():
             self._settings.set(self.DISMISSED_VERSION_KEY, version)
+
+    def last_seen_version(self) -> str | None:
+        """The last version whose news the user saw, or None if never recorded."""
+        return self._settings.get(self.LAST_SEEN_VERSION_KEY)
+
+    def set_last_seen_version(self, version: str) -> None:
+        with self._database.transaction():
+            self._settings.set(self.LAST_SEEN_VERSION_KEY, version)
 
     def rate_source(self) -> str | None:
         """Where the dollar rate comes from ("manual", "bolsa"…), or None if never chosen."""

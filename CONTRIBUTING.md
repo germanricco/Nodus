@@ -60,8 +60,15 @@ El script congela la aplicación con PyInstaller en `dist/Nodus/` y, si encuentr
 
 ## Publicar una versión
 
-1. Subir `nodus.__version__` en `src/nodus/__init__.py` y actualizar el README (en inglés y en español).
-2. Crear una etiqueta anotada cuyo mensaje sean las notas del release: `git tag -a vX.Y.Z -F notas.md`.
+1. Subir `nodus.__version__` en `src/nodus/__init__.py`, actualizar el README (en inglés y en español) y ponerle la fecha a la sección de la versión en `CHANGELOG.md`.
+2. Generar las notas del release a partir de esa sección y crear con ellas una etiqueta anotada:
+
+   ```
+   .venv/Scripts/python scripts/release_notes.py X.Y.Z
+   git tag -a vX.Y.Z -F notas.md
+   ```
+
+   `CHANGELOG.md` es la única fuente de las novedades, escrita para usuarios y en español. De ahí salen las notas del release (el mensaje de la etiqueta), el «Qué trae» del aviso de versión nueva y el diálogo de novedades que Nodus muestra una vez al abrir la versión nueva; el programa compilado lo lleva adentro.
 3. Subir el commit y la etiqueta. El flujo `.github/workflows/release.yml` comprueba que la etiqueta coincida con la versión, corre los tests, compila el instalador y crea el release con él.
 
 Para probar la compilación sin publicar nada, en GitHub: Actions → Release → Run workflow, que deja el instalador como artefacto de la ejecución.

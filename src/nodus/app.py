@@ -4,6 +4,7 @@ import ctypes
 import sys
 from datetime import date
 
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from nodus.config.paths import AppPaths
@@ -51,6 +52,8 @@ class NodusApp:
             window.show()
             window.check_for_updates()
             window.update_exchange_rate()
+            # Once the window has painted, so the news appear over it, not before it.
+            QTimer.singleShot(0, window.show_unseen_news)
             return self._qt_app.exec()
         finally:
             database.close()

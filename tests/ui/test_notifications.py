@@ -10,7 +10,7 @@ from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
 from nodus.services.notification_service import NoticeKind
 from nodus.services.update_service import UpdateService
-from nodus.ui import main_window as main_window_module
+from nodus.ui import browser
 from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
 
@@ -67,7 +67,7 @@ def test_newer_release_is_counted_and_listed(qtbot, offline_window):
 def test_download_opens_the_release_page(qtbot, offline_window, monkeypatch):
     opened = []
     monkeypatch.setattr(
-        main_window_module.QDesktopServices, "openUrl", lambda url: opened.append(url.toString())
+        browser.QDesktopServices, "openUrl", lambda url: opened.append(url.toString())
     )
     found_release(qtbot, offline_window)
     offline_window.open_notifications()

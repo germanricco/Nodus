@@ -24,15 +24,17 @@ from PySide6.QtWidgets import (
 
 from nodus import __version__
 from nodus.database.repositories.transaction_repository import TransactionFilter
+from nodus.links import DONATE_URL, REPOSITORY_URL, feedback_url
 from nodus.models.currency import FOREIGN_CURRENCIES, HOME_CURRENCY, Currency
 from nodus.models.exchange_rate import ExchangeRate
 from nodus.services.backup_service import BackupService
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.services.rate_feed_service import SOURCES
-from nodus.services.update_service import REPOSITORY_URL
+from nodus.ui.browser import open_url
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import export_transactions
+from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.labels import rate_text
@@ -412,15 +414,23 @@ class SettingsPage(Page):
 
     # About
 
+    def show_news(self) -> None:
+        NewsDialog.for_entries(self._services.news.all_entries(), parent=self.window()).exec()
+
     def _about_card(self) -> Card:
         card = Card("Acerca de Nodus")
         version_row = SettingRow(f"Versión {__version__}")
-        version_row.add(
-            secondary_button(
-                "Ver en GitHub", lambda: QDesktopServices.openUrl(QUrl(REPOSITORY_URL))
-            )
-        )
+        version_row.add(secondary_button("Ver en GitHub", lambda: open_url(REPOSITORY_URL)))
         card.body.addWidget(version_row)
+        news_row = SettingRow("Novedades")
+        news_row.add(secondary_button("Ver novedades", self.show_news))
+        card.body.addWidget(news_row)
+        feedback_row = SettingRow("Comentarios")
+        feedback_row.add(secondary_button("Enviar comentarios", lambda: open_url(feedback_url())))
+        card.body.addWidget(feedback_row)
+        donate_row = SettingRow("Apoyar el proyecto")
+        donate_row.add(secondary_button("Invitar un cafecito", lambda: open_url(DONATE_URL)))
+        card.body.addWidget(donate_row)
         self.check_updates_input = QCheckBox("Buscar actualizaciones al iniciar")
         self.check_updates_input.setToolTip(
             "Consulta en GitHub cuál es la última versión publicada. No envía ningún dato tuyo."

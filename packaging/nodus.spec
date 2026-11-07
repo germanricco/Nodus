@@ -58,8 +58,10 @@ def unused(destination: str) -> bool:
 analysis = Analysis(
     [str(PACKAGING / "entry.py")],
     pathex=[str(ROOT / "src")],
-    # Migrations, icons and the stylesheet, which the code reads with importlib.resources.
-    datas=collect_data_files("nodus", excludes=["**/__pycache__"]),
+    # Migrations, icons and the stylesheet, which the code reads with importlib.resources,
+    # and the changelog, which lives at the repository root but is read from the package.
+    datas=collect_data_files("nodus", excludes=["**/__pycache__"])
+    + [(str(ROOT / "CHANGELOG.md"), "nodus")],
     excludes=["tkinter"],
 )
 analysis.binaries = [entry for entry in analysis.binaries if not unused(entry[0])]

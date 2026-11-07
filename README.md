@@ -126,7 +126,7 @@ Nodus runs on **64-bit Windows 10 and 11**.
 2. Open it and follow the wizard. It installs for your user only, without administrator rights, and shows up in the Start menu.
 3. If Windows says "Windows protected your PC", click "More info" and then "Run anyway". The warning appears because the installer has no commercial code-signing certificate, which costs a yearly fee. Every installer is built automatically on GitHub from the code in this repository.
 
-To update, install the new version over the old one: your data is kept. Nodus lets you know when a new version is out. If you want it waiting for you every morning, turn on «Abrir Nodus al iniciar Windows» in Settings, and uninstalling turns it off again.
+To update, install the new version over the old one: your data is kept. Nodus lets you know when a new version is out and what it brings, and after updating it shows once what changed; the full history is in [CHANGELOG.md](CHANGELOG.md) (in Spanish). If you want it waiting for you every morning, turn on «Abrir Nodus al iniciar Windows» in Settings, and uninstalling turns it off again.
 
 ## Roadmap
 
@@ -140,7 +140,11 @@ Nodus is written in **Python**. The interface uses **PySide6**, the official Qt 
 
 ## Contributing
 
-Ideas and bug reports are welcome in [Issues](https://github.com/germanricco/Nodus/issues). To run Nodus from source, run the tests or build the installer, see [CONTRIBUTING.md](CONTRIBUTING.md) (in Spanish).
+Ideas and bug reports are welcome in [Issues](https://github.com/germanricco/Nodus/issues), or straight from the app with the speech bubble in the top bar, which opens a short form that needs no account. To run Nodus from source, run the tests or build the installer, see [CONTRIBUTING.md](CONTRIBUTING.md) (in Spanish).
+
+## Support
+
+Nodus is free and always will be. If it helps you keep your finances in order and you want to give something back, you can [buy me a coffee on Cafecito](https://cafecito.app/germanricco), also from Settings in the app.
 
 ## Acknowledgements
 
