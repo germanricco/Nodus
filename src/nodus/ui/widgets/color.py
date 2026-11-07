@@ -1,12 +1,22 @@
-"""Category colors: a dot to show one and a picker to choose one."""
+"""Category and tag colors: a dot to show one and a picker to choose one."""
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
+from PySide6.QtCore import QPointF, Qt
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QIcon,
+    QPainter,
+    QPainterPath,
+    QPaintEvent,
+    QPen,
+    QPixmap,
+)
 from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
 
 from nodus.models.palette import PALETTE
+from nodus.ui.widgets.color_wheel import ColorWheelPopup, hue_ring_gradient
 
 
 def color_icon(color: str, size: int = 12) -> QIcon:
@@ -41,11 +51,38 @@ class ColorDot(QLabel):
         self.setStyleSheet(f"background: {color}; border-radius: {self.width() // 2}px;")
 
 
-class ColorPicker(QWidget):
-    """A grid of round swatches; exactly one is selected.
+class WheelSwatch(QPushButton):
+    """The last swatch of the picker: a ring of every hue with a «+», which opens the
+    color wheel."""
 
-    A color outside the palette (set with ``set_color``) gets its own swatch, so editing
-    never silently changes a category's color.
+    def paintEvent(self, _event: QPaintEvent) -> None:  # noqa: N802
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        center = QPointF(self.width() / 2, self.height() / 2)
+        radius = min(self.width(), self.height()) / 2
+        painter.setPen(Qt.PenStyle.NoPen)
+        # A ring, so the dialog's own background shows through in either theme.
+        ring = QPainterPath()
+        ring.addEllipse(center, radius, radius)
+        ring.addEllipse(center, radius - 4, radius - 4)
+        painter.fillPath(ring, QBrush(hue_ring_gradient(center)))
+        painter.setPen(QPen(self.palette().windowText(), 1.6))
+        arm = radius / 3
+        painter.drawLine(
+            QPointF(center.x() - arm, center.y()), QPointF(center.x() + arm, center.y())
+        )
+        painter.drawLine(
+            QPointF(center.x(), center.y() - arm), QPointF(center.x(), center.y() + arm)
+        )
+        painter.end()
+
+
+class ColorPicker(QWidget):
+    """A grid of round swatches; exactly one is selected. The last one, «+», opens a
+    color wheel for any other color.
+
+    A color outside the palette (set with ``set_color`` or chosen on the wheel) gets its
+    own swatch, so editing never silently changes a category's color.
     """
 
     SWATCH_SIZE = 26
@@ -58,6 +95,12 @@ class ColorPicker(QWidget):
         self._grid.setSpacing(8)
         self._group = QButtonGroup(self)
         self._swatches: dict[str, QPushButton] = {}
+        self.wheel_swatch = WheelSwatch()
+        self.wheel_swatch.setFixedSize(self.SWATCH_SIZE, self.SWATCH_SIZE)
+        self.wheel_swatch.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.wheel_swatch.setToolTip("Otro color")
+        self.wheel_swatch.clicked.connect(self.open_wheel)
+        self.wheel_popup: ColorWheelPopup | None = None
         for color in PALETTE:
             self._add_swatch(color)
         self.set_color(PALETTE[0])
@@ -70,6 +113,12 @@ class ColorPicker(QWidget):
         if color not in self._swatches:
             self._add_swatch(color)
         self._swatches[color].setChecked(True)
+
+    def open_wheel(self) -> None:
+        """Opens the color wheel on the current color, under the «+» swatch."""
+        self.wheel_popup = ColorWheelPopup(self.color(), self)
+        self.wheel_popup.color_chosen.connect(self.set_color)
+        self.wheel_popup.open_below(self.wheel_swatch)
 
     def _add_swatch(self, color: str) -> None:
         swatch = QPushButton()
@@ -87,3 +136,8 @@ class ColorPicker(QWidget):
         self._grid.addWidget(swatch, index // self.COLUMNS, index % self.COLUMNS)
         self._group.addButton(swatch)
         self._swatches[color] = swatch
+        # The «+» always comes right after the last color.
+        self._grid.removeWidget(self.wheel_swatch)
+        self._grid.addWidget(
+            self.wheel_swatch, (index + 1) // self.COLUMNS, (index + 1) % self.COLUMNS
+        )

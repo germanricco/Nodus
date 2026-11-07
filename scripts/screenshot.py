@@ -134,6 +134,14 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
             app.processEvents()
             save(dialog, args.out / f"{name}-{mode.value}.png")
             dialog.close()
+        # The color wheel, opened from the category dialog's «+» swatch.
+        dialog = CategoryDialog(services, event_bus, parent=window)
+        dialog.show()
+        dialog.color_input.open_wheel()
+        dialog.color_input.wheel_popup.set_color("#2a9d8f")
+        app.processEvents()
+        save(dialog.color_input.wheel_popup, args.out / f"color-wheel-{mode.value}.png")
+        dialog.close()
         # The whole dashboard, below the fold too.
         window.resize(window.width(), FULL_DASHBOARD_HEIGHT)
         window.show_page(PageId.DASHBOARD)

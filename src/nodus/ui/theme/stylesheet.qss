@@ -186,7 +186,8 @@ QLabel#NotificationCount {
     font-weight: 700;
 }
 
-QFrame#NotificationPanel {
+QFrame#NotificationPanel,
+QFrame#ColorWheelPopup {
     background: $surface;
     border: 1px solid $border;
     border-radius: 10px;
@@ -575,4 +576,17 @@ QToolButton#TagChip {
 
 QToolButton#TagChip:hover {
     border: 1px solid $expense;
+}
+
+QSlider::groove:horizontal {
+    height: 6px;
+    background: $border;
+    border-radius: 3px;
+}
+
+QSlider::handle:horizontal {
+    width: 16px;
+    margin: -5px 0;
+    background: $accent;
+    border-radius: 8px;
 }
