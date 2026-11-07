@@ -21,31 +21,31 @@ Sin nube, sin cuentas, sin suscripciones.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-full-dark.png">
-  <img src="docs/images/dashboard-full-light.png" alt="El dashboard de Nodus: patrimonio, próximos pagos, gastos por categoría y presupuestos">
+  <img src="docs/images/dashboard-full-light.png" alt="El dashboard de Nodus: patrimonio neto, próximos pagos, gastos por categoría y presupuestos">
 </picture>
 
 ## Por qué Nodus
 
 Las aplicaciones de finanzas personales que se ven bien suelen vivir en la nube: piden crear una cuenta, cobran una suscripción y guardan tu historial financiero en servidores ajenos. Las que funcionan en tu computadora, en cambio, muchas veces parecen de otra época. Nodus busca el punto medio que faltaba: una interfaz cuidada y fluida que corre entera en tu máquina, con todos tus datos en un único archivo que puedes copiar, respaldar o mover cuando quieras.
 
-Nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta tiene su moneda, las compras de dólares guardan lo que salió y lo que entró, y el patrimonio se ve en las dos monedas con la cotización que elijas: MEP, blue u oficial. *Nodus* significa «nodo» en latín, el punto donde las líneas se cruzan, y esa es la idea: tu computadora es el único lugar donde tus datos financieros se encuentran.
+Nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta tiene su moneda, las compras de dólares guardan lo que salió y lo que entró, y el patrimonio neto se ve en las dos monedas con la cotización que elijas: MEP, blue u oficial. *Nodus* significa «nodo» en latín, el punto donde las líneas se cruzan, y esa es la idea: tu computadora es el único lugar donde tus datos financieros se encuentran.
 
 ## Qué puedes hacer
 
 ### Ver tu situación de un vistazo
-El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría te lleva a sus movimientos. Si alguien mira tu pantalla, el ojo de la barra superior oculta tus saldos y tu patrimonio, y el panel lateral se contrae a sus íconos cuando quieres más espacio.
+El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio neto, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría te lleva a sus movimientos. Si alguien mira tu pantalla, el ojo de la barra superior oculta tus saldos y tu patrimonio neto, y el panel lateral se contrae a sus íconos cuando quieres más espacio.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
-  <img src="docs/images/dashboard-light.png" alt="El dashboard: patrimonio, próximos pagos y gastos por categoría">
+  <img src="docs/images/dashboard-light.png" alt="El dashboard: patrimonio neto, próximos pagos y gastos por categoría">
 </picture>
 
 ### Llevar tus cuentas en pesos y en dólares
-Registras cada lugar donde tienes dinero, sea el banco, el efectivo, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. La cotización del día puede llegar sola o la cargas a mano. Los ahorros y las inversiones crecen solos, con intereses o precios: anotas cuánto vale hoy una, como lo muestra su app, y Nodus guarda la diferencia como rendimiento, que mueve tu saldo y tu patrimonio sin contar como ingreso.
+Registras cada lugar donde tienes dinero, sea el banco, el efectivo, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. La cotización del día puede llegar sola o la cargas a mano. Los ahorros y las inversiones crecen solos, con intereses o precios: anotas cuánto vale hoy una, como lo muestra su app, y Nodus guarda la diferencia como rendimiento, que mueve tu saldo y tu patrimonio neto sin contar como ingreso.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">
-  <img src="docs/images/accounts-light.png" alt="Cuentas en pesos y en dólares con el patrimonio y el rendimiento de una inversión">
+  <img src="docs/images/accounts-light.png" alt="Cuentas en pesos y en dólares con el patrimonio neto y el rendimiento de una inversión">
 </picture>
 
 ### Registrar y encontrar tus movimientos
@@ -97,7 +97,7 @@ Defines un presupuesto mensual para las categorías que quieres cuidar y ves cu�
 </picture>
 
 ### Mirar el año completo
-La página Análisis toma distancia: por defecto, los últimos doce meses. Tendencias muestra tus gastos, ingresos o ahorro mes a mes, apilados por categoría y frente a tu promedio mensual, junto con en qué se fue el dinero por categoría, por beneficiario y por etiqueta. Flujo de caja pone lado a lado ingresos, gastos, ahorro y tasa de ahorro con los del período anterior, y Patrimonio sigue cómo creció lo que tienes, fin de mes tras fin de mes, en pesos o en dólares. Un clic en cualquier barra o fila te lleva a los movimientos que la forman.
+La página Análisis toma distancia: por defecto, los últimos doce meses. Tendencias muestra tus gastos, ingresos o ahorro mes a mes, apilados por categoría y frente a tu promedio mensual, junto con en qué se fue el dinero por categoría, por beneficiario y por etiqueta. Flujo de caja pone lado a lado ingresos, gastos, ahorro y tasa de ahorro con los del período anterior, y Patrimonio neto sigue cómo creció lo que tienes, fin de mes tras fin de mes, en pesos o en dólares. Un clic en cualquier barra o fila te lleva a los movimientos que la forman.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/analysis-trends-dark.png">

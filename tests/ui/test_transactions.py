@@ -327,6 +327,21 @@ class TestTransactionsPage:
 
         assert column(page, AMOUNT) == ["$ 121.550,00 → US$ 100,00"]
 
+    def test_delete_key_deletes_the_selected_row(
+        self, qtbot, monkeypatch, services, event_bus, page, pesos, dollars
+    ):
+        populate(services, pesos, dollars)
+        page.refresh()
+        monkeypatch.setattr(transactions_page, "confirm", lambda *_args: True)
+
+        qtbot.keyClick(page.table, Qt.Key.Key_Delete)  # nothing selected: nothing happens
+        assert len(all_transactions(services)) == 5
+        page.table.selectRow(column(page, AMOUNT).index("-$ 2.500,00"))
+        with qtbot.waitSignal(event_bus.transactions_changed):
+            qtbot.keyClick(page.table, Qt.Key.Key_Delete)
+
+        assert len(all_transactions(services)) == 4
+
     def test_delete_transfer_after_confirmation(
         self, qtbot, monkeypatch, services, event_bus, page, pesos, dollars
     ):

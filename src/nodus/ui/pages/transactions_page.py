@@ -39,7 +39,7 @@ from nodus.ui.widgets.selectors import (
     TagComboBox,
 )
 from nodus.ui.widgets.style import set_style_property
-from nodus.ui.widgets.table import record_table
+from nodus.ui.widgets.table import DELETE_KEY_HINT, bind_delete_key, record_table
 from nodus.ui.widgets.transaction_table import (
     ACCOUNT,
     CATEGORY,
@@ -108,6 +108,7 @@ class TransactionsPage(Page):
         self.add_header_widget(self.period_selector)
         self.edit_button = self.add_header_button("Editar")
         self.delete_button = self.add_header_button("Eliminar")
+        self.delete_button.setToolTip(DELETE_KEY_HINT)
         self.export_button = self.add_header_button("Exportar")
         self.export_button.setToolTip("Guarda en un archivo CSV los movimientos que se ven")
         self.export_button.clicked.connect(self.export_shown)
@@ -338,6 +339,7 @@ class TransactionsPage(Page):
     def _build_table(self) -> QTableView:
         table = record_table(self.model, DESCRIPTION)
         table.doubleClicked.connect(lambda _index: self.edit_selected())
+        bind_delete_key(table, self.delete_selected)
         table.selectionModel().selectionChanged.connect(self._update_actions)
         return table
 

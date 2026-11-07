@@ -103,10 +103,10 @@ class NetWorthCard(Card):
     def _build_header(self) -> None:
         header = QHBoxLayout()
         header.setSpacing(12)
-        title = QLabel("PATRIMONIO")
+        title = QLabel("PATRIMONIO NETO")
         title.setObjectName("CardTitle")
         self.currency_input = SegmentedControl(CURRENCY_LABELS)
-        self.currency_input.setToolTip("Ver el patrimonio en pesos o en dólares")
+        self.currency_input.setToolTip("Ver el patrimonio neto en pesos o en dólares")
         self.currency_input.set_index(
             CURRENCIES.index(self._services.settings.net_worth_currency())
         )

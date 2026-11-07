@@ -82,8 +82,9 @@ class AccountRow(QWidget):
         policy = self.value_button.sizePolicy()
         policy.setRetainSizeWhenHidden(True)
         self.value_button.setSizePolicy(policy)
-        self.value_button.setVisible(account.type.changes_value and not account.is_archived)
         layout.addWidget(self.value_button)
+        # Only once it has a parent: shown before, it would flash as a window of its own.
+        self.value_button.setVisible(account.type.changes_value and not account.is_archived)
         self.edit_button = self._small_button("Editar")
         self.edit_button.clicked.connect(lambda: self.edit_requested.emit(account))
         self.archive_button = self._small_button(

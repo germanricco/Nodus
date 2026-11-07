@@ -35,7 +35,7 @@ nodus = ["database/migrations/*.sql", "ui/icons/*.svg", "ui/theme/*.qss"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tests"]
+pythonpath = ["tests", "scripts"]
 qt_api = "pyside6"
 
 [tool.ruff]

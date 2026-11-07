@@ -46,7 +46,8 @@ class ValueAdjustmentDialog(FormDialog):
         self.difference_label = QLabel()
         hint = QLabel(
             "Escribe lo que vale hoy, como lo muestra su app o resumen. La diferencia cuenta"
-            " como rendimiento: cambia el saldo y el patrimonio, no los ingresos ni los gastos."
+            " como rendimiento: cambia el saldo y el patrimonio neto, no los ingresos ni los"
+            " gastos."
         )
         hint.setObjectName("FieldHint")
         hint.setWordWrap(True)

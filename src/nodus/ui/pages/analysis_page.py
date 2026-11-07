@@ -38,7 +38,7 @@ class AnalysisPage(Page):
             CashFlowView(services, theme_manager),
             net_worth,
         ]
-        self.tabs = SegmentedControl(["Tendencias", "Flujo de caja", "Patrimonio"])
+        self.tabs = SegmentedControl(["Tendencias", "Flujo de caja", "Patrimonio neto"])
         self.period_selector = PeriodSelector(Period.last_months(DEFAULT_MONTHS, date.today()))
         self.add_header_widget(self.tabs)
         self.add_header_widget(self.period_selector)

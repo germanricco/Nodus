@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QAbstractItemModel, Qt
+from collections.abc import Callable
+
+from PySide6.QtCore import QAbstractItemModel, QEvent, QObject, Qt
+from PySide6.QtGui import QKeyEvent, QKeySequence
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableView
 
 
@@ -25,6 +28,33 @@ def record_table(model: QAbstractItemModel, stretch_column: int) -> QTableView:
         header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
     header.setSectionResizeMode(stretch_column, QHeaderView.ResizeMode.Stretch)
     return table
+
+
+DELETE_KEY_HINT = "También con la tecla Supr"
+
+
+class _DeleteKeyFilter(QObject):
+    """Turns a Supr press on the table it watches into a call to ``delete``."""
+
+    def __init__(self, table: QTableView, delete: Callable[[], None]) -> None:
+        super().__init__(table)
+        self._delete = delete
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802
+        if (
+            event.type() == QEvent.Type.KeyPress
+            and isinstance(event, QKeyEvent)
+            and event.matches(QKeySequence.StandardKey.Delete)
+        ):
+            self._delete()
+            return True
+        return False
+
+
+def bind_delete_key(table: QTableView, delete: Callable[[], None]) -> None:
+    """Calls ``delete`` when Supr is pressed on ``table``, as the page's «Eliminar» button
+    does; ``delete`` asks for confirmation and ignores no selection."""
+    table.installEventFilter(_DeleteKeyFilter(table, delete))
 
 
 def fit_rows(table: QTableView) -> None:

@@ -129,6 +129,16 @@ def test_delete_is_cancelled_when_not_confirmed(monkeypatch, page, services, pop
     assert services.payees.find("Kiosco") is not None
 
 
+def test_delete_key_deletes_the_selected_payee(monkeypatch, qtbot, services, page, populated):
+    page.refresh()
+    monkeypatch.setattr(payees_page, "confirm", lambda *_args: True)
+    select(page, "Kiosco")
+
+    qtbot.keyClick(page.table, Qt.Key.Key_Delete)
+
+    assert services.payees.find("Kiosco") is None
+
+
 class TestDialogs:
     def test_create_with_default_category(self, qtbot, services, event_bus, page):
         dialog = PayeeDialog(services, event_bus)

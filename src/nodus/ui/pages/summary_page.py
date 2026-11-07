@@ -25,7 +25,7 @@ from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.table import record_table
+from nodus.ui.widgets.table import DELETE_KEY_HINT, bind_delete_key, record_table
 
 # The first three columns of every summary table; subclasses may add more after them.
 NAME, COUNT, TOTAL = range(3)
@@ -169,6 +169,7 @@ class SummaryPage(Page, Generic[S]):
         self.edit_button = self.add_header_button("Editar")
         self.merge_button = self.add_header_button("Unir con…")
         self.delete_button = self.add_header_button("Eliminar")
+        self.delete_button.setToolTip(DELETE_KEY_HINT)
         self.create_button = self.add_header_button(f"Crear {noun}", primary=True)
 
         self.model = model
@@ -254,6 +255,7 @@ class SummaryPage(Page, Generic[S]):
         table.setSortingEnabled(True)
         table.sortByColumn(COUNT, Qt.SortOrder.DescendingOrder)
         table.doubleClicked.connect(lambda _index: self.show_selected_transactions())
+        bind_delete_key(table, lambda: self._with_selected(self.delete_item))
         table.selectionModel().selectionChanged.connect(self._update_actions)
         return table
 

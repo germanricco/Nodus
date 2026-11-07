@@ -134,6 +134,21 @@ class TestPage:
         assert page.active_label.text() == "3"
         assert page.monthly_label.text() == "$ 3.000,00"
 
+    def test_nearest_charge_comes_first(self, qtbot, services, event_bus, pesos):
+        """Created in any order, they list by date: within «Próximos 7 días» and after."""
+        for day, name in [(date(2026, 11, 20), "Día 20"), (date(2026, 12, 2), "2 de dic"),
+                          (date(2026, 11, 11), "Día 11"), (date(2026, 11, 8), "Día 8"),
+                          (date(2026, 11, 30), "Día 30")]:  # fmt: skip
+            create(services, pesos.id, due=day, name=name)
+        page = RecurringPage(services, event_bus)
+        qtbot.addWidget(page)
+
+        page.refresh(date(2026, 11, 6))
+
+        assert [row.charge.name for row in page.rows] == [
+            "Día 8", "Día 11", "Día 20", "Día 30", "2 de dic"
+        ]  # fmt: skip
+
     def test_skip_pause_and_delete(self, qtbot, services, event_bus, pesos, monkeypatch):
         charge = create(services, pesos.id)
         page = RecurringPage(services, event_bus)

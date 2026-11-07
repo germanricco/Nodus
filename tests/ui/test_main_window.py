@@ -1,6 +1,9 @@
+from datetime import date
+
+from demo_data import load_demo_data
 from factories import ars, expense_draft
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel
+from PySide6.QtCore import QEvent, QObject, Qt
+from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
@@ -123,3 +126,46 @@ def test_accounts_fold_under_their_title(window, qtbot, services, pesos):
     assert services.settings.accounts_folded()
     window.sidebar.toggle_accounts_folded()
     assert "Banco" in sidebar_texts(window)
+
+
+class _StrayWindowSpy(QObject):
+    """Records every widget that shows as a window of its own while installed."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.shown: list[str] = []
+
+    def eventFilter(self, watched, event) -> bool:  # noqa: N802
+        if (
+            event.type() == QEvent.Type.Show
+            and isinstance(watched, QWidget)
+            and watched.windowType() == Qt.WindowType.Window
+            and not isinstance(watched, MainWindow)
+        ):
+            self.shown.append(f"{type(watched).__name__} {watched.objectName()!r}")
+        return False
+
+
+def test_refreshing_never_flashes_a_stray_window(qtbot, qapp, window, services, event_bus):
+    """A widget made visible before it has a parent shows for an instant as a window."""
+    load_demo_data(services, date.today())
+    spy = _StrayWindowSpy()
+    qapp.installEventFilter(spy)
+    try:
+        for page_id in PageId:
+            window.show_page(page_id)
+            window.toggle_amounts_hidden()
+            window.toggle_amounts_hidden()
+        for signal in (
+            event_bus.accounts_changed,
+            event_bus.transactions_changed,
+            event_bus.recurring_changed,
+            event_bus.budgets_changed,
+            event_bus.exchange_rates_changed,
+        ):
+            signal.emit()
+        qtbot.wait(50)
+    finally:
+        qapp.removeEventFilter(spy)
+
+    assert spy.shown == []
