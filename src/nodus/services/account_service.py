@@ -33,7 +33,8 @@ class AccountService:
     ) -> Account:
         account = Account(None, clean_name(name), account_type, currency, initial_balance)
         with self._database.transaction():
-            return self._accounts.add(account)
+            position = self._accounts.next_position()
+            return self._accounts.add(dataclasses.replace(account, position=position))
 
     def update(
         self, account_id: int, name: str, account_type: AccountType, initial_balance: Money
@@ -70,8 +71,23 @@ class AccountService:
         return require_found(self._accounts.get(account_id), "La cuenta no existe.")
 
     def list_accounts(self, include_archived: bool = False) -> list[Account]:
-        """Accounts in alphabetical order."""
-        return sorted(self._accounts.list(include_archived), key=lambda a: name_sort_key(a.name))
+        """Accounts in the order the user gave them; alphabetical among equal positions,
+        as every account is until the user first moves one."""
+        return sorted(
+            self._accounts.list(include_archived),
+            key=lambda a: (a.position, name_sort_key(a.name)),
+        )
+
+    def reorder(self, account_ids: list[int]) -> None:
+        """Puts the accounts of ``account_ids`` first, in that order; the rest (the
+        archived ones, when the active list is reordered) keep their order after them."""
+        known = {a.id for a in self._accounts.list(include_archived=True)}
+        if len(set(account_ids)) != len(account_ids) or not set(account_ids) <= known:
+            raise ValidationError("La lista de cuentas no es válida.")
+        rest = [a.id for a in self.list_accounts(include_archived=True) if a.id not in account_ids]
+        order = [*account_ids, *rest]
+        with self._database.transaction():
+            self._accounts.set_positions({account_id: i for i, account_id in enumerate(order)})
 
     def balances(self, on: date | None = None) -> dict[int, Money]:
         """Balance of every account (archived included) at the end of ``on``, or the current

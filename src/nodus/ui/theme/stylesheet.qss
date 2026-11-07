@@ -120,6 +120,12 @@ QMainWindow, #ContentArea, #PageStack {
     font-weight: 700;
 }
 
+/* Where a dragged row of a ReorderableList would land. */
+#DropIndicator {
+    background: $accent;
+    border-radius: 1px;
+}
+
 #Badge {
     background: $accent_soft;
     color: $accent;

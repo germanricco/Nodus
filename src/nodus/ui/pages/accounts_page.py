@@ -21,6 +21,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.money_label import MoneyLabel, masked
 from nodus.ui.widgets.net_worth_card import NetWorthCard, signed
+from nodus.ui.widgets.reorderable_list import ReorderableList
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 
@@ -104,7 +105,11 @@ class AccountRow(QWidget):
 
 
 class AccountsPage(Page):
-    """Net worth in pesos and dollars, then active and archived accounts."""
+    """Net worth in pesos and dollars, then active and archived accounts.
+
+    Active accounts are reordered by dragging their handle; the order is saved and shows
+    in the sidebar and in every account list.
+    """
 
     navigate_requested = Signal(object)  # PageId
 
@@ -131,6 +136,8 @@ class AccountsPage(Page):
         page_layout.addWidget(self.net_worth_card)
         self._sections = QVBoxLayout()
         self._sections.setSpacing(16)
+        # The active accounts, when there are enough to reorder.
+        self.account_list: ReorderableList | None = None
         page_layout.addLayout(self._sections)
         page_layout.addStretch()
         scroll = QScrollArea()
@@ -148,6 +155,7 @@ class AccountsPage(Page):
 
     def refresh(self) -> None:
         clear_layout(self._sections)
+        self.account_list = None
         accounts = self._services.accounts.list_accounts(include_archived=True)
         self.net_worth_card.setVisible(bool(accounts))
         if not accounts:
@@ -157,7 +165,9 @@ class AccountsPage(Page):
         active = [a for a in accounts if not a.is_archived]
         archived = [a for a in accounts if a.is_archived]
         self.net_worth_card.show_day(date.today())
-        self._sections.addWidget(self._accounts_card("Cuentas activas", active, balances))
+        self._sections.addWidget(
+            self._accounts_card("Cuentas activas", active, balances, reorderable=True)
+        )
         if archived:
             self._sections.addWidget(self._accounts_card("Archivadas", archived, balances))
 
@@ -168,13 +178,24 @@ class AccountsPage(Page):
         ValueAdjustmentDialog(self._services, self._event_bus, account, parent=self.window()).exec()
 
     def _accounts_card(
-        self, title: str, accounts: list[Account], balances: dict[int, Money]
+        self,
+        title: str,
+        accounts: list[Account],
+        balances: dict[int, Money],
+        reorderable: bool = False,
     ) -> Card:
+        """A card with a row per account; ``reorderable`` gives each a drag handle once
+        there is more than one."""
         card = Card(title)
         if not accounts:
             empty = QLabel("No hay cuentas activas.")
             set_style_property(empty, "muted", True)
             card.body.addWidget(empty)
+        rows = None
+        if reorderable and len(accounts) > 1:
+            rows = self.account_list = ReorderableList()
+            rows.order_changed.connect(self._save_order)
+            card.body.addWidget(rows)
         for account in accounts:
             value_change = (
                 self._services.accounts.value_change(account.id)
@@ -191,8 +212,15 @@ class AccountsPage(Page):
             row.value_update_requested.connect(self.open_value_dialog)
             row.archive_toggled.connect(self._toggle_archived)
             row.delete_requested.connect(self.delete_account)
-            card.body.addWidget(row)
+            if rows is None:
+                card.body.addWidget(row)
+            else:
+                rows.add_row(account.id, row)
         return card
+
+    def _save_order(self, account_ids: list[int]) -> None:
+        self._services.accounts.reorder(account_ids)
+        self._event_bus.accounts_changed.emit()
 
     def _toggle_archived(self, account: Account) -> None:
         self._services.accounts.set_archived(account.id, not account.is_archived)

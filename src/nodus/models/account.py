@@ -14,6 +14,7 @@ class AccountType(Enum):
 
     CASH = "cash"
     BANK = "bank"
+    WALLET = "wallet"  # Mercado Pago, Ualá…: money held by an app, not by a bank
     CREDIT_CARD = "credit_card"
     SAVINGS = "savings"
     INVESTMENT = "investment"
@@ -39,6 +40,8 @@ class Account:
     currency: Currency
     initial_balance: Money
     is_archived: bool = False
+    # Place in the user's own order; ties, as after the upgrade that added it, go by name.
+    position: int = 0
 
     def __post_init__(self) -> None:
         if self.initial_balance.currency is not self.currency:

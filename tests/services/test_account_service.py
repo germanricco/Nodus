@@ -76,3 +76,38 @@ def test_delete_takes_movements_and_whole_transfers(services, pesos, dollars):
 def test_delete_unknown_account_raises(services):
     with pytest.raises(NotFoundError):
         services.accounts.delete(999)
+
+
+class TestOrder:
+    def names(self, services, include_archived=False) -> list[str]:
+        return [a.name for a in services.accounts.list_accounts(include_archived)]
+
+    def test_new_accounts_go_last(self, services, pesos, dollars):
+        services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("0"))
+
+        assert self.names(services) == ["Banco", "Ahorro", "Efectivo"]
+
+    def test_equal_positions_go_by_name(self, services, database):
+        """Upgraded databases start with every account at position 0: alphabetical."""
+        for name in ("Banco", "Ámbar", "efectivo"):
+            services.accounts.create(name, AccountType.CASH, Currency.ARS, ars("0"))
+        with database.transaction():
+            database.connection.execute("UPDATE accounts SET position = 0")
+
+        assert self.names(services) == ["Ámbar", "Banco", "efectivo"]
+
+    def test_reorder_keeps_archived_accounts_after(self, services, pesos, dollars):
+        wallet = services.accounts.create(
+            "Mercado Pago", AccountType.WALLET, Currency.ARS, ars("0")
+        )
+        services.accounts.set_archived(pesos.id, True)
+
+        services.accounts.reorder([wallet.id, dollars.id])
+
+        assert self.names(services) == ["Mercado Pago", "Ahorro"]
+        assert self.names(services, include_archived=True) == ["Mercado Pago", "Ahorro", "Banco"]
+
+    @pytest.mark.parametrize("ids", [[1, 1], [1, 99]])
+    def test_reorder_rejects_repeated_or_unknown_ids(self, services, pesos, dollars, ids):
+        with pytest.raises(ValidationError):
+            services.accounts.reorder(ids)

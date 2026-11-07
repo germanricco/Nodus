@@ -144,13 +144,28 @@ class Database:
             raise DatabaseError(f"{path}: {error}") from error
 
     def _apply(self, migration: Migration) -> None:
-        script = f"BEGIN;\n{migration.sql}\nPRAGMA user_version = {migration.version};\nCOMMIT;"
+        """Runs ``migration`` in one transaction, with foreign keys off as SQLite requires to
+        rebuild a table others refer to (dropping it would otherwise cascade or fail).
+
+        The keys are checked before committing, so a migration can never leave a row
+        pointing nowhere.
+        """
+        connection = self._connection
+        connection.execute("PRAGMA foreign_keys = OFF")  # has no effect inside a transaction
         try:
-            self._connection.executescript(script)
-        except sqlite3.Error:
-            if self._connection.in_transaction:
-                self._connection.rollback()
+            connection.executescript(f"BEGIN;\n{migration.sql}")
+            if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
+                raise DatabaseError(
+                    f"Migration {migration.version} would break references between tables."
+                )
+            connection.execute(f"PRAGMA user_version = {migration.version}")
+            connection.commit()
+        except (sqlite3.Error, DatabaseError):
+            if connection.in_transaction:
+                connection.rollback()
             raise
+        finally:
+            connection.execute("PRAGMA foreign_keys = ON")
 
     def close(self) -> None:
         self._connection.close()

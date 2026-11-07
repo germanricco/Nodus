@@ -53,6 +53,7 @@ def load_demo_data(services: Services, today: date) -> None:
 
     banco = services.accounts.create("Banco", AccountType.BANK, Currency.ARS, ars("420000"))
     efectivo = services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("60000"))
+    services.accounts.create("Mercado Pago", AccountType.WALLET, Currency.ARS, ars("45000"))
     ahorro = services.accounts.create("Ahorro en dólares", AccountType.SAVINGS, Currency.USD,
                                       usd("400"))  # fmt: skip
 

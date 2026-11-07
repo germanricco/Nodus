@@ -41,7 +41,7 @@ El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y e
 </picture>
 
 ### Llevar tus cuentas en pesos y en dólares
-Registras cada lugar donde tienes dinero, sea el banco, el efectivo, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. La cotización del día puede llegar sola o la cargas a mano. Los ahorros y las inversiones crecen solos, con intereses o precios: anotas cuánto vale hoy una, como lo muestra su app, y Nodus guarda la diferencia como rendimiento, que mueve tu saldo y tu patrimonio neto sin contar como ingreso.
+Registras cada lugar donde tienes dinero, sea el banco, el efectivo, una billetera virtual como Mercado Pago, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Las ordenas arrastrándolas, y el panel lateral sigue ese orden. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. La cotización del día puede llegar sola o la cargas a mano. Los ahorros y las inversiones crecen solos, con intereses o precios: anotas cuánto vale hoy una, como lo muestra su app, y Nodus guarda la diferencia como rendimiento, que mueve tu saldo y tu patrimonio neto sin contar como ingreso.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">

@@ -11,6 +11,7 @@ from nodus.models.transaction import TransactionType
 
 ACCOUNT_TYPE_LABELS = {
     AccountType.BANK: "Cuenta bancaria",
+    AccountType.WALLET: "Billetera virtual",
     AccountType.CASH: "Efectivo",
     AccountType.CREDIT_CARD: "Tarjeta de crédito",
     AccountType.SAVINGS: "Ahorro",

@@ -33,14 +33,16 @@ _BALANCES_SQL = """
 class AccountRepository(Repository):
     def add(self, account: Account) -> Account:
         account_id = self._insert(
-            "INSERT INTO accounts (name, type, currency, initial_balance_cents, is_archived)"
-            " VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO accounts"
+            " (name, type, currency, initial_balance_cents, is_archived, position)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
             (
                 account.name,
                 account.type.value,
                 account.currency.value,
                 account.initial_balance.cents,
                 account.is_archived,
+                account.position,
             ),
         )
         return dataclasses.replace(account, id=account_id)
@@ -69,6 +71,18 @@ class AccountRepository(Repository):
             sql += " WHERE is_archived = 0"
         rows = self._fetch_all(sql)
         return [self._from_row(row) for row in rows]
+
+    def next_position(self) -> int:
+        """The position after the last account, so a new one goes at the end."""
+        row = self._fetch_one("SELECT COALESCE(MAX(position), -1) + 1 AS next FROM accounts")
+        return row["next"]
+
+    def set_positions(self, positions: dict[int, int]) -> None:
+        """Saves the position of each account id in ``positions``."""
+        self._database.connection.executemany(
+            "UPDATE accounts SET position = ? WHERE id = ?",
+            [(position, account_id) for account_id, position in positions.items()],
+        )
 
     def count_transactions(self, account_id: int) -> tuple[int, int]:
         """(movements, transfers) recorded in the account; a transfer counts in both."""
@@ -107,4 +121,5 @@ class AccountRepository(Repository):
             currency=currency,
             initial_balance=Money(row["initial_balance_cents"], currency),
             is_archived=bool(row["is_archived"]),
+            position=row["position"],
         )

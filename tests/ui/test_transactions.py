@@ -51,12 +51,12 @@ class TestTransactionDialog:
         self, qtbot, services, event_bus, pesos, dollars
     ):
         first = make_dialog(qtbot, services, event_bus)
-        assert first.account_input.current_id() == dollars.id  # alphabetical: Ahorro, Banco
-        first.account_input.select(pesos.id)
+        assert first.account_input.current_id() == pesos.id  # the first in the user's order
+        first.account_input.select(dollars.id)
         first.amount_input.line_edit.setText("100")
         save(qtbot, first)
 
-        assert make_dialog(qtbot, services, event_bus).account_input.current_id() == pesos.id
+        assert make_dialog(qtbot, services, event_bus).account_input.current_id() == dollars.id
 
     def test_archived_last_account_is_not_offered(self, qtbot, services, event_bus, pesos, dollars):
         services.settings.set_last_account_id(pesos.id)

@@ -95,7 +95,7 @@ class TestAccountsPage:
 
         page.refresh()
 
-        assert [row.account.name for row in rows(page)] == ["Ahorro", "Banco"]
+        assert [row.account.name for row in rows(page)] == ["Banco", "Ahorro"]  # as created
         card = page.net_worth_card
         assert card.total_label.text() == "$ 600.000,00"
         assert card.legends[Currency.ARS].amount.text() == "$ 100.000,00"
@@ -221,3 +221,50 @@ class TestValueAdjustment:
         dialog.undo_button.click()
 
         assert services.accounts.balance(investment.id) == ars("1000000")
+
+
+class TestOrder:
+    def test_wallet_is_offered_and_shown(self, qtbot, services, event_bus, page):
+        dialog = AccountDialog(services, event_bus)
+        qtbot.addWidget(dialog)
+        assert dialog.type_input.findText("Billetera virtual") == 1  # right after the bank
+        services.accounts.create("Mercado Pago", AccountType.WALLET, Currency.ARS, ars("0"))
+
+        page.refresh()
+
+        assert "Billetera virtual · ARS" in texts(page)
+
+    def test_a_single_account_has_nothing_to_reorder(self, page, pesos):
+        page.refresh()
+
+        assert page.account_list is None
+
+    def test_dropping_an_account_saves_the_order_everywhere(
+        self, qtbot, services, event_bus, window, pesos, dollars
+    ):
+        services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("0"))
+        event_bus.accounts_changed.emit()
+        page = window.page(PageId.ACCOUNTS)
+        assert [row.account.name for row in rows(page)] == ["Banco", "Ahorro", "Efectivo"]
+
+        with qtbot.waitSignal(event_bus.accounts_changed):
+            page.account_list.move(2, 0)  # «Efectivo» to the top
+
+        new_order = ["Efectivo", "Banco", "Ahorro"]
+        assert [row.account.name for row in rows(page)] == new_order
+        # Qt lays out the rebuilt sidebar on the next pass of the event loop.
+        qtbot.waitUntil(lambda: sidebar_accounts(window, services) == new_order)
+        account_filter = window.page(PageId.TRANSACTIONS).account_filter
+        assert [account_filter.itemText(i) for i in range(1, 4)] == new_order
+
+
+def sidebar_accounts(window, services) -> list[str]:
+    """Names of the accounts in the sidebar, top to bottom."""
+    names = {account.name for account in services.accounts.list_accounts()}
+    labels = [
+        label
+        for label in window.sidebar.findChildren(QLabel)
+        if label.isVisibleTo(window) and label.text() in names
+    ]
+    labels.sort(key=lambda label: label.mapTo(window, label.rect().topLeft()).y())
+    return [label.text() for label in labels]

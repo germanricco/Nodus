@@ -43,7 +43,7 @@ The dashboard answers the usual questions: how much you have, how the month is g
 </picture>
 
 ### Keep accounts in pesos and dollars
-Add every place where you keep money, from your bank and cash to dollar savings or a credit card, and balances are always computed from your transactions. When you buy dollars, Nodus stores both amounts and shows the rate you actually got. Today's exchange rate can be fetched automatically or entered by hand. Savings and investments grow on their own, with interest or prices: write down what one is worth today, as its app shows it, and Nodus records the difference as a return that moves your balance and net worth without counting as income.
+Add every place where you keep money, from your bank, cash and virtual wallets like Mercado Pago to dollar savings or a credit card, and balances are always computed from your transactions. Drag them into the order you like, and the sidebar follows it. When you buy dollars, Nodus stores both amounts and shows the rate you actually got. Today's exchange rate can be fetched automatically or entered by hand. Savings and investments grow on their own, with interest or prices: write down what one is worth today, as its app shows it, and Nodus records the difference as a return that moves your balance and net worth without counting as income.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">
