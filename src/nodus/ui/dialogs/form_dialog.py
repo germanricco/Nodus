@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QFormLayout,
@@ -79,6 +80,27 @@ class FormDialog(QDialog):
     def show_error(self, message: str) -> None:
         self.error_label.setText(message)
         self.error_label.show()
+
+    def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
+        self._align_labels()
+        super().showEvent(event)
+
+    def _align_labels(self) -> None:
+        """Gives every label the width of the longest one, hidden rows included.
+
+        A form sizes its label column from the visible labels only, so showing or hiding
+        a row (like switching between Gasto, Ingreso and Transferencia) would shift the
+        fields sideways.
+        """
+        labels = [
+            item.widget()
+            for row in range(self.form.rowCount())
+            if (item := self.form.itemAt(row, QFormLayout.ItemRole.LabelRole))
+            and isinstance(item.widget(), QLabel)
+        ]
+        width = max((label.sizeHint().width() for label in labels), default=0)
+        for label in labels:
+            label.setMinimumWidth(width)
 
     def _on_save(self) -> None:
         try:

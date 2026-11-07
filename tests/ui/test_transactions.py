@@ -96,6 +96,19 @@ class TestTransactionDialog:
 
         assert dialog.width() == 460
 
+    def test_fields_stay_in_place_across_modes(self, qtbot, services, event_bus, pesos, dollars):
+        dialog = make_dialog(qtbot, services, event_bus)
+        dialog.show()
+        qtbot.waitExposed(dialog)
+        positions = set()
+
+        for mode in (EXPENSE_MODE, INCOME_MODE, TRANSFER_MODE):
+            dialog.mode_input.set_index(mode)
+            dialog.layout().activate()
+            positions.add(dialog.amount_input.geometry().x())
+
+        assert len(positions) == 1
+
     def test_category_choices_follow_mode(self, qtbot, services, event_bus, pesos):
         dialog = make_dialog(qtbot, services, event_bus)
 

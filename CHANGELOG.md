@@ -16,6 +16,7 @@ Más monedas, billeteras virtuales y tus cuentas en el orden que quieras.
 - Novedades: el aviso de versión nueva muestra qué trae, y al abrir una versión nueva Nodus cuenta qué cambió. Están siempre a mano en Ajustes.
 - La tarjeta principal del Dashboard se llama «Patrimonio neto».
 - Arreglo: al tocar el ojo ya no aparece por un instante una ventana suelta.
+- Arreglo: al pasar entre Gasto, Ingreso y Transferencia, los campos del formulario ya no se corren de lugar.
 
 ## 1.0.1 — 2026-11-06
 
