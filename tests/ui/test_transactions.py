@@ -19,7 +19,7 @@ from nodus.ui.dialogs.transaction_dialog import (
 from nodus.ui.navigation import PageId
 from nodus.ui.pages import transactions_page
 from nodus.ui.pages.transactions_page import TransactionsPage
-from nodus.ui.widgets.selectors import HEADING_ROLE
+from nodus.ui.widgets.selectors import HEADING_ROLE, MANAGE_ROLE
 from nodus.ui.widgets.transaction_table import AMOUNT, CATEGORY, PAYEE
 
 EXPENSE = TransactionType.EXPENSE
@@ -79,6 +79,22 @@ class TestTransactionDialog:
         assert saved.category_id == category_id(services, "Ocio", EXPENSE)
         assert saved.note == "Cine"
         assert saved.occurred_on == date.today()
+
+    def test_dialog_shrinks_and_grows_with_its_fields(
+        self, qtbot, services, event_bus, pesos, dollars
+    ):
+        dialog = make_dialog(qtbot, services, event_bus)
+        dialog.show()
+        qtbot.waitExposed(dialog)
+        expense_height = dialog.height()
+
+        # The layout applies a new size on the next pass of the event loop.
+        dialog.mode_input.set_index(TRANSFER_MODE)
+        qtbot.waitUntil(lambda: dialog.height() < expense_height)  # no payee, category, tags
+        dialog.mode_input.set_index(EXPENSE_MODE)
+        qtbot.waitUntil(lambda: dialog.height() == expense_height)
+
+        assert dialog.width() == 460
 
     def test_category_choices_follow_mode(self, qtbot, services, event_bus, pesos):
         dialog = make_dialog(qtbot, services, event_bus)
@@ -258,6 +274,50 @@ class TestTransactionsPage:
 
         assert [combo.itemText(i) for i in headings] == ["GASTOS", "INGRESOS"]
         assert not any(combo.model().item(i).isEnabled() for i in headings)
+
+    @pytest.mark.parametrize(
+        ("name", "page_id"),
+        [
+            ("account_filter", PageId.ACCOUNTS),
+            ("category_filter", PageId.CATEGORIES),
+            ("payee_filter", PageId.PAYEES),
+            ("tag_filter", PageId.TAGS),
+        ],
+    )
+    def test_list_filters_end_with_edit_that_leads_to_their_page(
+        self, qtbot, services, page, pesos, name, page_id
+    ):
+        services.payees.create("Kiosco")
+        services.tags.create("Viaje")
+        page.refresh()
+        combo = getattr(page, name)
+        last = combo.count() - 1
+        before = combo.currentIndex()
+
+        assert combo.itemText(last) == "Editar"
+        assert combo.itemData(last, MANAGE_ROLE)
+        with qtbot.waitSignal(page.navigate_requested) as signal:
+            combo.view().pressed.emit(combo.model().index(last, 0))
+
+        assert signal.args == [page_id]
+        assert combo.currentIndex() == before
+
+    def test_edit_row_is_never_selected(self, services, page, pesos):
+        page.refresh()
+        combo = page.account_filter
+
+        combo.select(None)  # the "any" item
+        assert combo.currentIndex() == 0
+        combo.select(12345)  # an id that is not there falls back to the first choice
+        assert combo.currentIndex() == 0
+        page.refresh()  # refilling keeps a single «Editar» at the end
+        assert [combo.itemText(i) for i in range(combo.count())].count("Editar") == 1
+
+    def test_type_filter_has_no_edit_row(self, page):
+        page.refresh()
+        texts = [page.type_filter.itemText(i) for i in range(page.type_filter.count())]
+
+        assert "Editar" not in texts
 
     def test_account_filter_still_shows_both_ends_of_transfer(self, services, page, pesos, dollars):
         populate(services, pesos, dollars)

@@ -51,7 +51,7 @@ Add every place where you keep money, from your bank and cash to dollar savings 
 </picture>
 
 ### Record and find your transactions
-One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, tag, type or text, adds up at the foot the transactions it shows, and whatever you see exports to a file that opens in Excel.
+One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, tag, type or text, adds up at the foot the transactions it shows, and whatever you see exports to a file that opens in Excel. Each filter list ends with a shortcut to edit its accounts, categories, payees or tags.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/transactions-dark.png">

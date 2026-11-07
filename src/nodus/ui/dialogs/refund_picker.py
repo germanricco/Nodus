@@ -6,7 +6,7 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QLayout, QLineEdit, QPushButton, QWidget
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.period import Period, format_date
@@ -46,6 +46,8 @@ class RefundPickerDialog(FormDialog):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__("Elegir el gasto que se reembolsa", parent)
+        # A list, not a form: it opens large and the user can resize it.
+        self.layout().setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
         self.setMinimumSize(780, 520)
         self._services = services
         self._linked_id = linked_id

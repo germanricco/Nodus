@@ -167,6 +167,10 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         category_filter.showPopup()
         app.processEvents()
         save(category_filter.view().window(), args.out / f"category-filter-{mode.value}.png")
+        # Its end, with the «Editar» row that leads to Categorías.
+        category_filter.view().scrollToBottom()
+        app.processEvents()
+        save(category_filter.view().window(), args.out / f"category-filter-end-{mode.value}.png")
         category_filter.hidePopup()
         # The notifications panel, with a new version announced.
         window.show_page(PageId.DASHBOARD)

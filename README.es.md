@@ -49,7 +49,7 @@ Registras cada lugar donde tienes dinero, sea el banco, el efectivo, los ahorros
 </picture>
 
 ### Registrar y encontrar tus movimientos
-Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la última cuenta que usaste. La lista se filtra por período, cuenta, categoría, beneficiario, etiqueta, tipo o texto, suma al pie los movimientos que muestra, y lo que ves se exporta a un archivo que se abre en Excel.
+Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la última cuenta que usaste. La lista se filtra por período, cuenta, categoría, beneficiario, etiqueta, tipo o texto, suma al pie los movimientos que muestra, y lo que ves se exporta a un archivo que se abre en Excel. Cada lista de filtros termina con un atajo para editar sus cuentas, categorías, beneficiarios o etiquetas.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/transactions-dark.png">

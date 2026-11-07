@@ -1,12 +1,16 @@
-"""Combo boxes to pick an account, a category, a payee or a tag."""
+"""Combo boxes to pick an account, a category, a payee or a tag.
+
+As filters, they can end with an «Editar» row that leads to the page managing the list.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QSize, Qt
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QSize, Qt, Signal
 from PySide6.QtGui import QFont, QPainter, QPalette
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QStyledItemDelegate,
     QStyleOptionViewItem,
@@ -22,20 +26,28 @@ from nodus.ui.widgets.color import color_icon
 # Item data: a section heading ("Gastos") instead of a choice, and how deep a choice is.
 HEADING_ROLE = Qt.ItemDataRole.UserRole + 1
 DEPTH_ROLE = Qt.ItemDataRole.UserRole + 2
+# The closing «Editar» row: an action, not a choice.
+MANAGE_ROLE = Qt.ItemDataRole.UserRole + 3
+MANAGE_LABEL = "Editar"
 
 _Index = QModelIndex | QPersistentModelIndex
 
 
 class _SectionDelegate(QStyledItemDelegate):
     """Draws the list of a selector: headings as small gray titles followed by a line, and
-    subcategories shifted in with their color dot, so the tree reads at a glance."""
+    subcategories shifted in with their color dot, so the tree reads at a glance. The
+    «Editar» row goes under a line, in the accent color, so it reads as an action."""
 
     INDENT = 18
     HEADING_GAP = 8  # space above every heading but the first row
+    MANAGE_GAP = 9  # space above the «Editar» row, with the line in its middle
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: _Index) -> None:
         if index.data(HEADING_ROLE):
             self._paint_heading(painter, option, index)
+            return
+        if index.data(MANAGE_ROLE):
+            self._paint_manage(painter, option, index)
             return
         depth = index.data(DEPTH_ROLE) or 0
         if depth:
@@ -47,6 +59,8 @@ class _SectionDelegate(QStyledItemDelegate):
         size = super().sizeHint(option, index)
         if index.data(HEADING_ROLE) and index.row() > 0:
             size.setHeight(size.height() + self.HEADING_GAP)
+        elif index.data(MANAGE_ROLE):
+            size.setHeight(size.height() + self.MANAGE_GAP)
         return size
 
     def _paint_heading(
@@ -69,15 +83,44 @@ class _SectionDelegate(QStyledItemDelegate):
         painter.drawLine(line_start, middle, rect.right(), middle)
         painter.restore()
 
+    def _paint_manage(self, painter: QPainter, option: QStyleOptionViewItem, index: _Index) -> None:
+        painter.save()
+        line = option.palette.color(QPalette.ColorRole.PlaceholderText)
+        line.setAlpha(90)
+        painter.setPen(line)
+        middle = option.rect.top() + self.MANAGE_GAP // 2
+        painter.drawLine(option.rect.left() + 8, middle, option.rect.right() - 8, middle)
+        font = QFont(option.font)
+        font.setWeight(QFont.Weight.DemiBold)
+        painter.setFont(font)
+        # The application palette: the list's own Highlight is the soft selection color.
+        painter.setPen(QApplication.palette().color(QPalette.ColorRole.Highlight))
+        rect = option.rect.adjusted(8, self.MANAGE_GAP, -8, 0)
+        text = index.data(Qt.ItemDataRole.DisplayRole)
+        painter.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, text)
+        painter.restore()
+
 
 class _SelectorComboBox(QComboBox):
-    """A combo box whose items carry an id, with an optional first item meaning "any"."""
+    """A combo box whose items carry an id, with an optional first item meaning "any".
+
+    With ``enable_manage_item``, the list ends with an «Editar» row. Clicking it closes the
+    list and emits ``manage_requested`` without changing the selection.
+    """
+
+    manage_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self._has_manage_item = False
         self.setMinimumContentsLength(14)
         self.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.setItemDelegate(_SectionDelegate(self))
+        self.view().pressed.connect(self._on_item_pressed)
+
+    def enable_manage_item(self) -> None:
+        """Ends the list with «Editar» from the next time it is filled."""
+        self._has_manage_item = True
 
     def showPopup(self) -> None:  # noqa: N802
         """Opens the list as wide as its longest name, so no name is cut off."""
@@ -91,11 +134,10 @@ class _SelectorComboBox(QComboBox):
 
     def select(self, item_id: int | None) -> None:
         """Selects the item with ``item_id``; falls back to the first selectable item."""
-        model = self.model()
         index = next(
             (
                 i for i in range(self.count())
-                if self.itemData(i) == item_id and model.item(i).isEnabled()
+                if self.itemData(i) == item_id and self._is_choice(i)
             ),
             self._first_selectable(),
         )  # fmt: skip
@@ -115,6 +157,17 @@ class _SelectorComboBox(QComboBox):
         previous = self._start(all_label)
         for name, item_id in items:
             self.addItem(name, item_id)
+        self._finish(previous)
+
+    def _finish(self, previous: int | None) -> None:
+        """Closes a refill started with ``_start``: adds «Editar» if enabled, lets signals
+        through again and restores the selection."""
+        if self._has_manage_item:
+            self.addItem(MANAGE_LABEL, None)
+            item = self.model().item(self.count() - 1)
+            # Enabled to take the click, but not selectable, so it never becomes the filter.
+            item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+            item.setData(True, MANAGE_ROLE)
         self.blockSignals(False)
         self.select(previous)
 
@@ -126,8 +179,17 @@ class _SelectorComboBox(QComboBox):
         item.setData(True, HEADING_ROLE)
 
     def _first_selectable(self) -> int:
-        model = self.model()
-        return next((i for i in range(self.count()) if model.item(i).isEnabled()), -1)
+        return next((i for i in range(self.count()) if self._is_choice(i)), -1)
+
+    def _is_choice(self, index: int) -> bool:
+        """Whether the row at ``index`` can be selected: not a heading nor «Editar»."""
+        item = self.model().item(index)
+        return item.isEnabled() and not item.data(MANAGE_ROLE)
+
+    def _on_item_pressed(self, index: QModelIndex) -> None:
+        if index.data(MANAGE_ROLE):
+            self.hidePopup()
+            self.manage_requested.emit()
 
 
 class AccountComboBox(_SelectorComboBox):
@@ -183,5 +245,4 @@ class CategoryComboBox(_SelectorComboBox):
                 for child in node.children:
                     self.addItem(color_icon(child.color), child.name, child.id)
                     self.setItemData(self.count() - 1, 1, DEPTH_ROLE)
-        self.blockSignals(False)
-        self.select(previous)
+        self._finish(previous)

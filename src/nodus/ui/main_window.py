@@ -78,10 +78,12 @@ class MainWindow(QMainWindow):
         payees.transactions_requested.connect(self.show_transactions)
         tags = TagsPage(services, event_bus, theme_manager)
         tags.transactions_requested.connect(self.show_transactions)
+        transactions = TransactionsPage(services, event_bus, theme_manager)
+        transactions.navigate_requested.connect(self.show_page)
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
-            PageId.TRANSACTIONS: TransactionsPage(services, event_bus, theme_manager),
+            PageId.TRANSACTIONS: transactions,
             PageId.RECURRING: RecurringPage(services, event_bus),
             PageId.BUDGETS: budgets,
             PageId.ANALYSIS: analysis,

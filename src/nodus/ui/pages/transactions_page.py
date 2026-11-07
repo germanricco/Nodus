@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from functools import partial
+
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -24,7 +26,7 @@ from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.labels import movements_text, unconverted_note
-from nodus.ui.navigation import TransactionFocus
+from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
@@ -86,8 +88,11 @@ class TransactionsPage(Page):
     """The movements of a period, newest first, narrowed by account, category, payee, tag,
     type or text, with what they add up to at the foot.
 
-    Double-clicking a row edits it. A transfer shows as one row for both of its legs.
+    Double-clicking a row edits it. A transfer shows as one row for both of its legs. Each
+    list filter ends with «Editar», which asks for the page that manages that list.
     """
+
+    navigate_requested = Signal(object)  # PageId
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -113,6 +118,14 @@ class TransactionsPage(Page):
         self.category_filter = CategoryComboBox()
         self.payee_filter = PayeeComboBox()
         self.tag_filter = TagComboBox()
+        for combo, page_id in (
+            (self.account_filter, PageId.ACCOUNTS),
+            (self.category_filter, PageId.CATEGORIES),
+            (self.payee_filter, PageId.PAYEES),
+            (self.tag_filter, PageId.TAGS),
+        ):
+            combo.enable_manage_item()
+            combo.manage_requested.connect(partial(self.navigate_requested.emit, page_id))
         self.type_filter = QComboBox()
         self.type_filter.addItems(list(TYPE_FILTERS))
         self.search_input = QLineEdit()

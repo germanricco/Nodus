@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QLabel,
+    QLayout,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -21,16 +22,24 @@ class FormDialog(QDialog):
     Subclasses add their fields to ``form`` and implement ``save``. If ``save`` raises
     ``ValidationError``, its message appears inside the dialog and the dialog stays open,
     so the user can fix the data without retyping everything.
+
+    The dialog always takes the size of its content, so it grows and shrinks as fields
+    are shown or hidden instead of keeping the blank space of a larger mode.
     """
+
+    MIN_WIDTH = 460
+    MARGIN = 24
 
     def __init__(self, title: str, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.setMinimumWidth(460)
 
         layout = self._layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setContentsMargins(self.MARGIN, 20, self.MARGIN, 20)
         layout.setSpacing(16)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+        # A fixed-size layout overrides the widget's minimum width; a strut keeps it.
+        layout.addStrut(self.MIN_WIDTH - 2 * self.MARGIN)
 
         heading = QLabel(title)
         heading.setObjectName("DialogTitle")

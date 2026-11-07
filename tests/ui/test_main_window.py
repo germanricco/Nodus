@@ -28,6 +28,16 @@ def test_sidebar_buttons_navigate(window, qtbot):
         assert button.isChecked()
 
 
+def test_edit_in_a_transactions_filter_opens_its_page(window):
+    window.show_page(PageId.TRANSACTIONS)
+    combo = window.page(PageId.TRANSACTIONS).category_filter
+
+    combo.view().pressed.emit(combo.model().index(combo.count() - 1, 0))
+
+    assert window.current_page is window.page(PageId.CATEGORIES)
+    assert window.sidebar.nav_button(PageId.CATEGORIES).isChecked()
+
+
 def test_sidebar_shows_empty_state_without_accounts(window):
     assert "Todavía no hay cuentas" in sidebar_texts(window)
 
