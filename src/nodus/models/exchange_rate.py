@@ -10,17 +10,29 @@ from nodus.models.currency import Currency
 from nodus.models.money import Money
 
 
-def implied_ars_per_usd(first: Money, second: Money) -> Decimal | None:
-    """Pesos per dollar implied by exchanging one amount for the other, in either order.
+@dataclass(frozen=True)
+class ImpliedRate:
+    """What one unit of ``base`` cost in ``quote`` in an exchange: "US$ 1 = $ 1.215,50"."""
 
-    For a transfer from pesos to dollars this is the rate actually obtained. None when the
-    amounts are not one in ARS and one in USD, or the dollar amount is zero.
+    base: Currency
+    quote: Currency
+    value: Decimal
+
+
+def implied_rate(first: Money, second: Money) -> ImpliedRate | None:
+    """The rate implied by exchanging one amount for the other, in either order.
+
+    For a transfer from pesos to dollars this is the rate actually obtained. It is given per
+    unit of the currency worth more (the smaller amount), as people quote rates: per dollar
+    against pesos, per euro against dollars. None when both amounts are in the same
+    currency or either is zero.
     """
-    amounts = {first.currency: first, second.currency: second}
-    pesos, dollars = amounts.get(Currency.ARS), amounts.get(Currency.USD)
-    if pesos is None or dollars is None or dollars.is_zero:
+    if first.currency is second.currency or first.is_zero or second.is_zero:
         return None
-    return pesos.to_decimal() / dollars.to_decimal()
+    base, quote = sorted((first, second), key=lambda money: abs(money.to_decimal()))
+    return ImpliedRate(
+        base.currency, quote.currency, abs(quote.to_decimal()) / abs(base.to_decimal())
+    )
 
 
 @dataclass(frozen=True)

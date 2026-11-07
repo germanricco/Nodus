@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, usd
+from factories import ars, clp, eur, usd
 
 from nodus.models.currency import Currency
 from nodus.services.errors import ValidationError
@@ -62,3 +62,36 @@ class TestConvert:
 
     def test_without_rate_returns_none(self, services):
         assert services.exchange_rates.convert(usd("10"), Currency.ARS, OCT_1) is None
+
+
+class TestOtherCurrencies:
+    def test_each_currency_keeps_its_own_history(self, services):
+        services.exchange_rates.set_rate(NOV_1, Decimal("1200"))
+        services.exchange_rates.set_rate(NOV_1, Decimal("1400"), Currency.EUR)
+
+        assert services.exchange_rates.rate_on(NOV_1).rate == Decimal("1200")
+        assert services.exchange_rates.rate_on(NOV_1, Currency.EUR).rate == Decimal("1400")
+        assert [r.rate for r in services.exchange_rates.history(Currency.EUR)] == [Decimal("1400")]
+        assert services.exchange_rates.history(Currency.CLP) == []
+
+    def test_converts_to_and_from_pesos(self, services):
+        services.exchange_rates.set_rate(NOV_1, Decimal("1.5784"), Currency.CLP)
+
+        assert services.exchange_rates.convert(clp("10000"), Currency.ARS, NOV_1) == ars("15784")
+        # Whole Chilean pesos: 1000 / 1.5784 = 633.55…
+        assert services.exchange_rates.convert(ars("1000"), Currency.CLP, NOV_1) == clp("634")
+
+    def test_two_foreign_currencies_convert_through_the_peso(self, services):
+        services.exchange_rates.set_rate(NOV_1, Decimal("1250"))
+        services.exchange_rates.set_rate(NOV_1, Decimal("1350"), Currency.EUR)
+
+        assert services.exchange_rates.convert(eur("100"), Currency.USD, NOV_1) == usd("108")
+
+    def test_a_missing_rate_on_either_side_gives_none(self, services):
+        services.exchange_rates.set_rate(NOV_1, Decimal("1250"))
+
+        assert services.exchange_rates.convert(eur("100"), Currency.USD, NOV_1) is None
+
+    def test_the_peso_has_no_rate(self, services):
+        with pytest.raises(ValueError):
+            services.exchange_rates.set_rate(NOV_1, Decimal("1"), Currency.ARS)

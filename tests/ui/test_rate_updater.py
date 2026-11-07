@@ -4,7 +4,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from factories import eur
 
+from nodus.models.account import AccountType
+from nodus.models.currency import Currency
 from nodus.services.rate_feed_service import SOURCES, RateFeedService
 from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
@@ -25,7 +28,7 @@ def offline_services(services, answer):
             raise answer["body"]
         return answer["body"]
 
-    feed = RateFeedService(services.exchange_rates, services.settings, fetch)
+    feed = RateFeedService(services.exchange_rates, services.settings, services.accounts, fetch)
     return dataclasses.replace(services, rate_feed=feed)
 
 
@@ -85,3 +88,21 @@ def test_failed_fetch_is_reported_in_settings(qtbot, offline_services, answer, o
 
     qtbot.waitUntil(lambda: page.rate_source_row.detail.text() == "Sin conexión")
     assert todays_rate(offline_services) is None
+
+
+def test_startup_also_brings_the_official_euro(
+    qtbot, offline_services, answer, event_bus, offline_window
+):
+    answer["body"] = json.dumps(
+        [{"casa": "blue", "venta": 1555}, {"moneda": "EUR", "casa": "oficial", "venta": 1738}]
+    ).encode()
+    offline_services.accounts.create("Europa", AccountType.CASH, Currency.EUR, eur("100"))
+    offline_services.rate_feed.set_source("blue")
+
+    with qtbot.waitSignal(event_bus.exchange_rates_changed):
+        offline_window.update_exchange_rate()
+
+    assert todays_rate(offline_services) == Decimal("1555")
+    assert offline_services.exchange_rates.rate_on(date.today(), Currency.EUR).rate == Decimal(
+        "1738"
+    )

@@ -24,8 +24,8 @@ def record_table(model: QAbstractItemModel, stretch_column: int) -> QTableView:
     header = table.horizontalHeader()
     header.setHighlightSections(False)
     header.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-    for column in range(model.columnCount()):
-        header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
+    # Set for the whole header, so columns a model adds later also fit their content.
+    header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
     header.setSectionResizeMode(stretch_column, QHeaderView.ResizeMode.Stretch)
     return table
 

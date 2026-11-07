@@ -25,6 +25,14 @@ def usd(amount: str) -> Money:
     return Money.from_decimal(amount, Currency.USD)
 
 
+def eur(amount: str) -> Money:
+    return Money.from_decimal(amount, Currency.EUR)
+
+
+def clp(amount: str) -> Money:
+    return Money.from_decimal(amount, Currency.CLP)
+
+
 def category_id(services: Services, name: str, kind: TransactionType) -> int:
     """Id of a default category, looked up by name."""
     return next(c.id for c in services.categories.list_categories(kind) if c.name == name)

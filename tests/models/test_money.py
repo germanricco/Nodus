@@ -87,3 +87,20 @@ class TestFormat:
     def test_format(self, money, expected):
         assert money.format() == expected
         assert str(money) == expected
+
+
+class TestCurrencyWithoutCents:
+    """The Chilean peso has no cents: amounts round to whole units and show none."""
+
+    def test_rounds_to_whole_units(self):
+        assert Money.from_decimal("1234.5", Currency.CLP).cents == 123400  # half to even
+        assert Money.from_decimal("1235.5", Currency.CLP).cents == 123600
+
+    def test_formats_without_decimals(self):
+        money = Money.from_decimal("-1234567", Currency.CLP)
+
+        assert money.format() == "-CLP$ 1.234.567"
+        assert money.format_plain() == "-1234567"
+
+    def test_euro_keeps_its_cents(self):
+        assert Money.from_decimal("10.5", Currency.EUR).format() == "€ 10,50"

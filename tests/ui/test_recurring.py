@@ -2,10 +2,12 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import TODAY, ars, category_id, charge_draft, usd
+from factories import TODAY, ars, category_id, charge_draft, eur, usd
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
+from nodus.models.account import AccountType
+from nodus.models.currency import Currency
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
@@ -75,6 +77,16 @@ class TestChargeDialog:
 
         dialog.amount_input.line_edit.setText("10")
         assert dialog.amount_input.money().currency.value == "USD"
+
+    def test_amount_follows_an_account_in_euros(self, qtbot, services, event_bus, pesos):
+        euros = services.accounts.create("Europa", AccountType.CASH, Currency.EUR, eur("0"))
+        dialog = make(qtbot, RecurringChargeDialog(services, event_bus))
+
+        dialog.account_input.select(euros.id)
+        dialog.amount_input.line_edit.setText("10")
+
+        assert dialog.amount_input.money() == eur("10")
+        assert not dialog.form.isRowVisible(dialog.dollars_input)
 
     def test_edits_a_charge(self, qtbot, services, event_bus, pesos):
         charge = create(services, pesos.id)

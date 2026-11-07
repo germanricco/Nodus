@@ -41,7 +41,7 @@ El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y e
 </picture>
 
 ### Llevar tus cuentas en pesos y en dólares
-Registras cada lugar donde tienes dinero, sea el banco, el efectivo, una billetera virtual como Mercado Pago, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Las ordenas arrastrándolas, y el panel lateral sigue ese orden. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. La cotización del día puede llegar sola o la cargas a mano. Los ahorros y las inversiones crecen solos, con intereses o precios: anotas cuánto vale hoy una, como lo muestra su app, y Nodus guarda la diferencia como rendimiento, que mueve tu saldo y tu patrimonio neto sin contar como ingreso.
+Registras cada lugar donde tienes dinero, sea el banco, el efectivo, una billetera virtual como Mercado Pago, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Las ordenas arrastrándolas, y el panel lateral sigue ese orden. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. También puedes tener euros y pesos chilenos, para un viaje o unos ahorros afuera, y se suman a tu patrimonio neto como todo lo demás. Las cotizaciones del día pueden llegar solas, el dólar que elijas y el euro y el peso chileno oficiales, o las cargas a mano. Los ahorros y las inversiones crecen solos, con intereses o precios: anotas cuánto vale hoy una, como lo muestra su app, y Nodus guarda la diferencia como rendimiento, que mueve tu saldo y tu patrimonio neto sin contar como ingreso.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">
@@ -114,7 +114,7 @@ Una campana junta lo que merece tu atención: un pago que vence, un presupuesto 
 
 ## Tus datos son tuyos
 
-Todo vive en un archivo de tu computadora, `%APPDATA%\Nodus\nodus.db`, con las copias diarias al lado, en `%APPDATA%\Nodus\backups`. Actualizar o desinstalar Nodus no lo toca. La aplicación solo se conecta a internet para dos cosas, y puedes desactivar las dos: ver en GitHub si hay una versión nueva, sin enviar ningún dato tuyo, y traer la cotización del dólar de [DolarApi](https://dolarapi.com) si elegiste una automática.
+Todo vive en un archivo de tu computadora, `%APPDATA%\Nodus\nodus.db`, con las copias diarias al lado, en `%APPDATA%\Nodus\backups`. Actualizar o desinstalar Nodus no lo toca. La aplicación solo se conecta a internet para dos cosas, y puedes desactivar las dos: ver en GitHub si hay una versión nueva, sin enviar ningún dato tuyo, y traer las cotizaciones de [DolarApi](https://dolarapi.com) si elegiste una fuente automática.
 
 ## Descargar e instalar
 

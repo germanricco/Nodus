@@ -103,6 +103,8 @@ class RecurringChargeDialog(FormDialog):
         if in_pesos:
             dollars = self.dollars_input.isChecked()
             self.amount_input.set_currency(Currency.USD if dollars else Currency.ARS)
+        elif account is not None:
+            self.amount_input.set_currency(account.currency)
 
     def _load(self, charge: RecurringCharge) -> None:
         self.name_input.setText(charge.name)

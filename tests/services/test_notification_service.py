@@ -1,8 +1,10 @@
 from datetime import timedelta
 from decimal import Decimal
 
-from factories import TODAY, ars, category_id, charge_draft, expense_draft
+from factories import TODAY, ars, category_id, charge_draft, eur, expense_draft
 
+from nodus.models.account import AccountType
+from nodus.models.currency import Currency
 from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
 from nodus.services.notification_service import STALE_RATE_DAYS, NoticeKind
@@ -47,7 +49,7 @@ def test_rate_becomes_stale_after_a_week(services, dollars):
     services.exchange_rates.delete(services.exchange_rates.history()[0].id)
 
     notices = services.notifications.notices(TODAY, None)
-    assert notices[0].title == f"Sin cotización desde hace {STALE_RATE_DAYS + 3} días"
+    assert notices[0].title == f"Sin cotización del dólar desde hace {STALE_RATE_DAYS + 3} días"
 
 
 def test_failed_backup(services):
@@ -133,3 +135,13 @@ def test_several_budgets_passed_in_one_notice(services, pesos):
     (notice,) = services.notifications.notices(TODAY, None)
     assert notice.title == "2 presupuestos excedidos"
     assert notice.detail == "Ocio, Ropa."
+
+
+def test_each_foreign_currency_held_needs_its_rate(services, dollars):
+    services.accounts.create("Europa", AccountType.CASH, Currency.EUR, eur("100"))
+    services.exchange_rates.set_rate(TODAY, Decimal("1000"))
+
+    [notice] = services.notifications.notices(TODAY, None)
+
+    assert notice.title == "Sin cotización del euro"
+    assert notice.detail == "Cárgala para sumar tus cuentas en euros al resto."

@@ -3,9 +3,11 @@
 from datetime import date
 
 import pytest
-from factories import ars, category_id, expense_draft, income_draft
+from factories import ars, category_id, eur, expense_draft, income_draft
 from PySide6.QtCore import Qt
 
+from nodus.models.account import AccountType
+from nodus.models.currency import Currency
 from nodus.models.period import Month, Period, format_month
 from nodus.models.transaction import TransactionType
 from nodus.ui.navigation import PageId, TransactionFocus
@@ -236,6 +238,17 @@ def test_net_worth_table_follows_the_currency(services, dollars, filled):
     assert view.model.headerData(3, Qt.Orientation.Horizontal) == "Total en US$"
     assert table_row(view, 0)[3] == NO_RATE_TEXT  # no exchange rate loaded
     assert table_row(view, 0)[4] == "—"
+
+
+def test_net_worth_table_has_a_column_per_currency_held(services, dollars, movements, page):
+    services.accounts.create("Europa", AccountType.CASH, Currency.EUR, eur("100"))
+    page.refresh()
+    view = net_worth_view(page)
+
+    headers = [view.model.headerData(c, Qt.Orientation.Horizontal) for c in range(6)]
+
+    assert headers == ["Mes", "En pesos", "En dólares", "En euros", "Total en $", "Variación"]
+    assert table_row(view, 0)[3] == "€ 100,00"
 
 
 def test_net_worth_asks_for_a_rate_in_settings(qtbot, page):

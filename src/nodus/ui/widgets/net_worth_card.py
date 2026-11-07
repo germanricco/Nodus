@@ -7,13 +7,14 @@ from datetime import date, timedelta
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from nodus.models.currency import Currency
+from nodus.models.currency import TOTAL_CURRENCIES, Currency
 from nodus.models.money import Money
 from nodus.models.period import Month, Period
 from nodus.services.container import Services
 from nodus.services.dashboard_service import relative_change
 from nodus.services.net_worth_service import NetWorth, NetWorthPoint
 from nodus.ui.formatting import format_date
+from nodus.ui.labels import HELD_IN_LABELS, rate_text
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
@@ -26,9 +27,11 @@ from nodus.ui.widgets.money_label import AnimatedMoneyLabel, masked
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.style import set_style_property
 
-CURRENCIES = [Currency.ARS, Currency.USD]
-CURRENCY_LABELS = ["$", "US$"]
-HELD_IN = {Currency.ARS: "En pesos", Currency.USD: "En dólares"}
+# The net worth can be shown in these; the parts held in any currency are listed apart.
+CURRENCIES = list(TOTAL_CURRENCIES)
+CURRENCY_LABELS = [currency.symbol for currency in CURRENCIES]
+# A color for the Chilean peso, which the theme has no role for.
+CLP_COLOR = "#3498db"
 
 
 def signed(money: Money) -> str:
@@ -52,7 +55,7 @@ class CurrencyLegend(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
         self.dot = ColorDot("#000000", size=10)
-        name = QLabel(HELD_IN[currency])
+        name = QLabel(HELD_IN_LABELS[currency])
         set_style_property(name, "muted", True)
         self.amount = AnimatedMoneyLabel()
         self.amount.setObjectName("RowTitle")
@@ -64,11 +67,11 @@ class CurrencyLegend(QWidget):
 
 class NetWorthCard(Card):
     """The net worth in the currency the user picks, how it moved along the period, and
-    what part is held in pesos and in dollars, with the rate used.
+    what part is held in each currency, with the rates used.
 
     The dashboard shows it in full, with the trend; the accounts page uses ``compact``,
-    which leaves out the chart and the change. Without the exchange rate needed to add
-    both currencies, it shows each subtotal instead of inventing a total.
+    which leaves out the chart and the change. Without an exchange rate needed to add the
+    currencies up, it shows each subtotal instead of inventing a total.
     """
 
     rate_requested = Signal()
@@ -142,27 +145,31 @@ class NetWorthCard(Card):
         self.body.addLayout(row)
 
     def _build_missing_rate(self) -> None:
-        """Both subtotals side by side, for when they cannot be added up."""
+        """The subtotals side by side, for when they cannot be added up."""
         self.missing_rate = QWidget()
         layout = QHBoxLayout(self.missing_rate)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(32)
         self.subtotal_labels: dict[Currency, AnimatedMoneyLabel] = {}
-        for currency in CURRENCIES:
-            column = QVBoxLayout()
+        self._subtotal_columns: dict[Currency, QWidget] = {}
+        for currency in Currency:
+            column_widget = QWidget()
+            column = QVBoxLayout(column_widget)
+            column.setContentsMargins(0, 0, 0, 0)
             column.setSpacing(2)
-            caption = QLabel(HELD_IN[currency].upper())
+            caption = QLabel(HELD_IN_LABELS[currency].upper())
             caption.setObjectName("StatCaption")
             amount = AnimatedMoneyLabel()
             amount.setObjectName("StatValueLarge")
             amount.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
             self.subtotal_labels[currency] = amount
+            self._subtotal_columns[currency] = column_widget
             column.addWidget(caption)
             column.addWidget(amount)
-            layout.addLayout(column)
+            layout.addWidget(column_widget)
         self.load_rate_button = QPushButton("Cargar cotización")
         self.load_rate_button.setObjectName("SecondaryButton")
-        self.load_rate_button.setToolTip("Hace falta para sumar pesos y dólares")
+        self.load_rate_button.setToolTip("Hace falta para sumar tus cuentas en otras monedas")
         self.load_rate_button.clicked.connect(self.rate_requested)
         layout.addWidget(self.load_rate_button, alignment=Qt.AlignmentFlag.AlignBottom)
         layout.addStretch()
@@ -171,7 +178,7 @@ class NetWorthCard(Card):
     def _build_legend(self) -> None:
         legend = QHBoxLayout()
         legend.setSpacing(20)
-        self.legends = {currency: CurrencyLegend(currency) for currency in CURRENCIES}
+        self.legends = {currency: CurrencyLegend(currency) for currency in Currency}
         for item in self.legends.values():
             legend.addWidget(item)
         legend.addStretch()
@@ -212,9 +219,12 @@ class NetWorthCard(Card):
             self.day_label.setText(f"al {format_date(day)}")
         else:
             for held, label in self.subtotal_labels.items():
-                label.set_money(net_worth.by_currency[held])
+                amount = net_worth.by_currency.get(held)
+                self._subtotal_columns[held].setVisible(amount is not None)
+                if amount is not None:
+                    label.set_money(amount)
         self._show_composition(net_worth, currency, day)
-        self._show_rate(day)
+        self._show_rates(net_worth, day)
         if self.chart is not None:
             history = self._services.net_worth.history(period, date.today()) if period else []
             opening = (
@@ -225,31 +235,41 @@ class NetWorthCard(Card):
             self._show_trend(history, opening, currency, has_total)
 
     def _show_composition(self, net_worth: NetWorth, currency: Currency, day: date) -> None:
+        convert = self._services.exchange_rates.convert
         parts = {
-            held: self._services.exchange_rates.convert(net_worth.by_currency[held], currency, day)
-            for held in CURRENCIES
+            held: convert(amount, currency, day) for held, amount in net_worth.by_currency.items()
         }
         positive = [p for p in parts.values() if p is not None and p.cents > 0]
         whole = sum(positive[1:], positive[0]) if positive else Money.zero(currency)
         colors = self._colors()
         segments = []
-        for held in CURRENCIES:
-            legend = self.legends[held]
+        for held, legend in self.legends.items():
+            amount = net_worth.by_currency.get(held)
+            legend.setVisible(amount is not None and (not amount.is_zero or held is currency))
+            if amount is None:
+                continue
             legend.dot.set_color(colors[held])
-            legend.amount.set_money(net_worth.by_currency[held])
+            legend.amount.set_money(amount)
             part = parts[held]
             legend.share.setText(share(part, whole) if part is not None else "")
-            legend.setVisible(not net_worth.by_currency[held].is_zero or held is currency)
             segments.append(Segment(colors[held], max(0, part.cents) if part else 0, held.value))
         self.composition.set_segments(segments)
 
-    def _show_rate(self, day: date) -> None:
-        rate = self._services.exchange_rates.rate_on(day)
-        if rate is None:
-            self.rate_label.setText("Sin cotización")
-            return
-        value = Money.from_decimal(rate.rate, Currency.ARS).format()
-        self.rate_label.setText(f"US$ 1 = {value} · {rate.rate_date:%d/%m}")
+    def _show_rates(self, net_worth: NetWorth, day: date) -> None:
+        """The rate of the dollar, which the totals always need, and of any other foreign
+        currency held."""
+        texts = []
+        for held, amount in net_worth.by_currency.items():
+            if not held.is_foreign or (held is not Currency.USD and amount.is_zero):
+                continue
+            rate = self._services.exchange_rates.rate_on(day, held)
+            if rate is not None:
+                texts.append(f"{rate_text(held, rate.quote, rate.rate)} · {rate.rate_date:%d/%m}")
+            elif held is Currency.USD:
+                texts.append("Sin cotización")
+            else:
+                texts.append(f"{held.symbol} sin cotización")
+        self.rate_label.setText("    ".join(texts))
 
     def _show_trend(
         self,
@@ -306,7 +326,12 @@ class NetWorthCard(Card):
             self.show_day(*self._shown)
 
     def _colors(self) -> dict[Currency, str]:
-        return {Currency.ARS: self._theme.accent, Currency.USD: self._theme.income}
+        return {
+            Currency.ARS: self._theme.accent,
+            Currency.USD: self._theme.income,
+            Currency.EUR: self._theme.warning,
+            Currency.CLP: CLP_COLOR,
+        }
 
     def _set_theme(self, theme: Theme) -> None:
         self._theme = theme

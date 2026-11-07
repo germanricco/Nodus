@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
 
 from nodus.models.account import Account
 from nodus.models.currency import Currency
-from nodus.models.exchange_rate import implied_ars_per_usd
-from nodus.models.money import Money
+from nodus.models.exchange_rate import ImpliedRate, implied_rate
 from nodus.models.payee import Payee
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
@@ -19,6 +16,7 @@ from nodus.ui.dialogs.account_fields import required_account, selectable_account
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.dialogs.refund_picker import RefundField
 from nodus.ui.event_bus import EventBus
+from nodus.ui.labels import rate_text
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.date_input import DateInput
@@ -244,13 +242,13 @@ class TransactionDialog(FormDialog):
         """Shows the rate the transfer implies, once both amounts are filled in."""
         rate = self._implied_rate() if self.form.isRowVisible(self.amount_in_input) else None
         if rate is not None:
-            value = Money.from_decimal(rate, Currency.ARS).format()
-            self.rate_hint.setText(f"Cotización implícita: US$ 1 = {value}")
+            text = rate_text(rate.base, rate.quote, rate.value)
+            self.rate_hint.setText(f"Cotización implícita: {text}")
         self.form.setRowVisible(self.rate_hint, rate is not None)
 
-    def _implied_rate(self) -> Decimal | None:
+    def _implied_rate(self) -> ImpliedRate | None:
         try:
-            return implied_ars_per_usd(self.amount_input.money(), self.amount_in_input.money())
+            return implied_rate(self.amount_input.money(), self.amount_in_input.money())
         except ValidationError:
             return None
 

@@ -1,6 +1,7 @@
 """Spanish names for domain values shown in the interface."""
 
 from datetime import date
+from decimal import Decimal
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
@@ -21,6 +22,16 @@ ACCOUNT_TYPE_LABELS = {
 CURRENCY_LABELS = {
     Currency.ARS: "Pesos (ARS)",
     Currency.USD: "Dólares (USD)",
+    Currency.EUR: "Euros (EUR)",
+    Currency.CLP: "Pesos chilenos (CLP)",
+}
+
+# Where each part of the net worth is held, as the net worth card names it.
+HELD_IN_LABELS = {
+    Currency.ARS: "En pesos",
+    Currency.USD: "En dólares",
+    Currency.EUR: "En euros",
+    Currency.CLP: "En pesos chilenos",
 }
 
 TRANSACTION_TYPE_LABELS = {
@@ -65,14 +76,20 @@ def charge_amount_text(amount: Money, estimate: Money | None) -> str:
     return f"{amount.format()} {estimate_text(amount, estimate)}".rstrip()
 
 
+def rate_text(base: Currency, quote: Currency, value: Decimal) -> str:
+    """ "US$ 1 = $ 1.215,50", how a rate is quoted: one unit of ``base`` in ``quote``."""
+    return f"{base.symbol} 1 = {Money.from_decimal(value, quote).format()}"
+
+
 def movements_text(count: int) -> str:
     """ "1 movimiento", "3 movimientos"."""
     return "1 movimiento" if count == 1 else f"{count} movimientos"
 
 
 def unconverted_note(count: int) -> str:
-    """Why a total may fall short: dollar movements left out for lack of a rate."""
-    return f"{count} movimiento(s) en dólares sin cotización no se incluyen."
+    """Why a total may fall short: movements in another currency left out for lack of a
+    rate."""
+    return f"{count} movimiento(s) en otra moneda sin cotización no se incluyen."
 
 
 def days_left_text(month: Month, today: date) -> str | None:

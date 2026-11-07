@@ -56,6 +56,8 @@ def load_demo_data(services: Services, today: date) -> None:
     services.accounts.create("Mercado Pago", AccountType.WALLET, Currency.ARS, ars("45000"))
     ahorro = services.accounts.create("Ahorro en dólares", AccountType.SAVINGS, Currency.USD,
                                       usd("400"))  # fmt: skip
+    services.accounts.create("Euros del viaje", AccountType.CASH, Currency.EUR,
+                             Money.from_decimal("150", Currency.EUR))  # fmt: skip
 
     current = Month.of(today)
     # An investment that grows a little each month, brought up to date at each month end.
@@ -74,6 +76,7 @@ def load_demo_data(services: Services, today: date) -> None:
         month = current.shifted(-back)
         rate = Decimal(1215) - Decimal(32) * back
         services.exchange_rates.set_rate(month.start, rate)
+        services.exchange_rates.set_rate(month.start, rate * Decimal("1.16"), Currency.EUR)
 
         def on(day: int, month=month) -> date:
             return date(month.year, month.month, min(day, month.end.day))
@@ -115,6 +118,7 @@ def load_demo_data(services: Services, today: date) -> None:
         return today - timedelta(days=days)
 
     services.exchange_rates.set_rate(days_ago(3), Decimal("1215.50"))
+    services.exchange_rates.set_rate(days_ago(3), Decimal("1410.00"), Currency.EUR)
     record(banco.id, income, "Sueldo", ars("1450000"), days_ago(4), "Sueldo del mes",
            "Empresa S.A.")  # fmt: skip
     record(banco.id, income, "Trabajo freelance", ars("280000"), days_ago(2), "Diseño web",

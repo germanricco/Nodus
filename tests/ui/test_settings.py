@@ -2,8 +2,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, expense_draft
+from factories import ars, eur, expense_draft
 
+from nodus.models.account import AccountType
+from nodus.models.currency import FOREIGN_CURRENCIES, Currency
 from nodus.ui.dialogs import export
 from nodus.ui.pages import settings_page
 from nodus.ui.pages.settings_page import THEME_MODES, RateRow, SettingsPage
@@ -135,3 +137,31 @@ def test_export_all_writes_every_transaction(monkeypatch, tmp_path, services, pa
     page.export_all_button.click()
 
     assert target.read_text(encoding="utf-8-sig").count("\n") == 3
+
+
+class TestOtherCurrencies:
+    def test_with_only_the_dollar_there_is_no_currency_to_choose(self, page):
+        assert not page.rate_currency_row.isVisibleTo(page)
+        assert page.rate_currency() is Currency.USD
+
+    def test_euro_rates_are_kept_apart_from_the_dollar(self, qtbot, services, event_bus, page):
+        services.accounts.create("Europa", AccountType.CASH, Currency.EUR, eur("100"))
+        services.exchange_rates.set_rate(date(2026, 11, 1), Decimal("1200"))
+        page.refresh()
+        assert page.rate_currency_row.isVisibleTo(page)
+        clp_segment = page.rate_currency_input.buttons[FOREIGN_CURRENCIES.index(Currency.CLP)]
+        assert not clp_segment.isEnabled()
+
+        page.rate_currency_input.set_index(FOREIGN_CURRENCIES.index(Currency.EUR))
+        assert rate_rows(page) == []
+        assert page.rate_unit_label.text() == "€ 1 ="
+        assert page.rate_value_input.line_edit.placeholderText() == "Pesos por euro"
+        page.rate_value_input.line_edit.setText("1.738,25")
+        with qtbot.waitSignal(event_bus.exchange_rates_changed):
+            page.save_rate_button.click()
+
+        assert services.exchange_rates.rate_on(date.today(), Currency.EUR).rate == Decimal(
+            "1738.25"
+        )
+        assert page.current_rate_label.text() == "€ 1 = $ 1.738,25"
+        assert [row.rate.rate for row in rate_rows(page)] == [Decimal("1738.25")]

@@ -1,7 +1,8 @@
 """Exact monetary amounts.
 
 Amounts are kept as an integer number of cents, because floats accumulate rounding errors
-that are unacceptable in financial balances.
+that are unacceptable in financial balances. A currency without cents (the Chilean peso)
+still counts in hundredths, always whole units, so every amount is stored the same way.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from nodus.models.currency import Currency
 
 CENTS_PER_UNIT = 100
 _CENT = Decimal("0.01")
+_UNIT = Decimal("1")
 
 
 class CurrencyMismatchError(ValueError):
@@ -37,13 +39,15 @@ class Money:
 
     @classmethod
     def from_decimal(cls, value: Decimal | str | int, currency: Currency) -> Money:
-        """Builds an amount from units (e.g. "1234.56"), rounding half to even to the cent.
+        """Builds an amount from units (e.g. "1234.56"), rounding half to even to the
+        currency's smallest unit: the cent, or the whole unit for the Chilean peso.
 
         Floats are rejected: by the time a value is a float, precision may already be lost.
         """
         if isinstance(value, float):
             raise TypeError("Use Decimal or str for money, never float")
-        units = Decimal(value).quantize(_CENT, rounding=ROUND_HALF_EVEN)
+        step = _CENT if currency.decimals else _UNIT
+        units = Decimal(value).quantize(step, rounding=ROUND_HALF_EVEN)
         return cls(int(units * CENTS_PER_UNIT), currency)
 
     def to_decimal(self) -> Decimal:
@@ -84,7 +88,7 @@ class Money:
         """The number without thousands separators: "-1234,56". Spreadsheets in Spanish read
         it as a number, while "1.234,56" may be taken as text."""
         units, cents = divmod(abs(self.cents), CENTS_PER_UNIT)
-        return f"{self._sign}{units},{cents:02d}"
+        return f"{self._sign}{units}{self._decimal_part(cents)}"
 
     @property
     def _sign(self) -> str:
@@ -93,7 +97,11 @@ class Money:
     def _unsigned_number(self) -> str:
         units, cents = divmod(abs(self.cents), CENTS_PER_UNIT)
         grouped_units = f"{units:,}".replace(",", ".")
-        return f"{grouped_units},{cents:02d}"
+        return f"{grouped_units}{self._decimal_part(cents)}"
+
+    def _decimal_part(self, cents: int) -> str:
+        """ ",56", or nothing for a currency without cents."""
+        return f",{cents:02d}" if self.currency.decimals else ""
 
     def __str__(self) -> str:
         return self.format()

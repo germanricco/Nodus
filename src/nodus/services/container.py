@@ -104,7 +104,9 @@ class Services:
             updates=UpdateService(__version__),
             backups=backups,
             export=ExportService(accounts, categories, payees, transactions),
-            rate_feed=RateFeedService(exchange_rates, settings, downloader(f"Nodus/{__version__}")),
+            rate_feed=RateFeedService(
+                exchange_rates, settings, accounts, downloader(f"Nodus/{__version__}")
+            ),
             notifications=NotificationService(
                 settings, accounts, exchange_rates, backups, recurring, budgets
             ),

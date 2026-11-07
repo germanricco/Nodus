@@ -22,7 +22,7 @@ from nodus.services.dashboard_service import (
 )
 from nodus.services.net_worth_service import NetWorth, NetWorthPoint
 from nodus.ui.formatting import format_date
-from nodus.ui.labels import movements_text, unconverted_note
+from nodus.ui.labels import HELD_IN_LABELS, movements_text, unconverted_note
 from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.dashboard_cards import (
     CategoryLine,
@@ -59,8 +59,6 @@ NO_PREVIOUS_TEXT = "Sin datos del período anterior"
 
 MONTH, INCOME, EXPENSES, SAVINGS, RATE = range(5)
 FLOW_COLUMNS = ["Mes", "Ingresos", "Gastos", "Ahorro", "Tasa de ahorro"]
-IN_PESOS, IN_DOLLARS, TOTAL, CHANGE = range(1, 5)
-NET_WORTH_COLUMNS = ["Mes", "En pesos", "En dólares", "Total", "Variación"]
 NO_RATE_TEXT = "sin cotización"
 
 _RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -428,14 +426,18 @@ class CashFlowView(AnalysisView):
 
 
 class NetWorthTableModel(QAbstractTableModel):
-    """The net worth at each month end: held in pesos, in dollars, the total in the chosen
-    currency and how much it moved since the month before."""
+    """The net worth at each month end: what is held in each currency, the total in the
+    chosen currency and how much it moved since the month before.
+
+    Columns: the month, one per currency held, the total and the change.
+    """
 
     def __init__(self, theme: Theme) -> None:
         super().__init__()
         self._points: list[NetWorthPoint] = []
         self._opening: NetWorth | None = None
         self._currency = Currency.ARS
+        self._held: list[Currency] = []
         self._theme = theme
 
     def set_points(
@@ -444,24 +446,35 @@ class NetWorthTableModel(QAbstractTableModel):
         """``opening`` is the net worth before the first point, to show its change."""
         self.beginResetModel()
         self._points, self._opening, self._currency = points, opening, currency
+        self._held = list(points[0].net_worth.by_currency) if points else []
         self.endResetModel()
+
+    @property
+    def total_column(self) -> int:
+        return 1 + len(self._held)
+
+    @property
+    def change_column(self) -> int:
+        return self.total_column + 1
 
     def set_theme(self, theme: Theme) -> None:
         self._theme = theme
         if self._points:
-            self.dataChanged.emit(self.index(0, 0), self.index(len(self._points) - 1, CHANGE))
+            last = self.index(len(self._points) - 1, self.change_column)
+            self.dataChanged.emit(self.index(0, 0), last)
 
     def rowCount(self, parent: _ModelIndex = QModelIndex()) -> int:  # noqa: B008, N802
         return 0 if parent.isValid() else len(self._points)
 
     def columnCount(self, parent: _ModelIndex = QModelIndex()) -> int:  # noqa: B008, N802
-        return 0 if parent.isValid() else len(NET_WORTH_COLUMNS)
+        return 0 if parent.isValid() else self.change_column + 1
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = 0) -> object:  # noqa: N802
         if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            if section == TOTAL:
+            if section == self.total_column:
                 return f"Total en {CURRENCY_LABELS[CURRENCIES.index(self._currency)]}"
-            return NET_WORTH_COLUMNS[section]
+            held = [HELD_IN_LABELS[currency] for currency in self._held]
+            return ["Mes", *held, "Total", "Variación"][section]
         if role == Qt.ItemDataRole.TextAlignmentRole and section != MONTH:
             return _RIGHT
         return None
@@ -475,12 +488,12 @@ class NetWorthTableModel(QAbstractTableModel):
             total = point.net_worth.total_in[self._currency]
             return [
                 self._month_text(point.day),
-                by_currency[Currency.ARS].format(),
-                by_currency[Currency.USD].format(),
+                *(by_currency[currency].format() for currency in self._held),
                 total.format() if total is not None else NO_RATE_TEXT,
                 signed(change) if change is not None else "—",
             ][column]
-        if role == Qt.ItemDataRole.ForegroundRole and column == CHANGE and change is not None:
+        is_change = column == self.change_column
+        if role == Qt.ItemDataRole.ForegroundRole and is_change and change is not None:
             return QColor(self._theme.amount_color(change))
         if role == Qt.ItemDataRole.TextAlignmentRole and column != MONTH:
             return _RIGHT

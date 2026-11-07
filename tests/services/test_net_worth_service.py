@@ -1,8 +1,9 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
-from factories import TODAY, ars, expense_draft, income_draft, usd
+from factories import TODAY, ars, eur, expense_draft, income_draft, usd
 
+from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.period import Month, Period
 from nodus.services.transaction_service import TransferDraft
@@ -122,3 +123,25 @@ def test_history_without_a_rate_leaves_a_gap(services, pesos, dollars):
 
 def test_history_of_a_future_period_is_empty(services, pesos):
     assert services.net_worth.history(Period.of_months(Month(2027, 1)), TODAY) == []
+
+
+def test_euros_add_up_in_pesos_and_dollars(services, pesos, dollars):
+    services.accounts.create("Viaje", AccountType.SAVINGS, Currency.EUR, eur("200"))
+    services.exchange_rates.set_rate(TODAY, Decimal("1000"))
+    services.exchange_rates.set_rate(TODAY, Decimal("1100"), Currency.EUR)
+
+    net_worth = services.net_worth.net_worth(TODAY)
+
+    assert list(net_worth.by_currency) == [Currency.ARS, Currency.USD, Currency.EUR]
+    assert net_worth.by_currency[Currency.EUR] == eur("200")
+    assert net_worth.total_in == {Currency.ARS: ars("820000"), Currency.USD: usd("820")}
+
+
+def test_euros_without_their_rate_leave_no_total(services, pesos, dollars):
+    services.accounts.create("Viaje", AccountType.SAVINGS, Currency.EUR, eur("200"))
+    services.exchange_rates.set_rate(TODAY, Decimal("1000"))
+
+    assert services.net_worth.net_worth(TODAY).total_in == {
+        Currency.ARS: None,
+        Currency.USD: None,
+    }

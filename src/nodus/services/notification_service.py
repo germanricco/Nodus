@@ -15,10 +15,18 @@ from nodus.services.recurring_charge_service import RecurringChargeService
 from nodus.services.settings_service import SettingsService
 from nodus.services.update_service import Release
 
-# A rate older than this no longer reflects the dollar's price.
+# A rate older than this no longer reflects the currency's price.
 STALE_RATE_DAYS = 7
 # Charges due within this many days are announced, besides the overdue ones.
 CHARGE_NOTICE_DAYS = 3
+
+
+# How the notices name each foreign currency: singular and plural.
+_CURRENCY_NAMES = {
+    Currency.USD: ("dólar", "dólares"),
+    Currency.EUR: ("euro", "euros"),
+    Currency.CLP: ("peso chileno", "pesos chilenos"),
+}
 
 
 class NoticeKind(Enum):
@@ -70,9 +78,7 @@ class NotificationService:
                     release.url,
                 )
             )
-        rate_notice = self._rate_notice(today)
-        if rate_notice:
-            notices.append(rate_notice)
+        notices.extend(self._rate_notices(today))
         for notice in (self._charges_notice(today), self._budgets_notice(today)):
             if notice:
                 notices.append(notice)
@@ -86,23 +92,28 @@ class NotificationService:
         """Stops announcing ``release``; a later version is announced again."""
         self._settings.set_dismissed_version(release.version)
 
-    def _rate_notice(self, today: date) -> Notice | None:
-        """Only matters with dollar accounts, which need the rate to be added up."""
-        if not any(a.currency is Currency.USD for a in self._accounts.list_accounts()):
-            return None
-        rate = self._exchange_rates.rate_on(today)
+    def _rate_notices(self, today: date) -> list[Notice]:
+        """One per foreign currency an account holds, since its rate is needed to add it
+        up; currencies nobody holds do not matter."""
+        held = {account.currency for account in self._accounts.list_accounts()}
+        notices = (self._rate_notice(c, today) for c in Currency if c.is_foreign and c in held)
+        return [notice for notice in notices if notice]
+
+    def _rate_notice(self, currency: Currency, today: date) -> Notice | None:
+        name, plural = _CURRENCY_NAMES[currency]
+        rate = self._exchange_rates.rate_on(today, currency)
         if rate is None:
             return Notice(
                 NoticeKind.STALE_RATE,
-                "Sin cotización del dólar",
-                "Cárgala para sumar tus cuentas en pesos y en dólares.",
+                f"Sin cotización del {name}",
+                f"Cárgala para sumar tus cuentas en {plural} al resto.",
             )
         days = (today - rate.rate_date).days
         if days <= STALE_RATE_DAYS:
             return None
         return Notice(
             NoticeKind.STALE_RATE,
-            f"Sin cotización desde hace {days} días",
+            f"Sin cotización del {name} desde hace {days} días",
             f"La última es del {rate.rate_date:%d/%m/%Y}.",
         )
 

@@ -1,4 +1,4 @@
-"""Settings section: theme, dollar exchange rate and where the data lives."""
+"""Settings section: theme, exchange rates and where the data lives."""
 
 from __future__ import annotations
 
@@ -24,9 +24,8 @@ from PySide6.QtWidgets import (
 
 from nodus import __version__
 from nodus.database.repositories.transaction_repository import TransactionFilter
-from nodus.models.currency import Currency
+from nodus.models.currency import FOREIGN_CURRENCIES, HOME_CURRENCY, Currency
 from nodus.models.exchange_rate import ExchangeRate
-from nodus.models.money import Money
 from nodus.services.backup_service import BackupService
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
@@ -36,6 +35,7 @@ from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import export_transactions
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
+from nodus.ui.labels import rate_text
 from nodus.ui.pages.page import Page
 from nodus.ui.rate_updater import RateUpdater
 from nodus.ui.theme.theme import ThemeMode
@@ -50,6 +50,14 @@ from nodus.ui.widgets.style import clear_layout, set_style_property
 # Segment order of the theme selector.
 THEME_MODES = [ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM]
 THEME_LABELS = ["Claro", "Oscuro", "Según el sistema"]
+# Segments of the rate currency selector, one per FOREIGN_CURRENCIES entry.
+RATE_CURRENCY_LABELS = ["Dólar", "Euro", "Peso chileno"]
+# What the rate form asks for, per currency.
+RATE_PLACEHOLDERS = {
+    Currency.USD: "Pesos por dólar",
+    Currency.EUR: "Pesos por euro",
+    Currency.CLP: "Pesos por peso chileno",
+}
 
 
 def open_folder(folder: Path) -> None:
@@ -57,8 +65,8 @@ def open_folder(folder: Path) -> None:
 
 
 def format_rate(rate: ExchangeRate) -> str:
-    """ "US$ 1 = $ 1.215,50", how the dollar rate is quoted in Argentina."""
-    return f"US$ 1 = {Money.from_decimal(rate.rate, Currency.ARS).format()}"
+    """ "US$ 1 = $ 1.215,50", how a rate is quoted in Argentina."""
+    return rate_text(rate.base, HOME_CURRENCY, rate.rate)
 
 
 def secondary_button(text: str, on_click: Callable[[], object]) -> QPushButton:
@@ -121,6 +129,7 @@ class SettingsPage(Page):
 
     def refresh(self) -> None:
         self.theme_input.set_index(THEME_MODES.index(self._theme_manager.mode))
+        self._refresh_rate_currencies()
         self._refresh_rates()
         self._refresh_rate_source()
         self._refresh_backup_status()
@@ -148,13 +157,21 @@ class SettingsPage(Page):
     # Exchange rate
 
     def _rate_card(self) -> Card:
-        card = Card("Cotización del dólar")
+        card = Card("Cotizaciones")
+        self.rate_currency_row = SettingRow("Moneda")
+        self.rate_currency_input = self.rate_currency_row.add(
+            SegmentedControl(RATE_CURRENCY_LABELS)
+        )
+        self.rate_currency_input.changed.connect(lambda _index: self._refresh_rates())
+        card.body.addWidget(self.rate_currency_row)
+
         self.rate_source_row = SettingRow("Fuente")
         self.rate_source_input = self.rate_source_row.add(SegmentedControl(list(SOURCES.values())))
         self.rate_source_input.changed.connect(self._set_rate_source)
         self.rate_source_input.setToolTip(
             "Con MEP, Blue u Oficial, Nodus trae el valor de venta del día desde DolarApi"
-            " al abrirse. Con Manual, la cargas tú."
+            " al abrirse; el euro y el peso chileno, con su cotización oficial."
+            " Con Manual, las cargas tú."
         )
         self.refresh_rate_button = self.rate_source_row.add(
             secondary_button("Actualizar", self.refresh_rate)
@@ -170,13 +187,16 @@ class SettingsPage(Page):
         current.addWidget(self.current_rate_label)
         current.addWidget(self.current_rate_date_label, alignment=Qt.AlignmentFlag.AlignBottom)
         current.addStretch()
+        # The euro and the Chilean peso ignore the dollar's source.
+        self.official_rate_label = QLabel("Oficial, desde DolarApi")
+        set_style_property(self.official_rate_label, "muted", True)
+        current.addWidget(self.official_rate_label, alignment=Qt.AlignmentFlag.AlignBottom)
         card.body.addSpacing(4)
         card.body.addLayout(current)
         card.body.addSpacing(4)
 
         self.rate_date_input = DateInput()
         self.rate_value_input = AmountInput(Currency.ARS)
-        self.rate_value_input.line_edit.setPlaceholderText("Pesos por dólar")
         self.rate_value_input.setFixedWidth(200)
         self.save_rate_button = QPushButton("Guardar")
         self.save_rate_button.setObjectName("PrimaryButton")
@@ -186,7 +206,8 @@ class SettingsPage(Page):
         form = QHBoxLayout()
         form.setSpacing(8)
         form.addWidget(self.rate_date_input)
-        form.addWidget(QLabel("US$ 1 ="))
+        self.rate_unit_label = QLabel()
+        form.addWidget(self.rate_unit_label)
         form.addWidget(self.rate_value_input)
         form.addWidget(self.save_rate_button)
         form.addStretch()
@@ -213,6 +234,7 @@ class SettingsPage(Page):
             return
         feed.set_source(source)
         self._refresh_rate_source()
+        self._refresh_rates()
         self.refresh_rate()
 
     def refresh_rate(self) -> None:
@@ -221,7 +243,7 @@ class SettingsPage(Page):
             self.rate_source_row.set_detail("Consultando…")
             self._rate_updater.update(force=True)
 
-    def _on_rate_updated(self, value: Decimal) -> None:
+    def _on_rate_updated(self, _rates: dict[Currency, Decimal]) -> None:
         self.rate_source_row.set_detail("Actualizada hoy")
 
     def _on_rate_failed(self) -> None:
@@ -233,13 +255,15 @@ class SettingsPage(Page):
         automatic = feed.is_automatic()
         self.refresh_rate_button.setVisible(automatic)
         self.rate_source_row.set_detail(
-            "Actualizada hoy" if automatic and not feed.is_due(date.today()) else ""
+            "Actualizada hoy" if automatic and not feed.due(date.today()) else ""
         )
 
     def save_rate(self) -> None:
         try:
             value = self.rate_value_input.money().to_decimal()
-            self._services.exchange_rates.set_rate(self.rate_date_input.day(), value)
+            self._services.exchange_rates.set_rate(
+                self.rate_date_input.day(), value, self.rate_currency()
+            )
         except ValidationError as error:
             self.rate_error_label.setText(str(error))
             self.rate_error_label.show()
@@ -247,15 +271,35 @@ class SettingsPage(Page):
         self.rate_value_input.line_edit.clear()
         self._event_bus.exchange_rates_changed.emit()
 
+    def rate_currency(self) -> Currency:
+        """The currency whose rates the card shows: the dollar, unless the user picked
+        another one in use."""
+        return FOREIGN_CURRENCIES[self.rate_currency_input.index()]
+
+    def _refresh_rate_currencies(self) -> None:
+        """Offers only the currencies in use; with just the dollar, there is no choice."""
+        in_use = self._services.rate_feed.currencies()
+        for index, currency in enumerate(FOREIGN_CURRENCIES):
+            self.rate_currency_input.set_segment_enabled(index, currency in in_use)
+        if self.rate_currency() not in in_use:
+            self.rate_currency_input.set_index(FOREIGN_CURRENCIES.index(Currency.USD))
+        self.rate_currency_row.setVisible(len(in_use) > 1)
+
     def _refresh_rates(self) -> None:
         today = date.today()
+        currency = self.rate_currency()
         self.rate_error_label.hide()
         self.rate_date_input.set_day(today)
-        current = self._services.exchange_rates.rate_on(today)
+        self.rate_unit_label.setText(f"{currency.symbol} 1 =")
+        self.rate_value_input.line_edit.setPlaceholderText(RATE_PLACEHOLDERS[currency])
+        self.official_rate_label.setVisible(
+            currency is not Currency.USD and self._services.rate_feed.is_automatic()
+        )
+        current = self._services.exchange_rates.rate_on(today, currency)
         self.current_rate_label.setText(format_rate(current) if current else "Sin cotización")
         self.current_rate_date_label.setText(format_date(current.rate_date) if current else "")
         clear_layout(self._history)
-        history = self._services.exchange_rates.history()
+        history = self._services.exchange_rates.history(currency)
         if not history:
             empty = QLabel("Sin cotizaciones.")
             set_style_property(empty, "muted", True)

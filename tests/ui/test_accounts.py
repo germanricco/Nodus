@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 import pytest
-from factories import TODAY, ars, expense_draft, usd
+from factories import TODAY, ars, eur, expense_draft, usd
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
@@ -100,7 +100,10 @@ class TestAccountsPage:
         assert card.total_label.text() == "$ 600.000,00"
         assert card.legends[Currency.ARS].amount.text() == "$ 100.000,00"
         assert card.legends[Currency.USD].amount.text() == "US$ 500,00"
-        assert [card.legends[c].share.text() for c in Currency] == ["17 %", "83 %"]
+        assert [card.legends[c].share.text() for c in (Currency.ARS, Currency.USD)] == [
+            "17 %",
+            "83 %",
+        ]
         assert card.rate_label.text() == f"US$ 1 = $ 1.000,00 · {TODAY:%d/%m}"
 
         card.currency_input.set_index(1)
@@ -116,6 +119,22 @@ class TestAccountsPage:
         assert card.subtotal_labels[Currency.ARS].text() == "$ 100.000,00"
         assert card.subtotal_labels[Currency.USD].text() == "US$ 500,00"
         assert card.rate_label.text() == "Sin cotización"
+
+    def test_lists_a_euro_account_with_its_rate(self, services, page, pesos, dollars):
+        services.accounts.create("Europa", AccountType.CASH, Currency.EUR, eur("100"))
+        services.exchange_rates.set_rate(TODAY, Decimal("1000"))
+        page.refresh()
+
+        card = page.net_worth_card
+        assert card.subtotal_labels[Currency.EUR].text() == "€ 100,00"  # no euro rate yet
+        assert card.rate_label.text() == f"US$ 1 = $ 1.000,00 · {TODAY:%d/%m}    € sin cotización"
+
+        services.exchange_rates.set_rate(TODAY, Decimal("1500"), Currency.EUR)
+        page.refresh()
+
+        assert card.total_label.text() == "$ 750.000,00"
+        assert card.legends[Currency.EUR].amount.text() == "€ 100,00"
+        assert not card.legends[Currency.CLP].isVisibleTo(page)
 
     def test_load_rate_leads_to_settings(self, qtbot, page, pesos, dollars):
         page.refresh()

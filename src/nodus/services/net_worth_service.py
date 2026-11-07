@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 from nodus.database.repositories.transaction_repository import TransactionFilter
-from nodus.models.currency import Currency
+from nodus.models.currency import TOTAL_CURRENCIES, Currency
 from nodus.models.money import Money
 from nodus.models.period import Period
 from nodus.services.account_service import AccountService
@@ -21,9 +21,10 @@ DAILY_POINTS_MAX_DAYS = 92
 class NetWorth:
     """What the user has, as of a date.
 
-    ``by_currency`` adds the balances held in each currency without converting anything.
-    ``total_in`` expresses everything in one currency; it is None for a currency when a
-    conversion was needed and no exchange rate exists yet.
+    ``by_currency`` adds the balances held in each currency without converting anything:
+    pesos and dollars always, other currencies when some account holds them.
+    ``total_in`` expresses everything in pesos or in dollars; it is None for one of them
+    when a conversion was needed and no exchange rate exists yet.
     """
 
     by_currency: dict[Currency, Money]
@@ -54,8 +55,9 @@ class NetWorthService:
     def net_worth(self, day: date) -> NetWorth:
         """Balances at the end of ``day``, converted at that day's rate."""
         balances = self._accounts.balances(day)
-        by_currency = {currency: Money.zero(currency) for currency in Currency}
-        for account in self._accounts.list_accounts():
+        accounts = self._accounts.list_accounts()
+        by_currency = self._zeros({account.currency for account in accounts})
+        for account in accounts:
             by_currency[account.currency] += balances[account.id]
         return self._net_worth(by_currency, day)
 
@@ -90,7 +92,7 @@ class NetWorthService:
         end = days[-1]
         currencies = {a.id: a.currency for a in self._accounts.list_accounts()}
         balances = self._accounts.balances(period.start - timedelta(days=1))
-        by_currency = {currency: Money.zero(currency) for currency in Currency}
+        by_currency = self._zeros(set(currencies.values()))
         for account_id, currency in currencies.items():
             by_currency[currency] += balances[account_id]
         # Every change to a balance in the period: movements and value adjustments.
@@ -117,8 +119,13 @@ class NetWorthService:
             points.append(NetWorthPoint(day, self._net_worth(dict(by_currency), day)))
         return points
 
+    @staticmethod
+    def _zeros(held: set[Currency]) -> dict[Currency, Money]:
+        """Zero in pesos, dollars and each currency in ``held``, in the currencies' order."""
+        return {c: Money.zero(c) for c in Currency if c in TOTAL_CURRENCIES or c in held}
+
     def _net_worth(self, by_currency: dict[Currency, Money], day: date) -> NetWorth:
-        total_in = {target: self._total_in(by_currency, target, day) for target in Currency}
+        total_in = {target: self._total_in(by_currency, target, day) for target in TOTAL_CURRENCIES}
         return NetWorth(by_currency, total_in)
 
     def _total_in(

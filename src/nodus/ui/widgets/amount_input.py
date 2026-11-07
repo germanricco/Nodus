@@ -14,6 +14,10 @@ from nodus.services.errors import ValidationError
 _ALLOWED = re.compile(r"^-?[\d.,]+$")
 
 
+# The hint of an empty field: "0,00", or "0" for a currency without cents.
+_ZERO_HINTS = {True: "0,00", False: "0"}
+
+
 def parse_amount(text: str) -> Decimal:
     """Reads a number as people type it in Argentina.
 
@@ -46,7 +50,6 @@ class AmountInput(QWidget):
         self._symbol = QLabel()
         self._symbol.setObjectName("AmountSymbol")
         self.line_edit = QLineEdit()
-        self.line_edit.setPlaceholderText("0,00")
         layout.addWidget(self._symbol)
         layout.addWidget(self.line_edit, stretch=1)
         self.set_currency(currency)
@@ -54,11 +57,16 @@ class AmountInput(QWidget):
     def set_currency(self, currency: Currency) -> None:
         self._currency = currency
         self._symbol.setText(currency.symbol)
+        # Only the default hint follows the currency; a field may set one of its own.
+        if self.line_edit.placeholderText() in {"", *_ZERO_HINTS.values()}:
+            self.line_edit.setPlaceholderText(_ZERO_HINTS[currency.decimals > 0])
 
     def money(self) -> Money:
         """The typed amount; an empty field counts as zero."""
         text = self.line_edit.text()
         amount = parse_amount(text) if text.strip() else Decimal(0)
+        if not self._currency.decimals and amount != amount.to_integral_value():
+            raise ValidationError("Los pesos chilenos no llevan centavos.")
         return Money.from_decimal(amount, self._currency)
 
     def set_money(self, money: Money) -> None:

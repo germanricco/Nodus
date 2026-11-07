@@ -2,11 +2,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, usd
+from factories import ars, clp, eur, usd
 
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
-from nodus.models.exchange_rate import ExchangeRate, implied_ars_per_usd
+from nodus.models.exchange_rate import ExchangeRate, implied_rate
 from nodus.models.money import Money
 from nodus.models.period import Month
 from nodus.models.transaction import Transaction, TransactionType
@@ -83,14 +83,21 @@ class TestMonth:
 @pytest.mark.parametrize(
     ("first", "second", "expected"),
     [
-        (ars("243100"), usd("200"), Decimal("1215.5")),
-        (usd("200"), ars("243100"), Decimal("1215.5")),
+        (ars("243100"), usd("200"), (Currency.USD, Currency.ARS, Decimal("1215.5"))),
+        (usd("200"), ars("243100"), (Currency.USD, Currency.ARS, Decimal("1215.5"))),
+        (eur("100"), usd("108"), (Currency.EUR, Currency.USD, Decimal("1.08"))),
+        (clp("10000"), ars("15800"), (Currency.CLP, Currency.ARS, Decimal("1.58"))),
         (ars("1"), ars("1"), None),
         (ars("1"), usd("0"), None),
     ],
 )
-def test_implied_ars_per_usd(first, second, expected):
-    assert implied_ars_per_usd(first, second) == expected
+def test_implied_rate_is_per_unit_of_the_currency_worth_more(first, second, expected):
+    rate = implied_rate(first, second)
+
+    if expected is None:
+        assert rate is None
+    else:
+        assert (rate.base, rate.quote, rate.value) == expected
 
 
 @pytest.mark.parametrize(

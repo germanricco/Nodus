@@ -7,7 +7,7 @@ from pathlib import Path
 from nodus.config.paths import visible_path
 from nodus.database.database import Database
 from nodus.database.repositories.settings_repository import SettingsRepository
-from nodus.models.currency import Currency
+from nodus.models.currency import TOTAL_CURRENCIES, Currency
 
 
 class SettingsService:
@@ -84,7 +84,7 @@ class SettingsService:
     def net_worth_currency(self) -> Currency:
         """The currency the dashboard shows the net worth in; pesos until chosen."""
         value = self._settings.get(self.NET_WORTH_CURRENCY_KEY)
-        return Currency(value) if value in {c.value for c in Currency} else Currency.ARS
+        return next((c for c in TOTAL_CURRENCIES if c.value == value), Currency.ARS)
 
     def set_net_worth_currency(self, currency: Currency) -> None:
         with self._database.transaction():
