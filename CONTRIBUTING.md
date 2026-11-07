@@ -14,6 +14,14 @@ python -m venv .venv
 
 Para probar sin tocar tus datos reales, define la variable de entorno `NODUS_DATA_DIR` con otra carpeta antes de abrirlo; Nodus crea ahí su base de datos y sus copias de seguridad.
 
+La forma rápida de probar con tus datos de siempre es `scripts/dev.py`. Copia tu base real en `dev-data/` (ignorada por git) y abre Nodus sobre esa copia. La base real se lee en modo solo lectura, así que nunca cambia, aunque el Nodus instalado esté abierto.
+
+```bash
+.venv/Scripts/python scripts/dev.py          # copia nueva de los datos reales
+.venv/Scripts/python scripts/dev.py --keep   # sigue con la copia anterior y sus cambios
+.venv/Scripts/python scripts/dev.py --demo   # empieza de cero con datos de demostración
+```
+
 ## Comandos de uso diario
 
 ```bash

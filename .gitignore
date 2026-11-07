@@ -34,6 +34,9 @@ dist/
 # Capturas generadas por scripts/screenshot.py
 screenshots/
 
+# Copia de los datos reales para probar con scripts/dev.py
+dev-data/
+
 # Editores y sistema operativo
 .vscode/
 .idea/

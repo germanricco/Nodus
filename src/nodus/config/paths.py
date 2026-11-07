@@ -32,8 +32,14 @@ class AppPaths:
         default folder from it.
         """
         override = os.environ.get(cls.DATA_DIR_ENV_VAR)
-        if override:
-            return cls(Path(override))
+        return cls(Path(override)) if override else cls.default()
+
+    @classmethod
+    def default(cls) -> AppPaths:
+        """The OS application data folder, where the user's real data lives.
+
+        The Qt application name must be set before calling this.
+        """
         location = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)
         return cls(Path(location))
 
