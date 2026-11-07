@@ -134,17 +134,26 @@ class SettingsPage(Page):
         self._refresh_rate_source()
         self._refresh_backup_status()
         self.check_updates_input.setChecked(self._services.settings.check_updates())
+        self.startup_input.setChecked(self._services.startup.is_enabled())
 
-    # Appearance
+    # General
 
     def _appearance_card(self) -> Card:
-        card = Card("Apariencia")
-        self.theme_input = SegmentedControl(THEME_LABELS)
+        card = Card("General")
+        theme_row = SettingRow("Tema")
+        self.theme_input = theme_row.add(SegmentedControl(THEME_LABELS))
         self.theme_input.changed.connect(self._set_theme)
-        row = QHBoxLayout()
-        row.addWidget(self.theme_input)
-        row.addStretch()
-        card.body.addLayout(row)
+        card.body.addWidget(theme_row)
+
+        startup = self._services.startup
+        self.startup_row = SettingRow(
+            "Abrir Nodus al iniciar Windows",
+            "" if startup.is_available() else "Disponible en la versión instalada",
+        )
+        self.startup_input = self.startup_row.add(QCheckBox())
+        self.startup_input.setEnabled(startup.is_available())
+        self.startup_input.clicked.connect(startup.set_enabled)
+        card.body.addWidget(self.startup_row)
         return card
 
     def _set_theme(self, index: int) -> None:

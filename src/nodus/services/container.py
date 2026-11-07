@@ -31,6 +31,7 @@ from nodus.services.payee_service import PayeeService
 from nodus.services.rate_feed_service import RateFeedService
 from nodus.services.recurring_charge_service import RecurringChargeService
 from nodus.services.settings_service import SettingsService
+from nodus.services.startup_service import StartupService
 from nodus.services.tag_service import TagService
 from nodus.services.transaction_service import TransactionService
 from nodus.services.update_service import UpdateService
@@ -61,6 +62,7 @@ class Services:
     payees: PayeeService
     analysis: AnalysisService
     tags: TagService
+    startup: StartupService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -115,4 +117,5 @@ class Services:
             payees=payees,
             analysis=AnalysisService(transactions, categories, payees, exchange_rates),
             tags=TagService(database, tag_repository, transactions, exchange_rates),
+            startup=StartupService.for_this_program(),
         )

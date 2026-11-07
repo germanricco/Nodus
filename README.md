@@ -126,7 +126,7 @@ Nodus runs on **64-bit Windows 10 and 11**.
 2. Open it and follow the wizard. It installs for your user only, without administrator rights, and shows up in the Start menu.
 3. If Windows says "Windows protected your PC", click "More info" and then "Run anyway". The warning appears because the installer has no commercial code-signing certificate, which costs a yearly fee. Every installer is built automatically on GitHub from the code in this repository.
 
-To update, install the new version over the old one: your data is kept. Nodus lets you know when a new version is out.
+To update, install the new version over the old one: your data is kept. Nodus lets you know when a new version is out. If you want it waiting for you every morning, turn on «Abrir Nodus al iniciar Windows» in Settings, and uninstalling turns it off again.
 
 ## Roadmap
 

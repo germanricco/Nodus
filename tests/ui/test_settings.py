@@ -1,11 +1,13 @@
+import dataclasses
 from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, eur, expense_draft
+from factories import FakeRegistry, ars, eur, expense_draft
 
 from nodus.models.account import AccountType
 from nodus.models.currency import FOREIGN_CURRENCIES, Currency
+from nodus.services.startup_service import StartupService
 from nodus.ui.dialogs import export
 from nodus.ui.pages import settings_page
 from nodus.ui.pages.settings_page import THEME_MODES, RateRow, SettingsPage
@@ -165,3 +167,25 @@ class TestOtherCurrencies:
         )
         assert page.current_rate_label.text() == "€ 1 = $ 1.738,25"
         assert [row.rate.rate for row in rate_rows(page)] == [Decimal("1738.25")]
+
+
+class TestStartWithWindows:
+    def test_from_the_source_code_it_is_disabled_and_says_why(self, page):
+        assert not page.startup_input.isEnabled()
+        assert page.startup_row.detail.text() == "Disponible en la versión instalada"
+
+    def test_ticking_it_registers_nodus(self, qtbot, services, event_bus, theme_manager):
+        registry = FakeRegistry()
+        installed = dataclasses.replace(
+            services, startup=StartupService(registry, r"C:\Nodus\Nodus.exe")
+        )
+        settings = SettingsPage(installed, event_bus, theme_manager)
+        qtbot.addWidget(settings)
+        settings.refresh()
+        assert settings.startup_input.isEnabled() and not settings.startup_input.isChecked()
+
+        settings.startup_input.click()
+
+        assert registry.value == r'"C:\Nodus\Nodus.exe"'
+        settings.startup_input.click()
+        assert registry.value is None

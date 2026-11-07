@@ -54,5 +54,10 @@ Source: "..\dist\Nodus\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 Name: "{autoprograms}\Nodus"; Filename: "{app}\Nodus.exe"
 Name: "{autodesktop}\Nodus"; Filename: "{app}\Nodus.exe"; Tasks: desktopicon
 
+[Registry]
+; Nodus writes this value itself when the user turns on «Abrir Nodus al iniciar Windows».
+; ValueType none creates nothing on install; the flag removes the value on uninstall.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "Nodus"; Flags: uninsdeletevalue
+
 [Run]
 Filename: "{app}\Nodus.exe"; Description: "{cm:LaunchProgram,Nodus}"; Flags: nowait postinstall skipifsilent

@@ -124,7 +124,7 @@ Nodus funciona en **Windows 10 y 11 de 64 bits**.
 2. Ábrelo y sigue el asistente. Se instala solo para tu usuario, sin permisos de administrador, y queda en el menú Inicio.
 3. Si Windows muestra «Windows protegió tu PC», haz clic en «Más información» y luego en «Ejecutar de todas formas». Aparece porque el instalador no tiene una firma comercial, que tiene un costo anual. Cada instalador se compila automáticamente en GitHub a partir del código de este repositorio.
 
-Para actualizar, instala la versión nueva encima de la anterior: tus datos se conservan. Cuando haya una nueva, Nodus te avisa.
+Para actualizar, instala la versión nueva encima de la anterior: tus datos se conservan. Cuando haya una nueva, Nodus te avisa. Si quieres que te espere abierto cada mañana, activa «Abrir Nodus al iniciar Windows» en Ajustes; al desinstalarlo, esa opción se quita sola.
 
 ## Hoja de ruta
 

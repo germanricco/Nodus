@@ -84,3 +84,19 @@ def charge_draft(
 def light_theme() -> ThemeManager:
     """A light theme for widgets that need one, built over the running application."""
     return ThemeManager(QApplication.instance(), ThemeMode.LIGHT)
+
+
+class FakeRegistry:
+    """The Run key's ``Nodus`` value, in memory."""
+
+    def __init__(self, value: str | None = None) -> None:
+        self.value = value
+
+    def read(self) -> str | None:
+        return self.value
+
+    def write(self, command: str) -> None:
+        self.value = command
+
+    def delete(self) -> None:
+        self.value = None
