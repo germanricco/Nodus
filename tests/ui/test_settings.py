@@ -152,7 +152,7 @@ class TestOtherCurrencies:
         page.refresh()
         assert page.rate_currency_row.isVisibleTo(page)
         clp_segment = page.rate_currency_input.buttons[FOREIGN_CURRENCIES.index(Currency.CLP)]
-        assert not clp_segment.isEnabled()
+        assert not clp_segment.isVisibleTo(page)
 
         page.rate_currency_input.set_index(FOREIGN_CURRENCIES.index(Currency.EUR))
         assert rate_rows(page) == []
@@ -172,7 +172,7 @@ class TestOtherCurrencies:
 class TestStartWithWindows:
     def test_from_the_source_code_it_is_disabled_and_says_why(self, page):
         assert not page.startup_input.isEnabled()
-        assert page.startup_row.detail.text() == "Disponible en la versión instalada"
+        assert page.startup_input.toolTip() == "Disponible en la versión instalada"
 
     def test_ticking_it_registers_nodus(self, qtbot, services, event_bus, theme_manager):
         registry = FakeRegistry()

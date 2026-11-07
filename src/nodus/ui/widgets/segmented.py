@@ -52,3 +52,7 @@ class SegmentedControl(QFrame):
 
     def set_segment_enabled(self, index: int, enabled: bool) -> None:
         self.buttons[index].setEnabled(enabled)
+
+    def set_segment_visible(self, index: int, visible: bool) -> None:
+        """Shows or hides an option that does not apply, instead of graying it out."""
+        self.buttons[index].setVisible(visible)

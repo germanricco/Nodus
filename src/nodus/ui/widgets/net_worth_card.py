@@ -22,6 +22,7 @@ from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.chart_base import format_compact
 from nodus.ui.widgets.charts import ProportionBar, Segment
 from nodus.ui.widgets.color import ColorDot
+from nodus.ui.widgets.flow_layout import FlowLayout
 from nodus.ui.widgets.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel, masked
 from nodus.ui.widgets.segmented import SegmentedControl
@@ -147,9 +148,8 @@ class NetWorthCard(Card):
     def _build_missing_rate(self) -> None:
         """The subtotals side by side, for when they cannot be added up."""
         self.missing_rate = QWidget()
-        layout = QHBoxLayout(self.missing_rate)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(32)
+        # Wraps, like the legend, when there are many currencies to list.
+        layout = FlowLayout(self.missing_rate, h_spacing=32, v_spacing=12)
         self.subtotal_labels: dict[Currency, AnimatedMoneyLabel] = {}
         self._subtotal_columns: dict[Currency, QWidget] = {}
         for currency in Currency:
@@ -171,17 +171,15 @@ class NetWorthCard(Card):
         self.load_rate_button.setObjectName("SecondaryButton")
         self.load_rate_button.setToolTip("Hace falta para sumar tus cuentas en otras monedas")
         self.load_rate_button.clicked.connect(self.rate_requested)
-        layout.addWidget(self.load_rate_button, alignment=Qt.AlignmentFlag.AlignBottom)
-        layout.addStretch()
+        layout.addWidget(self.load_rate_button)
         self.body.addWidget(self.missing_rate)
 
     def _build_legend(self) -> None:
-        legend = QHBoxLayout()
-        legend.setSpacing(20)
+        # Wraps instead of widening the card when many currencies are held.
+        legend = FlowLayout(last_to_the_right=True)
         self.legends = {currency: CurrencyLegend(currency) for currency in Currency}
         for item in self.legends.values():
             legend.addWidget(item)
-        legend.addStretch()
         self.rate_label = QLabel()
         self.rate_label.setObjectName("FieldHint")
         legend.addWidget(self.rate_label)

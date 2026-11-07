@@ -148,14 +148,12 @@ class SettingsPage(Page):
         card.body.addWidget(theme_row)
 
         startup = self._services.startup
-        self.startup_row = SettingRow(
-            "Abrir Nodus al iniciar Windows",
-            "" if startup.is_available() else "Disponible en la versión instalada",
-        )
-        self.startup_input = self.startup_row.add(QCheckBox())
+        self.startup_input = QCheckBox("Abrir Nodus al iniciar Windows")
         self.startup_input.setEnabled(startup.is_available())
+        if not startup.is_available():
+            self.startup_input.setToolTip("Disponible en la versión instalada")
         self.startup_input.clicked.connect(startup.set_enabled)
-        card.body.addWidget(self.startup_row)
+        card.body.addWidget(self.startup_input)
         return card
 
     def _set_theme(self, index: int) -> None:
@@ -291,7 +289,7 @@ class SettingsPage(Page):
         """Offers only the currencies in use; with just the dollar, there is no choice."""
         in_use = self._services.rate_feed.currencies()
         for index, currency in enumerate(FOREIGN_CURRENCIES):
-            self.rate_currency_input.set_segment_enabled(index, currency in in_use)
+            self.rate_currency_input.set_segment_visible(index, currency in in_use)
         if self.rate_currency() not in in_use:
             self.rate_currency_input.set_index(FOREIGN_CURRENCIES.index(Currency.USD))
         self.rate_currency_row.setVisible(len(in_use) > 1)

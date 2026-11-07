@@ -4,19 +4,15 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, in
 
 ## 1.1.0 — 2026-11-07
 
-Más monedas, billeteras virtuales y tus cuentas en el orden que quieras.
-
-- Euros y pesos chilenos: crea cuentas en esas monedas, su cotización oficial llega sola desde DolarApi y se suman al patrimonio en pesos o en dólares.
+- Cuentas en euros y en pesos chilenos, con su cotización oficial automática.
 - Billetera virtual como tipo de cuenta, para Mercado Pago, Ualá y similares.
-- Las cuentas se ordenan arrastrando la manija ⋮⋮ en Cuentas; la barra lateral y las listas siguen ese orden.
-- Cualquier color para categorías y etiquetas: la muestra «+» abre un círculo cromático, y también acepta un código como #3A7BD5.
-- Nodus puede abrirse solo al iniciar Windows, desde Ajustes.
-- La tecla Supr elimina lo seleccionado en Transacciones, Beneficiarios y Etiquetas, siempre con confirmación.
-- Enviar comentarios desde Nodus: el globo de la barra superior abre un formulario corto, sin cuenta, que ya sabe qué versión usas. En Ajustes, además, «Apoyar el proyecto» lleva a Cafecito.
-- Novedades: el aviso de versión nueva muestra qué trae, y al abrir una versión nueva Nodus cuenta qué cambió. Están siempre a mano en Ajustes.
-- La tarjeta principal del Dashboard se llama «Patrimonio neto».
-- Arreglo: al tocar el ojo ya no aparece por un instante una ventana suelta.
-- Arreglo: al pasar entre Gasto, Ingreso y Transferencia, los campos del formulario ya no se corren de lugar.
+- Ordena tus cuentas arrastrándolas en Cuentas.
+- Cualquier color para categorías y etiquetas, con un círculo cromático.
+- Nodus puede abrirse solo al iniciar Windows (en Ajustes).
+- Envía comentarios desde el globo de la barra superior, y apoya el proyecto desde Ajustes.
+- Novedades como estas al actualizar, y qué trae cada versión nueva antes de instalarla.
+- Supr elimina lo seleccionado en las listas, con confirmación.
+- Arreglos y pequeñas mejoras en la interfaz.
 
 ## 1.0.1 — 2026-11-06
 

@@ -1,9 +1,11 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
-from factories import ars, category_id, charge_draft, expense_draft, income_draft
-from PySide6.QtWidgets import QLabel
+from factories import ars, category_id, charge_draft, clp, eur, expense_draft, income_draft
+from PySide6.QtWidgets import QLabel, QScrollArea
 
+from nodus.models.account import AccountType
+from nodus.models.currency import Currency
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.ui.navigation import PageId, TransactionFocus
@@ -306,3 +308,17 @@ def test_expenses_legend_goes_beside_the_ring_when_it_fits(qtbot, window, pesos)
 
     window.resize(1280, 900)  # four of six columns are enough for both
     qtbot.waitUntil(lambda: card.legend_beside)
+
+
+def test_many_currencies_never_push_the_cards_off_the_window(
+    qtbot, window, services, pesos, dollars
+):
+    services.accounts.create("Viaje", AccountType.CASH, Currency.EUR, eur("150"))
+    services.accounts.create("Chile", AccountType.CASH, Currency.CLP, clp("90000"))
+    window.resize(1280, 800)
+    window.show_page(PageId.DASHBOARD)
+    qtbot.wait(50)
+
+    page = window.page(PageId.DASHBOARD)
+    scroll = page.findChild(QScrollArea)
+    assert scroll.widget().width() <= scroll.viewport().width()

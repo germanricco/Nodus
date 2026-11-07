@@ -318,10 +318,14 @@ QCheckBox {
     spacing: 8px;
 }
 
+QCheckBox:disabled {
+    color: $text_muted;
+}
+
 QCheckBox::indicator {
     width: 16px;
     height: 16px;
-    border: 1px solid $border;
+    border: 1px solid $text_muted;
     border-radius: 4px;
     background: $background;
 }
@@ -334,6 +338,10 @@ QCheckBox::indicator:checked {
     border: 1px solid $accent;
     background: $accent;
     image: url($icons/check.svg);
+}
+
+QCheckBox::indicator:disabled {
+    border: 1px solid $border;
 }
 
 /* Segmented control (e.g. Gasto / Ingreso / Transferencia) */

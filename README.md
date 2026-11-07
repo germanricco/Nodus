@@ -130,9 +130,10 @@ To update, install the new version over the old one: your data is kept. Nodus le
 
 ## Roadmap
 
-Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the dashboard, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. Coming next:
+Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the dashboard, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. **v1.1** added euros and Chilean pesos, virtual wallets, accounts in your own order, any color for categories and tags, opening with Windows, sending feedback from the app and a summary of what's new after each update. Coming next:
 
-- **Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
+- **v1.2 — Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
+- **v1.3 — Investments:** a section of its own to follow them.
 
 ## Technology
 
