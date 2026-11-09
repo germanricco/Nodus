@@ -25,7 +25,7 @@ from nodus.ui.theme.icons import icon, logo_pixmap
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.money_label import MoneyLabel
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
 
 
 class SidebarAccountRow(QWidget):
@@ -36,9 +36,9 @@ class SidebarAccountRow(QWidget):
     def __init__(self, name: str, balance: Money, hidden: bool) -> None:
         super().__init__()
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, Space.XXS, Space.XS, Space.XXS)
+        make_hoverable(self)
+        layout.setContentsMargins(Space.S, Space.XXS, Space.S, Space.XXS)
         label = QLabel(name)
-        label.setObjectName("SidebarItem")
         layout.addWidget(label, stretch=1)
         amount = MoneyLabel()
         amount.set_hidden(hidden)
@@ -119,7 +119,8 @@ class Sidebar(QFrame):
         for widget in (self._logo_name, self._accounts_title, self._footer):
             widget.setVisible(not collapsed)
         self._show_accounts_state()
-        self._logo_row.setContentsMargins(*((2, 4, 2, 12) if collapsed else (8, 4, 8, 12)))
+        side = Space.XXS if collapsed else Space.S
+        self._logo_row.setContentsMargins(side, Space.XS, side, Space.M)
         self.collapse_button.setToolTip("Expandir el panel" if collapsed else "Contraer el panel")
         self._apply_collapse_icon()
 

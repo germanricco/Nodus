@@ -17,7 +17,7 @@ from nodus.ui.theme.design import Space
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
-from nodus.ui.widgets.style import clear_layout
+from nodus.ui.widgets.style import clear_layout, make_hoverable
 
 SECTION_TITLES = {TransactionType.EXPENSE: "Gastos", TransactionType.INCOME: "Ingresos"}
 SYSTEM_HINT = "Recibe las transacciones de las categorías que se eliminan."
@@ -41,9 +41,9 @@ class CategoryRow(QWidget):
         self.category = category
         self.has_movements = has_movements
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(
-            self.INDENT if category.is_subcategory else 0, Space.XS, 0, Space.XS
-        )
+        make_hoverable(self)
+        indent = self.INDENT if category.is_subcategory else 0
+        layout.setContentsMargins(Space.S + indent, Space.XS, Space.S, Space.XS)
         layout.setSpacing(Space.S)
         layout.addWidget(ColorDot(category.color))
         name = QLabel(category.name)

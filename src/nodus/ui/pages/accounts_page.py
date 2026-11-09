@@ -32,7 +32,7 @@ from nodus.ui.widgets.money_label import MoneyLabel, masked
 from nodus.ui.widgets.net_worth_card import NetWorthCard, signed
 from nodus.ui.widgets.reorderable_list import ReorderableList
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
 
 
 def account_delete_warning(services: Services, account: Account) -> str:
@@ -98,8 +98,9 @@ class AccountRow(QWidget):
         super().__init__()
         self.account = account
         self.has_movements = has_movements
+        make_hoverable(self)
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, Space.S, 0, Space.S)
+        layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
         layout.setSpacing(Space.M)
 
         badge = QLabel(account.currency.value)

@@ -48,7 +48,7 @@ from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.setting_row import SettingRow
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
 from nodus.ui.widgets.toggle_switch import ToggleSwitch
 
 # Segment order of the theme selector.
@@ -89,7 +89,8 @@ class RateRow(QWidget):
         super().__init__()
         self.rate = rate
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, Space.XXS, 0, Space.XXS)
+        make_hoverable(self)
+        layout.setContentsMargins(Space.S, Space.XXS, Space.S, Space.XXS)
         day = QLabel(format_date(rate.rate_date))
         set_style_property(day, "muted", True)
         day.setMinimumWidth(90)

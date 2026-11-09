@@ -13,6 +13,7 @@ from collections.abc import Callable, Sequence
 
 from PySide6.QtCore import (
     QAbstractItemModel,
+    QEvent,
     QModelIndex,
     QPoint,
     QPointF,
@@ -95,6 +96,12 @@ class _RowControlsDelegate(QStyledItemDelegate):
         self._table = table
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        # The row under the mouse lights up whole, as the sidebar's items; a chosen row
+        # keeps the selection color.
+        if index.row() == self._table.hovered_row and not (
+            option.state & QStyle.StateFlag.State_Selected
+        ):
+            painter.fillRect(option.rect, QColor(active_theme().hover))
         first, last = self._table.edge_columns()
         if index.column() not in (first, last):
             super().paint(painter, option, index)
@@ -192,7 +199,8 @@ class SelectableTable(QTableView):
     """A record table whose rows can be chosen several at a time, each with its menu.
 
     ``actions_for(row)`` gives the menu of a row of ``model``, for its «⋯» and for a right
-    click. A double click elsewhere than on the controls emits ``row_activated``.
+    click. A double click elsewhere than on the controls emits ``row_activated``. The row
+    under the mouse lights up (``hovered_row``) without being chosen.
     """
 
     row_activated = Signal(int)
@@ -207,6 +215,7 @@ class SelectableTable(QTableView):
     ) -> None:
         super().__init__(parent)
         self._actions_for = actions_for
+        self.hovered_row = -1
         self.setHorizontalHeader(_SelectionHeader(self))
         configure_record_table(self, model, stretch_column)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -318,9 +327,20 @@ class SelectableTable(QTableView):
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         super().mouseMoveEvent(event)
-        control, _index = self._control_at(event.position().toPoint())
+        control, index = self._control_at(event.position().toPoint())
         cursor = Qt.CursorShape.PointingHandCursor if control else Qt.CursorShape.ArrowCursor
         self.viewport().setCursor(cursor)
+        self._set_hovered_row(index.row() if index.isValid() else -1)
+
+    def viewportEvent(self, event: QEvent) -> bool:  # noqa: N802
+        if event.type() == QEvent.Type.Leave:
+            self._set_hovered_row(-1)
+        return super().viewportEvent(event)
+
+    def _set_hovered_row(self, row: int) -> None:
+        if row != self.hovered_row:
+            self.hovered_row = row
+            self.viewport().update()
 
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:  # noqa: N802
         index = self.indexAt(event.pos())

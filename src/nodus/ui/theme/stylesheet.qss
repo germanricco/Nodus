@@ -669,15 +669,19 @@ QLabel#ChangeBadge[tone="warning"] {
     color: $warning;
 }
 
-/* Dashboard: category rows that light up under the mouse, and boxed figures */
+/* Rows that light up under the mouse, as the sidebar's items: list rows that open
+   something or have a menu (make_hoverable), and the Dashboard's category rows, which
+   also light up with their slice of the donut. */
 
-QFrame#CategoryLine {
+[hoverable="true"], QFrame#CategoryLine {
     border-radius: $radius_m;
 }
 
-QFrame#CategoryLine[highlighted="true"] {
+[hoverable="true"]:hover, QFrame#CategoryLine[highlighted="true"] {
     background: $hover;
 }
+
+/* Boxed figures */
 
 QFrame#FigureTile {
     border: 1px solid $border;

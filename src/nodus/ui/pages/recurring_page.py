@@ -28,7 +28,7 @@ from nodus.ui.theme.design import Space
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
 
 GROUP_TITLES = {
     DueStatus.OVERDUE: "Vencidos",
@@ -74,7 +74,8 @@ class RecurringChargeRow(QWidget):
         super().__init__()
         self.charge = charge
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, Space.S, 0, Space.S)
+        make_hoverable(self)
+        layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
         layout.setSpacing(Space.M)
         layout.addWidget(ColorDot(category.color))
 

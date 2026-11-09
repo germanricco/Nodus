@@ -1,5 +1,6 @@
 """Small helpers shared by widgets."""
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLayout, QWidget
 
 
@@ -10,6 +11,15 @@ def set_style_property(widget: QWidget, name: str, value: object) -> None:
     """
     widget.setProperty(name, value)
     _repolish(widget)
+
+
+def make_hoverable(widget: QWidget) -> None:
+    """Lights up ``widget``'s background under the mouse, as the sidebar's items do, so a
+    row that can be clicked or has a menu shows it responds (``[hoverable="true"]`` in the
+    stylesheet). Only for such rows: a row that lights up but does nothing misleads."""
+    widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
+    widget.setAttribute(Qt.WidgetAttribute.WA_Hover)
+    widget.setProperty("hoverable", True)
 
 
 def set_style_name(widget: QWidget, name: str) -> None:

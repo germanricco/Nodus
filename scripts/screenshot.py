@@ -20,6 +20,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 if sys.platform == "win32":
     os.environ.setdefault("QT_QPA_FONTDIR", str(Path(os.environ["WINDIR"]) / "Fonts"))
 
+from PySide6.QtCore import Qt  # noqa: E402
 from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
@@ -229,19 +230,30 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.show_page(PageId.ACCOUNTS)
         app.processEvents()
         accounts = window.page(PageId.ACCOUNTS)
-        row = next(r for r in accounts.findChildren(AccountRow) if r.can_update_value)
+        # Rebuilt lists leave hidden rows waiting to be deleted; only a shown one counts.
+        row = next(
+            r for r in accounts.findChildren(AccountRow) if r.isVisible() and r.can_update_value
+        )
         row.more_button.open_menu()
         app.processEvents()
         save(row.more_button.menu, args.out / f"row-menu-{mode.value}.png")
         row.more_button.menu.close()
+        # A row lights up under the mouse.
+        # Offscreen there is no real pointer, so the row is told it is under the mouse.
+        row.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, True)
+        row.repaint()
+        save(window, args.out / f"accounts-hover-{mode.value}.png")
+        row.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, False)
         # Several transactions chosen: the selection bar takes the header.
         window.show_page(PageId.TRANSACTIONS)
         transactions = window.page(PageId.TRANSACTIONS)
         for row in (1, 2, 3):
             transactions.table.toggle_row(row)
+        transactions.table.hovered_row = 5  # under the mouse, not chosen
         app.processEvents()
         save(window, args.out / f"transactions-selection-{mode.value}.png")
         transactions.table.clearSelection()
+        transactions.table.hovered_row = -1
         # The notifications panel, with a new version announced.
         window.show_page(PageId.DASHBOARD)
         window._show_release(Release("9.9.0", ""))
