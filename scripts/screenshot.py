@@ -28,12 +28,13 @@ from nodus.models.period import Month  # noqa: E402
 from nodus.models.transaction import TransactionType  # noqa: E402
 from nodus.models.transaction_filter import TransactionFilter  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
-from nodus.services.update_service import Release  # noqa: E402
+from nodus.services.update_service import Installer, Release  # noqa: E402
 from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
 from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
+from nodus.ui.dialogs.update_dialog import UpdateDialog  # noqa: E402
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
@@ -188,6 +189,15 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         save(window.notification_panel, args.out / f"notifications-{mode.value}.png")
         window.notification_panel.hide()
         window._show_release(None)
+        # Updating from Nodus, halfway through the download (never started: no network).
+        size = 24_578_342
+        release = Release("9.9.0", "", installer=Installer("", size, ""))
+        update = UpdateDialog(services.updates, release, parent=window)
+        update.progressed.emit(size // 2)
+        update.show()
+        app.processEvents()
+        save(update, args.out / f"update-dialog-{mode.value}.png")
+        update.close()
     window.close()
 
 

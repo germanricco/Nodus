@@ -3,7 +3,7 @@ import json
 from datetime import date
 
 import pytest
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QDialog, QPushButton
 
 from nodus.links import DONATE_URL, feedback_url
 from nodus.services.changelog import ChangelogEntry
@@ -49,21 +49,17 @@ def test_installed_news_only_close(qtbot):
     qtbot.addWidget(dialog)
 
     assert dialog.windowTitle() == "Novedades de Nodus"
-    assert dialog.download_button is None
+    assert dialog.update_button is None
     assert "Euros y pesos chilenos" in dialog.text.toPlainText()
 
 
-def test_release_news_download_opens_its_page(qtbot, monkeypatch):
-    urls = []
-    monkeypatch.setattr(
-        browser.QDesktopServices, "openUrl", lambda url: urls.append(url.toString())
-    )
+def test_release_news_update_accepts_the_dialog(qtbot):
     dialog = NewsDialog.for_release(RELEASE)
     qtbot.addWidget(dialog)
 
-    dialog.download_button.click()
+    dialog.update_button.click()
 
-    assert urls == ["https://example.com/v9"]
+    assert dialog.result() == QDialog.DialogCode.Accepted
 
 
 def test_window_shows_unseen_news_once(qtbot, services, event_bus, theme_manager, opened):
@@ -103,7 +99,7 @@ def test_update_notice_tells_what_the_release_brings(
 
     assert opened[0].windowTitle() == "Qué trae Nodus 9.0.0"
     assert opened[0].text.toPlainText().strip() == "Algo."
-    assert opened[0].download_button is not None
+    assert opened[0].update_button is not None
 
 
 def test_update_notice_without_notes_has_no_news_button(qtbot, services, event_bus, theme_manager):

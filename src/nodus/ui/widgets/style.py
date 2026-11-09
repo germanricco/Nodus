@@ -9,6 +9,18 @@ def set_style_property(widget: QWidget, name: str, value: object) -> None:
     Qt does not re-evaluate stylesheets when a property changes, so the widget is re-polished.
     """
     widget.setProperty(name, value)
+    _repolish(widget)
+
+
+def set_style_name(widget: QWidget, name: str) -> None:
+    """Gives ``widget`` the object name the stylesheet selects on (e.g. ``#ErrorLabel``)."""
+    if widget.objectName() != name:
+        widget.setObjectName(name)
+        _repolish(widget)
+
+
+def _repolish(widget: QWidget) -> None:
+    """Qt does not re-evaluate stylesheets on its own when a selector's input changes."""
     widget.style().unpolish(widget)
     widget.style().polish(widget)
 

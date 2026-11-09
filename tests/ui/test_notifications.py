@@ -61,10 +61,10 @@ def test_newer_release_is_counted_and_listed(qtbot, offline_window):
     assert panel.isVisible()
     assert [n.kind for n in offline_window.notices()] == [NoticeKind.UPDATE]
     assert "9.0.0" in offline_window.notices()[0].title
-    assert panel.rows[0].action_button.text() == "Descargar"
+    assert panel.rows[0].action_button.text() == "Actualizar"
 
 
-def test_download_opens_the_release_page(qtbot, offline_window, monkeypatch):
+def test_update_from_the_source_code_opens_the_release_page(qtbot, offline_window, monkeypatch):
     opened = []
     monkeypatch.setattr(
         browser.QDesktopServices, "openUrl", lambda url: opened.append(url.toString())

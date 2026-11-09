@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
 
 from nodus.services.changelog import ChangelogEntry
 from nodus.services.update_service import Release
-from nodus.ui.browser import open_url
 from nodus.ui.formatting import format_date
 
 HEADING_SPACE = 20
@@ -50,14 +49,15 @@ def _space_out_headings(text: QTextBrowser) -> None:
 class NewsDialog(QDialog):
     """A title, the notes in Markdown and one way out.
 
-    The notes of a version not installed yet come with «Descargar», which opens its page.
+    The notes of a version not installed yet come with «Actualizar»: choosing it accepts
+    the dialog, and the caller starts the update.
     """
 
     def __init__(
         self,
         title: str,
         markdown: str,
-        download_url: str = "",
+        update: bool = False,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -80,18 +80,16 @@ class NewsDialog(QDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch()
-        self.download_button: QPushButton | None = None
-        if download_url:
+        self.update_button: QPushButton | None = None
+        if update:
             close = QPushButton("Cerrar")
             close.setObjectName("SecondaryButton")
             close.clicked.connect(self.reject)
             buttons.addWidget(close)
-            self.download_button = QPushButton("Descargar")
-            self.download_button.clicked.connect(lambda: self._download(download_url))
-            main_button = self.download_button
+            self.update_button = main_button = QPushButton("Actualizar")
         else:
             main_button = QPushButton("Entendido")
-            main_button.clicked.connect(self.accept)
+        main_button.clicked.connect(self.accept)
         main_button.setObjectName("PrimaryButton")
         main_button.setDefault(True)
         buttons.addWidget(main_button)
@@ -108,8 +106,4 @@ class NewsDialog(QDialog):
     def for_release(cls, release: Release, parent: QWidget | None = None) -> NewsDialog:
         """What a published version brings, before installing it."""
         notes = release.notes or "Esta versión no trae notas."
-        return cls(f"Qué trae Nodus {release.version}", notes, release.url, parent)
-
-    def _download(self, url: str) -> None:
-        open_url(url)
-        self.accept()
+        return cls(f"Qué trae Nodus {release.version}", notes, update=True, parent=parent)

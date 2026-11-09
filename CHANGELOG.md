@@ -1,9 +1,10 @@
 # Novedades de Nodus
 
-Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, instala la versión nueva encima de la anterior: tus datos se conservan.
+Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
-## 1.1.1
+## 1.2.0
 
+- Actualiza Nodus con un clic: cuando hay una versión nueva, «Actualizar» la descarga, la instala sin preguntas y vuelve a abrir Nodus. Desde la 1.1.0 hay que actualizar a mano esta última vez.
 - Arreglo: Nodus anclado a la barra de tareas muestra su ícono en lugar de un recuadro en blanco. Si ya lo tenías anclado, desánclalo y vuelve a anclarlo después de actualizar.
 
 ## 1.1.0 — 2026-11-07

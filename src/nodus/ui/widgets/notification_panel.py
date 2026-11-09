@@ -9,7 +9,7 @@ from nodus.services.notification_service import Notice, NoticeKind
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 ACTION_LABELS = {
-    NoticeKind.UPDATE: "Descargar",
+    NoticeKind.UPDATE: "Actualizar",
     NoticeKind.STALE_RATE: "Ir a Ajustes",
     NoticeKind.BACKUP_FAILED: "Ir a Ajustes",
     NoticeKind.CHARGES_DUE: "Ver cargos",

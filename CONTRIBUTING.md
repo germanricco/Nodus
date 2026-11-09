@@ -58,6 +58,8 @@ Los tests en `tests/` siguen la misma estructura. Algunas reglas que conviene co
 
 El script congela la aplicación con PyInstaller en `dist/Nodus/` y, si encuentra [Inno Setup 6](https://jrsoftware.org/isinfo.php), genera `dist/Nodus-Setup-<versión>.exe`. Para probar el instalador sin tocar tus datos, ábrelo con `NODUS_DATA_DIR` definida.
 
+Cuando el usuario toca «Actualizar», Nodus descarga el instalador del release (verificando el SHA-256 que publica GitHub para cada archivo adjunto) y lo abre con `/SILENT /SUPPRESSMSGBOXES /NORESTART /RELAUNCH=1` antes de cerrarse. `/RELAUNCH=1` hace que `packaging/nodus.iss` vuelva a abrir Nodus al terminar; sin ese parámetro, una instalación silenciosa deja la aplicación cerrada. Por eso el instalador de cada release tiene que llamarse `Nodus-Setup-<versión>.exe`, como lo genera `scripts/build.py`.
+
 ## Publicar una versión
 
 1. Subir `nodus.__version__` en `src/nodus/__init__.py`, actualizar el README (en inglés y en español) y ponerle la fecha a la sección de la versión en `CHANGELOG.md`.

@@ -344,6 +344,20 @@ QCheckBox::indicator:disabled {
     border: 1px solid $border;
 }
 
+/* Progress bar (downloading an update) */
+
+QProgressBar {
+    border: none;
+    border-radius: 4px;
+    background: $hover;
+    max-height: 8px;
+}
+
+QProgressBar::chunk {
+    border-radius: 4px;
+    background: $accent;
+}
+
 /* Segmented control (e.g. Gasto / Ingreso / Transferencia) */
 
 #SegmentedControl {

@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
@@ -22,6 +24,7 @@ from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
+from nodus.ui.dialogs.update_dialog import UpdateDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.accounts_page import AccountsPage
@@ -186,8 +189,8 @@ class MainWindow(QMainWindow):
         self.notification_panel.open_below(self.top_bar.notifications_button)
 
     def _act_on_notice(self, notice: Notice) -> None:
-        if notice.kind is NoticeKind.UPDATE:
-            open_url(notice.url)
+        if notice.kind is NoticeKind.UPDATE and self._release is not None:
+            self.start_update(self._release)
         elif notice.kind is NoticeKind.CHARGES_DUE:
             self.show_page(PageId.RECURRING)
         elif notice.kind is NoticeKind.BUDGET_OVER:
@@ -196,8 +199,23 @@ class MainWindow(QMainWindow):
             self.show_page(PageId.SETTINGS)
 
     def _show_release_news(self, _notice: Notice) -> None:
-        if self._release is not None:
-            NewsDialog.for_release(self._release, parent=self).exec()
+        if self._release is None:
+            return
+        dialog = NewsDialog.for_release(self._release, parent=self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.start_update(self._release)
+
+    def start_update(self, release: Release) -> None:
+        """Downloads and installs ``release``, then closes Nodus for the installer, which
+        opens it again. Run from the source code, or without an installer attached, the
+        release page opens instead."""
+        if not self._services.updates.can_install(release):
+            open_url(release.url)
+            return
+        dialog = UpdateDialog(self._services.updates, release, parent=self)
+        dialog.exec()
+        if dialog.installing:
+            QApplication.quit()
 
     def _dismiss_notice(self, _notice: Notice) -> None:
         if self._release is not None:

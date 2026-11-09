@@ -116,7 +116,7 @@ A bell gathers what needs your attention: a payment coming due, a budget passed,
 
 ## Your data stays yours
 
-Everything lives in one file on your computer, `%APPDATA%\Nodus\nodus.db`, with the daily backups next to it in `%APPDATA%\Nodus\backups`. Updating or uninstalling Nodus never touches it. The app only goes online for two things, and you can turn both off: checking GitHub for a new version, without sending any of your data, and fetching exchange rates from [DolarApi](https://dolarapi.com) if you chose an automatic source.
+Everything lives in one file on your computer, `%APPDATA%\Nodus\nodus.db`, with the daily backups next to it in `%APPDATA%\Nodus\backups`. Updating or uninstalling Nodus never touches it. The app only goes online for two things, and you can turn both off: checking GitHub for a new version, without sending any of your data (the installer itself is only downloaded when you click «Actualizar»), and fetching exchange rates from [DolarApi](https://dolarapi.com) if you chose an automatic source.
 
 ## Download and install
 
@@ -126,14 +126,14 @@ Nodus runs on **64-bit Windows 10 and 11**.
 2. Open it and follow the wizard. It installs for your user only, without administrator rights, and shows up in the Start menu.
 3. If Windows says "Windows protected your PC", click "More info" and then "Run anyway". The warning appears because the installer has no commercial code-signing certificate, which costs a yearly fee. Every installer is built automatically on GitHub from the code in this repository.
 
-To update, install the new version over the old one: your data is kept. Nodus lets you know when a new version is out and what it brings, and after updating it shows once what changed; the full history is in [CHANGELOG.md](CHANGELOG.md) (in Spanish). If you want it waiting for you every morning, turn on «Abrir Nodus al iniciar Windows» in Settings, and uninstalling turns it off again.
+To update, click «Actualizar» when Nodus announces a new version: it downloads it, checks it arrived intact, installs it without questions and opens again, with your data kept. (Coming from 1.1.0 or earlier, install 1.2.0 over the old version once; from then on it is one click.) Nodus tells you what each new version brings before you install it, and after updating it shows once what changed; the full history is in [CHANGELOG.md](CHANGELOG.md) (in Spanish). If you want it waiting for you every morning, turn on «Abrir Nodus al iniciar Windows» in Settings, and uninstalling turns it off again.
 
 ## Roadmap
 
 Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the dashboard, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. **v1.1** added euros and Chilean pesos, virtual wallets, accounts in your own order, any color for categories and tags, opening with Windows, sending feedback from the app and a summary of what's new after each update. Coming next:
 
-- **v1.2 — Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
-- **v1.3 — Investments:** a section of its own to follow them.
+- **v1.3 — Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
+- **v1.4 — Investments:** a section of its own to follow them.
 
 ## Technology
 

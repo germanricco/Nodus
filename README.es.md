@@ -114,7 +114,7 @@ Una campana junta lo que merece tu atención: un pago que vence, un presupuesto 
 
 ## Tus datos son tuyos
 
-Todo vive en un archivo de tu computadora, `%APPDATA%\Nodus\nodus.db`, con las copias diarias al lado, en `%APPDATA%\Nodus\backups`. Actualizar o desinstalar Nodus no lo toca. La aplicación solo se conecta a internet para dos cosas, y puedes desactivar las dos: ver en GitHub si hay una versión nueva, sin enviar ningún dato tuyo, y traer las cotizaciones de [DolarApi](https://dolarapi.com) si elegiste una fuente automática.
+Todo vive en un archivo de tu computadora, `%APPDATA%\Nodus\nodus.db`, con las copias diarias al lado, en `%APPDATA%\Nodus\backups`. Actualizar o desinstalar Nodus no lo toca. La aplicación solo se conecta a internet para dos cosas, y puedes desactivar las dos: ver en GitHub si hay una versión nueva, sin enviar ningún dato tuyo (el instalador solo se descarga cuando tocas «Actualizar»), y traer las cotizaciones de [DolarApi](https://dolarapi.com) si elegiste una fuente automática.
 
 ## Descargar e instalar
 
@@ -124,14 +124,14 @@ Nodus funciona en **Windows 10 y 11 de 64 bits**.
 2. Ábrelo y sigue el asistente. Se instala solo para tu usuario, sin permisos de administrador, y queda en el menú Inicio.
 3. Si Windows muestra «Windows protegió tu PC», haz clic en «Más información» y luego en «Ejecutar de todas formas». Aparece porque el instalador no tiene una firma comercial, que tiene un costo anual. Cada instalador se compila automáticamente en GitHub a partir del código de este repositorio.
 
-Para actualizar, instala la versión nueva encima de la anterior: tus datos se conservan. Cuando haya una nueva, Nodus te avisa y te cuenta qué trae, y después de actualizar te muestra una vez qué cambió; la historia completa está en [CHANGELOG.md](CHANGELOG.md). Si quieres que te espere abierto cada mañana, activa «Abrir Nodus al iniciar Windows» en Ajustes; al desinstalarlo, esa opción se quita sola.
+Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: la descarga, comprueba que llegó entera, la instala sin preguntas y se vuelve a abrir, con tus datos intactos. (Si vienes de la 1.1.0 o anterior, instala la 1.2.0 encima una vez; desde ahí, alcanza con un clic.) Antes de instalar, Nodus te cuenta qué trae cada versión, y después de actualizar te muestra una vez qué cambió; la historia completa está en [CHANGELOG.md](CHANGELOG.md). Si quieres que te espere abierto cada mañana, activa «Abrir Nodus al iniciar Windows» en Ajustes; al desinstalarlo, esa opción se quita sola.
 
 ## Hoja de ruta
 
 Nodus crece por versiones pequeñas y estables. La **v1.0**, la primera estable, incluye cuentas, transacciones, cotización del dólar, rendimiento de inversiones, dashboard, cargos recurrentes, presupuestos, beneficiarios, etiquetas, reembolsos, análisis, copias de seguridad y exportación. La **v1.1** sumó euros y pesos chilenos, billeteras virtuales, cuentas en el orden que quieras, cualquier color para categorías y etiquetas, abrir con Windows, enviar comentarios desde la aplicación y un resumen de las novedades después de cada actualización. Lo que viene:
 
-- **v1.2 — Metas y grupos de cuentas:** ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.
-- **v1.3 — Inversiones:** una sección propia para seguirlas.
+- **v1.3 — Metas y grupos de cuentas:** ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.
+- **v1.4 — Inversiones:** una sección propia para seguirlas.
 
 ## Tecnología
 

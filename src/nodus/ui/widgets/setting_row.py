@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from nodus.ui.widgets.style import set_style_name
+
 
 class SettingRow(QWidget):
     """A title with an optional short gray detail under it, and widgets aligned right.
@@ -39,9 +41,4 @@ class SettingRow(QWidget):
         """Shows ``text`` under the title (in the error color if ``error``); empty hides it."""
         self.detail.setText(text)
         self.detail.setVisible(bool(text))
-        name = "ErrorLabel" if error else "FieldHint"
-        if self.detail.objectName() != name:
-            # The object name drives the style; re-polish so the change shows.
-            self.detail.setObjectName(name)
-            self.detail.style().unpolish(self.detail)
-            self.detail.style().polish(self.detail)
+        set_style_name(self.detail, "ErrorLabel" if error else "FieldHint")

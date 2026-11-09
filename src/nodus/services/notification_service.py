@@ -76,7 +76,7 @@ class NotificationService:
                 Notice(
                     NoticeKind.UPDATE,
                     f"Nodus {release.version} está disponible",
-                    "Instálala encima de la actual; tus datos se conservan.",
+                    "Se instala en un momento y tus datos se conservan.",
                     release.url,
                     release.notes,
                 )
