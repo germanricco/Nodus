@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from factories import ars, category_id, expense_draft, income_draft, light_theme, usd
+from menus import run_action, texts
 from PySide6.QtCore import Qt
 
 from nodus.models.period import Month, Period
@@ -10,6 +11,7 @@ from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.transaction_service import TransferDraft
 from nodus.ui import main_window as main_window_module
 from nodus.ui.dialogs import export
+from nodus.ui.dialogs.change_category_dialog import ChangeCategoryDialog
 from nodus.ui.dialogs.transaction_dialog import (
     EXPENSE_MODE,
     INCOME_MODE,
@@ -361,10 +363,9 @@ class TestTransactionsPage:
         buy_dollars(services, pesos, dollars)
         page.refresh()
         monkeypatch.setattr(transactions_page, "confirm", lambda *_args: True)
-        page.table.selectRow(0)
 
         with qtbot.waitSignal(event_bus.transactions_changed):
-            page.delete_button.click()
+            run_action(page.row_actions(0), "Eliminar")
 
         assert all_transactions(services) == []
         assert page.model.rowCount() == 0
@@ -385,13 +386,89 @@ class TestTransactionsPage:
         page.search_input.setText("verduleria")
         assert column(page, AMOUNT) == ["-$ 200,00"]
 
-    def test_actions_need_a_selection(self, services, page, pesos, dollars):
+    def test_row_menu_offers_what_the_row_allows(self, services, page, pesos, dollars):
         populate(services, pesos, dollars)
         page.refresh()
 
-        assert not page.delete_button.isEnabled()
+        assert texts(page.row_actions(0)) == ["Editar", "Eliminar"]  # the transfer
+        assert texts(page.row_actions(1)) == ["Editar", "Cambiar categoría", "Eliminar"]
+
+    def test_selection_bar_takes_the_header_with_two_rows(self, services, page, pesos, dollars):
+        populate(services, pesos, dollars)
+        page.refresh()
+        page.show()
+
         page.table.selectRow(1)
-        assert page.delete_button.isEnabled()
+        assert not page.selection_bar.isVisible()
+        assert page.export_button.isVisible()
+
+        page.table.toggle_row(2)
+        assert page.selection_bar.isVisible()
+        assert not page.export_button.isVisible()
+        assert page.selection_bar.count_label.text() == "2 seleccionadas"
+        assert page.selection_bar.detail_label.text() == (
+            "Ingresos $ 900.000,00 · Gastos $ 2.500,00 · Neto $ 897.500,00"
+        )
+        assert not page.category_button.isEnabled()  # an expense and an income
+
+        page.selection_bar.clear_button.click()
+        assert not page.selection_bar.isVisible()
+        assert page.export_button.isVisible()
+
+    def test_check_boxes_add_rows_and_the_header_box_chooses_all(
+        self, qtbot, services, page, pesos, dollars
+    ):
+        populate(services, pesos, dollars)
+        page.refresh()
+        page.show()
+        table = page.table
+
+        for row in (0, 2):
+            box = table.check_rect(table.visualRect(table.model().index(row, 0)))
+            qtbot.mouseClick(table.viewport(), Qt.MouseButton.LeftButton, pos=box.center())
+
+        assert table.selected_rows() == [0, 2]
+        assert table.check_state() == Qt.CheckState.PartiallyChecked
+        table.toggle_all()
+        assert table.check_state() == Qt.CheckState.Checked
+        table.toggle_all()
+        assert table.selected_rows() == []
+
+    def test_deletes_several_after_one_confirmation(
+        self, qtbot, monkeypatch, services, event_bus, page, pesos, dollars
+    ):
+        populate(services, pesos, dollars)
+        page.refresh()
+        warnings = []
+        monkeypatch.setattr(
+            transactions_page, "confirm", lambda _p, _t, text: warnings.append(text) or True
+        )
+        page.table.selectRow(0)
+        page.table.toggle_row(1)
+
+        with qtbot.waitSignal(event_bus.transactions_changed):
+            qtbot.keyClick(page.table, Qt.Key.Key_Delete)
+
+        assert warnings == [
+            "Se van a eliminar 2 transacciones. Las transferencias se eliminan con el"
+            " movimiento de las dos cuentas."
+        ]
+        assert column(page, AMOUNT) == ["$ 900.000,00"]
+
+    def test_changes_the_category_of_several(self, qtbot, services, event_bus, page, pesos):
+        ids = [
+            services.transactions.create(expense_draft(services, pesos.id, ars(a))).id
+            for a in ("10", "20")
+        ]
+        ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
+        dialog = ChangeCategoryDialog(services, event_bus, ids, TransactionType.EXPENSE)
+        qtbot.addWidget(dialog)
+        dialog.category_input.select(ocio)
+
+        with qtbot.waitSignal(event_bus.transactions_changed):
+            dialog.save_button.click()
+
+        assert {services.transactions.get(i).category_id for i in ids} == {ocio}
 
 
 class TestAddTransactionButton:
@@ -445,12 +522,12 @@ def test_payee_opens_its_whole_history(qtbot, services, window, pesos):
     )
     window.show_page(PageId.PAYEES)
     payees = window.page(PageId.PAYEES)
-    payees.table.selectRow(next(
+    coto_row = next(
         row for row in range(payees.proxy.rowCount())
         if payees.proxy.index(row, 0).data() == "Coto"
-    ))  # fmt: skip
+    )  # fmt: skip
 
-    payees.transactions_button.click()
+    run_action(payees.row_actions(coto_row), "Ver movimientos")
 
     transactions = window.page(PageId.TRANSACTIONS)
     assert window.current_page is transactions

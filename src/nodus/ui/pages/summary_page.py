@@ -14,7 +14,7 @@ from PySide6.QtCore import (
     Signal,
 )
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QLabel, QLineEdit, QTableView
+from PySide6.QtWidgets import QLabel, QLineEdit
 
 from nodus.models.money import Money
 from nodus.models.payee import normalize_name
@@ -25,7 +25,10 @@ from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.table import DELETE_KEY_HINT, bind_delete_key, record_table
+from nodus.ui.widgets.row_actions import RowAction
+from nodus.ui.widgets.selectable_table import SelectableTable
+from nodus.ui.widgets.selection_bar import SelectionBar
+from nodus.ui.widgets.table import DELETE_KEY_HINT, bind_delete_key
 
 # The first three columns of every summary table; subclasses may add more after them.
 NAME, COUNT, TOTAL = range(3)
@@ -139,7 +142,8 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
 
 class SummaryPage(Page, Generic[S]):
     """Every item with its movements, sortable by any column, with a search that ignores
-    case and accents. Double-click or "Ver movimientos" opens the item's transactions.
+    case and accents. A double click opens the item's transactions; its «⋯» or a right
+    click offers every action, and several rows can be chosen to merge or delete them.
 
     Subclasses load the summaries and carry out the actions.
     """
@@ -153,9 +157,11 @@ class SummaryPage(Page, Generic[S]):
         texts: tuple[str, str],
         model: SummaryTableModel[S],
         theme_manager: ThemeManager,
+        chosen_word: str = "seleccionadas",
     ) -> None:
         """``noun`` names one item ("beneficiario"); ``texts`` are what the empty table
-        says when there are no items at all and when none matches the search."""
+        says when there are no items at all and when none matches the search;
+        ``chosen_word`` agrees with the items in the selection bar ("seleccionados")."""
         super().__init__(title)
         self._no_items_text, self._no_matches_text = texts
         self._summaries: list[S] = []
@@ -165,12 +171,14 @@ class SummaryPage(Page, Generic[S]):
         self.search_input.setClearButtonEnabled(True)
         self.search_input.setMinimumWidth(200)
         self.add_header_widget(self.search_input)
-        self.transactions_button = self.add_header_button("Ver movimientos")
-        self.edit_button = self.add_header_button("Editar")
-        self.merge_button = self.add_header_button("Unir con…")
-        self.delete_button = self.add_header_button("Eliminar")
-        self.delete_button.setToolTip(DELETE_KEY_HINT)
         self.create_button = self.add_header_button(f"Crear {noun}", primary=True)
+        self.selection_bar = SelectionBar(chosen_word)
+        self.merge_button = self.selection_bar.add_action("Unir…", self.merge_selected)
+        self.merge_button.setToolTip("Deja uno solo y le pasa los movimientos de los demás")
+        self.delete_button = self.selection_bar.add_action("Eliminar", self.delete_selected)
+        self.delete_button.setToolTip(DELETE_KEY_HINT)
+        self.selection_bar.cleared.connect(lambda: self.table.clearSelection())
+        self.set_selection_bar(self.selection_bar)
 
         self.model = model
         self.proxy = QSortFilterProxyModel(self)
@@ -189,10 +197,6 @@ class SummaryPage(Page, Generic[S]):
 
         self.search_input.textChanged.connect(self._show_matches)
         self.create_button.clicked.connect(self.create_item)
-        self.transactions_button.clicked.connect(self.show_selected_transactions)
-        self.edit_button.clicked.connect(lambda: self._with_selected(self.edit_item))
-        self.merge_button.clicked.connect(lambda: self._with_selected(self.merge_item))
-        self.delete_button.clicked.connect(lambda: self._with_selected(self.delete_item))
         theme_manager.theme_changed.connect(self.model.set_theme)
 
     # To implement
@@ -210,10 +214,12 @@ class SummaryPage(Page, Generic[S]):
     def edit_item(self, summary: S) -> None:
         raise NotImplementedError
 
-    def merge_item(self, summary: S) -> None:
+    def merge_items(self, summaries: list[S]) -> None:
+        """One item joins another; several join the one the user keeps."""
         raise NotImplementedError
 
-    def delete_item(self, summary: S) -> None:
+    def delete_items(self, summaries: list[S]) -> None:
+        """Deletes ``summaries`` after the user confirms."""
         raise NotImplementedError
 
     # Shared
@@ -222,21 +228,46 @@ class SummaryPage(Page, Generic[S]):
         self._summaries = self.load_summaries()
         self._show_matches()
 
-    def selected_summary(self) -> S | None:
-        rows = self.table.selectionModel().selectedRows()
-        if not rows:
-            return None
-        return self.model.summary(self.proxy.mapToSource(rows[0]).row())
+    def summary_at(self, row: int) -> S:
+        """The item of a table row, which may be sorted differently from the model."""
+        return self.model.summary(self.proxy.mapToSource(self.proxy.index(row, 0)).row())
 
-    def show_selected_transactions(self) -> None:
-        summary = self.selected_summary()
-        if summary is not None and summary.count:
+    def selected_summaries(self) -> list[S]:
+        return [self.summary_at(row) for row in self.table.selected_rows()]
+
+    def row_actions(self, row: int) -> list[RowAction]:
+        """The menu of a row: its movements, edit, merge and delete."""
+        summary = self.summary_at(row)
+        return [
+            RowAction(
+                "Ver movimientos",
+                lambda: self.show_transactions(summary),
+                "list",
+                enabled=summary.count > 0,
+            ),
+            RowAction("Editar", lambda: self.edit_item(summary), "pencil"),
+            RowAction(
+                "Unir con…",
+                lambda: self.merge_items([summary]),
+                "merge",
+                enabled=len(self._summaries) > 1,
+            ),
+            RowAction("Eliminar", lambda: self.delete_items([summary]), "trash", destructive=True),
+        ]
+
+    def show_transactions(self, summary: S) -> None:
+        if summary.count:
             self.transactions_requested.emit(self.focus_of(summary))
 
-    def _with_selected(self, action) -> None:
-        summary = self.selected_summary()
-        if summary is not None:
-            action(summary)
+    def merge_selected(self) -> None:
+        summaries = self.selected_summaries()
+        if len(summaries) > 1:
+            self.merge_items(summaries)
+
+    def delete_selected(self) -> None:
+        summaries = self.selected_summaries()
+        if summaries:
+            self.delete_items(summaries)
 
     def _show_matches(self) -> None:
         wanted = normalize_name(self.search_input.text())
@@ -249,19 +280,19 @@ class SummaryPage(Page, Generic[S]):
         self.empty_label.setVisible(not has_rows)
         self._update_actions()
 
-    def _build_table(self) -> QTableView:
-        table = record_table(self.proxy, NAME)
+    def _build_table(self) -> SelectableTable:
+        table = SelectableTable(self.proxy, NAME, self.row_actions)
         table.setObjectName("SortableTable")
         table.setSortingEnabled(True)
         table.sortByColumn(COUNT, Qt.SortOrder.DescendingOrder)
-        table.doubleClicked.connect(lambda _index: self.show_selected_transactions())
-        bind_delete_key(table, lambda: self._with_selected(self.delete_item))
-        table.selectionModel().selectionChanged.connect(self._update_actions)
+        table.row_activated.connect(lambda row: self.show_transactions(self.summary_at(row)))
+        bind_delete_key(table, self.delete_selected)
+        table.selection_changed.connect(self._update_actions)
         return table
 
     def _update_actions(self) -> None:
-        summary = self.selected_summary()
-        self.transactions_button.setEnabled(bool(summary and summary.count))
-        self.edit_button.setEnabled(summary is not None)
-        self.merge_button.setEnabled(summary is not None and len(self._summaries) > 1)
-        self.delete_button.setEnabled(summary is not None)
+        """With two or more rows chosen, the header becomes the selection bar."""
+        count = len(self.table.selected_rows())
+        self.show_selection_bar(count > 1)
+        if count > 1:
+            self.selection_bar.set_count(count)

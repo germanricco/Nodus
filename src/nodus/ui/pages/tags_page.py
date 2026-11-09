@@ -66,13 +66,21 @@ class TagsPage(SummaryPage[TagSummary]):
     def edit_item(self, summary: TagSummary) -> None:
         TagDialog(self._services, self._event_bus, summary.tag, parent=self.window()).exec()
 
-    def merge_item(self, summary: TagSummary) -> None:
-        MergeTagDialog(self._services, self._event_bus, summary.tag, parent=self.window()).exec()
+    def merge_items(self, summaries: list[TagSummary]) -> None:
+        tags = [summary.tag for summary in summaries]
+        MergeTagDialog(self._services, self._event_bus, tags, parent=self.window()).exec()
 
-    def delete_item(self, summary: TagSummary) -> None:
-        text = f"Se va a eliminar «{summary.tag.name}»."
-        if summary.count:
-            text += f" {movements_text(summary.count)} la pierden; los movimientos no se borran."
-        if confirm(self.window(), "Eliminar etiqueta", text):
-            self._services.tags.delete(summary.tag.id)
+    def delete_items(self, summaries: list[TagSummary]) -> None:
+        if len(summaries) == 1:
+            title, text = "Eliminar etiqueta", f"Se va a eliminar «{summaries[0].tag.name}»."
+            count = summaries[0].count
+        else:
+            title = "Eliminar etiquetas"
+            text = f"Se van a eliminar {len(summaries)} etiquetas."
+            count = self._services.tags.tagged_count([summary.tag.id for summary in summaries])
+        if count:
+            lose = "la pierden" if len(summaries) == 1 else "pierden alguna"
+            text += f" {movements_text(count)} {lose}; los movimientos no se borran."
+        if confirm(self.window(), title, text):
+            self._services.tags.delete_many([summary.tag.id for summary in summaries])
             announce_tag_change(self._event_bus)

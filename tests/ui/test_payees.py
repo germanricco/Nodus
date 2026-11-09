@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 from factories import ars, category_id, expense_draft, income_draft
+from menus import run_action, texts
 from PySide6.QtCore import Qt
 
 from nodus.models.period import Month, Period
@@ -82,23 +83,46 @@ def test_search_ignores_case_and_accents(services, page, populated):
     assert "búsqueda" in page.empty_label.text()
 
 
-def test_actions_follow_the_selection(page, populated):
+def actions_of(page, name: str):
+    return page.row_actions(column(page, NAME).index(name))
+
+
+def test_row_menu_offers_every_action(page, populated):
     page.refresh()
-    assert not page.edit_button.isEnabled()
 
-    select(page, "Kiosco")
+    actions = actions_of(page, "Kiosco")
 
-    assert page.edit_button.isEnabled()
-    assert page.merge_button.isEnabled()
-    assert not page.transactions_button.isEnabled()  # no movements to show
+    assert texts(actions) == ["Ver movimientos", "Editar", "Unir con…", "Eliminar"]
+    assert [a.enabled for a in actions] == [False, True, True, True]  # no movements to show
+
+
+def test_selection_bar_merges_and_deletes_several(
+    monkeypatch, qtbot, services, event_bus, page, populated
+):
+    page.refresh()
+    page.show()
+    warnings = []
+    monkeypatch.setattr(
+        payees_page, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+    )
+    select(page, "Coto")
+    page.table.toggle_row(column(page, NAME).index("Empresa"))
+
+    assert page.selection_bar.isVisible()
+    assert page.selection_bar.count_label.text() == "2 seleccionados"
+    assert not page.create_button.isVisible()
+    with qtbot.waitSignal(event_bus.payees_changed):
+        qtbot.keyClick(page.table, Qt.Key.Key_Delete)
+
+    assert warnings == ["Se van a eliminar 2 beneficiarios. 4 movimientos quedan sin beneficiario."]
+    assert column(page, NAME) == ["Kiosco"]
 
 
 def test_see_transactions_spans_the_whole_history(qtbot, page, populated, services):
     page.refresh()
-    select(page, "Coto")
 
     with qtbot.waitSignal(page.transactions_requested) as signal:
-        page.transactions_button.click()
+        run_action(actions_of(page, "Coto"), "Ver movimientos")
 
     period = Period.of_months(Month(2026, 10), Month.of(date.today()))
     assert signal.args == [TransactionFocus(period, payee_id=services.payees.find("Coto").id)]
@@ -167,7 +191,7 @@ class TestDialogs:
 
     def test_merge_explains_and_moves_transactions(self, qtbot, services, event_bus, populated):
         coto = services.payees.find("Coto")
-        dialog = MergePayeeDialog(services, event_bus, coto)
+        dialog = MergePayeeDialog(services, event_bus, [coto])
         qtbot.addWidget(dialog)
         dialog.target_input.setCurrentIndex(dialog.target_input.findText("Kiosco"))
 
@@ -179,3 +203,18 @@ class TestDialogs:
 
         assert services.payees.find("Coto") is None
         assert services.payees.transaction_count(services.payees.find("Kiosco").id) == 3
+
+    def test_merge_several_keeps_the_one_chosen(self, qtbot, services, event_bus, populated):
+        payees = [services.payees.find(name) for name in ["Coto", "Empresa", "Kiosco"]]
+        dialog = MergePayeeDialog(services, event_bus, payees)
+        qtbot.addWidget(dialog)
+        dialog.target_input.setCurrentIndex(dialog.target_input.findText("Kiosco"))
+
+        assert dialog.windowTitle() == "Unir 3 beneficiarios"
+        assert dialog.result_label.text() == (
+            "4 movimientos pasan a «Kiosco» y se eliminan «Coto» y «Empresa»."
+        )
+        with qtbot.waitSignal(event_bus.transactions_changed):
+            qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+        assert [p.name for p in services.payees.list_payees()] == ["Kiosco"]

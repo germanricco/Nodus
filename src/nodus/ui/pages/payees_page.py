@@ -53,6 +53,7 @@ class PayeesPage(SummaryPage[PayeeSummary]):
             (NO_PAYEES_TEXT, NO_MATCHES_TEXT),
             PayeeTableModel(theme_manager.theme),
             theme_manager,
+            chosen_word="seleccionados",
         )
         self._services = services
         self._event_bus = event_bus
@@ -77,17 +78,21 @@ class PayeesPage(SummaryPage[PayeeSummary]):
     def edit_item(self, summary: PayeeSummary) -> None:
         PayeeDialog(self._services, self._event_bus, summary.payee, parent=self.window()).exec()
 
-    def merge_item(self, summary: PayeeSummary) -> None:
-        MergePayeeDialog(
-            self._services, self._event_bus, summary.payee, parent=self.window()
-        ).exec()
+    def merge_items(self, summaries: list[PayeeSummary]) -> None:
+        payees = [summary.payee for summary in summaries]
+        MergePayeeDialog(self._services, self._event_bus, payees, parent=self.window()).exec()
 
-    def delete_item(self, summary: PayeeSummary) -> None:
-        text = f"Se va a eliminar «{summary.payee.name}»."
-        if summary.count:
-            left = "queda" if summary.count == 1 else "quedan"
-            text += f" {movements_text(summary.count)} {left} sin beneficiario."
-        if confirm(self.window(), "Eliminar beneficiario", text):
-            self._services.payees.delete(summary.payee.id)
+    def delete_items(self, summaries: list[PayeeSummary]) -> None:
+        count = sum(summary.count for summary in summaries)
+        if len(summaries) == 1:
+            title, text = "Eliminar beneficiario", f"Se va a eliminar «{summaries[0].payee.name}»."
+        else:
+            title = "Eliminar beneficiarios"
+            text = f"Se van a eliminar {len(summaries)} beneficiarios."
+        if count:
+            left = "queda" if count == 1 else "quedan"
+            text += f" {movements_text(count)} {left} sin beneficiario."
+        if confirm(self.window(), title, text):
+            self._services.payees.delete_many([summary.payee.id for summary in summaries])
             self._event_bus.payees_changed.emit()
             self._event_bus.transactions_changed.emit()

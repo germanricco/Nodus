@@ -191,6 +191,14 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         app.processEvents()
         save(row.more_button.menu, args.out / f"row-menu-{mode.value}.png")
         row.more_button.menu.close()
+        # Several transactions chosen: the selection bar takes the header.
+        window.show_page(PageId.TRANSACTIONS)
+        transactions = window.page(PageId.TRANSACTIONS)
+        for row in (1, 2, 3):
+            transactions.table.toggle_row(row)
+        app.processEvents()
+        save(window, args.out / f"transactions-selection-{mode.value}.png")
+        transactions.table.clearSelection()
         # The notifications panel, with a new version announced.
         window.show_page(PageId.DASHBOARD)
         window._show_release(Release("9.9.0", ""))

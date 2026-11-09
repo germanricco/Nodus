@@ -86,6 +86,11 @@ def movements_text(count: int) -> str:
     return "1 movimiento" if count == 1 else f"{count} movimientos"
 
 
+def transactions_text(count: int) -> str:
+    """ "1 transacción", "3 transacciones"."""
+    return "1 transacción" if count == 1 else f"{count} transacciones"
+
+
 def unconverted_note(count: int) -> str:
     """Why a total may fall short: movements in another currency left out for lack of a
     rate."""

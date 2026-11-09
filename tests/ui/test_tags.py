@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 from factories import ars, expense_draft, income_draft
+from menus import run_action
 from PySide6.QtCore import Qt
 
 from nodus.models.period import Month, Period
@@ -32,6 +33,10 @@ def column(page, index: int) -> list[str]:
 
 def select(page, name: str) -> None:
     page.table.selectRow(column(page, NAME).index(name))
+
+
+def actions_of(page, name: str):
+    return page.row_actions(column(page, NAME).index(name))
 
 
 @pytest.fixture
@@ -63,13 +68,36 @@ def test_lists_most_used_first_with_totals(page, populated):
 
 def test_see_transactions_spans_the_whole_history(qtbot, services, page, populated):
     page.refresh()
-    select(page, "Viaje")
 
     with qtbot.waitSignal(page.transactions_requested) as signal:
-        page.transactions_button.click()
+        run_action(actions_of(page, "Viaje"), "Ver movimientos")
 
     period = Period.of_months(Month(2026, 10), Month.of(date.today()))
     assert signal.args == [TransactionFocus(period, tag_id=services.tags.find("Viaje").id)]
+
+
+def test_delete_several_counts_each_movement_once(
+    monkeypatch, qtbot, services, event_bus, page, populated
+):
+    services.transactions.create(
+        expense_draft(services, services.accounts.list_accounts()[0].id, ars("5"),
+                      tag_names=("Viaje", "Trabajo"))
+    )  # fmt: skip
+    page.refresh()
+    warnings = []
+    monkeypatch.setattr(
+        tags_page, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+    )
+    select(page, "Viaje")
+    page.table.toggle_row(column(page, NAME).index("Trabajo"))
+
+    with qtbot.waitSignal(event_bus.tags_changed):
+        page.delete_button.click()
+
+    assert warnings == [
+        "Se van a eliminar 2 etiquetas. 4 movimientos pierden alguna; los movimientos no se borran."
+    ]
+    assert column(page, NAME) == ["Mudanza"]
 
 
 def test_delete_keeps_the_movements(monkeypatch, qtbot, services, event_bus, page, populated):
@@ -117,7 +145,7 @@ class TestDialogs:
 
     def test_merge_explains_and_moves_transactions(self, qtbot, services, event_bus, populated):
         viaje = services.tags.find("Viaje")
-        dialog = MergeTagDialog(services, event_bus, viaje)
+        dialog = MergeTagDialog(services, event_bus, [viaje])
         qtbot.addWidget(dialog)
         dialog.target_input.setCurrentIndex(dialog.target_input.findText("Mudanza"))
 
@@ -135,9 +163,7 @@ class TestTransactionsList:
     def test_tag_opens_its_movements_with_column_and_totals(self, services, window, populated):
         window.show_page(PageId.TAGS)
         tags = window.page(PageId.TAGS)
-        select(tags, "Viaje")
-
-        tags.transactions_button.click()
+        run_action(actions_of(tags, "Viaje"), "Ver movimientos")
 
         transactions = window.page(PageId.TRANSACTIONS)
         assert window.current_page is transactions

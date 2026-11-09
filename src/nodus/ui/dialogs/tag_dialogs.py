@@ -8,7 +8,7 @@ from nodus.models.palette import palette_color
 from nodus.models.tag import Tag
 from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import FormDialog
-from nodus.ui.dialogs.merge_dialog import MergeDialog
+from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.color import ColorPicker
 
@@ -56,23 +56,28 @@ class TagDialog(FormDialog):
 
 
 class MergeTagDialog(MergeDialog):
-    """Gives another tag to the transactions of ``tag`` and deletes it, for duplicates such
-    as "Viaje" and "Vacaciones"."""
+    """Gives one tag to the transactions of ``tags`` and deletes the rest, for duplicates
+    such as "Viaje" and "Vacaciones".
+
+    One tag joins another of the list; several join the one the user keeps.
+    """
 
     def __init__(
         self,
         services: Services,
         event_bus: EventBus,
-        tag: Tag,
+        tags: list[Tag],
         parent: QWidget | None = None,
     ) -> None:
-        others = [(t.name, t.id) for t in services.tags.list_tags() if t.id != tag.id]
-        count = services.tags.transaction_count(tag.id)
-        super().__init__(tag.name, "Etiqueta", others, count, parent)
+        chosen = {tag.id for tag in tags}
+        others = [(t.name, t.id) for t in services.tags.list_tags() if t.id not in chosen]
+        sources = [
+            MergeItem(tag.name, tag.id, services.tags.transaction_count(tag.id)) for tag in tags
+        ]
+        super().__init__(sources, "Etiqueta", "etiquetas", others, parent)
         self._services = services
         self._event_bus = event_bus
-        self._tag = tag
 
-    def merge(self, target_id: int) -> None:
-        self._services.tags.merge(self._tag.id, target_id)
+    def merge(self, source_ids: list[int], target_id: int) -> None:
+        self._services.tags.merge_many(source_ids, target_id)
         announce_tag_change(self._event_bus)

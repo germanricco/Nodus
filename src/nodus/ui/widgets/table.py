@@ -10,9 +10,17 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableView
 
 
 def record_table(model: QAbstractItemModel, stretch_column: int) -> QTableView:
-    """A table of whole-row selection, without grid or editing, whose columns fit their
-    content except ``stretch_column``, which takes the remaining width."""
+    """A table of single whole-row selection, without grid or editing, whose columns fit
+    their content except ``stretch_column``, which takes the remaining width."""
     table = QTableView()
+    configure_record_table(table, model, stretch_column)
+    return table
+
+
+def configure_record_table(
+    table: QTableView, model: QAbstractItemModel, stretch_column: int
+) -> None:
+    """Sets up ``table`` as ``record_table`` describes, for tables of other classes."""
     table.setModel(model)
     table.setShowGrid(False)
     table.setWordWrap(False)
@@ -27,7 +35,6 @@ def record_table(model: QAbstractItemModel, stretch_column: int) -> QTableView:
     # Set for the whole header, so columns a model adds later also fit their content.
     header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
     header.setSectionResizeMode(stretch_column, QHeaderView.ResizeMode.Stretch)
-    return table
 
 
 DELETE_KEY_HINT = "También con la tecla Supr"

@@ -4,7 +4,8 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 
 ## 1.3.0
 
-- Las acciones de cada fila, en un mismo lugar: el botón «⋯» al final de la fila o el clic derecho abren un menú con todo lo que se puede hacer con ella. Ya está en Cuentas, Categorías, Recurrentes y Presupuestos.
+- Las acciones de cada fila, en un mismo lugar: el botón «⋯» al final de la fila o el clic derecho abren un menú con todo lo que se puede hacer con ella, en todas las listas. Los botones «Editar», «Eliminar» y «Unir con…» dejan el encabezado de Transacciones, Beneficiarios y Etiquetas.
+- Varias filas a la vez: marca las casillas (o usa Ctrl y Mayús) y aparece una barra con lo que se puede hacer con todas. En Transacciones suma lo elegido y permite cambiarles la categoría o eliminarlas; en Beneficiarios y Etiquetas, unirlas en una sola o eliminarlas. Esc suelta la selección.
 
 ## 1.2.0
 

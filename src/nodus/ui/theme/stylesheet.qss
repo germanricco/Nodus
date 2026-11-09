@@ -228,6 +228,13 @@ QPushButton#SecondaryButton:hover, QPushButton#SmallButton:hover {
     background: $hover;
 }
 
+/* The bar that replaces a page's header while several rows are chosen */
+
+QFrame#SelectionBar {
+    background: $accent_soft;
+    border-radius: 10px;
+}
+
 /* The «⋯» that opens a row's actions */
 
 QPushButton#MoreButton {

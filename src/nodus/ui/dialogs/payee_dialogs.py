@@ -8,7 +8,7 @@ from nodus.models.payee import Payee
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import FormDialog
-from nodus.ui.dialogs.merge_dialog import MergeDialog
+from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.selectors import CategoryComboBox
 
@@ -68,24 +68,30 @@ class PayeeDialog(FormDialog):
 
 
 class MergePayeeDialog(MergeDialog):
-    """Moves the transactions of ``payee`` to another payee and deletes it, for duplicates
-    such as "Coto" and "Coto Online"."""
+    """Moves the transactions of ``payees`` to one payee and deletes the rest, for
+    duplicates such as "Coto" and "Coto Online".
+
+    One payee joins another of the list; several join the one the user keeps.
+    """
 
     def __init__(
         self,
         services: Services,
         event_bus: EventBus,
-        payee: Payee,
+        payees: list[Payee],
         parent: QWidget | None = None,
     ) -> None:
-        others = [(p.name, p.id) for p in services.payees.list_payees() if p.id != payee.id]
-        count = services.payees.transaction_count(payee.id)
-        super().__init__(payee.name, "Beneficiario", others, count, parent)
+        chosen = {payee.id for payee in payees}
+        others = [(p.name, p.id) for p in services.payees.list_payees() if p.id not in chosen]
+        sources = [
+            MergeItem(payee.name, payee.id, services.payees.transaction_count(payee.id))
+            for payee in payees
+        ]
+        super().__init__(sources, "Beneficiario", "beneficiarios", others, parent)
         self._services = services
         self._event_bus = event_bus
-        self._payee = payee
 
-    def merge(self, target_id: int) -> None:
-        self._services.payees.merge(self._payee.id, target_id)
+    def merge(self, source_ids: list[int], target_id: int) -> None:
+        self._services.payees.merge_many(source_ids, target_id)
         self._event_bus.payees_changed.emit()
         self._event_bus.transactions_changed.emit()
