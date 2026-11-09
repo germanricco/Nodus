@@ -15,7 +15,6 @@ from nodus.ui.pages.analysis_views import AnalysisView, CashFlowView, NetWorthVi
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.period_selector import PeriodSelector
-from nodus.ui.widgets.segmented import SegmentedControl
 
 DEFAULT_MONTHS = 12
 
@@ -38,9 +37,11 @@ class AnalysisPage(Page):
             CashFlowView(services, theme_manager),
             net_worth,
         ]
-        self.tabs = SegmentedControl(["Tendencias", "Flujo de caja", "Patrimonio neto"])
+        self.tabs = self.set_tabs(
+            ["Tendencias", "Flujo de caja", "Patrimonio neto"],
+            [view.DESCRIPTION for view in self.views],
+        )
         self.period_selector = PeriodSelector(Period.last_months(DEFAULT_MONTHS, date.today()))
-        self.add_header_widget(self.tabs)
         self.add_header_widget(self.period_selector)
 
         self._stack = QStackedWidget()

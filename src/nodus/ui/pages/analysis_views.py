@@ -103,6 +103,8 @@ class AnalysisView(QWidget):
     """A report: shows a period and asks for the transactions behind its figures."""
 
     transactions_requested = Signal(object)  # TransactionFocus
+    # What the report shows, in a line under its tab.
+    DESCRIPTION = ""
 
     def show_period(self, period: Period) -> None:
         raise NotImplementedError
@@ -112,6 +114,8 @@ class TrendsView(AnalysisView):
     """Expenses, income or savings month by month: totals against the previous period,
     bars stacked by category with the monthly average, and the split by category, by
     payee and by tag. Clicking a bar, a piece or a row opens those transactions."""
+
+    DESCRIPTION = "Lo que gastas, ganas y ahorras mes a mes, frente al período anterior."
 
     def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
         super().__init__()
@@ -361,6 +365,8 @@ class CashFlowView(AnalysisView):
     """Income, expenses, savings and savings rate of the period against the previous one,
     with the bars and the table of each month. A bar or a row opens that month."""
 
+    DESCRIPTION = "Lo que entra contra lo que sale cada mes, y cuánto te queda."
+
     def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
         super().__init__()
         self._services = services
@@ -534,6 +540,8 @@ class NetWorthTableModel(QAbstractTableModel):
 class NetWorthView(AnalysisView):
     """The net worth along the period, in pesos or dollars, with its change and split by
     currency, and a table of what there was at each month end."""
+
+    DESCRIPTION = "Cuánto tienes al cierre de cada mes, sumando todas tus cuentas y monedas."
 
     rate_requested = Signal()
 

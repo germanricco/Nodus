@@ -17,6 +17,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Cada beneficiario y cada etiqueta también tienen su página: un doble clic en la lista (o «Abrir» en su menú) muestra cuántos movimientos tiene, cuánto suman, el último y, en un beneficiario, su categoría habitual, con todos sus movimientos debajo, «Editar» y «Unir con…» arriba y «Eliminar» al pie.
 - Las listas responden al mouse: la fila bajo el cursor se ilumina, como en el panel de la izquierda, sin quedar elegida. Pasa en las tablas de Transacciones, Beneficiarios y Etiquetas, y en las listas de cuentas, categorías, cargos recurrentes, cotizaciones y las cuentas de la barra lateral.
 - Textos, márgenes y esquinas siguen una misma escala en toda la aplicación, así que cada pantalla se ve igual de ordenada. Arreglo: en los gráficos de línea, como el del patrimonio, la última fecha ya no se pisa con la anterior.
+- En Análisis, los informes se eligen con pestañas debajo del título, y cada uno dice en una línea qué muestra. El período queda arriba a la derecha, como en el resto de las páginas, y «Gastos / Ingresos / Ahorro» queda junto a las cifras que cambia.
 
 ## 1.2.0
 

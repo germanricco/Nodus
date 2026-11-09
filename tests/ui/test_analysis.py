@@ -282,3 +282,12 @@ def test_net_worth_asks_for_a_rate_in_settings(qtbot, page):
     with qtbot.waitSignal(page.navigate_requested) as navigate:
         view.card.rate_requested.emit()
     assert navigate.args == [PageId.SETTINGS]
+
+
+def test_the_reports_are_tabs_under_the_title_with_what_each_shows(page):
+    assert page.tabs not in page._header_widgets
+    assert page.tab_description.text() == TrendsView.DESCRIPTION
+
+    page.tabs.set_index(CASH_FLOW_TAB)
+
+    assert page.tab_description.text() == CashFlowView.DESCRIPTION

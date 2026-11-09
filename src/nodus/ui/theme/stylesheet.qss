@@ -461,6 +461,34 @@ QPushButton#Segment:disabled {
     color: $border;
 }
 
+/* Tabs that switch between the views of a page (Page.set_tabs): underlined, in the
+   accent color when chosen, as the sidebar's current page. */
+
+QFrame#TabBar {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid $border;
+}
+
+QPushButton#Tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: $space_s $space_xxs;
+    color: $text_muted;
+}
+
+QPushButton#Tab:hover {
+    color: $text;
+}
+
+QPushButton#Tab:checked {
+    color: $accent;
+    font-weight: $strong_weight;
+    border-bottom: 2px solid $accent;
+}
+
 /* Period selector: "‹ Noviembre 2026 ▾ ›" */
 
 QPushButton#PeriodButton {

@@ -3,6 +3,8 @@
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from nodus.ui.theme.design import Space
+from nodus.ui.widgets.segmented import TabBar
+from nodus.ui.widgets.style import set_style_property
 
 
 class Page(QWidget):
@@ -46,6 +48,25 @@ class Page(QWidget):
         """Adds a control to the right of the title, e.g. a month selector."""
         self._header.addWidget(widget)
         self._header_widgets.append(widget)
+
+    def set_tabs(self, labels: list[str], descriptions: list[str]) -> TabBar:
+        """Puts tabs for the page's views under the title, each with a line that says
+        what its view shows. The header stays for what affects the whole page."""
+        tabs = TabBar(labels)
+        description = QLabel(descriptions[0])
+        description.setObjectName("TabDescription")
+        set_style_property(description, "muted", True)
+        tabs.changed.connect(lambda index: description.setText(descriptions[index]))
+        self.tab_description = description
+        block = QVBoxLayout()
+        block.setSpacing(Space.M)
+        row = QHBoxLayout()
+        row.addWidget(tabs)
+        row.addStretch()
+        block.addLayout(row)
+        block.addWidget(description)
+        self.content_layout.insertLayout(0, block)
+        return tabs
 
     def set_selection_bar(self, bar: QWidget) -> None:
         """Puts ``bar`` in the header, hidden, to take the place of the header's controls
