@@ -55,7 +55,8 @@ NO_PAYEE_LABEL = "Sin beneficiario"
 TAGS_HINT = "Un movimiento con varias etiquetas suma en cada una."
 TOOLTIP_CATEGORIES = 3
 EMPTY_TEXT = "Sin movimientos en el período"
-NO_PREVIOUS_TEXT = "Sin datos del período anterior"
+# Shown, without a pill, where there is no previous period to compare with.
+NO_PREVIOUS_TEXT = "—"
 
 MONTH, INCOME, EXPENSES, SAVINGS, RATE = range(5)
 FLOW_COLUMNS = ["Mes", "Ingresos", "Gastos", "Ahorro", "Tasa de ahorro"]
@@ -131,12 +132,12 @@ class TrendsView(AnalysisView):
         self.change_badge.setToolTip("Frente al período anterior, del mismo largo")
         self.previous_label = QLabel()
         self.average_label = QLabel()
-        self.total_tile = FigureTile("Total", self.total_label, self.change_badge)
-        self.previous_tile = FigureTile("Período anterior", self.previous_label)
+        self.total_tile = FigureTile("Total", self.total_label, self.change_badge, large=True)
+        self.previous_tile = FigureTile("Período anterior", self.previous_label, large=True)
         tiles = QHBoxLayout()
         tiles.setSpacing(16)
         for tile in (self.total_tile, self.previous_tile,
-                     FigureTile("Promedio mensual", self.average_label)):  # fmt: skip
+                     FigureTile("Promedio mensual", self.average_label, large=True)):  # fmt: skip
             tiles.addWidget(tile, stretch=1)
         layout.addLayout(tiles)
 
@@ -343,6 +344,18 @@ class CashFlowTableModel(QAbstractTableModel):
         return None
 
 
+def months_to_list(months: list[MonthFlow], current: Month) -> list[MonthFlow]:
+    """The months of the table, without the empty ones before the first movement or still
+    to come (a year that has not ended), which would only be rows of zeros. An empty month
+    in between stays: it says something."""
+
+    def empty(flow: MonthFlow) -> bool:
+        return flow.income.is_zero and flow.expenses.is_zero
+
+    first = next((i for i, flow in enumerate(months) if not empty(flow)), len(months))
+    return [flow for flow in months[first:] if flow.month <= current or not empty(flow)]
+
+
 class CashFlowView(AnalysisView):
     """Income, expenses, savings and savings rate of the period against the previous one,
     with the bars and the table of each month. A bar or a row opens that month."""
@@ -373,21 +386,23 @@ class CashFlowView(AnalysisView):
             ("Tasa de ahorro", self.rate_label, self.rate_badge),
         ):
             badge.setToolTip(badge.toolTip() or "Frente al período anterior, del mismo largo")
-            tiles.addWidget(FigureTile(caption, value, badge), stretch=1)
+            tiles.addWidget(FigureTile(caption, value, badge, large=True), stretch=1)
         layout.addLayout(tiles)
 
         self.chart = BarChart(theme_manager.theme)
         self.chart.setMinimumHeight(StackedBarChart.MIN_HEIGHT)
-        self.chart.clicked.connect(self._open_month)
+        self.chart.clicked.connect(lambda index: self._open_month(self._report.months[index]))
         card, self.empty_label, self.unconverted_label = chart_card("Mes a mes", self.chart)
         layout.addWidget(card)
 
-        table_card = Card()
+        table_card = self.table_card = Card()
         card_header(table_card, "Detalle por mes")
         self.model = CashFlowTableModel(theme_manager.theme)
         self.table = record_table(self.model, MONTH)
         self.table.setToolTip("Doble clic para ver los movimientos del mes")
-        self.table.doubleClicked.connect(lambda index: self._open_month(index.row()))
+        self.table.doubleClicked.connect(
+            lambda index: self._open_month(self.model.month(index.row()))
+        )
         table_card.body.addWidget(self.table)
         layout.addWidget(table_card)
         layout.addStretch()
@@ -410,15 +425,15 @@ class CashFlowView(AnalysisView):
         has_data = not (current.income.is_zero and current.expenses.is_zero)
         self.chart.setVisible(has_data)
         self.empty_label.setVisible(not has_data)
+        self.table_card.setVisible(has_data)  # it would be a table without rows
         self.chart.set_groups(flow_bar_groups(report.months))
         self.unconverted_label.setText(unconverted_note(report.unconverted))
         self.unconverted_label.setVisible(bool(report.unconverted))
-        self.model.set_months(report.months)
+        self.model.set_months(months_to_list(report.months, Month.of(date.today())))
         fit_rows(self.table)
 
-    def _open_month(self, index: int) -> None:
-        month = self.model.month(index).month
-        self.transactions_requested.emit(TransactionFocus(Period.of_months(month)))
+    def _open_month(self, flow: MonthFlow) -> None:
+        self.transactions_requested.emit(TransactionFocus(Period.of_months(flow.month)))
 
     def _set_theme(self, theme: Theme) -> None:
         self.chart.set_theme(theme)

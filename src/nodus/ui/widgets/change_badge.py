@@ -46,9 +46,18 @@ class ChangeBadge(QLabel):
         if change is None:
             self.setText(self._none_text)
             self.setVisible(bool(self._none_text))
-            set_style_property(self, "tone", "neutral")
+            self._set_tone("empty")
             return
         self.setText(format_change(change, self._unit) + (f" · {detail}" if detail else ""))
         self.setVisible(True)
         good = change > 0 if self._higher_is_better else change < 0
-        set_style_property(self, "tone", "neutral" if change == 0 else "good" if good else "bad")
+        self._set_tone("neutral" if change == 0 else "good" if good else "bad")
+
+    def _set_tone(self, tone: str) -> None:
+        """Colors the pill; "empty" is a plain "—" without the pill or its padding."""
+        if self.property("tone") == tone:
+            return
+        set_style_property(self, "tone", tone)
+        # Re-polishing recolors the label but keeps the padding it had, and "empty" has
+        # none. A new stylesheet of its own (a comment, one per tone) makes Qt recompute it.
+        self.setStyleSheet(f"/* {tone} */")

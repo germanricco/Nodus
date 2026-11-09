@@ -10,6 +10,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.period import Month, Period, format_month
 from nodus.models.transaction import TransactionType
+from nodus.services.dashboard_service import MonthFlow
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.analysis_page import AnalysisPage
 from nodus.ui.pages.analysis_views import (
@@ -18,6 +19,7 @@ from nodus.ui.pages.analysis_views import (
     CashFlowView,
     NetWorthView,
     TrendsView,
+    months_to_list,
 )
 
 EXPENSE = TransactionType.EXPENSE
@@ -172,7 +174,7 @@ def test_cash_flow_totals_and_months(filled):
     assert view.expenses_label.money() == -ars("400")
     assert view.savings_label.money() == ars("600")
     assert view.rate_label.text() == "60 %"
-    assert view.rate_badge.text() == "Sin datos del período anterior"
+    assert view.rate_badge.text() == "—"
     assert [group.label for group in view.chart.groups()] == ["Sep", "Oct", "Nov"]
     assert view.model.rowCount() == 3
     assert table_row(view, 0) == [
@@ -208,12 +210,35 @@ def test_cash_flow_month_opens_its_transactions(qtbot, filled):
     assert from_row.args == [TransactionFocus(october)]
 
 
+def test_cash_flow_table_leaves_out_months_of_zeros():
+    def flow(month: Month, income: str = "0") -> MonthFlow:
+        return MonthFlow(month, ars(income), ars("0"))
+
+    months = [
+        flow(Month(2026, 8)),  # before the first movement
+        flow(Month(2026, 9), "5"),
+        flow(Month(2026, 10)),  # empty, but in between
+        flow(Month(2026, 11)),
+        flow(Month(2026, 12)),  # still to come
+        flow(Month(2027, 1), "3"),  # a movement already logged ahead
+    ]
+
+    listed = months_to_list(months, Month(2026, 11))
+
+    assert [f.month for f in listed] == [
+        Month(2026, 9),
+        Month(2026, 10),
+        Month(2026, 11),
+        Month(2027, 1),
+    ]
+
+
 def test_cash_flow_empty_period(page):
     view = cash_flow_view(page)
 
     assert view.chart.isHidden()
     assert not view.empty_label.isHidden()
-    assert view.model.rowCount() == 3
+    assert view.table_card.isHidden()
 
 
 # Net worth

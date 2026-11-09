@@ -143,6 +143,11 @@ QMainWindow, #ContentArea, #PageStack {
     font-weight: 600;
 }
 
+#TileValue {
+    font-size: 18pt;
+    font-weight: 600;
+}
+
 /* Small label next to a name, like "sistema" on the "Otros" category */
 #Tag {
     background: $accent_soft;
@@ -260,6 +265,19 @@ QPushButton#MoreButton {
 
 QPushButton#MoreButton:hover, QPushButton#MoreButton:pressed {
     background: $hover;
+}
+
+/* A link in a card's header, such as «Ver todas ›». */
+QPushButton#LinkButton {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: $accent;
+    font-size: 9pt;
+}
+
+QPushButton#LinkButton:hover {
+    text-decoration: underline;
 }
 
 /* Dialogs and form fields */
@@ -607,6 +625,12 @@ QLabel#ChangeBadge {
     font-weight: 600;
     background: $hover;
     color: $text_muted;
+}
+
+/* Nothing to compare with: a plain "—", not a pill. */
+QLabel#ChangeBadge[tone="empty"] {
+    background: transparent;
+    padding: 2px 0px;
 }
 
 QLabel#ChangeBadge[tone="good"] {

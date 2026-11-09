@@ -9,6 +9,8 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - En Transacciones, al pasar el mouse por una celda recortada («Supermercado…», «Banco → Aho…») se ve su texto completo.
 - Varias filas a la vez: marca las casillas (o usa Ctrl y Mayús) y aparece una barra con lo que se puede hacer con todas. En Transacciones suma lo elegido, en verde y rojo, y permite cambiarles la categoría o eliminarlas; en Beneficiarios y Etiquetas, unirlas en una sola o eliminarlas. Esc suelta la selección.
 - Cada botón dice lo que hace: «Agregar cuenta» al crear y «Guardar cambios» al editar, y los botones de crear se llaman igual en todas las páginas («Agregar cuenta», «Agregar categoría», «Agregar beneficiario»…). Al confirmar algo que no se puede deshacer, el botón va en rojo y nombra lo que pasa: «Eliminar 3 transacciones».
+- En el Dashboard, «Ver todas ›» pasa al encabezado de cada tarjeta, en el mismo lugar en todas, y deja más lugar para la lista.
+- Análisis más fácil de leer: las cifras de Tendencias y Flujo de caja se ven más grandes, un «—» reemplaza al aviso repetido cuando no hay período anterior, y el detalle por mes ya no lista meses en cero antes del primer movimiento ni los que todavía no llegaron.
 
 ## 1.2.0
 

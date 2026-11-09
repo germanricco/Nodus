@@ -3,6 +3,7 @@ can move from what they showed to the new data instead of being rebuilt."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 
 from PySide6.QtCore import Qt, Signal
@@ -111,6 +112,17 @@ def card_header(card: Card, title: str) -> QHBoxLayout:
     return header
 
 
+def see_all_link(header: QHBoxLayout, text: str, slot: Callable[[], object]) -> QPushButton:
+    """A small link at the right of a card's header to the page with the whole list, in
+    the same place on every card and without taking a row of its own."""
+    button = QPushButton(f"{text} ›")
+    button.setObjectName("LinkButton")
+    button.setCursor(Qt.CursorShape.PointingHandCursor)
+    button.clicked.connect(slot)
+    header.addWidget(button)
+    return button
+
+
 class CategoryLine(QFrame):
     """A row with a color dot and a category name, then any widgets on the right.
 
@@ -166,17 +178,25 @@ class CategoryLine(QFrame):
 
 class FigureTile(QFrame):
     """A boxed caption and value, like the Income / Expenses / Saved boxes of the reference,
-    optionally with a ``badge`` under the value (e.g. a ``ChangeBadge``)."""
+    optionally with a ``badge`` under the value (e.g. a ``ChangeBadge``).
 
-    def __init__(self, caption: str, value: QLabel, badge: QWidget | None = None) -> None:
+    ``large`` makes the value stand out above its caption, for pages whose tiles are the
+    figures that matter (Análisis).
+    """
+
+    def __init__(
+        self, caption: str, value: QLabel, badge: QWidget | None = None, large: bool = False
+    ) -> None:
         super().__init__()
         self.setObjectName("FigureTile")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 8, 12, 8)
         layout.setSpacing(2)
+        # Tiles in a row share their height; the figures stay on top, lined up.
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         caption_label = QLabel(caption.upper())
         caption_label.setObjectName("StatCaption")
-        value.setObjectName("RowTitle")
+        value.setObjectName("TileValue" if large else "RowTitle")
         value.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.value = value
         layout.addWidget(caption_label)
@@ -216,23 +236,21 @@ class LatestTransactionRow(QWidget):
 
 
 class LatestTransactionsCard(Card):
-    """The period's most recent movements and a button to see them all."""
+    """The period's most recent movements and a link to see them all."""
 
     see_all_requested = Signal()
 
     def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
-        super().__init__("Últimas transacciones")
+        super().__init__()
         self._services = services
         self._theme_manager = theme_manager
         self._builder = TransactionListBuilder(services)
+        header = card_header(self, "Últimas transacciones")
+        self.see_all_button = see_all_link(header, "Ver todas", self.see_all_requested)
         self._rows = QVBoxLayout()
         self._rows.setSpacing(0)
         self.body.addLayout(self._rows)
         self.body.addStretch()
-        self.see_all_button = QPushButton("Ver todas")
-        self.see_all_button.setObjectName("SecondaryButton")
-        self.see_all_button.clicked.connect(self.see_all_requested)
-        self.body.addWidget(self.see_all_button)
 
     def show_period(self, period: Period, count: int = LATEST_COUNT) -> None:
         clear_layout(self._rows)
@@ -296,15 +314,12 @@ class UpcomingPaymentsCard(Card):
         self.monthly_label = muted_label("")
         self.monthly_label.setToolTip("Lo que suman tus cargos recurrentes en un mes")
         header.addWidget(self.monthly_label)
+        self.see_all_button = see_all_link(header, "Ver todos", self.see_all_requested)
         self._rows = QVBoxLayout()
         self._rows.setSpacing(0)
         self.body.addLayout(self._rows)
         # Extra height goes below the rows, keeping the title on top.
         self.body.addStretch()
-        self.see_all_button = QPushButton("Ver todos")
-        self.see_all_button.setObjectName("SecondaryButton")
-        self.see_all_button.clicked.connect(self.see_all_requested)
-        self.body.addWidget(self.see_all_button)
         self.rows: list[UpcomingPaymentRow] = []
 
     def show_data(self, today: date) -> None:
@@ -365,14 +380,11 @@ class BudgetsCard(Card):
         header = card_header(self, "Presupuestos")
         self.when_label = muted_label("")
         header.addWidget(self.when_label)
+        self.see_all_button = see_all_link(header, "Ver todos", self.see_all_requested)
         self._rows = QVBoxLayout()
         self._rows.setSpacing(0)
         self.body.addLayout(self._rows)
         self.body.addStretch()
-        self.see_all_button = QPushButton("Ver todos")
-        self.see_all_button.setObjectName("SecondaryButton")
-        self.see_all_button.clicked.connect(self.see_all_requested)
-        self.body.addWidget(self.see_all_button)
         self.rows: list[BudgetRow] = []
 
     def show_month(self, month: Month, today: date) -> None:
