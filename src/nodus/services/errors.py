@@ -26,6 +26,10 @@ class BackupError(Exception):
     """
 
 
+class UpdateError(Exception):
+    """A new version could not be downloaded or started. The message explains why."""
+
+
 def require_found(value: T | None, message: str) -> T:
     """Returns ``value``, or raises ``NotFoundError`` with ``message`` if it is None."""
     if value is None:

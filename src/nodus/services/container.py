@@ -105,7 +105,7 @@ class Services:
             net_worth=NetWorthService(accounts, transactions, exchange_rates),
             settings=settings,
             dashboard=dashboard,
-            updates=UpdateService(__version__),
+            updates=UpdateService.for_this_program(__version__),
             backups=backups,
             export=ExportService(accounts, categories, payees, transactions),
             rate_feed=RateFeedService(

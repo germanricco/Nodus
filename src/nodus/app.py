@@ -45,6 +45,7 @@ class NodusApp:
             services = Services.create(database)
             services.backups.create_if_due(date.today())
             services.startup.repair()
+            services.updates.clean()
             theme_mode = ThemeMode.from_setting(services.settings.theme_preference())
             theme_manager = ThemeManager(self._qt_app, theme_mode)
             window = MainWindow(services, EventBus(), theme_manager)
