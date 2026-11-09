@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+from html import escape
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
+from nodus.models.money import Money
 from nodus.models.period import Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
@@ -28,6 +30,7 @@ from nodus.ui.formatting import format_date
 from nodus.ui.labels import movements_text, transactions_text, unconverted_note
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.page import Page
+from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
 from nodus.ui.widgets.card import Card
@@ -90,6 +93,24 @@ def selection_totals_text(totals: FilteredTotals) -> str:
     )
 
 
+def selection_totals_html(totals: FilteredTotals, theme: Theme) -> str:
+    """``selection_totals_text`` with income in green, expenses in red and the net by its
+    sign, as amounts look everywhere else."""
+    if not (totals.income.cents or totals.expenses.cents):
+        return ""
+
+    def part(label: str, money: Money, color: str) -> str:
+        return f'{label} <span style="color:{color}">{escape(money.format())}</span>'
+
+    return " · ".join(
+        [
+            part("Ingresos", totals.income, theme.income),
+            part("Gastos", totals.expenses, theme.expense),
+            part("Neto", totals.net, theme.amount_color(totals.net)),
+        ]
+    )
+
+
 def common_kind(items: list[TransactionListItem]) -> TransactionType | None:
     """The type ``items`` share when they are all expenses or all incomes, so they can
     move to one category; None with a transfer or a mix."""
@@ -137,7 +158,9 @@ class TransactionsPage(Page):
         self.category_button = self.selection_bar.add_action(
             "Cambiar categoría", self.change_category_of_selected
         )
-        self.delete_button = self.selection_bar.add_action("Eliminar", self.delete_selected)
+        self.delete_button = self.selection_bar.add_action(
+            "Eliminar", self.delete_selected, destructive=True
+        )
         self.delete_button.setToolTip(DELETE_KEY_HINT)
         self.selection_bar.cleared.connect(lambda: self.table.clearSelection())
         self.set_selection_bar(self.selection_bar)
@@ -424,7 +447,9 @@ class TransactionsPage(Page):
         if not several:
             return
         totals = self._services.dashboard.totals_of([item.transaction for item in items])
-        self.selection_bar.set_count(len(items), selection_totals_text(totals))
+        self.selection_bar.set_count(
+            len(items), selection_totals_html(totals, self._theme_manager.theme)
+        )
         movable = common_kind(items) is not None
         self.category_button.setEnabled(movable)
         self.category_button.setToolTip(

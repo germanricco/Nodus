@@ -42,14 +42,18 @@ class SelectionBar(QFrame):
         self.clear_button.clicked.connect(self.cleared)
         layout.addWidget(self.clear_button)
 
-    def add_action(self, text: str, run: Callable[[], object]) -> QPushButton:
+    def add_action(
+        self, text: str, run: Callable[[], object], destructive: bool = False
+    ) -> QPushButton:
+        """A button for every chosen row; destructive ones (delete) show in red."""
         button = QPushButton(text)
-        button.setObjectName("SecondaryButton")
+        button.setObjectName("DangerButton" if destructive else "SecondaryButton")
         button.clicked.connect(lambda: run())
         self._actions.addWidget(button)
         return button
 
     def set_count(self, count: int, detail: str = "") -> None:
+        """Shows ``count`` and an optional ``detail``, which may be rich text (colors)."""
         self.count_label.setText(f"{count} {self._chosen_word}")
         self.detail_label.setText(detail)
         self.detail_label.setVisible(bool(detail))

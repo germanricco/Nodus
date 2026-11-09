@@ -64,11 +64,20 @@ class TransactionTableModel(QAbstractTableModel):
             return colors_icon([tag.color for tag in item.tags])
         if role == Qt.ItemDataRole.ForegroundRole and column == AMOUNT:
             return QColor(self._theme.tone_color(item.tone))
-        if role == Qt.ItemDataRole.ToolTipRole and column == DESCRIPTION and item.refund_text:
-            return item.refund_text
+        if role == Qt.ItemDataRole.ToolTipRole:
+            return self._tooltip(item, column)
         if role == Qt.ItemDataRole.TextAlignmentRole and column == AMOUNT:
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None
+
+    def _tooltip(self, item: TransactionListItem, column: int) -> str | None:
+        """The whole text of a cell, which narrow columns cut with "…"; the description
+        of a refund says what it pays back instead."""
+        if column == DESCRIPTION and item.refund_text:
+            return item.refund_text
+        if column in (DATE, AMOUNT):
+            return None
+        return self._text(item, column) or None
 
     @staticmethod
     def _text(item: TransactionListItem, column: int) -> str:

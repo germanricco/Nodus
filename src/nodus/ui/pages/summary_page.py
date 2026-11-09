@@ -175,7 +175,9 @@ class SummaryPage(Page, Generic[S]):
         self.selection_bar = SelectionBar(chosen_word)
         self.merge_button = self.selection_bar.add_action("Unir…", self.merge_selected)
         self.merge_button.setToolTip("Deja uno solo y le pasa los movimientos de los demás")
-        self.delete_button = self.selection_bar.add_action("Eliminar", self.delete_selected)
+        self.delete_button = self.selection_bar.add_action(
+            "Eliminar", self.delete_selected, destructive=True
+        )
         self.delete_button.setToolTip(DELETE_KEY_HINT)
         self.selection_bar.cleared.connect(lambda: self.table.clearSelection())
         self.set_selection_bar(self.selection_bar)

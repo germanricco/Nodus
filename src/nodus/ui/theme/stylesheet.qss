@@ -224,6 +224,20 @@ QPushButton#SmallButton {
     font-size: 9pt;
 }
 
+/* Destructive actions (delete): red text, a red tint under the mouse. */
+QPushButton#DangerButton {
+    background: $surface;
+    color: $expense;
+    border: 1px solid $border;
+    border-radius: 8px;
+    padding: 8px 16px;
+}
+
+QPushButton#DangerButton:hover {
+    background: $expense_soft;
+    border-color: $expense;
+}
+
 QPushButton#SecondaryButton:hover, QPushButton#SmallButton:hover {
     background: $hover;
 }

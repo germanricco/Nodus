@@ -4,6 +4,7 @@ import pytest
 from factories import ars, category_id, expense_draft, income_draft, light_theme, usd
 from menus import run_action, texts
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QTextDocumentFragment
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
@@ -22,8 +23,9 @@ from nodus.ui.navigation import PageId
 from nodus.ui.pages import transactions_page
 from nodus.ui.pages.accounts_page import AccountRow
 from nodus.ui.pages.transactions_page import TransactionsPage
+from nodus.ui.theme.theme import LIGHT
 from nodus.ui.widgets.selectors import HEADING_ROLE, MANAGE_ROLE
-from nodus.ui.widgets.transaction_table import AMOUNT, CATEGORY, PAYEE
+from nodus.ui.widgets.transaction_table import ACCOUNT, AMOUNT, CATEGORY, PAYEE
 
 EXPENSE = TransactionType.EXPENSE
 NOVEMBER = Month(2026, 11)
@@ -387,6 +389,15 @@ class TestTransactionsPage:
         page.search_input.setText("verduleria")
         assert column(page, AMOUNT) == ["-$ 200,00"]
 
+    def test_cut_cells_show_their_whole_text(self, services, page, pesos, dollars):
+        populate(services, pesos, dollars)
+        page.refresh()
+
+        tooltip = page.model.index(0, ACCOUNT).data(Qt.ItemDataRole.ToolTipRole)
+
+        assert tooltip == "Banco → Ahorro"  # the transfer
+        assert page.model.index(0, AMOUNT).data(Qt.ItemDataRole.ToolTipRole) is None
+
     def test_row_menu_offers_what_the_row_allows(self, services, page, pesos, dollars):
         populate(services, pesos, dollars)
         page.refresh()
@@ -407,9 +418,14 @@ class TestTransactionsPage:
         assert page.selection_bar.isVisible()
         assert not page.export_button.isVisible()
         assert page.selection_bar.count_label.text() == "2 seleccionadas"
-        assert page.selection_bar.detail_label.text() == (
+        detail = page.selection_bar.detail_label.text()
+        assert QTextDocumentFragment.fromHtml(detail).toPlainText() == (
             "Ingresos $ 900.000,00 · Gastos $ 2.500,00 · Neto $ 897.500,00"
         )
+        theme = LIGHT
+        assert f'color:{theme.income}">$ 900.000,00' in detail
+        assert f'color:{theme.expense}">$ 2.500,00' in detail
+        assert page.delete_button.objectName() == "DangerButton"
         assert not page.category_button.isEnabled()  # an expense and an income
 
         page.selection_bar.clear_button.click()

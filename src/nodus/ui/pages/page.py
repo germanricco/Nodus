@@ -9,19 +9,26 @@ class Page(QWidget):
     ``refresh`` runs every time the page is shown, so it always reflects current data.
     """
 
+    HEADER_HEIGHT = 44
+
     def __init__(self, title: str) -> None:
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
-        self._header = QHBoxLayout()
+        header = QWidget()
+        # As tall as the selection bar, which takes the header's place, so nothing below
+        # moves when rows are chosen.
+        header.setFixedHeight(self.HEADER_HEIGHT)
+        self._header = QHBoxLayout(header)
+        self._header.setContentsMargins(0, 0, 0, 0)
         title_label = QLabel(title)
         title_label.setObjectName("PageTitle")
         self._header.addWidget(title_label)
         self._header.addStretch()
         self._header_widgets: list[QWidget] = []
         self._selection_bar: QWidget | None = None
-        layout.addLayout(self._header)
+        layout.addWidget(header)
         self.content_layout = QVBoxLayout()
         self.content_layout.setSpacing(16)
         layout.addLayout(self.content_layout, stretch=1)
