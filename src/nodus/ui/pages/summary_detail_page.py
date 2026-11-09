@@ -44,7 +44,7 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         theme_manager: ThemeManager,
         delete_action: str,
     ) -> None:
-        super().__init__(detail_id)
+        super().__init__(detail_id, theme_manager)
         self._services = services
         self._event_bus = event_bus
         self._hidden = services.settings.amounts_hidden()

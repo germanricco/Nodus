@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel
 
 from nodus.models.account import Account
@@ -20,6 +19,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.accounts_page import account_delete_warning, delete_account
+from nodus.ui.pages.dashboard_cards import FigureTile
 from nodus.ui.pages.detail_page import DetailPage, danger_zone
 from nodus.ui.pages.transaction_list_view import TransactionListView
 from nodus.ui.theme.design import Space
@@ -30,10 +30,10 @@ from nodus.ui.widgets.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.money_label import MoneyLabel, masked
 from nodus.ui.widgets.net_worth_card import signed
 from nodus.ui.widgets.row_actions import MoreButton, RowAction
-from nodus.ui.widgets.style import set_style_property
 from nodus.ui.widgets.transaction_table import ACCOUNT
 
-SUMMARY_WIDTH = 300
+# Tall enough to read the trend, short enough to leave the movements most of the page.
+CHART_HEIGHT = 200
 
 
 class AccountDetailPage(DetailPage):
@@ -48,7 +48,7 @@ class AccountDetailPage(DetailPage):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__(DetailId.ACCOUNT)
+        super().__init__(DetailId.ACCOUNT, theme_manager)
         self._services = services
         self._event_bus = event_bus
         self.account: Account | None = None
@@ -65,31 +65,29 @@ class AccountDetailPage(DetailPage):
         self.more_button = MoreButton(self.more_actions)
         self.add_header_widget(self.more_button)
 
-        top = QHBoxLayout()
-        top.setSpacing(Space.L)
-        summary = Card()
-        summary.setFixedWidth(SUMMARY_WIDTH)
-        self.kind_label = QLabel()
-        set_style_property(self.kind_label, "muted", True)
+        # The figures in a row, as on the pages of a payee or a tag; the ones that do not
+        # apply to this account (pesos, return) hide.
+        figures = QHBoxLayout()
+        figures.setSpacing(Space.M)
         self.balance_label = MoneyLabel()
-        self.balance_label.setObjectName("StatValueHero")
-        self.balance_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.converted_label = QLabel()
-        set_style_property(self.converted_label, "muted", True)
         self.gain_label = QLabel()
-        set_style_property(self.gain_label, "muted", True)
-        for widget in (self.kind_label, self.balance_label, self.converted_label, self.gain_label):
-            summary.body.addWidget(widget)
-        summary.body.addStretch()
-        top.addWidget(summary)
-        chart_card = Card("Saldo")
+        self.kind_label = QLabel()
+        self.balance_tile = FigureTile("Saldo", self.balance_label, large=True)
+        self.converted_tile = FigureTile("En pesos", self.converted_label, large=True)
+        self.gain_tile = FigureTile("Rendimiento", self.gain_label, large=True)
+        self.kind_tile = FigureTile("Tipo", self.kind_label, large=True)
+        for tile in (self.balance_tile, self.converted_tile, self.gain_tile, self.kind_tile):
+            figures.addWidget(tile, stretch=1)
+        self.content_layout.addLayout(figures)
+        chart_card = Card("Saldo en el tiempo")
         self.chart = LineChart(
             theme_manager.theme, self._format_value, self._format_axis, self._format_day
         )
+        self.chart.setFixedHeight(CHART_HEIGHT)
         chart_card.body.addWidget(self.chart)
         theme_manager.theme_changed.connect(self.chart.set_theme)
-        top.addWidget(chart_card, stretch=1)
-        self.content_layout.addLayout(top)
+        self.content_layout.addWidget(chart_card)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
         self.list_view.empty_state.set_message("Esta cuenta todavía no tiene movimientos.")
@@ -133,9 +131,9 @@ class AccountDetailPage(DetailPage):
         gain = (
             self._services.accounts.value_change(account.id) if account.type.changes_value else None
         )
-        self.gain_label.setVisible(gain is not None and not gain.is_zero)
+        self.gain_tile.setVisible(gain is not None)
         if gain is not None:
-            self.gain_label.setText(f"Rendimiento {masked(gain) if self._hidden else signed(gain)}")
+            self.gain_label.setText(masked(gain) if self._hidden else signed(gain))
         self.value_button.setVisible(account.type.changes_value and not account.is_archived)
 
         history = self._services.net_worth.account_history(account.id, today)
@@ -176,15 +174,19 @@ class AccountDetailPage(DetailPage):
     def _show_converted(self, balance: Money, today: date) -> None:
         """A foreign balance also in pesos, at today's rate, as the net worth counts it."""
         if balance.currency is HOME_CURRENCY:
-            self.converted_label.hide()
+            self.converted_tile.hide()
             return
         converted = self._services.exchange_rates.convert(balance, HOME_CURRENCY, today)
         if converted is None:
-            self.converted_label.setText("Sin cotización para pasarlo a pesos")
+            self.converted_label.setText("—")
+            self.converted_label.setToolTip("Sin cotización para pasarlo a pesos")
         else:
             shown = masked(converted) if self._hidden else converted.format()
             self.converted_label.setText(f"≈ {shown}")
-        self.converted_label.show()
+            self.converted_label.setToolTip(
+                "Con la cotización de hoy, como lo cuenta el patrimonio"
+            )
+        self.converted_tile.show()
 
     def _data_changed(self) -> None:
         # Hidden, it is refreshed when shown again.

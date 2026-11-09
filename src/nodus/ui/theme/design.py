@@ -24,7 +24,7 @@ class TextRole(Enum):
     """A kind of text, with its size in points and its weight. Captions (``LABEL``) are
     also written in capitals."""
 
-    DISPLAY = (28, BOLD)  # the one figure a page is about: an account's balance
+    DISPLAY = (28, BOLD)  # the one figure a page is about: the net worth
     TITLE = (20, SEMIBOLD)  # a page's title
     SUBTITLE = (15, SEMIBOLD)  # a dialog's title, the logo
     FIGURE = (18, SEMIBOLD)  # the value of a figure tile

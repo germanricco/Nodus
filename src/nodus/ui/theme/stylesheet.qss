@@ -186,6 +186,17 @@ QPushButton#IconButton:hover {
     background: $hover;
 }
 
+/* The arrow back of a detail page, left of its title, as the Back button of Windows. */
+QPushButton#BackButton {
+    background: transparent;
+    border: none;
+    border-radius: $radius_l;
+}
+
+QPushButton#BackButton:hover {
+    background: $hover;
+}
+
 QLabel#NotificationCount {
     background: $expense;
     color: #ffffff;

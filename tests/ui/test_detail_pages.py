@@ -56,12 +56,21 @@ class TestAccountDetail:
         assert detail.balance_label.text() == "$ 99.990,00"
         assert detail.value_button.isHidden()  # a bank account does not change value
 
-    def test_a_foreign_account_shows_its_value_in_pesos(self, window, dollars):
+    def test_a_foreign_account_shows_its_value_in_pesos(self, window, pesos, dollars):
         window.show_detail(DetailId.ACCOUNT, dollars.id)
         detail = window.detail(DetailId.ACCOUNT)
 
-        assert not detail.converted_label.isHidden()
-        assert not detail.value_button.isHidden()  # savings change value
+        assert not detail.converted_tile.isHidden()
+        assert not detail.gain_tile.isHidden()  # savings change value
+        assert not detail.value_button.isHidden()
+        window.show_detail(DetailId.ACCOUNT, pesos.id)
+        assert detail.converted_tile.isHidden()
+        assert detail.gain_tile.isHidden()
+
+    def test_the_back_arrow_names_where_it_goes(self, window, pesos):
+        window.show_detail(DetailId.ACCOUNT, pesos.id)
+
+        assert window.detail(DetailId.ACCOUNT).back_button.toolTip() == "Volver a Cuentas (Esc)"
 
     def test_the_danger_zone_asks_before_deleting(
         self, monkeypatch, services, window, pesos, dollars
