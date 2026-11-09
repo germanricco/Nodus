@@ -67,3 +67,12 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\Nodus.exe"; Description: "{cm:LaunchProgram,Nodus}"; Flags: nowait postinstall skipifsilent
+; Nodus updating itself runs the installer with /SILENT /RELAUNCH=1 and closes; this opens
+; the new version when it finishes. Other silent installs leave Nodus closed.
+Filename: "{app}\Nodus.exe"; Flags: nowait; Check: RelaunchRequested
+
+[Code]
+function RelaunchRequested: Boolean;
+begin
+  Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
+end;
