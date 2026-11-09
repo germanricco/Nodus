@@ -17,6 +17,7 @@ from nodus.database.repositories.transaction_repository import (
     TransactionRepository,
 )
 from nodus.models.account import Account
+from nodus.models.bulk_changes import BulkChanges
 from nodus.models.money import Money
 from nodus.models.palette import palette_color
 from nodus.models.payee import Payee, normalize_name
@@ -137,22 +138,44 @@ class TransactionService:
                 if not transaction.is_transfer:
                     self._transactions.delete(transaction.id)
 
-    def set_category(self, transaction_ids: list[int], category_id: int) -> None:
-        """Moves every one of ``transaction_ids`` to ``category_id``, or none of them.
+    def bulk_edit(self, transaction_ids: list[int], changes: BulkChanges) -> None:
+        """Applies ``changes`` to every one of ``transaction_ids``, or to none if one fails.
 
-        All must be expenses or incomes of the category's kind; transfers have no category.
+        Transfers take only the note, on both legs: they have no category, payee or tags.
+        A new category must suit every expense or income chosen.
         """
-        category = require_found(self._categories.get(category_id), "La categoría no existe.")
+        if changes.is_empty:
+            raise ValidationError("Completa al menos un campo para cambiar.")
         transactions = [self.get(transaction_id) for transaction_id in transaction_ids]
-        if any(t.is_transfer for t in transactions):
+        movements = [t for t in transactions if not t.is_transfer]
+        if changes.category_id is not None:
+            self._require_category_for(changes.category_id, movements)
+        note = changes.note.strip()
+        transfer_ids = {t.transfer_id for t in transactions if t.is_transfer}
+        with self._database.transaction():
+            for transaction in movements:
+                edited = transaction
+                if changes.category_id is not None:
+                    edited = dataclasses.replace(edited, category_id=changes.category_id)
+                if note:
+                    edited = dataclasses.replace(edited, note=note)
+                if changes.payee_name.strip():
+                    edited = self._with_payee(edited, changes.payee_name)
+                self._transactions.update(edited)
+                if changes.add_tags or changes.remove_tags:
+                    self._change_tags(transaction.id, changes.add_tags, changes.remove_tags)
+            for transfer_id in transfer_ids if note else ():
+                for leg in self._transactions.list_transfer_legs(transfer_id):
+                    self._transactions.update(dataclasses.replace(leg, note=note))
+
+    def _require_category_for(self, category_id: int, movements: list[Transaction]) -> None:
+        category = require_found(self._categories.get(category_id), "La categoría no existe.")
+        if not movements:
             raise ValidationError("Las transferencias no tienen categoría.")
-        if any(t.type is not category.kind for t in transactions):
+        if any(t.type is not category.kind for t in movements):
             raise ValidationError(
                 f"La categoría «{category.name}» no corresponde a todas las transacciones elegidas."
             )
-        with self._database.transaction():
-            for transaction in transactions:
-                self._transactions.update(dataclasses.replace(transaction, category_id=category_id))
 
     def refund_summary(self, expense_id: int, ignore_id: int | None = None) -> RefundSummary:
         """What has been refunded of ``expense_id``, leaving out ``ignore_id`` (the refund
@@ -228,9 +251,23 @@ class TransactionService:
         return dataclasses.replace(transaction, payee_id=payee.id)
 
     def _set_tags(self, transaction_id: int, names: tuple[str, ...]) -> None:
-        """Gives the transaction the tags called ``names``, creating the new ones with the
-        next preset color. Runs inside the caller's database transaction, like
-        ``_with_payee``."""
+        """Gives the transaction the tags called ``names``. Runs inside the caller's
+        database transaction, like ``_with_payee``."""
+        self._tags.set_for(transaction_id, self._tag_ids(names))
+
+    def _change_tags(
+        self, transaction_id: int, added: tuple[str, ...], removed: tuple[str, ...]
+    ) -> None:
+        """Adds the tags called ``added`` and takes away those called ``removed``, keeping
+        the transaction's other tags."""
+        dropped = {normalize_name(name) for name in removed}
+        current = self._tags.tags_for([transaction_id]).get(transaction_id, [])
+        kept = [tag.id for tag in current if normalize_name(tag.name) not in dropped]
+        new = [tag_id for tag_id in self._tag_ids(added) if tag_id not in kept]
+        self._tags.set_for(transaction_id, kept + new)
+
+    def _tag_ids(self, names: tuple[str, ...]) -> list[int]:
+        """The tags called ``names``, creating the new ones with the next preset color."""
         tag_ids = []
         for name in names:
             normalized = normalize_name(name)
@@ -241,7 +278,7 @@ class TransactionService:
                 color = palette_color(len(self._tags.list()))
                 tag = self._tags.add(Tag(None, name.strip(), color))
             tag_ids.append(tag.id)
-        self._tags.set_for(transaction_id, tag_ids)
+        return tag_ids
 
     # Validation
 

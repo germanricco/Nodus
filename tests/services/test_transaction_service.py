@@ -4,6 +4,7 @@ import pytest
 from factories import TODAY, ars, category_id, expense_draft, income_draft, usd
 
 from nodus.models.account import AccountType
+from nodus.models.bulk_changes import BulkChanges
 from nodus.models.currency import Currency
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
@@ -92,35 +93,88 @@ class TestSeveralAtOnce:
 
         assert services.transactions.get(expense.id).amount == ars("10")
 
-    def test_set_category_moves_them_all(self, services, pesos):
+    def test_bulk_edit_moves_them_all_to_a_category(self, services, pesos):
         ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
         ids = [
-            services.transactions.create(expense_draft(services, pesos.id, ars(a))).id
+            services.transactions.create(expense_draft(services, pesos.id, ars(a), note=a)).id
             for a in ("10", "20")
         ]
 
-        services.transactions.set_category(ids, ocio)
+        services.transactions.bulk_edit(ids, BulkChanges(category_id=ocio))
 
-        assert [services.transactions.get(i).category_id for i in ids] == [ocio, ocio]
+        edited = [services.transactions.get(i) for i in ids]
+        assert [t.category_id for t in edited] == [ocio, ocio]
+        assert [t.note for t in edited] == ["10", "20"]  # what was left empty stays
 
-    def test_set_category_needs_the_same_kind_for_all(self, services, pesos):
+    def test_bulk_edit_needs_a_category_that_suits_all(self, services, pesos):
         ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
         expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
         income = services.transactions.create(income_draft(services, pesos.id, ars("20")))
 
         with pytest.raises(ValidationError, match="no corresponde"):
-            services.transactions.set_category([expense.id, income.id], ocio)
+            services.transactions.bulk_edit(
+                [expense.id, income.id], BulkChanges(category_id=ocio, note="x")
+            )
 
         assert services.transactions.get(expense.id).category_id != ocio
+        assert services.transactions.get(expense.id).note == ""  # nothing changed
 
-    def test_set_category_refuses_transfers(self, services, pesos, dollars):
+    def test_bulk_edit_needs_something_to_change(self, services, pesos):
+        expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
+
+        with pytest.raises(ValidationError, match="al menos"):
+            services.transactions.bulk_edit([expense.id], BulkChanges())
+
+    def test_bulk_edit_sets_the_payee_and_the_note(self, services, pesos):
+        ids = [
+            services.transactions.create(expense_draft(services, pesos.id, ars(a))).id
+            for a in ("10", "20")
+        ]
+
+        services.transactions.bulk_edit(ids, BulkChanges(payee_name="Coto", note="Compra"))
+
+        coto = services.payees.find("Coto")
+        assert {services.transactions.get(i).payee_id for i in ids} == {coto.id}
+        assert {services.transactions.get(i).note for i in ids} == {"Compra"}
+
+    def test_bulk_edit_adds_and_removes_tags_keeping_the_others(self, services, pesos):
+        first = services.transactions.create(
+            expense_draft(services, pesos.id, ars("10"), tag_names=("Viaje", "Trabajo"))
+        )
+        second = services.transactions.create(expense_draft(services, pesos.id, ars("20")))
+
+        services.transactions.bulk_edit(
+            [first.id, second.id], BulkChanges(add_tags=("Vacaciones",), remove_tags=("viaje",))
+        )
+
+        tags = services.transactions.tags_for([first.id, second.id])
+        assert [t.name for t in tags[first.id]] == ["Trabajo", "Vacaciones"]
+        assert [t.name for t in tags[second.id]] == ["Vacaciones"]
+
+    def test_bulk_edit_gives_transfers_only_the_note(self, services, pesos, dollars):
+        ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
+        expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
+        transfer = services.transactions.create_transfer(
+            TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
+        )
+
+        services.transactions.bulk_edit(
+            [expense.id, transfer.outgoing.id], BulkChanges(category_id=ocio, note="Viaje")
+        )
+
+        assert services.transactions.get(expense.id).category_id == ocio
+        legs = services.transactions.get_transfer(transfer.outgoing.transfer_id)
+        assert {legs.outgoing.note, legs.incoming.note} == {"Viaje"}
+        assert legs.outgoing.category_id is None
+
+    def test_bulk_edit_refuses_a_category_for_transfers_alone(self, services, pesos, dollars):
         ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
         transfer = services.transactions.create_transfer(
             TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
         )
 
         with pytest.raises(ValidationError, match="transferencias"):
-            services.transactions.set_category([transfer.outgoing.id], ocio)
+            services.transactions.bulk_edit([transfer.outgoing.id], BulkChanges(category_id=ocio))
 
 
 class TestTransfers:

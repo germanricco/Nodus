@@ -31,6 +31,7 @@ from nodus.services.container import Services  # noqa: E402
 from nodus.services.update_service import Installer, Release  # noqa: E402
 from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
 from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
+from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
@@ -73,7 +74,20 @@ DIALOGS = {
     "value-adjustment-dialog": lambda services, event_bus, window: value_dialog(
         services, event_bus, window
     ),
+    "bulk-edit-dialog": lambda services, event_bus, window: bulk_edit_dialog(
+        services, event_bus, window
+    ),
 }
+
+
+def bulk_edit_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
+    """Three of the latest expenses, as when several rows are chosen."""
+    expenses = [
+        t
+        for t in services.transactions.list_transactions(TransactionFilter())
+        if t.type is TransactionType.EXPENSE and not t.is_transfer
+    ][:3]
+    return BulkEditDialog(services, event_bus, expenses, parent=window)
 
 
 def value_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:

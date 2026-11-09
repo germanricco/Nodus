@@ -12,7 +12,7 @@ from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.transaction_service import TransferDraft
 from nodus.ui import main_window as main_window_module
 from nodus.ui.dialogs import export
-from nodus.ui.dialogs.change_category_dialog import ChangeCategoryDialog
+from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog
 from nodus.ui.dialogs.transaction_dialog import (
     EXPENSE_MODE,
     INCOME_MODE,
@@ -403,7 +403,7 @@ class TestTransactionsPage:
         page.refresh()
 
         assert texts(page.row_actions(0)) == ["Editar", "Eliminar"]  # the transfer
-        assert texts(page.row_actions(1)) == ["Editar", "Cambiar categoría", "Eliminar"]
+        assert texts(page.row_actions(1)) == ["Editar", "Eliminar"]
 
     def test_selection_bar_takes_the_header_with_two_rows(self, services, page, pesos, dollars):
         populate(services, pesos, dollars)
@@ -426,7 +426,7 @@ class TestTransactionsPage:
         assert f'color:{theme.income}">$ 900.000,00' in detail
         assert f'color:{theme.expense}">$ 2.500,00' in detail
         assert page.delete_button.objectName() == "DangerButton"
-        assert not page.category_button.isEnabled()  # an expense and an income
+        assert page.edit_button.isEnabled()
 
         page.selection_bar.clear_button.click()
         assert not page.selection_bar.isVisible()
@@ -472,20 +472,52 @@ class TestTransactionsPage:
         ]
         assert column(page, AMOUNT) == ["$ 900.000,00"]
 
-    def test_changes_the_category_of_several(self, qtbot, services, event_bus, page, pesos):
-        ids = [
-            services.transactions.create(expense_draft(services, pesos.id, ars(a))).id
+    def test_edits_several_at_once(self, qtbot, services, event_bus, page, pesos):
+        expenses = [
+            services.transactions.create(expense_draft(services, pesos.id, ars(a), note=a))
             for a in ("10", "20")
         ]
         ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
-        dialog = ChangeCategoryDialog(services, event_bus, ids, TransactionType.EXPENSE)
+        dialog = BulkEditDialog(services, event_bus, expenses)
         qtbot.addWidget(dialog)
         dialog.category_input.select(ocio)
+        dialog.payee_input.line_edit.setText("Coto")
 
-        with qtbot.waitSignal(event_bus.transactions_changed):
+        assert dialog.save_button.text() == "Aplicar a 2 transacciones"
+        with qtbot.waitSignal(event_bus.payees_changed):
             dialog.save_button.click()
 
-        assert {services.transactions.get(i).category_id for i in ids} == {ocio}
+        edited = [services.transactions.get(t.id) for t in expenses]
+        assert {t.category_id for t in edited} == {ocio}
+        assert {t.payee_id for t in edited} == {services.payees.find("Coto").id}
+        assert [t.note for t in edited] == ["10", "20"]  # left as each one had it
+
+    def test_bulk_edit_explains_what_cannot_change(self, qtbot, services, event_bus, pesos):
+        expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
+        income = services.transactions.create(income_draft(services, pesos.id, ars("20")))
+        dialog = BulkEditDialog(services, event_bus, [expense, income])
+        qtbot.addWidget(dialog)
+
+        assert not dialog.category_input.isEnabled()
+        assert dialog.payee_input.isEnabled()
+        dialog.save_button.click()  # nothing filled in
+        assert "al menos" in dialog.error_label.text()
+
+    def test_selection_bar_opens_the_bulk_edit(self, monkeypatch, services, page, pesos, dollars):
+        populate(services, pesos, dollars)
+        page.refresh()
+        opened = []
+        monkeypatch.setattr(
+            transactions_page.BulkEditDialog,
+            "exec",
+            lambda dialog: opened.append(dialog.windowTitle()),
+        )
+        page.table.selectRow(1)
+        page.table.toggle_row(2)
+
+        page.edit_button.click()
+
+        assert opened == ["Editar 2 transacciones"]
 
 
 def test_account_movements_open_filtered_by_account(services, window, pesos, dollars):

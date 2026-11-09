@@ -51,7 +51,7 @@ Add every place where you keep money, from your bank, cash and virtual wallets l
 </picture>
 
 ### Record and find your transactions
-One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, tag, type or text, adds up at the foot the transactions it shows, and whatever you see exports to a file that opens in Excel. Each filter list ends with a shortcut to edit its accounts, categories, payees or tags. Every row in Nodus has a «⋯» menu, also opened with a right click, with everything you can do with it; tick several transactions to change their category or delete them together, and several payees or tags to merge or delete them.
+One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, tag, type or text, adds up at the foot the transactions it shows, and whatever you see exports to a file that opens in Excel. Each filter list ends with a shortcut to edit its accounts, categories, payees or tags. Every row in Nodus has a «⋯» menu, also opened with a right click, with everything you can do with it; tick several transactions to edit their category, payee, note or tags at once, or to delete them together, and several payees or tags to merge or delete them.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/transactions-dark.png">

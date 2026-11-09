@@ -49,7 +49,7 @@ Registras cada lugar donde tienes dinero, sea el banco, el efectivo, una billete
 </picture>
 
 ### Registrar y encontrar tus movimientos
-Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la última cuenta que usaste. La lista se filtra por período, cuenta, categoría, beneficiario, etiqueta, tipo o texto, suma al pie los movimientos que muestra, y lo que ves se exporta a un archivo que se abre en Excel. Cada lista de filtros termina con un atajo para editar sus cuentas, categorías, beneficiarios o etiquetas. Cada fila de Nodus tiene un menú «⋯», que también se abre con el clic derecho, con todo lo que puedes hacer con ella; marca varias transacciones para cambiarles la categoría o eliminarlas juntas, y varios beneficiarios o etiquetas para unirlos o eliminarlos.
+Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la última cuenta que usaste. La lista se filtra por período, cuenta, categoría, beneficiario, etiqueta, tipo o texto, suma al pie los movimientos que muestra, y lo que ves se exporta a un archivo que se abre en Excel. Cada lista de filtros termina con un atajo para editar sus cuentas, categorías, beneficiarios o etiquetas. Cada fila de Nodus tiene un menú «⋯», que también se abre con el clic derecho, con todo lo que puedes hacer con ella; marca varias transacciones para cambiarles de una vez la categoría, el beneficiario, la nota o las etiquetas, o para eliminarlas juntas, y varios beneficiarios o etiquetas para unirlos o eliminarlos.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/transactions-dark.png">

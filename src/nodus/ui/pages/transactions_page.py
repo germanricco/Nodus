@@ -21,7 +21,7 @@ from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.dashboard_service import FilteredTotals
-from nodus.ui.dialogs.change_category_dialog import ChangeCategoryDialog
+from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import export_transactions
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
@@ -112,15 +112,6 @@ def selection_totals_html(totals: FilteredTotals, theme: Theme) -> str:
     )
 
 
-def common_kind(items: list[TransactionListItem]) -> TransactionType | None:
-    """The type ``items`` share when they are all expenses or all incomes, so they can
-    move to one category; None with a transfer or a mix."""
-    kinds = {item.transaction.type for item in items}
-    if not items or any(item.is_transfer for item in items) or len(kinds) != 1:
-        return None
-    return kinds.pop()
-
-
 def export_filename(period: Period) -> str:
     """ "nodus-transacciones-2026-11.csv" for a month, start and end dates otherwise."""
     if period.is_whole_months and period.first_month == period.last_month:
@@ -133,7 +124,7 @@ class TransactionsPage(Page):
     type or text, with what they add up to at the foot.
 
     Double-clicking a row edits it; its «⋯» or a right click offers every action, and
-    several rows can be chosen to change their category or delete them together. A
+    several rows can be chosen to edit or delete them together. A
     transfer shows as one row for both of its legs. Each list filter ends with «Editar»,
     which asks for the page that manages that list.
     """
@@ -156,9 +147,8 @@ class TransactionsPage(Page):
         self.export_button.setToolTip("Guarda en un archivo CSV los movimientos que se ven")
         self.export_button.clicked.connect(self.export_shown)
         self.selection_bar = SelectionBar("seleccionadas")
-        self.category_button = self.selection_bar.add_action(
-            "Cambiar categoría", self.change_category_of_selected
-        )
+        self.edit_button = self.selection_bar.add_action("Editar…", self.edit_selected)
+        self.edit_button.setToolTip("Cambia la categoría, el beneficiario, la nota o las etiquetas")
         self.delete_button = self.selection_bar.add_action(
             "Eliminar", self.delete_selected, destructive=True
         )
@@ -355,17 +345,12 @@ class TransactionsPage(Page):
         return [self.model.item(row) for row in self.table.selected_rows()]
 
     def row_actions(self, row: int) -> list[RowAction]:
-        """The menu of a row: edit, change its category and delete."""
+        """The menu of a row: edit it and delete it."""
         item = self.model.item(row)
-        actions = [RowAction("Editar", lambda: self.edit(item), "pencil")]
-        if not item.is_transfer:
-            actions.append(
-                RowAction("Cambiar categoría", lambda: self.change_category([item]), "categories")
-            )
-        actions.append(
-            RowAction("Eliminar", lambda: self.delete([item]), "trash", destructive=True)
-        )
-        return actions
+        return [
+            RowAction("Editar", lambda: self.edit(item), "pencil"),
+            RowAction("Eliminar", lambda: self.delete([item]), "trash", destructive=True),
+        ]
 
     def edit(self, item: TransactionListItem) -> None:
         TransactionDialog(
@@ -416,21 +401,16 @@ class TransactionsPage(Page):
             text += f" {owner} {refunds} reembolsos quedan como ingresos comunes."
         return text
 
-    def change_category_of_selected(self) -> None:
-        self.change_category(self.selected_items())
-
-    def change_category(self, items: list[TransactionListItem]) -> None:
-        """Moves ``items``, all expenses or all incomes, to a category the user picks."""
-        kind = common_kind(items)
-        if kind is None:
-            return
-        ChangeCategoryDialog(
-            self._services,
-            self._event_bus,
-            [item.transaction.id for item in items],
-            kind,
-            parent=self.window(),
-        ).exec()
+    def edit_selected(self) -> None:
+        """Edits the chosen rows together: their category, payee, note or tags."""
+        items = self.selected_items()
+        if items:
+            BulkEditDialog(
+                self._services,
+                self._event_bus,
+                [item.transaction for item in items],
+                parent=self.window(),
+            ).exec()
 
     def _fit_columns(self) -> None:
         header = self.table.horizontalHeader()
@@ -447,7 +427,7 @@ class TransactionsPage(Page):
 
     def _update_actions(self) -> None:
         """With two or more rows chosen, the header becomes the selection bar, with what
-        they add up to and whether they can change category together."""
+        they add up to."""
         items = self.selected_items()
         several = len(items) > 1
         self.show_selection_bar(several)
@@ -456,9 +436,4 @@ class TransactionsPage(Page):
         totals = self._services.dashboard.totals_of([item.transaction for item in items])
         self.selection_bar.set_count(
             len(items), selection_totals_html(totals, self._theme_manager.theme)
-        )
-        movable = common_kind(items) is not None
-        self.category_button.setEnabled(movable)
-        self.category_button.setToolTip(
-            "" if movable else "Solo si todas son gastos o todas son ingresos"
         )
