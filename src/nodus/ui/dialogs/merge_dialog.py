@@ -44,7 +44,7 @@ class MergeDialog(FormDialog):
         """``plural_noun`` names several items ("beneficiarios") in the title."""
         single = len(sources) == 1
         title = f"Unir «{sources[0].name}» con…" if single else f"Unir {len(sources)} {plural_noun}"
-        super().__init__(title, parent)
+        super().__init__(title, parent, "Unir")
         self._sources = sources
 
         self.target_input = QComboBox()
@@ -56,7 +56,6 @@ class MergeDialog(FormDialog):
         self.result_label.setWordWrap(True)
         self.form.addRow(field_label if single else "Queda", self.target_input)
         self.form.addRow("", self.result_label)
-        self.save_button.setText("Unir")
 
         self.target_input.currentIndexChanged.connect(self._update_result)
         self._update_result()

@@ -15,7 +15,7 @@ class DateRangeDialog(FormDialog):
     ``period`` holds the chosen range."""
 
     def __init__(self, period: Period, parent: QWidget | None = None) -> None:
-        super().__init__("Elegir fechas", parent)
+        super().__init__("Elegir fechas", parent, "Aplicar")
         self.period = period
         self.start_input = DateInput()
         self.start_input.set_day(period.start)
@@ -23,7 +23,6 @@ class DateRangeDialog(FormDialog):
         self.end_input.set_day(period.end)
         self.form.addRow("Desde", self.start_input)
         self.form.addRow("Hasta", self.end_input)
-        self.save_button.setText("Aplicar")
 
     def save(self) -> None:
         start, end = self.start_input.day(), self.end_input.day()

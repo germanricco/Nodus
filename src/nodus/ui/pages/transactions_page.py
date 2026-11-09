@@ -378,7 +378,9 @@ class TransactionsPage(Page):
         """Deletes ``items`` after the user confirms, saying what goes with them."""
         if not items:
             return
-        title = "Eliminar transacción" if len(items) == 1 else "Eliminar transacciones"
+        title = (
+            "Eliminar transacción" if len(items) == 1 else f"Eliminar {len(items)} transacciones"
+        )
         if confirm(self.window(), title, self._delete_warning(items)):
             self._services.transactions.delete_many([item.transaction.id for item in items])
             self._event_bus.transactions_changed.emit()

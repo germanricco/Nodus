@@ -16,9 +16,14 @@ from PySide6.QtWidgets import (
 
 from nodus.services.errors import ValidationError
 
+# The main button of a dialog that edits something that already exists.
+SAVE_CHANGES = "Guardar cambios"
+
 
 class FormDialog(QDialog):
-    """A titled form with Cancelar/Guardar buttons and an inline error message.
+    """A titled form with "Cancelar" and a main button, and an inline error message.
+
+    The main button says what it does (``action``): "Agregar cuenta", "Guardar cambios".
 
     Subclasses add their fields to ``form`` and implement ``save``. If ``save`` raises
     ``ValidationError``, its message appears inside the dialog and the dialog stays open,
@@ -31,7 +36,9 @@ class FormDialog(QDialog):
     MIN_WIDTH = 460
     MARGIN = 24
 
-    def __init__(self, title: str, parent: QWidget | None = None) -> None:
+    def __init__(
+        self, title: str, parent: QWidget | None = None, action: str = SAVE_CHANGES
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
 
@@ -61,7 +68,7 @@ class FormDialog(QDialog):
         cancel = QPushButton("Cancelar")
         cancel.setObjectName("SecondaryButton")
         cancel.clicked.connect(self.reject)
-        self.save_button = QPushButton("Guardar")
+        self.save_button = QPushButton(action)
         self.save_button.setObjectName("PrimaryButton")
         self.save_button.setDefault(True)
         self.save_button.clicked.connect(self._on_save)

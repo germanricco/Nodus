@@ -133,7 +133,7 @@ class AccountsPage(Page):
         super().__init__("Cuentas")
         self._services = services
         self._event_bus = event_bus
-        self.create_button = self.add_header_button("Crear cuenta", primary=True)
+        self.create_button = self.add_header_button("Agregar cuenta", primary=True)
         self.create_button.clicked.connect(lambda: self.open_account_dialog())
 
         container = QWidget()

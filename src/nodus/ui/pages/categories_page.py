@@ -97,7 +97,7 @@ class CategoriesPage(Page):
         super().__init__("Categorías")
         self._services = services
         self._event_bus = event_bus
-        self.create_button = self.add_header_button("Nueva categoría", primary=True)
+        self.create_button = self.add_header_button("Agregar categoría", primary=True)
         self.create_button.clicked.connect(lambda: self.open_category_dialog())
 
         container = QWidget()

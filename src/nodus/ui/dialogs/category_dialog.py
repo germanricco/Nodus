@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QComboBox, QLineEdit, QWidget
 from nodus.models.category import Category
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
-from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import TRANSACTION_TYPE_LABELS
 from nodus.ui.widgets.color import ColorPicker
@@ -31,7 +31,11 @@ class CategoryDialog(FormDialog):
         parent_id: int | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__("Editar categoría" if category else "Nueva categoría", parent)
+        if category:
+            action = SAVE_CHANGES
+        else:
+            action = "Agregar subcategoría" if parent_id else "Agregar categoría"
+        super().__init__("Editar categoría" if category else "Nueva categoría", parent, action)
         self._services = services
         self._event_bus = event_bus
         self._category = category

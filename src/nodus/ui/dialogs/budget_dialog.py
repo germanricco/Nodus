@@ -12,7 +12,7 @@ from nodus.services.budget_service import SUGGESTION_MONTHS
 from nodus.services.category_service import CategoryNode
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
-from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.selectors import CategoryComboBox
@@ -37,7 +37,11 @@ class BudgetDialog(FormDialog):
     ) -> None:
         limits = services.budgets.limits_on(month)
         has_limit = category is not None and category.id in limits
-        super().__init__("Cambiar límite" if has_limit else "Nuevo presupuesto", parent)
+        super().__init__(
+            "Cambiar límite" if has_limit else "Nuevo presupuesto",
+            parent,
+            SAVE_CHANGES if has_limit else "Agregar presupuesto",
+        )
         self._services = services
         self._event_bus = event_bus
         self._month = month

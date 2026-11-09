@@ -34,7 +34,7 @@ class ValueAdjustmentDialog(FormDialog):
         today: date | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__(f"Actualizar valor de «{account.name}»", parent)
+        super().__init__(f"Actualizar valor de «{account.name}»", parent, "Actualizar valor")
         self._services = services
         self._event_bus = event_bus
         self._account = account

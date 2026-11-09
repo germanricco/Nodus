@@ -141,7 +141,7 @@ class BudgetsPage(Page):
             f"«{category.name}» deja de tener presupuesto desde "
             f"{format_month(self.month).lower()}. Los meses anteriores conservan su límite."
         )
-        if not confirm(self.window(), "Quitar presupuesto", text, action="Quitar"):
+        if not confirm(self.window(), "Quitar presupuesto", text):
             return
         self._services.budgets.remove(category.id, self.month)
         self._event_bus.budgets_changed.emit()

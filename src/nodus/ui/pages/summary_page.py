@@ -171,7 +171,7 @@ class SummaryPage(Page, Generic[S]):
         self.search_input.setClearButtonEnabled(True)
         self.search_input.setMinimumWidth(200)
         self.add_header_widget(self.search_input)
-        self.create_button = self.add_header_button(f"Crear {noun}", primary=True)
+        self.create_button = self.add_header_button(f"Agregar {noun}", primary=True)
         self.selection_bar = SelectionBar(chosen_word)
         self.merge_button = self.selection_bar.add_action("Unir…", self.merge_selected)
         self.merge_button.setToolTip("Deja uno solo y le pasa los movimientos de los demás")

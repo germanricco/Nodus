@@ -87,7 +87,7 @@ class PayeesPage(SummaryPage[PayeeSummary]):
         if len(summaries) == 1:
             title, text = "Eliminar beneficiario", f"Se va a eliminar «{summaries[0].payee.name}»."
         else:
-            title = "Eliminar beneficiarios"
+            title = f"Eliminar {len(summaries)} beneficiarios"
             text = f"Se van a eliminar {len(summaries)} beneficiarios."
         if count:
             left = "queda" if count == 1 else "quedan"

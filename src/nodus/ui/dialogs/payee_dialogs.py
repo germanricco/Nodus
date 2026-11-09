@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
 from nodus.models.payee import Payee
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
-from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
 from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.selectors import CategoryComboBox
@@ -29,7 +29,11 @@ class PayeeDialog(FormDialog):
         payee: Payee | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__("Editar beneficiario" if payee else "Nuevo beneficiario", parent)
+        super().__init__(
+            "Editar beneficiario" if payee else "Nuevo beneficiario",
+            parent,
+            SAVE_CHANGES if payee else "Agregar beneficiario",
+        )
         self._services = services
         self._event_bus = event_bus
         self._payee = payee

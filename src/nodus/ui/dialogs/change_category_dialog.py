@@ -23,7 +23,7 @@ class ChangeCategoryDialog(FormDialog):
         kind: TransactionType,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__("Cambiar categoría", parent)
+        super().__init__("Cambiar categoría", parent, "Cambiar categoría")
         self._services = services
         self._event_bus = event_bus
         self._transaction_ids = transaction_ids
@@ -35,7 +35,6 @@ class ChangeCategoryDialog(FormDialog):
             hint.setText("La transacción pasa a esta categoría.")
         self.form.addRow("Categoría", self.category_input)
         self.form.addRow("", hint)
-        self.save_button.setText("Cambiar")
 
     def save(self) -> None:
         self._services.transactions.set_category(

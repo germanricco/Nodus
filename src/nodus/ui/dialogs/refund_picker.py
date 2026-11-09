@@ -45,7 +45,7 @@ class RefundPickerDialog(FormDialog):
         linked_id: int | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__("Elegir el gasto que se reembolsa", parent)
+        super().__init__("Elegir el gasto que se reembolsa", parent, "Vincular")
         # A list, not a form: it opens large and the user can resize it.
         self.layout().setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
         self.setMinimumSize(780, 520)
@@ -72,7 +72,6 @@ class RefundPickerDialog(FormDialog):
         self.empty_label.setObjectName("FieldHint")
         self.form.addRow(self.table)
         self.form.addRow(self.empty_label)
-        self.save_button.setText("Vincular")
 
         self.period_selector.period_changed.connect(self.reload)
         self.search_input.textChanged.connect(self.reload)

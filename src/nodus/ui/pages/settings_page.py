@@ -213,7 +213,7 @@ class SettingsPage(Page):
         self.rate_date_input = DateInput()
         self.rate_value_input = AmountInput(Currency.ARS)
         self.rate_value_input.setFixedWidth(200)
-        self.save_rate_button = QPushButton("Guardar")
+        self.save_rate_button = QPushButton("Guardar cotización")
         self.save_rate_button.setObjectName("PrimaryButton")
         self.save_rate_button.setToolTip("Si ya hay una cotización para esa fecha, se reemplaza.")
         self.save_rate_button.clicked.connect(self.save_rate)
@@ -402,7 +402,7 @@ class SettingsPage(Page):
             f"Tus datos actuales se van a reemplazar por los de «{Path(path).name}». Antes se"
             " guarda una copia de cómo están ahora, en la carpeta de copias."
         )
-        if not confirm(self.window(), "Restaurar copia", text, action="Restaurar"):
+        if not confirm(self.window(), "Restaurar copia", text):
             return
         try:
             self._services.backups.restore(Path(path), datetime.now())

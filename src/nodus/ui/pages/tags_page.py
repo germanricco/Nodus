@@ -15,7 +15,7 @@ from nodus.ui.widgets.color import color_icon
 
 NO_TAGS_TEXT = (
     "Aún no hay etiquetas: se crean al escribir una nueva al cargar un movimiento,"
-    " o con «Crear etiqueta»."
+    " o con «Agregar etiqueta»."
 )
 NO_MATCHES_TEXT = "Ninguna etiqueta coincide con la búsqueda"
 
@@ -75,7 +75,7 @@ class TagsPage(SummaryPage[TagSummary]):
             title, text = "Eliminar etiqueta", f"Se va a eliminar «{summaries[0].tag.name}»."
             count = summaries[0].count
         else:
-            title = "Eliminar etiquetas"
+            title = f"Eliminar {len(summaries)} etiquetas"
             text = f"Se van a eliminar {len(summaries)} etiquetas."
             count = self._services.tags.tagged_count([summary.tag.id for summary in summaries])
         if count:

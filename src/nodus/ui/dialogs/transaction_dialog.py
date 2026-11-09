@@ -13,7 +13,7 @@ from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.services.transaction_service import TransactionDraft, TransferDraft
 from nodus.ui.dialogs.account_fields import required_account, selectable_accounts
-from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
 from nodus.ui.dialogs.refund_picker import RefundField
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import rate_text
@@ -54,7 +54,11 @@ class TransactionDialog(FormDialog):
         transaction: Transaction | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__("Editar transacción" if transaction else "Nueva transacción", parent)
+        super().__init__(
+            "Editar transacción" if transaction else "Nueva transacción",
+            parent,
+            SAVE_CHANGES if transaction else "Agregar transacción",
+        )
         self._services = services
         self._event_bus = event_bus
         self._transaction = transaction

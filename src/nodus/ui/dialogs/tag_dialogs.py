@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QLineEdit, QWidget
 from nodus.models.palette import palette_color
 from nodus.models.tag import Tag
 from nodus.services.container import Services
-from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
 from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.color import ColorPicker
@@ -29,7 +29,11 @@ class TagDialog(FormDialog):
         tag: Tag | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__("Editar etiqueta" if tag else "Nueva etiqueta", parent)
+        super().__init__(
+            "Editar etiqueta" if tag else "Nueva etiqueta",
+            parent,
+            SAVE_CHANGES if tag else "Agregar etiqueta",
+        )
         self._services = services
         self._event_bus = event_bus
         self._tag = tag

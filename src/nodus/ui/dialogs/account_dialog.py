@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QComboBox, QLineEdit, QWidget
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.services.container import Services
-from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS, CURRENCY_LABELS
 from nodus.ui.widgets.amount_input import AmountInput
@@ -27,7 +27,11 @@ class AccountDialog(FormDialog):
         account: Account | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__("Editar cuenta" if account else "Nueva cuenta", parent)
+        super().__init__(
+            "Editar cuenta" if account else "Nueva cuenta",
+            parent,
+            SAVE_CHANGES if account else "Agregar cuenta",
+        )
         self._services = services
         self._event_bus = event_bus
         self._account = account

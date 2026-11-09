@@ -15,7 +15,7 @@ from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.services.recurring_charge_service import RecurringChargeDraft
 from nodus.ui.dialogs.account_fields import required_account, selectable_accounts
-from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import FREQUENCY_LABELS
 from nodus.ui.widgets.amount_input import AmountInput
@@ -50,7 +50,11 @@ class RecurringChargeDialog(FormDialog):
         charge: RecurringCharge | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__("Editar cargo" if charge else "Nuevo cargo recurrente", parent)
+        super().__init__(
+            "Editar cargo" if charge else "Nuevo cargo recurrente",
+            parent,
+            SAVE_CHANGES if charge else "Agregar cargo",
+        )
         self._services = services
         self._event_bus = event_bus
         self._charge = charge
@@ -156,11 +160,10 @@ class PayChargeDialog(FormDialog):
         today: date | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__(f"Pagar {charge.name}", parent)
+        super().__init__(f"Pagar {charge.name}", parent, "Registrar pago")
         self._services = services
         self._event_bus = event_bus
         self._charge = charge
-        self.save_button.setText("Registrar pago")
 
         self._today = today or date.today()
         self.amount_input = AmountInput(charge.amount.currency)

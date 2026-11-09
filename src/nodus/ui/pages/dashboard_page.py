@@ -282,7 +282,7 @@ class DashboardPage(Page):
             "Crea una cuenta por cada lugar donde tengas dinero y registra tus movimientos."
         )
         text.setWordWrap(True)
-        self.create_account_button = QPushButton("Crear mi primera cuenta")
+        self.create_account_button = QPushButton("Agregar mi primera cuenta")
         self.create_account_button.setObjectName("PrimaryButton")
         self.create_account_button.clicked.connect(
             lambda: self.navigate_requested.emit(PageId.ACCOUNTS)
