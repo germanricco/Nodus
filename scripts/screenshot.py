@@ -110,6 +110,7 @@ def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) ->
 
 # Tall enough for every dashboard card at once.
 FULL_DASHBOARD_HEIGHT = 1180
+FULL_SETTINGS_HEIGHT = 1500
 
 
 # File names of the analysis tabs, in their order.
@@ -149,6 +150,12 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.show_page(PageId.DASHBOARD)
         app.processEvents()
         save(window, args.out / f"dashboard-full-{mode.value}.png")
+        # Settings, whole: the data and about cards are below the fold.
+        window.resize(window.width(), FULL_SETTINGS_HEIGHT)
+        window.show_page(PageId.SETTINGS)
+        app.processEvents()
+        save(window, args.out / f"settings-full-{mode.value}.png")
+        window.resize(window.width(), FULL_DASHBOARD_HEIGHT)
         # Each analysis report, whole.
         window.show_page(PageId.ANALYSIS)
         analysis = window.page(PageId.ANALYSIS)

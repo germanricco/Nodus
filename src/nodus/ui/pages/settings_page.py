@@ -10,8 +10,8 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
-    QCheckBox,
     QFileDialog,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -48,6 +48,7 @@ from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.setting_row import SettingRow
 from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.toggle_switch import ToggleSwitch
 
 # Segment order of the theme selector.
 THEME_MODES = [ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM]
@@ -148,18 +149,26 @@ class SettingsPage(Page):
 
     def _appearance_card(self) -> Card:
         card = Card("General")
-        theme_row = SettingRow("Tema")
+        theme_row = SettingRow(
+            "Tema", "«Según el sistema» sigue el modo claro u oscuro de Windows."
+        )
         self.theme_input = theme_row.add(SegmentedControl(THEME_LABELS))
         self.theme_input.changed.connect(self._set_theme)
         card.body.addWidget(theme_row)
 
         startup = self._services.startup
-        self.startup_input = QCheckBox("Abrir Nodus al iniciar Windows")
+        startup_row = SettingRow(
+            "Abrir Nodus al iniciar Windows",
+            "Te espera abierto al encender la computadora."
+            if startup.is_available()
+            else "Disponible en la versión instalada.",
+        )
+        self.startup_input = startup_row.add(ToggleSwitch())
         self.startup_input.setEnabled(startup.is_available())
         if not startup.is_available():
             self.startup_input.setToolTip("Disponible en la versión instalada")
         self.startup_input.clicked.connect(startup.set_enabled)
-        card.body.addWidget(self.startup_input)
+        card.body.addWidget(startup_row)
         return card
 
     def _set_theme(self, index: int) -> None:
@@ -173,7 +182,7 @@ class SettingsPage(Page):
 
     def _rate_card(self) -> Card:
         card = Card("Cotizaciones")
-        self.rate_currency_row = SettingRow("Moneda")
+        self.rate_currency_row = SettingRow("Moneda", "La cotización que se ve y se carga debajo.")
         self.rate_currency_input = self.rate_currency_row.add(
             SegmentedControl(RATE_CURRENCY_LABELS)
         )
@@ -350,15 +359,29 @@ class SettingsPage(Page):
         )
         self.backup_row.add(secondary_button("Abrir carpeta", self._open_backups_folder))
 
-        restore_row = SettingRow("Restaurar")
-        self.restore_button = restore_row.add(
-            secondary_button("Elegir copia…", self.restore_backup)
+        export_row = SettingRow(
+            "Exportar transacciones", "Todas, en un archivo CSV para abrir en una planilla."
         )
-        export_row = SettingRow("Exportar transacciones")
         self.export_all_button = export_row.add(secondary_button("Exportar CSV", self.export_all))
 
-        for row in (data_row, self.backup_row, restore_row, export_row):
+        for row in (data_row, self.backup_row, export_row):
             card.body.addWidget(row)
+
+        # Apart from the everyday actions, since it replaces all the data.
+        separator = QFrame()
+        separator.setObjectName("Separator")
+        separator.setFixedHeight(1)
+        card.body.addSpacing(4)
+        card.body.addWidget(separator)
+        restore_row = SettingRow(
+            "Restaurar una copia",
+            "Reemplaza tus datos actuales por los de una copia. Antes se guarda una copia de"
+            " cómo están ahora.",
+        )
+        self.restore_button = restore_row.add(QPushButton("Restaurar copia…"))
+        self.restore_button.setObjectName("DangerButton")
+        self.restore_button.clicked.connect(self.restore_backup)
+        card.body.addWidget(restore_row)
         return card
 
     def _refresh_backup_status(self) -> None:
@@ -423,22 +446,20 @@ class SettingsPage(Page):
 
     def _about_card(self) -> Card:
         card = Card("Acerca de Nodus")
-        version_row = SettingRow(f"Versión {__version__}")
+        version_row = SettingRow(f"Versión {__version__}", "El código fuente, abierto a todos.")
         version_row.add(secondary_button("Ver en GitHub", lambda: open_url(REPOSITORY_URL)))
-        card.body.addWidget(version_row)
-        news_row = SettingRow("Novedades")
-        news_row.add(secondary_button("Ver novedades", self.show_news))
-        card.body.addWidget(news_row)
-        feedback_row = SettingRow("Comentarios")
-        feedback_row.add(secondary_button("Enviar comentarios", lambda: open_url(feedback_url())))
-        card.body.addWidget(feedback_row)
-        donate_row = SettingRow("Apoyar el proyecto")
-        donate_row.add(secondary_button("Invitar un cafecito", lambda: open_url(DONATE_URL)))
-        card.body.addWidget(donate_row)
-        self.check_updates_input = QCheckBox("Buscar actualizaciones al iniciar")
-        self.check_updates_input.setToolTip(
-            "Consulta en GitHub cuál es la última versión publicada. No envía ningún dato tuyo."
+        updates_row = SettingRow(
+            "Buscar actualizaciones al iniciar",
+            "Consulta en GitHub cuál es la última versión publicada. No envía ningún dato tuyo.",
         )
+        self.check_updates_input = updates_row.add(ToggleSwitch())
         self.check_updates_input.clicked.connect(self._services.settings.set_check_updates)
-        card.body.addWidget(self.check_updates_input)
+        news_row = SettingRow("Novedades", "Lo que trajo cada versión.")
+        news_row.add(secondary_button("Ver novedades", self.show_news))
+        feedback_row = SettingRow("Comentarios", "Una idea o un error, sin crear una cuenta.")
+        feedback_row.add(secondary_button("Enviar comentarios", lambda: open_url(feedback_url())))
+        donate_row = SettingRow("Apoyar el proyecto", "Nodus es gratis y lo va a seguir siendo.")
+        donate_row.add(secondary_button("Invitar un cafecito", lambda: open_url(DONATE_URL)))
+        for row in (version_row, updates_row, news_row, feedback_row, donate_row):
+            card.body.addWidget(row)
         return card

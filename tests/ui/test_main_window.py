@@ -169,3 +169,12 @@ def test_refreshing_never_flashes_a_stray_window(qtbot, qapp, window, services, 
         qapp.removeEventFilter(spy)
 
     assert spy.shown == []
+
+
+def test_settings_sits_at_the_foot_of_the_sidebar(window):
+    layout = window.sidebar.layout()
+    settings = layout.indexOf(window.sidebar.nav_button(PageId.SETTINGS))
+
+    # Below the other pages and the accounts, and no longer in the top bar.
+    assert settings > layout.indexOf(window.sidebar.nav_button(PageId.TAGS)) + 1
+    assert not hasattr(window.top_bar, "settings_button")

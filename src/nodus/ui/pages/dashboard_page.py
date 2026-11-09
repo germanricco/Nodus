@@ -262,7 +262,8 @@ class DashboardPage(Page):
         content's minimum height is set explicitly instead, once Qt has applied pending
         style and layout changes.
         """
-        QTimer.singleShot(0, self._apply_minimum_height)
+        # With the page as context, the call is dropped if the page is gone by then.
+        QTimer.singleShot(0, self, self._apply_minimum_height)
 
     def _apply_minimum_height(self) -> None:
         self._grid.activate()

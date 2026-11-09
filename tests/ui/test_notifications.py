@@ -114,8 +114,8 @@ def test_empty_panel_says_so(qtbot, offline_window):
     assert offline_window.notification_panel.rows == []
 
 
-def test_gear_opens_settings(offline_window):
-    offline_window.top_bar.settings_button.click()
+def test_sidebar_foot_opens_settings(offline_window):
+    offline_window.sidebar.nav_button(PageId.SETTINGS).click()
 
     assert offline_window.current_page is offline_window.page(PageId.SETTINGS)
 

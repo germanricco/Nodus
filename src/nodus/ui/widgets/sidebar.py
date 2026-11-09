@@ -27,7 +27,8 @@ from nodus.ui.widgets.style import clear_layout, set_style_property
 
 
 class Sidebar(QFrame):
-    """Navigation buttons on top, the user's accounts below, like MoneyMatter's sidebar.
+    """Navigation buttons on top, the user's accounts below, like MoneyMatter's sidebar,
+    and Ajustes at the foot.
 
     It can collapse to its icons, to leave the room to the page; the choice is saved.
     """
@@ -61,6 +62,8 @@ class Sidebar(QFrame):
         self._accounts_area = self._build_accounts_area()
         layout.addWidget(self._accounts_area, stretch=1)
         layout.addStretch()  # keeps the buttons on top while the accounts are hidden
+        # At the foot, as in Windows apps: it is visited rarely, not every day.
+        layout.addWidget(self._nav_buttons[PageId.SETTINGS])
 
         layout.addLayout(self._build_footer())
 
@@ -174,7 +177,8 @@ class Sidebar(QFrame):
             button.setIconSize(QSize(20, 20))
             button.clicked.connect(lambda _checked, p=page_id: self.page_requested.emit(p))
             group.addButton(button)
-            layout.addWidget(button)
+            if page_id is not PageId.SETTINGS:  # placed at the foot
+                layout.addWidget(button)
             buttons[page_id] = button
         return buttons
 

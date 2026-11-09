@@ -122,7 +122,6 @@ class MainWindow(QMainWindow):
         self.sidebar.page_requested.connect(self.show_page)
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
         self.top_bar.notifications_requested.connect(self.open_notifications)
-        self.top_bar.settings_requested.connect(lambda: self.show_page(PageId.SETTINGS))
         self.top_bar.feedback_requested.connect(lambda: open_url(feedback_url()))
         self.top_bar.set_amounts_hidden(services.settings.amounts_hidden())
         self.top_bar.hide_amounts_toggled.connect(self.toggle_amounts_hidden)

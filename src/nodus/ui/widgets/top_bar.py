@@ -10,14 +10,13 @@ from nodus.ui.theme.theme_manager import ThemeManager
 
 class TopBar(QFrame):
     """ "Agregar transacción" on the left, always visible because it is the most frequent
-    action; on the right, the eye that hides amounts, sending comments, the notifications
-    bell with how many there are, and settings."""
+    action; on the right, the eye that hides amounts, sending comments and the
+    notifications bell with how many there are. Ajustes is at the foot of the sidebar."""
 
     add_transaction_requested = Signal()
     hide_amounts_toggled = Signal()
     feedback_requested = Signal()
     notifications_requested = Signal()
-    settings_requested = Signal()
 
     def __init__(self, theme_manager: ThemeManager) -> None:
         super().__init__()
@@ -43,15 +42,12 @@ class TopBar(QFrame):
         self.notification_count.setFixedSize(18, 18)
         self.notification_count.move(22, -2)
         self.notification_count.hide()
-        self.settings_button = self._icon_button("Ajustes")
-        self.settings_button.clicked.connect(self.settings_requested)
         self.hide_amounts_button = self._icon_button("")
         self.hide_amounts_button.clicked.connect(self.hide_amounts_toggled)
         self._amounts_hidden = False
         layout.addWidget(self.hide_amounts_button)
         layout.addWidget(self.feedback_button)
         layout.addWidget(self.notifications_button)
-        layout.addWidget(self.settings_button)
 
         self._apply_theme(theme_manager.theme)
         theme_manager.theme_changed.connect(self._apply_theme)
@@ -83,4 +79,3 @@ class TopBar(QFrame):
         self.hide_amounts_button.setIcon(icon(eye, theme.text_muted))
         self.feedback_button.setIcon(icon("message", theme.text_muted))
         self.notifications_button.setIcon(icon("bell", theme.text_muted))
-        self.settings_button.setIcon(icon("settings", theme.text_muted))
