@@ -3,7 +3,7 @@ from datetime import date
 
 from factories import ars, expense_draft, income_draft, usd
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.export_service import HEADER
 from nodus.services.transaction_service import TransferDraft
 

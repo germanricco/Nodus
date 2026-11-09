@@ -6,8 +6,8 @@ import pytest
 from factories import ars, expense_draft, income_draft
 from PySide6.QtCore import Qt
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.period import Month, Period
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.ui.dialogs.tag_dialogs import MergeTagDialog, TagDialog
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages import tags_page

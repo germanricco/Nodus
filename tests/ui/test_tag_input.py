@@ -3,7 +3,7 @@
 from factories import light_theme
 from PySide6.QtCore import Qt
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog
 from nodus.ui.widgets.tag_input import TagInput, new_names_hint
 

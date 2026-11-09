@@ -7,6 +7,7 @@ from factories import FakeRegistry, ars, eur, expense_draft
 
 from nodus.models.account import AccountType
 from nodus.models.currency import FOREIGN_CURRENCIES, Currency
+from nodus.services.errors import BackupError
 from nodus.services.startup_service import StartupService
 from nodus.ui.dialogs import export
 from nodus.ui.pages import settings_page
@@ -81,6 +82,21 @@ def test_backup_now_creates_a_copy_and_shows_it(services, page):
 
     assert services.backups.last_backup() == date.today()
     assert page.backup_row.detail.text() == f"Última: {date.today():%d/%m/%Y}"
+
+
+def test_failed_backup_now_warns_the_user(services, page, monkeypatch):
+    def broken(_today):
+        raise BackupError("disco lleno")
+
+    warnings = []
+    monkeypatch.setattr(services.backups, "create", broken)
+    monkeypatch.setattr(
+        settings_page.QMessageBox, "warning", lambda _parent, _title, text: warnings.append(text)
+    )
+
+    page.backup_now_button.click()
+
+    assert warnings == ["No se pudo copiar: disco lleno"]
 
 
 def test_failed_daily_backup_is_shown(services, page):

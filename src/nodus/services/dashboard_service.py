@@ -10,12 +10,12 @@ import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.category import Category
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.period import Month, Period
 from nodus.models.transaction import Transaction, TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.category_service import CategoryService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.transaction_service import TransactionService

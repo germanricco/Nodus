@@ -5,10 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, timedelta
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.currency import TOTAL_CURRENCIES, Currency
 from nodus.models.money import Money
 from nodus.models.period import Period
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.account_service import AccountService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.transaction_service import TransactionService

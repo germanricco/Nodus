@@ -6,8 +6,8 @@ from decimal import Decimal
 import pytest
 from factories import ars, expense_draft, income_draft, usd
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.palette import PALETTE
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import ValidationError
 
 

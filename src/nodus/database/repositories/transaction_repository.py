@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import dataclasses
 import sqlite3
-from dataclasses import dataclass
 from datetime import date
 
 from nodus.database.repositories.base import Repository
@@ -12,6 +11,7 @@ from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.payee import normalize_name
 from nodus.models.transaction import Transaction, TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 
 # The amount's currency is the account's, so every read joins accounts. The payee is
 # joined so the text search can match its name.
@@ -19,30 +19,6 @@ _SELECT = (
     "SELECT t.*, a.currency FROM transactions t JOIN accounts a ON a.id = t.account_id"
     " LEFT JOIN payees p ON p.id = t.payee_id"
 )
-
-
-@dataclass(frozen=True)
-class TransactionFilter:
-    """Criteria for listing transactions. Unset fields do not filter.
-
-    ``category_id`` also matches the category's subcategories, and ``text`` searches the note
-    and the names of the payee and the tags, these ignoring case and accents.
-    ``is_transfer`` keeps only transfer legs (True) or only income and expenses (False), and
-    ``refund_linked`` only refunds and refunded expenses (True) or neither (False).
-    Dates are inclusive.
-    """
-
-    start: date | None = None
-    end: date | None = None
-    account_id: int | None = None
-    category_id: int | None = None
-    payee_id: int | None = None
-    tag_id: int | None = None
-    type: TransactionType | None = None
-    text: str | None = None
-    is_transfer: bool | None = None
-    refund_linked: bool | None = None
-    limit: int | None = None
 
 
 class TransactionRepository(Repository):

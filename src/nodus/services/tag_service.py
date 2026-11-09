@@ -9,12 +9,12 @@ from datetime import date
 
 from nodus.database.database import Database
 from nodus.database.repositories.tag_repository import TagRepository
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.money import Money
 from nodus.models.palette import palette_color
 from nodus.models.payee import normalize_name
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.dashboard_service import net_in_pesos
 from nodus.services.errors import ValidationError, clean_name, require_found
 from nodus.services.exchange_rate_service import ExchangeRateService

@@ -3,8 +3,8 @@
 from factories import ars, category_id, expense_draft, light_theme
 from PySide6.QtCore import Qt
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.transaction import TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.ui.dialogs.transaction_dialog import INCOME_MODE, TRANSFER_MODE, TransactionDialog
 
 EXPENSE = TransactionType.EXPENSE

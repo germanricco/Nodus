@@ -18,6 +18,14 @@ class NotFoundError(ValidationError):
     """The referenced record does not exist (for instance, it was deleted meanwhile)."""
 
 
+class BackupError(Exception):
+    """A copy of the data could not be written (a full disk, a locked folder…).
+
+    Wraps the file or database error so callers above the services need not know
+    which storage engine is underneath.
+    """
+
+
 def require_found(value: T | None, message: str) -> T:
     """Returns ``value``, or raises ``NotFoundError`` with ``message`` if it is None."""
     if value is None:

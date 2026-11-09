@@ -4,8 +4,8 @@ from decimal import Decimal
 import pytest
 from factories import ars, category_id, expense_draft, income_draft, usd
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.transaction import TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import NotFoundError, ValidationError
 
 

@@ -17,11 +17,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.budget import Budget
 from nodus.models.money import Money
 from nodus.models.period import Month, Period, format_month
 from nodus.models.recurring_charge import DueStatus, RecurringCharge
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.dashboard_service import CategoryTotal, Comparison, MonthFlow, PeriodSummary
 from nodus.services.recurring_charge_service import UPCOMING_DAYS

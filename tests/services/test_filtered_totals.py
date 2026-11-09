@@ -5,8 +5,8 @@ from decimal import Decimal
 
 from factories import ars, category_id, expense_draft, income_draft, usd
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.transaction import TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.transaction_service import TransferDraft
 
 NOVEMBER = TransactionFilter(start=date(2026, 11, 1), end=date(2026, 11, 30))

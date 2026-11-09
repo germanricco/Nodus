@@ -8,7 +8,7 @@ from nodus.database.database import Database, Migration, latest_schema_version
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.services.backup_service import BackupService
-from nodus.services.errors import ValidationError
+from nodus.services.errors import BackupError, ValidationError
 
 TODAY = date(2026, 11, 6)
 NOW = datetime(2026, 11, 6, 21, 30)
@@ -64,6 +64,19 @@ def test_failed_daily_backup_is_remembered_not_raised(services, monkeypatch):
 
     assert services.backups.create_if_due(TODAY) is None
     assert "disco lleno" in services.backups.last_error
+
+
+@pytest.mark.parametrize("failure", [OSError("disco lleno"), sqlite3.Error("base bloqueada")])
+def test_failed_backup_raises_a_backup_error(services, monkeypatch, failure):
+    """The caller sees one service error, whatever failed underneath."""
+
+    def broken(_destination):
+        raise failure
+
+    monkeypatch.setattr(services.backups, "_copy_to", broken)
+
+    with pytest.raises(BackupError, match=str(failure)):
+        services.backups.create(TODAY)
 
 
 def test_restore_brings_back_the_copy_and_saves_current_data(services):

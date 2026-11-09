@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sqlite3
 from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
@@ -23,13 +22,13 @@ from PySide6.QtWidgets import (
 )
 
 from nodus import __version__
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.links import DONATE_URL, REPOSITORY_URL, feedback_url
 from nodus.models.currency import FOREIGN_CURRENCIES, HOME_CURRENCY, Currency
 from nodus.models.exchange_rate import ExchangeRate
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.backup_service import BackupService
 from nodus.services.container import Services
-from nodus.services.errors import ValidationError
+from nodus.services.errors import BackupError, ValidationError
 from nodus.services.rate_feed_service import SOURCES
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.confirm import confirm
@@ -366,7 +365,7 @@ class SettingsPage(Page):
     def backup_now(self) -> None:
         try:
             self._services.backups.create(date.today())
-        except (OSError, sqlite3.Error) as error:
+        except BackupError as error:
             QMessageBox.warning(self.window(), "Copia de seguridad", f"No se pudo copiar: {error}")
         self._refresh_backup_status()
 

@@ -8,7 +8,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from nodus.database.database import Database, DatabaseError, latest_schema_version
-from nodus.services.errors import ValidationError
+from nodus.services.errors import BackupError, ValidationError
 
 _DAILY_NAME = re.compile(r"^nodus-(\d{4}-\d{2}-\d{2})\.db$")
 
@@ -28,10 +28,16 @@ class BackupService:
         self.last_error: str | None = None
 
     def create(self, today: date) -> Path:
-        """Copies the data to today's backup, replacing an earlier one from today."""
+        """Copies the data to today's backup, replacing an earlier one from today.
+
+        Raises ``BackupError`` if the copy cannot be written.
+        """
         destination = self.backups_dir / f"nodus-{today.isoformat()}.db"
-        self._copy_to(destination)
-        self._prune()
+        try:
+            self._copy_to(destination)
+            self._prune()
+        except (OSError, sqlite3.Error) as error:
+            raise BackupError(str(error)) from error
         return destination
 
     def create_if_due(self, today: date) -> Path | None:
@@ -44,7 +50,7 @@ class BackupService:
             return None
         try:
             backup = self.create(today)
-        except (OSError, sqlite3.Error) as error:
+        except BackupError as error:
             self.last_error = f"No se pudo hacer la copia del día: {error}"
             return None
         self.last_error = None

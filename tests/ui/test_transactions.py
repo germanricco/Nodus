@@ -4,9 +4,9 @@ import pytest
 from factories import ars, category_id, expense_draft, income_draft, light_theme, usd
 from PySide6.QtCore import Qt
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.transaction_service import TransferDraft
 from nodus.ui import main_window as main_window_module
 from nodus.ui.dialogs import export

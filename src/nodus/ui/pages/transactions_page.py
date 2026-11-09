@@ -15,9 +15,9 @@ from PySide6.QtWidgets import (
     QTableView,
 )
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.period import Period
 from nodus.models.transaction import TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.dashboard_service import FilteredTotals
 from nodus.ui.dialogs.confirm import confirm

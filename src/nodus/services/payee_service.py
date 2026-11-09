@@ -9,12 +9,12 @@ from datetime import date
 
 from nodus.database.database import Database
 from nodus.database.repositories.payee_repository import PayeeRepository
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.category import Category
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.payee import Payee, normalize_name
 from nodus.models.transaction import Transaction, TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.category_service import CategoryService
 from nodus.services.dashboard_service import net_in_pesos
 from nodus.services.errors import ValidationError, clean_name, require_found

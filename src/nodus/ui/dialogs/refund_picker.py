@@ -8,9 +8,9 @@ from datetime import date
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLayout, QLineEdit, QPushButton, QWidget
 
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.period import Period, format_date
 from nodus.models.transaction import Transaction, TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.ui.dialogs.form_dialog import FormDialog

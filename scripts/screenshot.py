@@ -23,10 +23,10 @@ if sys.platform == "win32":
 from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
-from nodus.database.repositories.transaction_repository import TransactionFilter  # noqa: E402
 from nodus.models.money import Money  # noqa: E402
 from nodus.models.period import Month  # noqa: E402
 from nodus.models.transaction import TransactionType  # noqa: E402
+from nodus.models.transaction_filter import TransactionFilter  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
 from nodus.services.update_service import Release  # noqa: E402
 from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402

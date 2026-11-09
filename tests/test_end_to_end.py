@@ -6,10 +6,10 @@ from factories import ars, light_theme, usd
 from PySide6.QtWidgets import QLabel
 
 from nodus.database.database import Database
-from nodus.database.repositories.transaction_repository import TransactionFilter
 from nodus.models.currency import Currency
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.transaction_dialog import (
