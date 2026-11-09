@@ -2,6 +2,10 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, instala la versión nueva encima de la anterior: tus datos se conservan.
 
+## 1.1.1
+
+- Arreglo: Nodus anclado a la barra de tareas muestra su ícono en lugar de un recuadro en blanco. Si ya lo tenías anclado, desánclalo y vuelve a anclarlo después de actualizar.
+
 ## 1.1.0 — 2026-11-07
 
 - Cuentas en euros y en pesos chilenos, con su cotización oficial automática.

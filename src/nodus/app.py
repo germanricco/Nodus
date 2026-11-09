@@ -7,6 +7,7 @@ from datetime import date
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication, QMessageBox
 
+from nodus import APP_USER_MODEL_ID
 from nodus.config.paths import AppPaths
 from nodus.database.database import Database, DatabaseError
 from nodus.services.container import Services
@@ -21,8 +22,6 @@ class NodusApp:
     """Starts Nodus: makes sure the local database is usable, then opens the main window."""
 
     APPLICATION_NAME = "Nodus"
-    # Lets Windows group the windows under Nodus's own taskbar icon instead of Python's.
-    APP_USER_MODEL_ID = "GermanRicco.Nodus"
 
     def __init__(self, argv: list[str]) -> None:
         # Must be set before AppPaths, which derives the data folder from it.
@@ -58,10 +57,11 @@ class NodusApp:
         finally:
             database.close()
 
-    @classmethod
-    def _set_taskbar_identity(cls) -> None:
+    @staticmethod
+    def _set_taskbar_identity() -> None:
+        """Groups the windows under Nodus's own taskbar icon instead of Python's."""
         if sys.platform == "win32":
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(cls.APP_USER_MODEL_ID)
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID)
 
 
 def main() -> int:

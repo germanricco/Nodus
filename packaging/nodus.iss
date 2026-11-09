@@ -1,5 +1,6 @@
 ; Inno Setup recipe for the Nodus installer. Run through scripts/build.py, which passes
-; the version (/DAppVersion=) and expects PyInstaller's output in dist/Nodus.
+; the version (/DAppVersion=) and the taskbar ID (/DAppUserModelID=), and expects
+; PyInstaller's output in dist/Nodus.
 ;
 ; Installs per user (no administrator prompt) into %LOCALAPPDATA%\Programs\Nodus. The
 ; user's data lives in %APPDATA%\Nodus, outside the program folder, so upgrading or
@@ -7,6 +8,9 @@
 
 #ifndef AppVersion
   #error Pass the version with /DAppVersion=x.y.z
+#endif
+#ifndef AppUserModelID
+  #error Pass the taskbar ID with /DAppUserModelID= (nodus.APP_USER_MODEL_ID)
 #endif
 
 [Setup]
@@ -51,8 +55,10 @@ Type: filesandordirs; Name: "{app}\_internal"
 Source: "..\dist\Nodus\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\Nodus"; Filename: "{app}\Nodus.exe"
-Name: "{autodesktop}\Nodus"; Filename: "{app}\Nodus.exe"; Tasks: desktopicon
+; The same ID the running app declares, so Windows links its window to these shortcuts
+; and a pinned Nodus shows the program's icon instead of a blank square.
+Name: "{autoprograms}\Nodus"; Filename: "{app}\Nodus.exe"; AppUserModelID: "{#AppUserModelID}"
+Name: "{autodesktop}\Nodus"; Filename: "{app}\Nodus.exe"; Tasks: desktopicon; AppUserModelID: "{#AppUserModelID}"
 
 [Registry]
 ; Nodus writes this value itself when the user turns on «Abrir Nodus al iniciar Windows».
