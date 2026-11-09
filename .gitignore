@@ -56,5 +56,7 @@ docs/especificacion_de_proyecto.md
 NOTES.md
 TASKS.md
 CLAUDE.md
+.claude/skills/
+.claude/checks/
 # Notas del release que genera scripts/release_notes.py para la etiqueta
 notas.md
