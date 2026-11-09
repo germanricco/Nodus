@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from functools import partial
 
 from PySide6.QtWidgets import (
     QApplication,
@@ -26,12 +27,14 @@ from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.dialogs.update_dialog import UpdateDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import PageId, TransactionFocus
+from nodus.ui.navigation import DetailId, PageId, TransactionFocus
+from nodus.ui.pages.account_detail_page import AccountDetailPage
 from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.analysis_page import AnalysisPage
 from nodus.ui.pages.budgets_page import BudgetsPage
 from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.dashboard_page import DashboardPage
+from nodus.ui.pages.detail_page import DetailPage
 from nodus.ui.pages.page import Page
 from nodus.ui.pages.payees_page import PayeesPage
 from nodus.ui.pages.recurring_page import RecurringPage
@@ -88,6 +91,10 @@ class MainWindow(QMainWindow):
         tags.transactions_requested.connect(self.show_transactions)
         transactions = TransactionsPage(services, event_bus, theme_manager)
         transactions.navigate_requested.connect(self.show_page)
+        accounts.detail_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
+        self._details: dict[DetailId, DetailPage] = {
+            DetailId.ACCOUNT: AccountDetailPage(services, event_bus, theme_manager),
+        }
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
@@ -102,6 +109,9 @@ class MainWindow(QMainWindow):
         }
         for page in self._pages.values():
             self._stack.addWidget(page)
+        for detail in self._details.values():
+            self._stack.addWidget(detail)
+            detail.back_requested.connect(partial(self.show_page, detail.detail_id.list_page))
 
         content = QWidget()
         content.setObjectName("ContentArea")
@@ -120,6 +130,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
 
         self.sidebar.page_requested.connect(self.show_page)
+        self.sidebar.account_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
         self.top_bar.notifications_requested.connect(self.open_notifications)
         self.top_bar.feedback_requested.connect(lambda: open_url(feedback_url()))
@@ -236,6 +247,17 @@ class MainWindow(QMainWindow):
         page.refresh()
         self._stack.setCurrentWidget(page)
         self.sidebar.select(page_id)
+
+    def detail(self, detail_id: DetailId) -> DetailPage:
+        return self._details[detail_id]
+
+    def show_detail(self, detail_id: DetailId, item_id: int) -> None:
+        """Opens the page about one item, with its list page selected in the sidebar."""
+        page = self._details[detail_id]
+        page.show_item(item_id)
+        self._stack.setCurrentWidget(page)
+        self.sidebar.select(detail_id.list_page)
+        page.setFocus()
 
     def show_transactions(self, focus: TransactionFocus) -> None:
         """Opens the transactions page on what ``focus`` asks for."""

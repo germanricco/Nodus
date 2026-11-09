@@ -267,6 +267,13 @@ QPushButton#MoreButton:hover, QPushButton#MoreButton:pressed {
     background: $hover;
 }
 
+/* Where an item is deleted, apart from its everyday actions. */
+#DangerZone {
+    background: $surface;
+    border: 1px solid $expense;
+    border-radius: 12px;
+}
+
 /* A link in a card's header, such as «Ver todas ›». */
 QPushButton#LinkButton {
     background: transparent;

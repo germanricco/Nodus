@@ -14,7 +14,7 @@ from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages import tags_page
 from nodus.ui.pages.summary_page import COUNT, NAME, TOTAL
 from nodus.ui.pages.tags_page import NO_TAGS_TEXT, TagsPage
-from nodus.ui.pages.transactions_page import totals_text
+from nodus.ui.pages.transaction_list_view import totals_text
 from nodus.ui.widgets.transaction_table import AMOUNT, TAGS
 
 

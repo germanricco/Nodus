@@ -39,6 +39,17 @@ class NetWorthPoint:
     net_worth: NetWorth
 
 
+def trend_days(period: Period, today: date) -> list[date]:
+    """The days a trend shows along ``period``, up to ``today``: each one for up to
+    ``DAILY_POINTS_MAX_DAYS``, otherwise each month end and the last day."""
+    end = min(period.end, today)
+    if end < period.start:
+        return []
+    if period.days <= DAILY_POINTS_MAX_DAYS:
+        return [period.start + timedelta(days=i) for i in range((end - period.start).days + 1)]
+    return [*(month.end for month in period.months() if month.end < end), end]
+
+
 class NetWorthService:
     """Combines account balances and exchange rates. Archived accounts are left out."""
 
@@ -66,13 +77,33 @@ class NetWorthService:
 
         Daily for periods of up to ``DAILY_POINTS_MAX_DAYS``, otherwise at each month end.
         """
-        end = min(period.end, today)
-        if end < period.start:
-            return []
-        if period.days <= DAILY_POINTS_MAX_DAYS:
-            days = [period.start + timedelta(days=i) for i in range((end - period.start).days + 1)]
-            return self._points(period, days)
-        return self.month_ends(period, today)
+        days = trend_days(period, today)
+        return self._points(period, days) if days else []
+
+    def account_history(self, account_id: int, today: date) -> list[tuple[date, Money]]:
+        """The balance of one account along its whole life, from its first movement or
+        value update to ``today``, on the days ``trend_days`` picks; archived accounts
+        included."""
+        span = self._transactions.date_range(TransactionFilter(account_id=account_id))
+        adjustments = self._accounts.value_adjustments(account_id)
+        starts = [today] + ([span[0]] if span else []) + [a.occurred_on for a in adjustments[:1]]
+        period = Period(min(starts), today)
+        balance = self._accounts.balance(account_id, period.start - timedelta(days=1))
+        changes = [
+            (t.occurred_on, t.signed_amount)
+            for t in self._transactions.list_transactions(
+                TransactionFilter(account_id=account_id, start=period.start, end=today)
+            )
+        ]
+        changes += [(a.occurred_on, a.amount) for a in adjustments if a.occurred_on <= today]
+        changes.sort(key=lambda change: change[0])
+        points, index = [], 0
+        for day in trend_days(period, today):
+            while index < len(changes) and changes[index][0] <= day:
+                balance += changes[index][1]
+                index += 1
+            points.append((day, balance))
+        return points
 
     def month_ends(self, period: Period, today: date) -> list[NetWorthPoint]:
         """The net worth at the end of each month of ``period``; the last point is today

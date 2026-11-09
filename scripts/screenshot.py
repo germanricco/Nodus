@@ -23,6 +23,7 @@ if sys.platform == "win32":
 from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
+from nodus.models.currency import Currency  # noqa: E402
 from nodus.models.money import Money  # noqa: E402
 from nodus.models.period import Month  # noqa: E402
 from nodus.models.transaction import TransactionType  # noqa: E402
@@ -39,7 +40,7 @@ from nodus.ui.dialogs.update_dialog import UpdateDialog  # noqa: E402
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
-from nodus.ui.navigation import PageId  # noqa: E402
+from nodus.ui.navigation import DetailId, PageId  # noqa: E402
 from nodus.ui.pages.accounts_page import AccountRow  # noqa: E402
 from nodus.ui.theme.theme import ThemeMode  # noqa: E402
 from nodus.ui.theme.theme_manager import ThemeManager  # noqa: E402
@@ -164,6 +165,15 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.show_page(PageId.DASHBOARD)
         app.processEvents()
         save(window, args.out / f"dashboard-full-{mode.value}.png")
+        # The page of one account: the demo investment, with its value updates.
+        investment = next(
+            a
+            for a in services.accounts.list_accounts()
+            if a.type.changes_value and a.currency is Currency.ARS
+        )
+        window.show_detail(DetailId.ACCOUNT, investment.id)
+        app.processEvents()
+        save(window, args.out / f"account-detail-{mode.value}.png")
         # Empty states: a search that matches nothing offers to clear it.
         for page_id in (PageId.TRANSACTIONS, PageId.PAYEES):
             window.show_page(page_id)

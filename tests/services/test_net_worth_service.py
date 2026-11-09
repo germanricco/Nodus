@@ -145,3 +145,25 @@ def test_euros_without_their_rate_leave_no_total(services, pesos, dollars):
         Currency.ARS: None,
         Currency.USD: None,
     }
+
+
+def test_account_history_follows_one_account_from_its_first_movement(services, pesos, dollars):
+    for amount, days_ago in (("100", 3), ("50", 1)):
+        services.transactions.create(
+            expense_draft(services, pesos.id, ars(amount), TODAY - timedelta(days=days_ago))
+        )
+    services.transactions.create(expense_draft(services, dollars.id, usd("5"), TODAY))
+
+    history = services.net_worth.account_history(pesos.id, TODAY)
+
+    assert [day for day, _balance in history] == [TODAY - timedelta(days=d) for d in (3, 2, 1, 0)]
+    assert [balance for _day, balance in history] == [
+        ars("99900"),
+        ars("99900"),
+        ars("99850"),
+        ars("99850"),
+    ]
+
+
+def test_account_history_without_movements_is_today(services, pesos):
+    assert services.net_worth.account_history(pesos.id, TODAY) == [(TODAY, ars("100000"))]

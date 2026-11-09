@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFrame,
@@ -26,6 +27,30 @@ from nodus.ui.widgets.money_label import MoneyLabel
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 
+class SidebarAccountRow(QWidget):
+    """An account and its balance in the sidebar; a click opens the account's page."""
+
+    clicked = Signal()
+
+    def __init__(self, name: str, balance: Money, hidden: bool) -> None:
+        super().__init__()
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 2, 4, 2)
+        label = QLabel(name)
+        label.setObjectName("SidebarItem")
+        layout.addWidget(label, stretch=1)
+        amount = MoneyLabel()
+        amount.set_hidden(hidden)
+        amount.set_money(balance)
+        layout.addWidget(amount)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+
+
 class Sidebar(QFrame):
     """Navigation buttons on top, the user's accounts below, like MoneyMatter's sidebar,
     and Ajustes at the foot.
@@ -34,6 +59,7 @@ class Sidebar(QFrame):
     """
 
     page_requested = Signal(object)  # PageId
+    account_requested = Signal(int)  # account id
 
     WIDTH = 260
     COLLAPSED_WIDTH = 64
@@ -132,9 +158,9 @@ class Sidebar(QFrame):
         balances = self._services.accounts.balances()
         hidden = self._services.settings.amounts_hidden()
         for account in accounts:
-            self._accounts_layout.addWidget(
-                self._account_row(account.name, balances[account.id], hidden)
-            )
+            row = SidebarAccountRow(account.name, balances[account.id], hidden)
+            row.clicked.connect(lambda a=account.id: self.account_requested.emit(a))
+            self._accounts_layout.addWidget(row)
         self._accounts_layout.addStretch()
 
     def _build_logo(self) -> QWidget:
@@ -194,20 +220,6 @@ class Sidebar(QFrame):
         scroll.viewport().setObjectName("SidebarAccounts")
         scroll.setWidget(container)
         return scroll
-
-    @staticmethod
-    def _account_row(name: str, balance: Money, hidden: bool) -> QWidget:
-        row = QWidget()
-        layout = QHBoxLayout(row)
-        layout.setContentsMargins(0, 2, 4, 2)
-        label = QLabel(name)
-        label.setObjectName("SidebarItem")
-        layout.addWidget(label, stretch=1)
-        amount = MoneyLabel()
-        amount.set_hidden(hidden)
-        amount.set_money(balance)
-        layout.addWidget(amount)
-        return row
 
     def _apply_theme(self, theme: Theme) -> None:
         self._theme = theme

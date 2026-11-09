@@ -20,7 +20,7 @@ from nodus.ui.dialogs.transaction_dialog import (
     TransactionDialog,
 )
 from nodus.ui.navigation import PageId
-from nodus.ui.pages import transactions_page
+from nodus.ui.pages import transaction_list_view
 from nodus.ui.pages.accounts_page import AccountRow
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.theme.theme import LIGHT
@@ -350,7 +350,7 @@ class TestTransactionsPage:
     ):
         populate(services, pesos, dollars)
         page.refresh()
-        monkeypatch.setattr(transactions_page, "confirm", lambda *_args: True)
+        monkeypatch.setattr(transaction_list_view, "confirm", lambda *_args: True)
 
         qtbot.keyClick(page.table, Qt.Key.Key_Delete)  # nothing selected: nothing happens
         assert len(all_transactions(services)) == 5
@@ -365,7 +365,7 @@ class TestTransactionsPage:
     ):
         buy_dollars(services, pesos, dollars)
         page.refresh()
-        monkeypatch.setattr(transactions_page, "confirm", lambda *_args: True)
+        monkeypatch.setattr(transaction_list_view, "confirm", lambda *_args: True)
 
         with qtbot.waitSignal(event_bus.transactions_changed):
             run_action(page.row_actions(0), "Eliminar")
@@ -458,7 +458,7 @@ class TestTransactionsPage:
         page.refresh()
         warnings = []
         monkeypatch.setattr(
-            transactions_page, "confirm", lambda _p, _t, text: warnings.append(text) or True
+            transaction_list_view, "confirm", lambda _p, _t, text: warnings.append(text) or True
         )
         page.table.selectRow(0)
         page.table.toggle_row(1)
@@ -508,7 +508,7 @@ class TestTransactionsPage:
         page.refresh()
         opened = []
         monkeypatch.setattr(
-            transactions_page.BulkEditDialog,
+            transaction_list_view.BulkEditDialog,
             "exec",
             lambda dialog: opened.append(dialog.windowTitle()),
         )

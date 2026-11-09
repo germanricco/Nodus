@@ -34,6 +34,20 @@ class PageId(Enum):
         return self.value[1]
 
 
+class DetailId(Enum):
+    """A page about one item (an account, a payee, a tag), reached from its list and not
+    from the sidebar. Each value is the list page it belongs to, which the sidebar keeps
+    selected and «‹ Volver» goes back to."""
+
+    ACCOUNT = PageId.ACCOUNTS
+    PAYEE = PageId.PAYEES
+    TAG = PageId.TAGS
+
+    @property
+    def list_page(self) -> PageId:
+        return self.value
+
+
 @dataclass(frozen=True)
 class TransactionFocus:
     """The movements a page sends the user to: a period, narrowed to one category, payee,

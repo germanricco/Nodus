@@ -157,6 +157,7 @@ class TestAccountsPage:
         assert "ARCHIVADAS" in texts(page)
         archived_row = next(r for r in rows(page) if r.account.id == dollars.id)
         assert [a.text for a in archived_row.actions()] == [
+            "Abrir",
             "Ver movimientos",
             "Editar",
             "Desarchivar",
@@ -167,7 +168,7 @@ class TestAccountsPage:
         services.transactions.create(expense_draft(services, pesos.id, ars("10")))
         page.refresh()
         by_name = {row.account.name: row for row in rows(page)}
-        assert not by_name["Ahorro"].actions()[0].enabled  # no movements
+        assert not by_name["Ahorro"].actions()[1].enabled  # no movements
 
         with qtbot.waitSignal(page.transactions_requested) as signal:
             run_action(by_name["Banco"].actions(), "Ver movimientos")

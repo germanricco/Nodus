@@ -3,42 +3,26 @@
 from __future__ import annotations
 
 from functools import partial
-from html import escape
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
-    QHeaderView,
-    QLabel,
     QLineEdit,
     QPushButton,
 )
 
-from nodus.models.money import Money
 from nodus.models.period import Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
-from nodus.services.dashboard_service import FilteredTotals
-from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog
-from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import export_transactions
-from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.formatting import format_date
-from nodus.ui.labels import movements_text, transactions_text, unconverted_note
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.page import Page
-from nodus.ui.theme.theme import Theme
+from nodus.ui.pages.transaction_list_view import TransactionListView
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
-from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.period_selector import PeriodSelector
-from nodus.ui.widgets.row_actions import RowAction
-from nodus.ui.widgets.selectable_table import SelectableTable
-from nodus.ui.widgets.selection_bar import SelectionBar
 from nodus.ui.widgets.selectors import (
     AccountComboBox,
     CategoryComboBox,
@@ -46,19 +30,6 @@ from nodus.ui.widgets.selectors import (
     TagComboBox,
 )
 from nodus.ui.widgets.style import set_style_property
-from nodus.ui.widgets.table import DELETE_KEY_HINT, bind_delete_key
-from nodus.ui.widgets.transaction_table import (
-    ACCOUNT,
-    CATEGORY,
-    DESCRIPTION,
-    PAYEE,
-    TAGS,
-    TransactionTableModel,
-)
-
-# Columns that fit their content only up to these widths, so the description keeps room
-# on a laptop screen; longer names end in "…" and show whole in a wider window.
-MAX_COLUMN_WIDTHS = {PAYEE: 110, CATEGORY: 140, TAGS: 120, ACCOUNT: 110}
 
 # Type filter: label -> (transaction type, is_transfer, refund_linked) criteria.
 TYPE_FILTERS = {
@@ -68,48 +39,6 @@ TYPE_FILTERS = {
     "Transferencias": (None, True, None),
     "Reembolsos": (None, False, True),
 }
-
-
-def totals_text(count: int, totals: FilteredTotals) -> str:
-    """The foot of the list: "24 movimientos · Ingresos $ … · Gastos $ … · Neto $ …"."""
-    parts = [movements_text(count)]
-    sums = selection_totals_text(totals)
-    if count and sums:
-        parts.append(sums)
-    if totals.unconverted:
-        parts.append(unconverted_note(totals.unconverted))
-    return " · ".join(parts)
-
-
-def selection_totals_text(totals: FilteredTotals) -> str:
-    """What some movements add up to: "Ingresos $ … · Gastos $ … · Neto $ …"."""
-    if not (totals.income.cents or totals.expenses.cents):
-        return ""
-    return " · ".join(
-        [
-            f"Ingresos {totals.income.format()}",
-            f"Gastos {totals.expenses.format()}",
-            f"Neto {totals.net.format()}",
-        ]
-    )
-
-
-def selection_totals_html(totals: FilteredTotals, theme: Theme) -> str:
-    """``selection_totals_text`` with income in green, expenses in red and the net by its
-    sign, as amounts look everywhere else."""
-    if not (totals.income.cents or totals.expenses.cents):
-        return ""
-
-    def part(label: str, money: Money, color: str) -> str:
-        return f'{label} <span style="color:{color}">{escape(money.format())}</span>'
-
-    return " · ".join(
-        [
-            part("Ingresos", totals.income, theme.income),
-            part("Gastos", totals.expenses, theme.expense),
-            part("Neto", totals.net, theme.amount_color(totals.net)),
-        ]
-    )
 
 
 def export_filename(period: Period) -> str:
@@ -123,10 +52,8 @@ class TransactionsPage(Page):
     """The movements of a period, newest first, narrowed by account, category, payee, tag,
     type or text, with what they add up to at the foot.
 
-    Double-clicking a row edits it; its «⋯» or a right click offers every action, and
-    several rows can be chosen to edit or delete them together. A
-    transfer shows as one row for both of its legs. Each list filter ends with «Editar»,
-    which asks for the page that manages that list.
+    The list itself (row menus, choosing several rows) is a ``TransactionListView``. Each
+    list filter ends with «Editar», which asks for the page that manages that list.
     """
 
     navigate_requested = Signal(object)  # PageId
@@ -138,7 +65,6 @@ class TransactionsPage(Page):
         self._services = services
         self._event_bus = event_bus
         self._theme_manager = theme_manager
-        self._builder = TransactionListBuilder(services)
 
         # The period goes in the header, as on the dashboard, to leave the row to the filters.
         self.period_selector = PeriodSelector()
@@ -146,16 +72,6 @@ class TransactionsPage(Page):
         self.export_button = self.add_header_button("Exportar")
         self.export_button.setToolTip("Guarda en un archivo CSV los movimientos que se ven")
         self.export_button.clicked.connect(self.export_shown)
-        self.selection_bar = SelectionBar("seleccionadas")
-        self.edit_button = self.selection_bar.add_action("Editar…", self.edit_selected)
-        self.edit_button.setToolTip("Cambia la categoría, el beneficiario, la nota o las etiquetas")
-        self.delete_button = self.selection_bar.add_action(
-            "Eliminar", self.delete_selected, destructive=True
-        )
-        self.delete_button.setToolTip(DELETE_KEY_HINT)
-        self.selection_bar.cleared.connect(lambda: self.table.clearSelection())
-        self.set_selection_bar(self.selection_bar)
-
         self.account_filter = AccountComboBox()
         self.category_filter = CategoryComboBox()
         self.payee_filter = PayeeComboBox()
@@ -188,18 +104,15 @@ class TransactionsPage(Page):
         filters.addWidget(self.clear_filters_button)
         self.content_layout.addLayout(filters)
 
-        self.model = TransactionTableModel(theme_manager.theme)
-        self.table = self._build_table()
-        self.empty_state = EmptyState()
-        card = Card()
-        card.body.setContentsMargins(8, 8, 8, 8)
-        card.body.addWidget(self.table)
-        card.body.addWidget(self.empty_state, stretch=1)
-        self.totals_label = QLabel()
-        self.totals_label.setObjectName("FieldHint")
-        self.totals_label.setContentsMargins(8, 4, 8, 0)
-        card.body.addWidget(self.totals_label)
-        self.content_layout.addWidget(card, stretch=1)
+        self.list_view = TransactionListView(services, event_bus, theme_manager, self)
+        self.content_layout.addWidget(self.list_view, stretch=1)
+        # The list's parts, at hand as the page's own.
+        view = self.list_view
+        self.model, self.table, self.empty_state = view.model, view.table, view.empty_state
+        self.totals_label, self.selection_bar = view.totals_label, view.selection_bar
+        self.edit_button, self.delete_button = view.edit_button, view.delete_button
+        self.row_actions, self.selected_items = view.row_actions, view.selected_items
+        self.delete_selected = view.delete_selected
 
         self.period_selector.period_changed.connect(self.reload)
         self.account_filter.currentIndexChanged.connect(self.reload)
@@ -208,7 +121,6 @@ class TransactionsPage(Page):
         self.tag_filter.currentIndexChanged.connect(self.reload)
         self.type_filter.currentIndexChanged.connect(self.reload)
         self.search_input.textChanged.connect(self.reload)
-        theme_manager.theme_changed.connect(self.model.set_theme)
         for signal in (
             event_bus.transactions_changed,
             event_bus.accounts_changed,
@@ -241,27 +153,13 @@ class TransactionsPage(Page):
 
     def reload(self) -> None:
         """Lists the movements matching the current filters."""
-        criteria = self.current_filter()
-        transactions = self._services.transactions.list_transactions(criteria)
-        items = self._builder.build(transactions)
-        self.model.set_items(items)
-        # Whoever does not use tags keeps the room for the description.
-        self.table.setColumnHidden(TAGS, not any(item.tags for item in items))
-        self._fit_columns()
-        has_rows = self.model.rowCount() > 0
-        self.totals_label.setText(
-            totals_text(self.model.rowCount(), self._services.dashboard.totals(criteria))
-        )
-        self.totals_label.setVisible(has_rows)
-        self.table.setVisible(has_rows)
-        self.empty_state.setVisible(not has_rows)
+        self.list_view.show_matching(self.current_filter())
         if self._has_filters():
             self.empty_state.set_message(
                 "Sin transacciones con estos filtros", "Limpiar filtros", self.clear_filters
             )
         else:
             self.empty_state.set_message("Sin transacciones en este período")
-        self._update_actions()
         self.clear_filters_button.setEnabled(self._has_filters())
         for combo in self._filter_combos():
             set_style_property(combo, "filter", "active" if combo.currentIndex() > 0 else "idle")
@@ -339,101 +237,4 @@ class TransactionsPage(Page):
             is_transfer=is_transfer,
             refund_linked=refund_linked,
             text=self.search_input.text().strip() or None,
-        )
-
-    def selected_items(self) -> list[TransactionListItem]:
-        return [self.model.item(row) for row in self.table.selected_rows()]
-
-    def row_actions(self, row: int) -> list[RowAction]:
-        """The menu of a row: edit it and delete it."""
-        item = self.model.item(row)
-        return [
-            RowAction("Editar", lambda: self.edit(item), "pencil"),
-            RowAction("Eliminar", lambda: self.delete([item]), "trash", destructive=True),
-        ]
-
-    def edit(self, item: TransactionListItem) -> None:
-        TransactionDialog(
-            self._services,
-            self._event_bus,
-            self._theme_manager,
-            item.transaction,
-            parent=self.window(),
-        ).exec()
-
-    def delete_selected(self) -> None:
-        self.delete(self.selected_items())
-
-    def delete(self, items: list[TransactionListItem]) -> None:
-        """Deletes ``items`` after the user confirms, saying what goes with them."""
-        if not items:
-            return
-        title = (
-            "Eliminar transacción" if len(items) == 1 else f"Eliminar {len(items)} transacciones"
-        )
-        if confirm(self.window(), title, self._delete_warning(items)):
-            self._services.transactions.delete_many([item.transaction.id for item in items])
-            self._event_bus.transactions_changed.emit()
-
-    def _delete_warning(self, items: list[TransactionListItem]) -> str:
-        if len(items) == 1:
-            item = items[0]
-            text = (
-                "Se va a eliminar la transferencia, con el movimiento de las dos cuentas."
-                if item.is_transfer
-                else f"Se va a eliminar «{item.description}» del {format_date(item.occurred_on)}."
-            )
-        else:
-            text = f"Se van a eliminar {transactions_text(len(items))}."
-            if any(item.is_transfer for item in items):
-                text += " Las transferencias se eliminan con el movimiento de las dos cuentas."
-        refunds = sum(
-            len(self._services.transactions.refund_summary(item.transaction.id).refunds)
-            for item in items
-            if not item.is_transfer
-        )
-        if refunds == 1 and len(items) == 1:
-            text += " Su reembolso queda como un ingreso común."
-        elif refunds == 1:
-            text += " Un reembolso queda como un ingreso común."
-        elif refunds:
-            owner = "Sus" if len(items) == 1 else "Los"
-            text += f" {owner} {refunds} reembolsos quedan como ingresos comunes."
-        return text
-
-    def edit_selected(self) -> None:
-        """Edits the chosen rows together: their category, payee, note or tags."""
-        items = self.selected_items()
-        if items:
-            BulkEditDialog(
-                self._services,
-                self._event_bus,
-                [item.transaction for item in items],
-                parent=self.window(),
-            ).exec()
-
-    def _fit_columns(self) -> None:
-        header = self.table.horizontalHeader()
-        for column, max_width in MAX_COLUMN_WIDTHS.items():
-            header.setSectionResizeMode(column, QHeaderView.ResizeMode.Interactive)
-            header.resizeSection(column, min(self.table.sizeHintForColumn(column), max_width))
-
-    def _build_table(self) -> SelectableTable:
-        table = SelectableTable(self.model, DESCRIPTION, self.row_actions)
-        table.row_activated.connect(lambda row: self.edit(self.model.item(row)))
-        bind_delete_key(table, self.delete_selected)
-        table.selection_changed.connect(self._update_actions)
-        return table
-
-    def _update_actions(self) -> None:
-        """With two or more rows chosen, the header becomes the selection bar, with what
-        they add up to."""
-        items = self.selected_items()
-        several = len(items) > 1
-        self.show_selection_bar(several)
-        if not several:
-            return
-        totals = self._services.dashboard.totals_of([item.transaction for item in items])
-        self.selection_bar.set_count(
-            len(items), selection_totals_html(totals, self._theme_manager.theme)
         )

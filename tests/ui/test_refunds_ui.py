@@ -11,7 +11,7 @@ from nodus.models.transaction import TransactionType
 from nodus.services.export_service import HEADER
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog
 from nodus.ui.dialogs.transaction_dialog import EXPENSE_MODE, INCOME_MODE, TransactionDialog
-from nodus.ui.pages import transactions_page
+from nodus.ui.pages import transaction_list_view
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.widgets.transaction_table import DESCRIPTION
 
@@ -162,7 +162,7 @@ def test_deleting_a_refunded_expense_warns(monkeypatch, services, pesos, shoes, 
     page.reload()
     asked = []
     monkeypatch.setattr(
-        transactions_page, "confirm", lambda _parent, _title, text: asked.append(text)
+        transaction_list_view, "confirm", lambda _parent, _title, text: asked.append(text)
     )
     row = descriptions(page).index("↺ Zapatillas")
 

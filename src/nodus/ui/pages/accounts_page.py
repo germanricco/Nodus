@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -33,6 +34,44 @@ from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 
+def account_delete_warning(services: Services, account: Account) -> str:
+    """What deleting ``account`` takes with it: its movements, transfers and charges."""
+    movements, transfers = services.accounts.transaction_count(account.id)
+    sentences = [f"Se va a eliminar la cuenta «{account.name}»."]
+    if movements == 0:
+        sentences.append("No tiene transacciones.")
+    elif movements == 1:
+        sentences.append("Su única transacción también se elimina.")
+    else:
+        sentences.append(f"Sus {movements} transacciones también se eliminan.")
+    if transfers == 1:
+        sentences.append("Incluye una transferencia, así que cambia el saldo de la otra cuenta.")
+    elif transfers > 1:
+        sentences.append(
+            f"Incluye {transfers} transferencias, así que cambia el saldo de las otras cuentas."
+        )
+    charges = services.recurring.count_for_account(account.id)
+    if charges == 1:
+        sentences.append("También se elimina su cargo recurrente.")
+    elif charges > 1:
+        sentences.append(f"También se eliminan sus {charges} cargos recurrentes.")
+    if movements:
+        sentences.append("Para conservar el historial, archívala en su lugar.")
+    return " ".join(sentences)
+
+
+def delete_account(
+    parent: QWidget, services: Services, event_bus: EventBus, account: Account
+) -> bool:
+    """Deletes ``account`` once the user confirms, saying what goes with it."""
+    if not confirm(parent, "Eliminar cuenta", account_delete_warning(services, account)):
+        return False
+    services.accounts.delete(account.id)
+    event_bus.accounts_changed.emit()
+    event_bus.transactions_changed.emit()
+    return True
+
+
 class AccountRow(QWidget):
     """One account: currency badge, name and type, balance, and the menu of its actions.
 
@@ -40,6 +79,7 @@ class AccountRow(QWidget):
     offers to update its value.
     """
 
+    detail_requested = Signal(object)  # Account
     edit_requested = Signal(object)  # Account
     transactions_requested = Signal(object)  # Account
     value_update_requested = Signal(object)  # Account
@@ -87,7 +127,19 @@ class AccountRow(QWidget):
 
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
+        chevron = QLabel("›")
+        set_style_property(chevron, "muted", True)
+        layout.addWidget(chevron)
         install_context_menu(self, self.actions)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip("Abrir la cuenta")
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(
+            event.position().toPoint()
+        ):
+            self.detail_requested.emit(self.account)
 
     @property
     def can_update_value(self) -> bool:
@@ -98,12 +150,13 @@ class AccountRow(QWidget):
         """Everything the account allows, for the «⋯» and the right click."""
         account = self.account
         result = [
+            RowAction("Abrir", lambda: self.detail_requested.emit(account)),
             RowAction(
                 "Ver movimientos",
                 lambda: self.transactions_requested.emit(account),
                 "list",
                 enabled=self.has_movements,
-            )
+            ),
         ]
         if self.can_update_value:
             result.append(
@@ -133,6 +186,7 @@ class AccountsPage(Page):
 
     navigate_requested = Signal(object)  # PageId
     transactions_requested = Signal(object)  # TransactionFocus
+    detail_requested = Signal(int)  # account id
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -234,6 +288,7 @@ class AccountsPage(Page):
             row.transactions_requested.connect(
                 lambda _account, focus=focus: self.transactions_requested.emit(focus)
             )
+            row.detail_requested.connect(lambda account: self.detail_requested.emit(account.id))
             row.edit_requested.connect(self.open_account_dialog)
             row.value_update_requested.connect(self.open_value_dialog)
             row.archive_toggled.connect(self._toggle_archived)
@@ -253,37 +308,7 @@ class AccountsPage(Page):
         self._event_bus.accounts_changed.emit()
 
     def delete_account(self, account: Account) -> None:
-        if not confirm(self.window(), "Eliminar cuenta", self._delete_warning(account)):
-            return
-        self._services.accounts.delete(account.id)
-        self._event_bus.accounts_changed.emit()
-        self._event_bus.transactions_changed.emit()
-
-    def _delete_warning(self, account: Account) -> str:
-        movements, transfers = self._services.accounts.transaction_count(account.id)
-        sentences = [f"Se va a eliminar la cuenta «{account.name}»."]
-        if movements == 0:
-            sentences.append("No tiene transacciones.")
-        elif movements == 1:
-            sentences.append("Su única transacción también se elimina.")
-        else:
-            sentences.append(f"Sus {movements} transacciones también se eliminan.")
-        if transfers == 1:
-            sentences.append(
-                "Incluye una transferencia, así que cambia el saldo de la otra cuenta."
-            )
-        elif transfers > 1:
-            sentences.append(
-                f"Incluye {transfers} transferencias, así que cambia el saldo de las otras cuentas."
-            )
-        charges = self._services.recurring.count_for_account(account.id)
-        if charges == 1:
-            sentences.append("También se elimina su cargo recurrente.")
-        elif charges > 1:
-            sentences.append(f"También se eliminan sus {charges} cargos recurrentes.")
-        if movements:
-            sentences.append("Para conservar el historial, archívala en su lugar.")
-        return " ".join(sentences)
+        delete_account(self.window(), self._services, self._event_bus, account)
 
     def _empty_state(self) -> Card:
         card = Card()

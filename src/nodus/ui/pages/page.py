@@ -22,9 +22,9 @@ class Page(QWidget):
         header.setFixedHeight(self.HEADER_HEIGHT)
         self._header = QHBoxLayout(header)
         self._header.setContentsMargins(0, 0, 0, 0)
-        title_label = QLabel(title)
-        title_label.setObjectName("PageTitle")
-        self._header.addWidget(title_label)
+        self.title_label = QLabel(title)
+        self.title_label.setObjectName("PageTitle")
+        self._header.addWidget(self.title_label)
         self._header.addStretch()
         self._header_widgets: list[QWidget] = []
         self._selection_bar: QWidget | None = None
