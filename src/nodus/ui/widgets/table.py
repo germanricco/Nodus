@@ -4,9 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from PySide6.QtCore import QAbstractItemModel, QEvent, QObject, Qt
-from PySide6.QtGui import QKeyEvent, QKeySequence
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableView
+from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QObject, Qt
+from PySide6.QtGui import QColor, QKeyEvent, QKeySequence, QMouseEvent, QPainter
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QHeaderView,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
+    QTableView,
+)
+
+from nodus.ui.theme.theme_manager import active_theme
 
 
 def record_table(model: QAbstractItemModel, stretch_column: int) -> QTableView:
@@ -72,3 +80,52 @@ def fit_rows(table: QTableView) -> None:
     height = table.horizontalHeader().sizeHint().height() + rows
     table.setFixedHeight(height + 2 * table.frameWidth())
     table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+
+class _LinkRows(QStyledItemDelegate):
+    """Makes each row of a table a link: it lights up whole under the mouse, as every row
+    that does something, and a click on it calls ``open_row`` (the table has nothing to
+    choose, so one click is enough, as on the Dashboard's category rows)."""
+
+    def __init__(self, table: QTableView, open_row: Callable[[int], None]) -> None:
+        super().__init__(table)
+        self._table = table
+        self._open_row = open_row
+        self.hovered_row = -1
+        table.viewport().installEventFilter(self)
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        if index.row() == self.hovered_row:
+            painter.fillRect(option.rect, QColor(active_theme().hover))
+        super().paint(painter, option, index)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802
+        if event.type() == QEvent.Type.MouseMove and isinstance(event, QMouseEvent):
+            self._hover(self._table.indexAt(event.position().toPoint()).row())
+        elif event.type() == QEvent.Type.Leave:
+            self._hover(-1)
+        elif (
+            event.type() == QEvent.Type.MouseButtonRelease
+            and isinstance(event, QMouseEvent)
+            and event.button() == Qt.MouseButton.LeftButton
+        ):
+            row = self._table.indexAt(event.position().toPoint()).row()
+            if row >= 0:
+                self._open_row(row)
+                return True
+        return False
+
+    def _hover(self, row: int) -> None:
+        if row != self.hovered_row:
+            self.hovered_row = row
+            self._table.viewport().update()
+
+
+def make_link_rows(table: QTableView, open_row: Callable[[int], None], tip: str) -> None:
+    """Turns the rows of a report table into links to ``open_row(row)``, following the
+    row rules: they light up under the mouse and open with one click."""
+    table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+    table.setMouseTracking(True)
+    table.viewport().setCursor(Qt.CursorShape.PointingHandCursor)
+    table.setToolTip(tip)
+    table.setItemDelegate(_LinkRows(table, open_row))

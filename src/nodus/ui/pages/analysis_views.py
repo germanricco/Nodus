@@ -44,7 +44,7 @@ from nodus.ui.widgets.net_worth_card import CURRENCIES, CURRENCY_LABELS, NetWort
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
 from nodus.ui.widgets.style import clear_layout
-from nodus.ui.widgets.table import fit_rows, record_table
+from nodus.ui.widgets.table import fit_rows, make_link_rows, record_table
 
 METRICS = list(Metric)
 # Categories stacked in the bars, the largest of the period; the rest share one piece.
@@ -406,9 +406,10 @@ class CashFlowView(AnalysisView):
         card_header(table_card, "Detalle por mes")
         self.model = CashFlowTableModel(theme_manager.theme)
         self.table = record_table(self.model, MONTH)
-        self.table.setToolTip("Doble clic para ver los movimientos del mes")
-        self.table.doubleClicked.connect(
-            lambda index: self._open_month(self.model.month(index.row()))
+        make_link_rows(
+            self.table,
+            lambda row: self._open_month(self.model.month(row)),
+            "Ver los movimientos del mes",
         )
         table_card.body.addWidget(self.table)
         layout.addWidget(table_card)

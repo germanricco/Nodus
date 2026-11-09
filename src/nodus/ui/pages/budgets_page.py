@@ -33,7 +33,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.period_selector import PeriodSelector
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
+from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 EMPTY_TEXT = (
@@ -55,10 +55,14 @@ class BudgetPageRow(BudgetRow):
         self.usage_label = self.line.add(muted_label(usage_text(budget)))
         self.pill = self.line.add(budget_pill(budget))
         self.more_button = self.line.add(MoreButton(self.actions))
-        install_context_menu(self, self.actions)
+        install_row_actions(self, self.actions)
+        # The whole row lights up, as every row with a menu; not its name line alone.
+        self.line.hovered.disconnect(self.line.set_highlighted)
 
     def actions(self) -> list[RowAction]:
+        """Its movements first, as a click on the row; then changing or removing it."""
         return [
+            RowAction("Ver movimientos", self.clicked.emit, "list", default=True),
             RowAction("Cambiar límite", self.edit_requested.emit, "pencil"),
             RowAction("Quitar presupuesto", self.remove_requested.emit, "trash", destructive=True),
         ]

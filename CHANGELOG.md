@@ -18,6 +18,8 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Las listas responden al mouse: la fila bajo el cursor se ilumina, como en el panel de la izquierda, sin quedar elegida. Pasa en las tablas de Transacciones, Beneficiarios y Etiquetas, y en las listas de cuentas, categorías, cargos recurrentes, cotizaciones y las cuentas de la barra lateral.
 - Textos, márgenes y esquinas siguen una misma escala en toda la aplicación, así que cada pantalla se ve igual de ordenada. Arreglo: en los gráficos de línea, como el del patrimonio, la última fecha ya no se pisa con la anterior.
 - En Análisis, los informes se eligen con pestañas debajo del título, y cada uno dice en una línea qué muestra. El período queda arriba a la derecha, como en el resto de las páginas, y «Gastos / Ingresos / Ahorro» queda junto a las cifras que cambia.
+- Todas las listas responden igual. El doble clic en una fila hace su acción principal, la misma que aparece en negrita en su menú: editar una categoría, una transacción o un cargo, pagar un cargo, abrir un beneficiario o una etiqueta. Lo que borra nunca va con doble clic. En el Dashboard, las últimas transacciones y los próximos pagos también tienen su menú y su doble clic, y en Análisis un clic en un mes de Flujo de caja muestra sus movimientos.
+- Arreglo: después de abrir el menú del clic derecho en varias filas seguidas, ya no quedan todas resaltadas.
 
 ## 1.2.0
 

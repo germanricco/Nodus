@@ -40,6 +40,7 @@ from nodus.ui.widgets.charts import DonutChart, ProportionBar, Segment
 from nodus.ui.widgets.color import ColorDot
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
+from nodus.ui.widgets.row_actions import RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 LATEST_COUNT = 6
@@ -207,12 +208,19 @@ class FigureTile(QFrame):
 
 
 class LatestTransactionRow(QWidget):
-    """A movement in the latest transactions card: what, where, how much and when."""
+    """A movement in the latest transactions card: what, where, how much and when. It
+    answers as a row of Transacciones: a double click edits it, a right click shows its
+    menu."""
+
+    edit_requested = Signal(object)  # TransactionListItem
+    delete_requested = Signal(object)  # TransactionListItem
 
     def __init__(self, item: TransactionListItem, transfer_color: str) -> None:
         super().__init__()
+        self.item = item
+        install_row_actions(self, self.actions)
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, Space.XS, 0, Space.XS)
+        layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
         layout.setSpacing(Space.S)
         layout.addWidget(ColorDot(item.category_color or transfer_color, size=10))
         texts = QVBoxLayout()
@@ -235,11 +243,24 @@ class LatestTransactionRow(QWidget):
         figures.addWidget(day)
         layout.addLayout(figures)
 
+    def actions(self) -> list[RowAction]:
+        """The same menu as its row in Transacciones."""
+        return [
+            RowAction(
+                "Editar", lambda: self.edit_requested.emit(self.item), "pencil", default=True
+            ),
+            RowAction(
+                "Eliminar", lambda: self.delete_requested.emit(self.item), "trash", destructive=True
+            ),
+        ]
+
 
 class LatestTransactionsCard(Card):
     """The period's most recent movements and a link to see them all."""
 
     see_all_requested = Signal()
+    edit_requested = Signal(object)  # TransactionListItem
+    delete_requested = Signal(object)  # TransactionListItem
 
     def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
         super().__init__()
@@ -264,19 +285,26 @@ class LatestTransactionsCard(Card):
             self._rows.addWidget(muted_label("Sin movimientos en el período"))
         transfer_color = self._theme_manager.theme.text_muted
         for item in items:
-            self._rows.addWidget(LatestTransactionRow(item, transfer_color))
+            row = LatestTransactionRow(item, transfer_color)
+            row.edit_requested.connect(self.edit_requested)
+            row.delete_requested.connect(self.delete_requested)
+            self._rows.addWidget(row)
 
 
 class UpcomingPaymentRow(QWidget):
-    """A charge in the upcoming payments card: name, when it is due, amount and "Pagar"."""
+    """A charge in the upcoming payments card: name, when it is due, amount and "Pagar".
+    It answers as a row of Recurrentes: a double click pays it, a right click shows its
+    menu."""
 
     pay_requested = Signal(object)  # RecurringCharge
+    skip_requested = Signal(object)  # RecurringCharge
 
     def __init__(self, charge: RecurringCharge, today: date, estimate: str = "") -> None:
         super().__init__()
         self.charge = charge
+        install_row_actions(self, self.actions)
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, Space.XS, 0, Space.XS)
+        layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
         layout.setSpacing(Space.S)
         texts = QVBoxLayout()
         texts.setSpacing(0)
@@ -301,11 +329,20 @@ class UpcomingPaymentRow(QWidget):
         self.pay_button.clicked.connect(lambda: self.pay_requested.emit(charge))
         layout.addWidget(self.pay_button)
 
+    def actions(self) -> list[RowAction]:
+        """Paying and skipping, as in Recurrentes; the rest is in that page."""
+        charge = self.charge
+        return [
+            RowAction("Pagar", lambda: self.pay_requested.emit(charge), "pay", default=True),
+            RowAction("Omitir", lambda: self.skip_requested.emit(charge), "skip"),
+        ]
+
 
 class UpcomingPaymentsCard(Card):
     """Recurring charges overdue or due in the next days, each with a quick "Pagar"."""
 
     pay_requested = Signal(object)  # RecurringCharge
+    skip_requested = Signal(object)  # RecurringCharge
     see_all_requested = Signal()
 
     def __init__(self, services: Services) -> None:
@@ -340,6 +377,7 @@ class UpcomingPaymentsCard(Card):
             estimate = self._services.recurring.estimated_payment(charge, today)
             row = UpcomingPaymentRow(charge, today, estimate_text(charge.amount, estimate))
             row.pay_requested.connect(self.pay_requested)
+            row.skip_requested.connect(self.skip_requested)
             self._rows.addWidget(row)
             self.rows.append(row)
 

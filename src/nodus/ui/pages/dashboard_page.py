@@ -34,6 +34,8 @@ from nodus.ui.pages.dashboard_cards import (
     muted_label,
 )
 from nodus.ui.pages.page import Page
+from nodus.ui.pages.recurring_page import skip_charge
+from nodus.ui.pages.transaction_list_view import delete_transactions, edit_transaction
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
@@ -74,6 +76,12 @@ class DashboardPage(Page):
             lambda: self.navigate_requested.emit(PageId.SETTINGS)
         )
         self.latest_card = LatestTransactionsCard(services, theme_manager)
+        self.latest_card.edit_requested.connect(
+            lambda item: edit_transaction(services, event_bus, theme_manager, item, self.window())
+        )
+        self.latest_card.delete_requested.connect(
+            lambda item: delete_transactions(services, event_bus, [item], self.window())
+        )
         self.latest_card.see_all_requested.connect(
             lambda: self.transactions_requested.emit(
                 TransactionFocus(self.period_selector.period())
@@ -81,6 +89,9 @@ class DashboardPage(Page):
         )
         self.upcoming_card = UpcomingPaymentsCard(services)
         self.upcoming_card.pay_requested.connect(self.open_pay_dialog)
+        self.upcoming_card.skip_requested.connect(
+            lambda charge: skip_charge(services, event_bus, charge)
+        )
         self.upcoming_card.see_all_requested.connect(
             lambda: self.navigate_requested.emit(PageId.RECURRING)
         )

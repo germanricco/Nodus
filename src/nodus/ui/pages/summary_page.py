@@ -245,7 +245,7 @@ class SummaryPage(Page, Generic[S]):
         """The menu of a row: its page, its movements, edit, merge and delete."""
         summary = self.summary_at(row)
         return [
-            RowAction("Abrir", lambda: self.open_detail(summary)),
+            RowAction("Abrir", lambda: self.open_detail(summary), default=True),
             RowAction(
                 "Ver movimientos",
                 lambda: self.show_transactions(summary),
@@ -302,7 +302,6 @@ class SummaryPage(Page, Generic[S]):
         table.setObjectName("SortableTable")
         table.setSortingEnabled(True)
         table.sortByColumn(COUNT, Qt.SortOrder.DescendingOrder)
-        table.row_activated.connect(lambda row: self.open_detail(self.summary_at(row)))
         bind_delete_key(table, self.delete_selected)
         table.selection_changed.connect(self._update_actions)
         return table

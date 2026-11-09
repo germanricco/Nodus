@@ -1,7 +1,7 @@
 """Pages about one item: how to get there and back, what they show, and deleting."""
 
 from factories import ars, expense_draft, usd
-from menus import run_action
+from menus import double_click_row, run_action
 from PySide6.QtCore import Qt
 
 from nodus.models.transaction_filter import TransactionFilter
@@ -98,7 +98,7 @@ class TestPayeeDetail:
         window.show_page(PageId.PAYEES)
         payees = window.page(PageId.PAYEES)
 
-        payees.table.row_activated.emit(0)
+        double_click_row(payees.table, 0)
 
         detail = window.detail(DetailId.PAYEE)
         assert window.current_page is detail

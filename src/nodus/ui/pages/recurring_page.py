@@ -27,8 +27,8 @@ from nodus.ui.pages.page import Page
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
-from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
+from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.style import clear_layout, set_style_property
 
 GROUP_TITLES = {
     DueStatus.OVERDUE: "Vencidos",
@@ -74,7 +74,6 @@ class RecurringChargeRow(QWidget):
         super().__init__()
         self.charge = charge
         layout = QHBoxLayout(self)
-        make_hoverable(self)
         layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
         layout.setSpacing(Space.M)
         layout.addWidget(ColorDot(category.color))
@@ -114,7 +113,7 @@ class RecurringChargeRow(QWidget):
 
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
-        install_context_menu(self, self.actions)
+        install_row_actions(self, self.actions)
 
     def actions(self) -> list[RowAction]:
         """Everything the charge allows, for the «⋯» and the right click."""
@@ -122,11 +121,17 @@ class RecurringChargeRow(QWidget):
         result = []
         if charge.is_active:
             result += [
-                RowAction("Pagar", lambda: self.pay_requested.emit(charge), "pay"),
+                RowAction("Pagar", lambda: self.pay_requested.emit(charge), "pay", default=True),
                 RowAction("Omitir", lambda: self.skip_requested.emit(charge), "skip"),
             ]
         return result + [
-            RowAction("Editar", lambda: self.edit_requested.emit(charge), "pencil"),
+            # A paused charge cannot be paid; editing is what it opens.
+            RowAction(
+                "Editar",
+                lambda: self.edit_requested.emit(charge),
+                "pencil",
+                default=not charge.is_active,
+            ),
             RowAction(
                 "Pausar" if charge.is_active else "Reanudar",
                 lambda: self.pause_toggled.emit(charge),
@@ -222,8 +227,7 @@ class RecurringPage(Page):
         PayChargeDialog(self._services, self._event_bus, charge, parent=self.window()).exec()
 
     def skip(self, charge: RecurringCharge) -> None:
-        self._services.recurring.skip(charge.id)
-        self._event_bus.recurring_changed.emit()
+        skip_charge(self._services, self._event_bus, charge)
 
     def toggle_pause(self, charge: RecurringCharge) -> None:
         self._services.recurring.set_active(charge.id, not charge.is_active)
@@ -275,3 +279,9 @@ class RecurringPage(Page):
         card.body.addWidget(title)
         card.body.addWidget(text)
         return card
+
+
+def skip_charge(services: Services, event_bus: EventBus, charge: RecurringCharge) -> None:
+    """Moves ``charge`` to its next due date without recording a payment."""
+    services.recurring.skip(charge.id)
+    event_bus.recurring_changed.emit()

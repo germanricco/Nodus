@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from html import escape
 
-from PySide6.QtWidgets import QHeaderView, QLabel
+from PySide6.QtWidgets import QHeaderView, QLabel, QWidget
 
 from nodus.models.money import Money
 from nodus.models.transaction_filter import TransactionFilter
@@ -118,7 +118,6 @@ class TransactionListView(Card):
 
         self.model = TransactionTableModel(theme_manager.theme)
         self.table = SelectableTable(self.model, DESCRIPTION, self.row_actions)
-        self.table.row_activated.connect(lambda row: self.edit(self.model.item(row)))
         bind_delete_key(self.table, self.delete_selected)
         self.table.selection_changed.connect(self._update_actions)
         self.empty_state = EmptyState()
@@ -157,58 +156,18 @@ class TransactionListView(Card):
         """The menu of a row: edit it and delete it."""
         item = self.model.item(row)
         return [
-            RowAction("Editar", lambda: self.edit(item), "pencil"),
+            RowAction("Editar", lambda: self.edit(item), "pencil", default=True),
             RowAction("Eliminar", lambda: self.delete([item]), "trash", destructive=True),
         ]
 
     def edit(self, item: TransactionListItem) -> None:
-        TransactionDialog(
-            self._services,
-            self._event_bus,
-            self._theme_manager,
-            item.transaction,
-            parent=self.window(),
-        ).exec()
+        edit_transaction(self._services, self._event_bus, self._theme_manager, item, self.window())
 
     def delete_selected(self) -> None:
         self.delete(self.selected_items())
 
     def delete(self, items: list[TransactionListItem]) -> None:
-        """Deletes ``items`` after the user confirms, saying what goes with them."""
-        if not items:
-            return
-        title = (
-            "Eliminar transacción" if len(items) == 1 else f"Eliminar {len(items)} transacciones"
-        )
-        if confirm(self.window(), title, self._delete_warning(items)):
-            self._services.transactions.delete_many([item.transaction.id for item in items])
-            self._event_bus.transactions_changed.emit()
-
-    def _delete_warning(self, items: list[TransactionListItem]) -> str:
-        if len(items) == 1:
-            item = items[0]
-            text = (
-                "Se va a eliminar la transferencia, con el movimiento de las dos cuentas."
-                if item.is_transfer
-                else f"Se va a eliminar «{item.description}» del {format_date(item.occurred_on)}."
-            )
-        else:
-            text = f"Se van a eliminar {transactions_text(len(items))}."
-            if any(item.is_transfer for item in items):
-                text += " Las transferencias se eliminan con el movimiento de las dos cuentas."
-        refunds = sum(
-            len(self._services.transactions.refund_summary(item.transaction.id).refunds)
-            for item in items
-            if not item.is_transfer
-        )
-        if refunds == 1 and len(items) == 1:
-            text += " Su reembolso queda como un ingreso común."
-        elif refunds == 1:
-            text += " Un reembolso queda como un ingreso común."
-        elif refunds:
-            owner = "Sus" if len(items) == 1 else "Los"
-            text += f" {owner} {refunds} reembolsos quedan como ingresos comunes."
-        return text
+        delete_transactions(self._services, self._event_bus, items, self.window())
 
     def edit_selected(self) -> None:
         """Edits the chosen rows together: their category, payee, note or tags."""
@@ -239,3 +198,53 @@ class TransactionListView(Card):
         self.selection_bar.set_count(
             len(items), selection_totals_html(totals, self._theme_manager.theme)
         )
+
+
+def edit_transaction(
+    services: Services,
+    event_bus: EventBus,
+    theme_manager: ThemeManager,
+    item: TransactionListItem,
+    parent: QWidget,
+) -> None:
+    """Opens the form of ``item``, wherever its row is (Transacciones, the Dashboard)."""
+    TransactionDialog(services, event_bus, theme_manager, item.transaction, parent=parent).exec()
+
+
+def delete_transactions(
+    services: Services, event_bus: EventBus, items: list[TransactionListItem], parent: QWidget
+) -> None:
+    """Deletes ``items`` after the user confirms, saying what goes with them."""
+    if not items:
+        return
+    title = "Eliminar transacción" if len(items) == 1 else f"Eliminar {len(items)} transacciones"
+    if confirm(parent, title, transaction_delete_warning(services, items)):
+        services.transactions.delete_many([item.transaction.id for item in items])
+        event_bus.transactions_changed.emit()
+
+
+def transaction_delete_warning(services: Services, items: list[TransactionListItem]) -> str:
+    if len(items) == 1:
+        item = items[0]
+        text = (
+            "Se va a eliminar la transferencia, con el movimiento de las dos cuentas."
+            if item.is_transfer
+            else f"Se va a eliminar «{item.description}» del {format_date(item.occurred_on)}."
+        )
+    else:
+        text = f"Se van a eliminar {transactions_text(len(items))}."
+        if any(item.is_transfer for item in items):
+            text += " Las transferencias se eliminan con el movimiento de las dos cuentas."
+    refunds = sum(
+        len(services.transactions.refund_summary(item.transaction.id).refunds)
+        for item in items
+        if not item.is_transfer
+    )
+    if refunds == 1 and len(items) == 1:
+        text += " Su reembolso queda como un ingreso común."
+    elif refunds == 1:
+        text += " Un reembolso queda como un ingreso común."
+    elif refunds:
+        owner = "Sus" if len(items) == 1 else "Los"
+        text += f" {owner} {refunds} reembolsos quedan como ingresos comunes."
+    return text

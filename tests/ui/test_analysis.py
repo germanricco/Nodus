@@ -4,7 +4,9 @@ from datetime import date
 
 import pytest
 from factories import ars, category_id, eur, expense_draft, income_draft
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, QPointF, Qt
+from PySide6.QtGui import QMouseEvent
+from PySide6.QtWidgets import QApplication
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
@@ -205,9 +207,28 @@ def test_cash_flow_month_opens_its_transactions(qtbot, filled):
         view.chart.clicked.emit(1)
     assert from_bar.args == [TransactionFocus(october)]
 
+    view.table_card.show()
+    cell = view.table.visualRect(view.model.index(1, 0)).center()
     with qtbot.waitSignal(filled.transactions_requested) as from_row:
-        view.table.doubleClicked.emit(view.model.index(1, 0))
+        qtbot.mouseClick(view.table.viewport(), Qt.MouseButton.LeftButton, pos=cell)
     assert from_row.args == [TransactionFocus(october)]
+
+
+def test_cash_flow_rows_light_up_under_the_mouse(qtbot, filled):
+    view = cash_flow_view(filled)
+    cell = view.table.visualRect(view.model.index(1, 0)).center()
+
+    move = QMouseEvent(
+        QEvent.Type.MouseMove,
+        QPointF(cell),
+        QPointF(view.table.viewport().mapToGlobal(cell)),
+        Qt.MouseButton.NoButton,
+        Qt.MouseButton.NoButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    QApplication.sendEvent(view.table.viewport(), move)
+
+    assert view.table.itemDelegate().hovered_row == 1
 
 
 def test_cash_flow_table_leaves_out_months_of_zeros():

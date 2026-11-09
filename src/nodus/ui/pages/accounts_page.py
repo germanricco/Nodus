@@ -31,8 +31,8 @@ from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.money_label import MoneyLabel, masked
 from nodus.ui.widgets.net_worth_card import NetWorthCard, signed
 from nodus.ui.widgets.reorderable_list import ReorderableList
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
-from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
+from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.style import clear_layout, set_style_property
 
 
 def account_delete_warning(services: Services, account: Account) -> str:
@@ -98,7 +98,6 @@ class AccountRow(QWidget):
         super().__init__()
         self.account = account
         self.has_movements = has_movements
-        make_hoverable(self)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
         layout.setSpacing(Space.M)
@@ -132,7 +131,7 @@ class AccountRow(QWidget):
         chevron = QLabel("›")
         set_style_property(chevron, "muted", True)
         layout.addWidget(chevron)
-        install_context_menu(self, self.actions)
+        install_row_actions(self, self.actions)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("Abrir la cuenta")
 
@@ -152,7 +151,7 @@ class AccountRow(QWidget):
         """Everything the account allows, for the «⋯» and the right click."""
         account = self.account
         result = [
-            RowAction("Abrir", lambda: self.detail_requested.emit(account)),
+            RowAction("Abrir", lambda: self.detail_requested.emit(account), default=True),
             RowAction(
                 "Ver movimientos",
                 lambda: self.transactions_requested.emit(account),

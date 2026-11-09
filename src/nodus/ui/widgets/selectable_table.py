@@ -25,6 +25,7 @@ from PySide6.QtCore import (
 from PySide6.QtGui import (
     QColor,
     QContextMenuEvent,
+    QCursor,
     QIcon,
     QKeyEvent,
     QMouseEvent,
@@ -45,7 +46,7 @@ from PySide6.QtWidgets import (
 from nodus.ui.theme.design import Radius
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
-from nodus.ui.widgets.row_actions import RowAction, show_menu
+from nodus.ui.widgets.row_actions import RowAction, run_default, show_menu
 from nodus.ui.widgets.table import configure_record_table
 
 # Room for the check box at the start of a row and for the «⋯» at its end, in pixels.
@@ -199,11 +200,11 @@ class SelectableTable(QTableView):
     """A record table whose rows can be chosen several at a time, each with its menu.
 
     ``actions_for(row)`` gives the menu of a row of ``model``, for its «⋯» and for a right
-    click. A double click elsewhere than on the controls emits ``row_activated``. The row
-    under the mouse lights up (``hovered_row``) without being chosen.
+    click. A double click elsewhere than on the controls runs the row's main action (the
+    bold one in its menu). The row under the mouse lights up (``hovered_row``) without
+    being chosen.
     """
 
-    row_activated = Signal(int)
     selection_changed = Signal()
 
     def __init__(
@@ -256,7 +257,8 @@ class SelectableTable(QTableView):
         becomes the only one chosen, so it is clear which row the menu acts on."""
         if not self.selectionModel().isRowSelected(row, QModelIndex()):
             self.selectRow(row)
-        show_menu(self, self._actions_for(row), position)
+        menu = show_menu(self, self._actions_for(row), position)
+        menu.aboutToHide.connect(self._hover_where_the_mouse_is)
 
     def actions_for(self, row: int) -> Sequence[RowAction]:
         return self._actions_for(row)
@@ -323,7 +325,7 @@ class SelectableTable(QTableView):
             return
         super().mouseDoubleClickEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
-            self.row_activated.emit(index.row())
+            run_default(self._actions_for(index.row()))
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         super().mouseMoveEvent(event)
@@ -336,6 +338,13 @@ class SelectableTable(QTableView):
         if event.type() == QEvent.Type.Leave:
             self._set_hovered_row(-1)
         return super().viewportEvent(event)
+
+    def _hover_where_the_mouse_is(self) -> None:
+        """After a menu closes, the light goes back to the row under the mouse, if any:
+        the menu held the mouse, so the table never saw it move or leave."""
+        position = self.viewport().mapFromGlobal(QCursor.pos())
+        inside = self.viewport().rect().contains(position)
+        self._set_hovered_row(self.indexAt(position).row() if inside else -1)
 
     def _set_hovered_row(self, row: int) -> None:
         if row != self.hovered_row:

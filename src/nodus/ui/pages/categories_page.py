@@ -16,8 +16,8 @@ from nodus.ui.pages.page import Page
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
-from nodus.ui.widgets.style import clear_layout, make_hoverable
+from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.style import clear_layout
 
 SECTION_TITLES = {TransactionType.EXPENSE: "Gastos", TransactionType.INCOME: "Ingresos"}
 SYSTEM_HINT = "Recibe las transacciones de las categorías que se eliminan."
@@ -41,7 +41,6 @@ class CategoryRow(QWidget):
         self.category = category
         self.has_movements = has_movements
         layout = QHBoxLayout(self)
-        make_hoverable(self)
         indent = self.INDENT if category.is_subcategory else 0
         layout.setContentsMargins(Space.S + indent, Space.XS, Space.S, Space.XS)
         layout.setSpacing(Space.S)
@@ -58,7 +57,7 @@ class CategoryRow(QWidget):
 
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
-        install_context_menu(self, self.actions)
+        install_row_actions(self, self.actions)
 
     def actions(self) -> list[RowAction]:
         """Its movements, editing and deleting; "Otros" only shows its movements, since it
@@ -70,11 +69,15 @@ class CategoryRow(QWidget):
                 lambda: self.transactions_requested.emit(category),
                 "list",
                 enabled=self.has_movements,
+                # «Otros» cannot change, so its movements are what it opens.
+                default=category.is_system,
             )
         ]
         if category.is_system:
             return result
-        result.append(RowAction("Editar", lambda: self.edit_requested.emit(category), "pencil"))
+        result.append(
+            RowAction("Editar", lambda: self.edit_requested.emit(category), "pencil", default=True)
+        )
         if not category.is_subcategory:
             result.append(
                 RowAction(

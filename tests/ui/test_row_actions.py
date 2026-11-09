@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QMenu, QWidget
 
 from nodus.ui.theme.theme import DARK, LIGHT, ThemeMode
 from nodus.ui.theme.theme_manager import active_theme
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, build_menu, install_context_menu
+from nodus.ui.widgets.row_actions import MoreButton, RowAction, build_menu, install_row_actions
 
 
 def sample_actions(log: list[str]) -> list[RowAction]:
@@ -57,7 +57,7 @@ def test_right_click_opens_the_same_menu(qtbot):
     qtbot.addWidget(row)
     row.show()
     log: list[str] = []
-    install_context_menu(row, lambda: sample_actions(log))
+    install_row_actions(row, lambda: sample_actions(log))
 
     row.customContextMenuRequested.emit(QPoint(5, 5))
 
