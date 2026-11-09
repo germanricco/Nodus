@@ -2,9 +2,9 @@
 
 from collections.abc import Sequence
 
-from PySide6.QtCore import QPoint, Qt
-from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QTableView, QWidget
+from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
+from PySide6.QtGui import QMouseEvent
+from PySide6.QtWidgets import QApplication, QTableView, QWidget
 
 from nodus.ui.widgets.row_actions import RowAction
 
@@ -25,12 +25,26 @@ def run_action(actions: Sequence[RowAction], text: str) -> None:
     action.callback()
 
 
-def double_click(widget: QWidget) -> None:
-    """A double click on ``widget``, left of its content (on its own background)."""
-    QTest.mouseDClick(widget, Qt.MouseButton.LeftButton, pos=QPoint(2, widget.height() // 2))
+def double_click(widget: QWidget, pos: QPoint | None = None) -> None:
+    """A double click on ``widget`` (by default left of its content, on its own
+    background), sent to it directly.
+
+    ``QTest.mouseDClick`` would leave Qt's mouse state behind when the double click
+    opens another page: the hidden widget keeps the mouse, and later tests' moves never
+    reach their rows.
+    """
+    point = QPointF(pos if pos is not None else QPoint(2, widget.height() // 2))
+    event = QMouseEvent(
+        QEvent.Type.MouseButtonDblClick,
+        point,
+        QPointF(widget.mapToGlobal(point)),
+        Qt.MouseButton.LeftButton,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    QApplication.sendEvent(widget, event)
 
 
 def double_click_row(table: QTableView, row: int, column: int = 2) -> None:
     """A double click on a cell of ``row``, away from the check box and the «⋯»."""
-    center = table.visualRect(table.model().index(row, column)).center()
-    QTest.mouseDClick(table.viewport(), Qt.MouseButton.LeftButton, pos=center)
+    double_click(table.viewport(), table.visualRect(table.model().index(row, column)).center())
