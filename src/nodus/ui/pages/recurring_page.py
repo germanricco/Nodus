@@ -8,7 +8,6 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QScrollArea,
     QVBoxLayout,
     QWidget,
@@ -27,6 +26,7 @@ from nodus.ui.pages.page import Page
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
+from nodus.ui.widgets.pay_button import PayButton
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
@@ -100,16 +100,14 @@ class RecurringChargeRow(QWidget):
             set_style_property(self.status_label, "muted", True)
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         amounts.addWidget(amount)
-        amounts.addWidget(self.status_label)
+        amounts.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignRight)
         layout.addLayout(amounts)
 
-        self.pay_button: QPushButton | None = None
-        self.skip_button: QPushButton | None = None
-        if charge.is_active:
-            self.pay_button = self._button(layout, "Pagar", self.pay_requested)
-            self.pay_button.setToolTip("Registrar el pago y pasar al próximo cobro")
-            self.skip_button = self._button(layout, "Omitir", self.skip_requested)
-            self.skip_button.setToolTip("Pasar al próximo cobro sin registrar un gasto")
+        self.pay_button = PayButton()
+        self.pay_button.clicked.connect(lambda: self.pay_requested.emit(charge))
+        layout.addWidget(self.pay_button)
+        if not charge.is_active:  # a paused charge is not paid; its room stays
+            self.pay_button.hide()
 
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
@@ -141,13 +139,6 @@ class RecurringChargeRow(QWidget):
                 "Eliminar", lambda: self.delete_requested.emit(charge), "trash", destructive=True
             ),
         ]
-
-    def _button(self, layout: QHBoxLayout, text: str, signal: Signal) -> QPushButton:
-        button = QPushButton(text)
-        button.setObjectName("SmallButton")
-        button.clicked.connect(lambda: signal.emit(self.charge))
-        layout.addWidget(button)
-        return button
 
 
 class RecurringPage(Page):

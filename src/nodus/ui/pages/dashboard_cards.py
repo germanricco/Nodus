@@ -40,6 +40,7 @@ from nodus.ui.widgets.charts import DonutChart, ProportionBar, Segment
 from nodus.ui.widgets.color import ColorDot
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
+from nodus.ui.widgets.pay_button import PayButton
 from nodus.ui.widgets.row_actions import RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
@@ -72,13 +73,14 @@ def percent(part: Money, whole: Money) -> str:
     return f"{round(100 * part.cents / whole.cents)} %"
 
 
+DUE_TONES = {DueStatus.OVERDUE: "bad", DueStatus.SOON: "warning", DueStatus.LATER: "neutral"}
+
+
 def due_status_label(charge: RecurringCharge, today: date) -> QLabel:
-    """When the charge is due, red once it is overdue."""
+    """When the charge is due, in a pill: red once overdue, amber within the week."""
     label = QLabel(due_label(charge.days_until(today)))
-    if charge.status(today) is DueStatus.OVERDUE:
-        set_style_property(label, "tone", "negative")
-    else:
-        set_style_property(label, "muted", True)
+    label.setObjectName("ChangeBadge")
+    set_style_property(label, "tone", DUE_TONES[charge.status(today)])
     return label
 
 
@@ -311,7 +313,7 @@ class UpcomingPaymentRow(QWidget):
         name = QLabel(charge.name)
         name.setObjectName("RowTitle")
         texts.addWidget(name)
-        texts.addWidget(due_status_label(charge, today))
+        texts.addWidget(due_status_label(charge, today), alignment=Qt.AlignmentFlag.AlignLeft)
         layout.addLayout(texts, stretch=1)
         amounts = QVBoxLayout()
         amounts.setSpacing(0)
@@ -324,8 +326,7 @@ class UpcomingPaymentRow(QWidget):
             estimate_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             amounts.addWidget(estimate_label)
         layout.addLayout(amounts)
-        self.pay_button = QPushButton("Pagar")
-        self.pay_button.setObjectName("SmallButton")
+        self.pay_button = PayButton()
         self.pay_button.clicked.connect(lambda: self.pay_requested.emit(charge))
         layout.addWidget(self.pay_button)
 

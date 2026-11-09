@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import pytest
 from factories import TODAY, ars, category_id, charge_draft, eur, usd
+from menus import run_action
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
@@ -142,7 +143,8 @@ class TestPage:
         assert [row.charge.name for row in page.rows] == ["Vencido", "Pronto", "Después", "Pausado"]
         overdue, *_rest, paused_row = page.rows
         assert overdue.status_label.text() == "Vencido hace 4 días"
-        assert paused_row.pay_button is None
+        assert not paused_row.pay_button.isVisibleTo(paused_row)
+        assert overdue.pay_button.isVisibleTo(overdue)
         assert page.active_label.text() == "3"
         assert page.monthly_label.text() == "$ 3.000,00"
 
@@ -167,7 +169,7 @@ class TestPage:
         qtbot.addWidget(page)
         page.refresh(TODAY)
 
-        click(qtbot, page.rows[0].skip_button)
+        run_action(page.rows[0].actions(), "Omitir")
         assert services.recurring.get(charge.id).next_due_on == date(2026, 12, 5)
 
         page.toggle_pause(services.recurring.get(charge.id))
