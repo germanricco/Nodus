@@ -2,6 +2,10 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.3.0
+
+- Las acciones de cada fila, en un mismo lugar: el botón «⋯» al final de la fila o el clic derecho abren un menú con todo lo que se puede hacer con ella. Ya está en Cuentas, Categorías, Recurrentes y Presupuestos.
+
 ## 1.2.0
 
 - Actualiza Nodus con un clic: cuando hay una versión nueva, «Actualizar» la descarga, la instala sin preguntas y vuelve a abrir Nodus. Desde la 1.1.0 hay que actualizar a mano esta última vez.

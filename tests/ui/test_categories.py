@@ -1,5 +1,6 @@
 import pytest
 from factories import ars, category_id, expense_draft
+from menus import run_action, texts
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
@@ -110,12 +111,16 @@ class TestCategoriesPage:
         page.refresh()
 
         otros = row_named(page, "Otros")
-        assert otros.buttons == {}
+        assert otros.actions() == []
+        assert otros.more_button is None
         tags = [label for label in otros.findChildren(QLabel) if label.objectName() == "Tag"]
         assert [tag.text() for tag in tags] == ["sistema"]
         assert tags[0].toolTip() == categories_page.SYSTEM_HINT
-        assert set(row_named(page, "Alquiler").buttons) == {"Editar", "Eliminar"}
-        assert "+ Subcategoría" in row_named(page, "Vivienda").buttons
+        assert texts(row_named(page, "Alquiler").actions()) == ["Editar", "Eliminar"]
+        assert row_named(page, "Alquiler").subcategory_button is None
+        vivienda_row = row_named(page, "Vivienda")
+        assert "Agregar subcategoría" in texts(vivienda_row.actions())
+        assert vivienda_row.subcategory_button is not None
 
     def test_delete_after_confirmation_moves_transactions(
         self, qtbot, monkeypatch, services, event_bus, page, pesos
@@ -128,7 +133,7 @@ class TestCategoriesPage:
         )
 
         with qtbot.waitSignal(event_bus.transactions_changed):
-            qtbot.mouseClick(row_named(page, "Ocio").buttons["Eliminar"], Qt.MouseButton.LeftButton)
+            run_action(row_named(page, "Ocio").actions(), "Eliminar")
 
         assert warnings == ["Se va a eliminar «Ocio». Su única transacción pasa a «Otros»."]
         assert "Ocio" not in [r.category.name for r in rows(page)]
@@ -136,6 +141,6 @@ class TestCategoriesPage:
     def test_delete_is_cancelled_when_not_confirmed(self, qtbot, monkeypatch, services, page):
         monkeypatch.setattr(categories_page, "confirm", lambda *_args: False)
 
-        qtbot.mouseClick(row_named(page, "Ocio").buttons["Eliminar"], Qt.MouseButton.LeftButton)
+        run_action(row_named(page, "Ocio").actions(), "Eliminar")
 
         assert "Ocio" in [c.name for c in services.categories.list_categories(EXPENSE)]

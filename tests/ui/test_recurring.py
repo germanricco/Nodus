@@ -185,7 +185,21 @@ class TestPage:
 
         row = RecurringChargeRow(charge, category, "Banco", TODAY)
 
-        assert [a.text() for a in row.menu.actions()] == ["Editar", "Reanudar", "Eliminar"]
+        assert [a.text for a in row.actions()] == ["Editar", "Reanudar", "Eliminar"]
+
+    def test_row_menu_of_active_charges_also_pays_and_skips(self, services, pesos):
+        charge = create(services, pesos.id)
+        category = services.categories.get(charge.category_id)
+
+        row = RecurringChargeRow(charge, category, "Banco", TODAY)
+
+        assert [a.text for a in row.actions()] == [
+            "Pagar",
+            "Omitir",
+            "Editar",
+            "Pausar",
+            "Eliminar",
+        ]
 
 
 def test_page_is_in_the_sidebar(window):

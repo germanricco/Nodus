@@ -22,6 +22,7 @@ from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.money_label import MoneyLabel, masked
 from nodus.ui.widgets.net_worth_card import NetWorthCard, signed
 from nodus.ui.widgets.reorderable_list import ReorderableList
+from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 
@@ -74,7 +75,8 @@ class AccountRow(QWidget):
         balance_label.setObjectName("RowAmount")
         layout.addWidget(balance_label)
 
-        self.value_button = self._small_button("Actualizar valor")
+        self.value_button = QPushButton("Actualizar valor")
+        self.value_button.setObjectName("SmallButton")
         self.value_button.setToolTip(
             "Anota lo que vale hoy; la diferencia es rendimiento, no un ingreso"
         )
@@ -85,23 +87,37 @@ class AccountRow(QWidget):
         self.value_button.setSizePolicy(policy)
         layout.addWidget(self.value_button)
         # Only once it has a parent: shown before, it would flash as a window of its own.
-        self.value_button.setVisible(account.type.changes_value and not account.is_archived)
-        self.edit_button = self._small_button("Editar")
-        self.edit_button.clicked.connect(lambda: self.edit_requested.emit(account))
-        self.archive_button = self._small_button(
-            "Desarchivar" if account.is_archived else "Archivar"
-        )
-        self.archive_button.clicked.connect(lambda: self.archive_toggled.emit(account))
-        self.delete_button = self._small_button("Eliminar")
-        self.delete_button.clicked.connect(lambda: self.delete_requested.emit(account))
-        for button in (self.edit_button, self.archive_button, self.delete_button):
-            layout.addWidget(button)
+        self.value_button.setVisible(self.can_update_value)
+        self.more_button = MoreButton(self.actions)
+        layout.addWidget(self.more_button)
+        install_context_menu(self, self.actions)
 
-    @staticmethod
-    def _small_button(text: str) -> QPushButton:
-        button = QPushButton(text)
-        button.setObjectName("SmallButton")
-        return button
+    @property
+    def can_update_value(self) -> bool:
+        """Savings and investments change value by themselves, until they are archived."""
+        return self.account.type.changes_value and not self.account.is_archived
+
+    def actions(self) -> list[RowAction]:
+        """Everything the account allows, for the «⋯» and the right click."""
+        account = self.account
+        result = []
+        if self.can_update_value:
+            result.append(
+                RowAction(
+                    "Actualizar valor", lambda: self.value_update_requested.emit(account), "trend"
+                )
+            )
+        return result + [
+            RowAction("Editar", lambda: self.edit_requested.emit(account), "pencil"),
+            RowAction(
+                "Desarchivar" if account.is_archived else "Archivar",
+                lambda: self.archive_toggled.emit(account),
+                "archive",
+            ),
+            RowAction(
+                "Eliminar", lambda: self.delete_requested.emit(account), "trash", destructive=True
+            ),
+        ]
 
 
 class AccountsPage(Page):

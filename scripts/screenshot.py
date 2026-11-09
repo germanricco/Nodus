@@ -39,6 +39,7 @@ from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog  # no
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
 from nodus.ui.navigation import PageId  # noqa: E402
+from nodus.ui.pages.accounts_page import AccountRow  # noqa: E402
 from nodus.ui.theme.theme import ThemeMode  # noqa: E402
 from nodus.ui.theme.theme_manager import ThemeManager  # noqa: E402
 from nodus.ui.widgets import chart_base  # noqa: E402
@@ -181,6 +182,15 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         app.processEvents()
         save(category_filter.view().window(), args.out / f"category-filter-end-{mode.value}.png")
         category_filter.hidePopup()
+        # A row's «⋯» menu, on an investment account, which offers every kind of action.
+        window.show_page(PageId.ACCOUNTS)
+        app.processEvents()
+        accounts = window.page(PageId.ACCOUNTS)
+        row = next(r for r in accounts.findChildren(AccountRow) if r.can_update_value)
+        row.more_button.open_menu()
+        app.processEvents()
+        save(row.more_button.menu, args.out / f"row-menu-{mode.value}.png")
+        row.more_button.menu.close()
         # The notifications panel, with a new version announced.
         window.show_page(PageId.DASHBOARD)
         window._show_release(Release("9.9.0", ""))

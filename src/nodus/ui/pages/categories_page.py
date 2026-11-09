@@ -14,6 +14,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.pages.page import Page
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
+from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
 from nodus.ui.widgets.style import clear_layout
 
 SECTION_TITLES = {TransactionType.EXPENSE: "Gastos", TransactionType.INCOME: "Ingresos"}
@@ -49,20 +50,41 @@ class CategoryRow(QWidget):
             layout.addWidget(tag)
         layout.addStretch()
 
-        self.buttons: dict[str, QPushButton] = {}
+        self.subcategory_button: QPushButton | None = None
+        self.more_button: MoreButton | None = None
         if category.is_system:
             return
         if not category.is_subcategory:
-            self._add_button(layout, "+ Subcategoría", self.add_subcategory_requested)
-        self._add_button(layout, "Editar", self.edit_requested)
-        self._add_button(layout, "Eliminar", self.delete_requested)
+            self.subcategory_button = QPushButton("+ Subcategoría")
+            self.subcategory_button.setObjectName("SmallButton")
+            self.subcategory_button.clicked.connect(
+                lambda: self.add_subcategory_requested.emit(category)
+            )
+            layout.addWidget(self.subcategory_button)
+        self.more_button = MoreButton(self.actions)
+        layout.addWidget(self.more_button)
+        install_context_menu(self, self.actions)
 
-    def _add_button(self, layout: QHBoxLayout, text: str, signal: Signal) -> None:
-        button = QPushButton(text)
-        button.setObjectName("SmallButton")
-        button.clicked.connect(lambda: signal.emit(self.category))
-        layout.addWidget(button)
-        self.buttons[text] = button
+    def actions(self) -> list[RowAction]:
+        """Editing and deleting; "Otros" offers nothing, since it cannot change."""
+        category = self.category
+        if category.is_system:
+            return []
+        result = [RowAction("Editar", lambda: self.edit_requested.emit(category), "pencil")]
+        if not category.is_subcategory:
+            result.append(
+                RowAction(
+                    "Agregar subcategoría",
+                    lambda: self.add_subcategory_requested.emit(category),
+                    "plus",
+                )
+            )
+        result.append(
+            RowAction(
+                "Eliminar", lambda: self.delete_requested.emit(category), "trash", destructive=True
+            )
+        )
+        return result
 
 
 class CategoriesPage(Page):

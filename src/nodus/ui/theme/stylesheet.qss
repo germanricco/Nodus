@@ -228,6 +228,19 @@ QPushButton#SecondaryButton:hover, QPushButton#SmallButton:hover {
     background: $hover;
 }
 
+/* The «⋯» that opens a row's actions */
+
+QPushButton#MoreButton {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 0;
+}
+
+QPushButton#MoreButton:hover, QPushButton#MoreButton:pressed {
+    background: $hover;
+}
+
 /* Dialogs and form fields */
 
 QDialog {
@@ -428,6 +441,21 @@ QMenu::item {
 QMenu::item:selected {
     background: $accent_soft;
     color: $accent;
+}
+
+QMenu::item:disabled {
+    color: $text_muted;
+    background: transparent;
+}
+
+QMenu::icon {
+    padding-left: 10px;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: $border;
+    margin: 5px 6px;
 }
 
 /* Tables */

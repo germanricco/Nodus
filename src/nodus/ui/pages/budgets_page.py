@@ -8,7 +8,6 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QMenu,
     QPushButton,
     QScrollArea,
     QVBoxLayout,
@@ -33,6 +32,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.period_selector import PeriodSelector
+from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 EMPTY_TEXT = (
@@ -53,14 +53,14 @@ class BudgetPageRow(BudgetRow):
         super().__init__(budget, theme)
         self.usage_label = self.line.add(muted_label(usage_text(budget)))
         self.pill = self.line.add(budget_pill(budget))
-        self.more_button = QPushButton("⋯")
-        self.more_button.setObjectName("SmallButton")
-        self.more_button.setToolTip("Más acciones")
-        menu = QMenu(self.more_button)
-        menu.addAction("Cambiar límite", self.edit_requested.emit)
-        menu.addAction("Quitar presupuesto", self.remove_requested.emit)
-        self.more_button.setMenu(menu)
-        self.line.add(self.more_button)
+        self.more_button = self.line.add(MoreButton(self.actions))
+        install_context_menu(self, self.actions)
+
+    def actions(self) -> list[RowAction]:
+        return [
+            RowAction("Cambiar límite", self.edit_requested.emit, "pencil"),
+            RowAction("Quitar presupuesto", self.remove_requested.emit, "trash", destructive=True),
+        ]
 
 
 class BudgetsPage(Page):

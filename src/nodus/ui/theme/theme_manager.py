@@ -93,3 +93,13 @@ class ThemeManager(QObject):
         for role, color in roles.items():
             palette.setColor(role, QColor(color))
         return palette
+
+
+def active_theme() -> Theme:
+    """The theme the application shows now, read from the palette ``ThemeManager`` applied.
+
+    For widgets built on demand, like row menus, that would otherwise need a
+    ``ThemeManager`` passed down through every row just to tint their icons.
+    """
+    window = QApplication.palette().color(QPalette.ColorRole.Window)
+    return DARK if window == QColor(DARK.background) else LIGHT

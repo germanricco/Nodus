@@ -8,7 +8,6 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QMenu,
     QPushButton,
     QScrollArea,
     QVBoxLayout,
@@ -27,6 +26,7 @@ from nodus.ui.pages.dashboard_cards import FigureTile, due_status_label
 from nodus.ui.pages.page import Page
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
+from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 GROUP_TITLES = {
@@ -110,18 +110,30 @@ class RecurringChargeRow(QWidget):
             self.skip_button = self._button(layout, "Omitir", self.skip_requested)
             self.skip_button.setToolTip("Pasar al próximo cobro sin registrar un gasto")
 
-        self.more_button = QPushButton("⋯")
-        self.more_button.setObjectName("SmallButton")
-        self.more_button.setToolTip("Más acciones")
-        self.menu = QMenu(self.more_button)
-        self.menu.addAction("Editar", lambda: self.edit_requested.emit(charge))
-        self.menu.addAction(
-            "Pausar" if charge.is_active else "Reanudar",
-            lambda: self.pause_toggled.emit(charge),
-        )
-        self.menu.addAction("Eliminar", lambda: self.delete_requested.emit(charge))
-        self.more_button.setMenu(self.menu)
+        self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
+        install_context_menu(self, self.actions)
+
+    def actions(self) -> list[RowAction]:
+        """Everything the charge allows, for the «⋯» and the right click."""
+        charge = self.charge
+        result = []
+        if charge.is_active:
+            result += [
+                RowAction("Pagar", lambda: self.pay_requested.emit(charge), "pay"),
+                RowAction("Omitir", lambda: self.skip_requested.emit(charge), "skip"),
+            ]
+        return result + [
+            RowAction("Editar", lambda: self.edit_requested.emit(charge), "pencil"),
+            RowAction(
+                "Pausar" if charge.is_active else "Reanudar",
+                lambda: self.pause_toggled.emit(charge),
+                "pause" if charge.is_active else "play",
+            ),
+            RowAction(
+                "Eliminar", lambda: self.delete_requested.emit(charge), "trash", destructive=True
+            ),
+        ]
 
     def _button(self, layout: QHBoxLayout, text: str, signal: Signal) -> QPushButton:
         button = QPushButton(text)

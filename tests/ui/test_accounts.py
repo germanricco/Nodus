@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 from factories import TODAY, ars, eur, expense_draft, usd
+from menus import run_action
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
@@ -150,12 +151,12 @@ class TestAccountsPage:
         page.refresh()
         row = next(r for r in rows(page) if r.account.id == dollars.id)
 
-        qtbot.mouseClick(row.archive_button, Qt.MouseButton.LeftButton)
+        run_action(row.actions(), "Archivar")
 
         assert services.accounts.get(dollars.id).is_archived
         assert "ARCHIVADAS" in texts(page)
         archived_row = next(r for r in rows(page) if r.account.id == dollars.id)
-        assert archived_row.archive_button.text() == "Desarchivar"
+        assert [a.text for a in archived_row.actions()] == ["Editar", "Desarchivar", "Eliminar"]
 
     def test_refreshes_when_accounts_change(self, services, event_bus, page):
         services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("10"))
@@ -175,7 +176,7 @@ class TestAccountsPage:
         )
 
         with qtbot.waitSignal(event_bus.accounts_changed):
-            qtbot.mouseClick(rows(page)[0].delete_button, Qt.MouseButton.LeftButton)
+            run_action(rows(page)[0].actions(), "Eliminar")
 
         assert warnings == [
             "Se va a eliminar la cuenta «Banco». Su única transacción también se elimina."
@@ -189,7 +190,7 @@ class TestAccountsPage:
         page.refresh()
         monkeypatch.setattr(accounts_page, "confirm", lambda *_args: False)
 
-        qtbot.mouseClick(rows(page)[0].delete_button, Qt.MouseButton.LeftButton)
+        run_action(rows(page)[0].actions(), "Eliminar")
 
         assert services.accounts.list_accounts() == [pesos]
 
@@ -213,6 +214,8 @@ class TestValueAdjustment:
         offered = {row.account.name: row.value_button.isVisibleTo(row) for row in rows(page)}
 
         assert offered == {"Banco": False, "MP Inversiones": True}
+        in_menu = {row.account.name: row.actions()[0].text for row in rows(page)}
+        assert in_menu == {"Banco": "Editar", "MP Inversiones": "Actualizar valor"}
 
     def test_shows_the_difference_and_saves_it_as_gain(
         self, qtbot, services, event_bus, investment
