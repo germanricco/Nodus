@@ -175,6 +175,34 @@ class TestDeleteAndMerge:
 
         assert services.payees.get(target.id).default_category_id == services_category
 
+    def test_delete_many(self, services, pesos):
+        for name in ["Coto", "Día", "Jumbo"]:
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars("10"), payee_name=name)
+            )
+        ids = [services.payees.find(name).id for name in ["Coto", "Día"]]
+
+        assert services.payees.delete_many(ids) == 2
+
+        assert payee_names(services) == ["Jumbo"]
+
+    def test_merge_many_into_one(self, services, pesos, groceries):
+        for name in ["Coto", "Coto Online", "COTO Digital"]:
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars("10"), payee_name=name)
+            )
+        coto, online, digital = (
+            services.payees.find(n) for n in ["Coto", "Coto Online", "COTO Digital"]
+        )
+        services.payees.update(digital.id, digital.name, groceries)
+
+        # The target may come among the sources, as when merging a whole selection.
+        services.payees.merge_many([coto.id, online.id, digital.id], coto.id)
+
+        assert payee_names(services) == ["Coto"]
+        assert services.payees.get(coto.id).default_category_id == groceries
+        assert [t.payee_id for t in listed(services)] == [coto.id] * 3
+
     def test_cannot_merge_into_itself(self, services):
         coto = services.payees.create("Coto")
 

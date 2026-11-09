@@ -95,10 +95,17 @@ class PayeeService:
 
     def delete(self, payee_id: int) -> int:
         """Deletes a payee and returns how many transactions were left without one."""
-        self.get(payee_id)
-        count = self._payees.count_transactions(payee_id)
+        return self.delete_many([payee_id])
+
+    def delete_many(self, payee_ids: list[int]) -> int:
+        """Deletes every one of ``payee_ids`` together, or none if one is missing, and
+        returns how many transactions were left without a payee."""
+        for payee_id in payee_ids:
+            self.get(payee_id)
+        count = sum(self._payees.count_transactions(payee_id) for payee_id in payee_ids)
         with self._database.transaction():
-            self._payees.delete(payee_id)
+            for payee_id in payee_ids:
+                self._payees.delete(payee_id)
         return count
 
     def merge(self, source_id: int, target_id: int) -> None:
@@ -106,17 +113,27 @@ class PayeeService:
 
         The target keeps its default category, or takes the source's if it had none.
         """
-        if source_id == target_id:
+        self.merge_many([source_id], target_id)
+
+    def merge_many(self, source_ids: list[int], target_id: int) -> None:
+        """Moves the transactions of every one of ``source_ids`` to ``target_id`` and
+        deletes the sources, all together.
+
+        The target keeps its default category, or takes the first source's that has one.
+        """
+        sources = [self.get(source_id) for source_id in source_ids if source_id != target_id]
+        if not sources:
             raise ValidationError("Elige otro beneficiario para unir.")
-        source = self.get(source_id)
         target = self.get(target_id)
+        inherited = next(
+            (s.default_category_id for s in sources if s.default_category_id is not None), None
+        )
         with self._database.transaction():
-            self._payees.reassign(source_id, target_id)
-            if target.default_category_id is None and source.default_category_id is not None:
-                self._payees.update(
-                    dataclasses.replace(target, default_category_id=source.default_category_id)
-                )
-            self._payees.delete(source_id)
+            for source in sources:
+                self._payees.reassign(source.id, target_id)
+                self._payees.delete(source.id)
+            if target.default_category_id is None and inherited is not None:
+                self._payees.update(dataclasses.replace(target, default_category_id=inherited))
 
     def suggested_category(self, payee_id: int, kind: TransactionType) -> int | None:
         """The category for a new ``kind`` transaction with this payee: its default if it is

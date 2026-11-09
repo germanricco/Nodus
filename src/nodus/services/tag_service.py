@@ -83,24 +83,41 @@ class TagService:
     def transaction_count(self, tag_id: int) -> int:
         return self._tags.count_transactions(tag_id)
 
+    def tagged_count(self, tag_ids: list[int]) -> int:
+        """How many transactions carry at least one of ``tag_ids``."""
+        return self._tags.count_tagged(tag_ids)
+
     def delete(self, tag_id: int) -> int:
         """Deletes a tag, which its transactions lose, and returns how many had it."""
-        self.get(tag_id)
-        count = self._tags.count_transactions(tag_id)
+        return self.delete_many([tag_id])
+
+    def delete_many(self, tag_ids: list[int]) -> int:
+        """Deletes every one of ``tag_ids`` together, or none if one is missing, and
+        returns how many transactions had any of them."""
+        for tag_id in tag_ids:
+            self.get(tag_id)
+        count = self.tagged_count(tag_ids)
         with self._database.transaction():
-            self._tags.delete(tag_id)
+            for tag_id in tag_ids:
+                self._tags.delete(tag_id)
         return count
 
     def merge(self, source_id: int, target_id: int) -> None:
         """Gives ``target_id`` to the transactions tagged ``source_id`` and deletes the
         latter, for duplicates such as "Viaje" and "Vacaciones"."""
-        if source_id == target_id:
+        self.merge_many([source_id], target_id)
+
+    def merge_many(self, source_ids: list[int], target_id: int) -> None:
+        """Gives ``target_id`` to the transactions tagged with any of ``source_ids`` and
+        deletes the sources, all together."""
+        sources = [self.get(source_id) for source_id in source_ids if source_id != target_id]
+        if not sources:
             raise ValidationError("Elige otra etiqueta para unir.")
-        self.get(source_id)
         self.get(target_id)
         with self._database.transaction():
-            self._tags.reassign(source_id, target_id)
-            self._tags.delete(source_id)
+            for source in sources:
+                self._tags.reassign(source.id, target_id)
+                self._tags.delete(source.id)
 
     def summaries(self) -> list[TagSummary]:
         """Every tag with its totals, the most used first."""

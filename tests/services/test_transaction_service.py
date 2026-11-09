@@ -6,6 +6,7 @@ from factories import TODAY, ars, category_id, expense_draft, income_draft, usd
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.transaction import TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import NotFoundError, ValidationError
 from nodus.services.transaction_service import TransferDraft
 
@@ -68,6 +69,58 @@ class TestIncomeAndExpenses:
 
         with pytest.raises(NotFoundError):
             services.transactions.get(created.id)
+
+
+class TestSeveralAtOnce:
+    def test_delete_many_takes_transfers_whole(self, services, pesos, dollars):
+        expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
+        kept = services.transactions.create(expense_draft(services, pesos.id, ars("20")))
+        transfer = services.transactions.create_transfer(
+            TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
+        )
+
+        services.transactions.delete_many([expense.id, transfer.outgoing.id, transfer.incoming.id])
+
+        remaining = services.transactions.list_transactions(TransactionFilter())
+        assert [t.id for t in remaining] == [kept.id]
+
+    def test_delete_many_deletes_nothing_if_one_is_missing(self, services, pesos):
+        expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
+
+        with pytest.raises(NotFoundError):
+            services.transactions.delete_many([expense.id, 9999])
+
+        assert services.transactions.get(expense.id).amount == ars("10")
+
+    def test_set_category_moves_them_all(self, services, pesos):
+        ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
+        ids = [
+            services.transactions.create(expense_draft(services, pesos.id, ars(a))).id
+            for a in ("10", "20")
+        ]
+
+        services.transactions.set_category(ids, ocio)
+
+        assert [services.transactions.get(i).category_id for i in ids] == [ocio, ocio]
+
+    def test_set_category_needs_the_same_kind_for_all(self, services, pesos):
+        ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
+        expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
+        income = services.transactions.create(income_draft(services, pesos.id, ars("20")))
+
+        with pytest.raises(ValidationError, match="no corresponde"):
+            services.transactions.set_category([expense.id, income.id], ocio)
+
+        assert services.transactions.get(expense.id).category_id != ocio
+
+    def test_set_category_refuses_transfers(self, services, pesos, dollars):
+        ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
+        transfer = services.transactions.create_transfer(
+            TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
+        )
+
+        with pytest.raises(ValidationError, match="transferencias"):
+            services.transactions.set_category([transfer.outgoing.id], ocio)
 
 
 class TestTransfers:

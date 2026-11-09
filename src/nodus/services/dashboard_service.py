@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 from nodus.models.category import Category
@@ -79,14 +80,24 @@ def converted_movements(
 ) -> ConvertedMovements:
     """Income and expenses matching ``criteria``, in pesos; transfers only move money
     between accounts, so they are left out. Refunds are turned into less spending."""
+    if criteria.is_transfer:
+        return ConvertedMovements([], 0)
+    listed = transactions.list_transactions(dataclasses.replace(criteria, is_transfer=False))
+    return convert_movements(transactions, exchange_rates, listed)
+
+
+def convert_movements(
+    transactions: TransactionService,
+    exchange_rates: ExchangeRateService,
+    listed: Iterable[Transaction],
+) -> ConvertedMovements:
+    """``listed`` in pesos, as ``converted_movements`` counts them; transfers are left out."""
     movements: list[ConvertedMovement] = []
     unconverted = 0
-    if criteria.is_transfer:
-        return ConvertedMovements(movements, unconverted)
     refunded_categories: dict[int, int] = {}
-    for transaction in transactions.list_transactions(
-        dataclasses.replace(criteria, is_transfer=False)
-    ):
+    for transaction in listed:
+        if transaction.is_transfer:
+            continue
         amount = exchange_rates.convert(
             transaction.amount, SUMMARY_CURRENCY, transaction.occurred_on
         )
@@ -293,8 +304,16 @@ class DashboardService:
 
     def totals(self, criteria: TransactionFilter) -> FilteredTotals:
         """What the movements matching ``criteria`` add up to, transfers aside."""
+        return self._totals(converted_movements(self._transactions, self._exchange_rates, criteria))
+
+    def totals_of(self, transactions: list[Transaction]) -> FilteredTotals:
+        """What ``transactions`` add up to, transfers aside, as for a selection."""
+        return self._totals(
+            convert_movements(self._transactions, self._exchange_rates, transactions)
+        )
+
+    def _totals(self, converted: ConvertedMovements) -> FilteredTotals:
         totals = {kind: Money.zero(self.CURRENCY) for kind in TransactionType}
-        converted = converted_movements(self._transactions, self._exchange_rates, criteria)
         for movement in converted.movements:
             totals[movement.kind] += movement.amount
         return FilteredTotals(

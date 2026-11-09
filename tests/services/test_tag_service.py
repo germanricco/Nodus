@@ -91,6 +91,22 @@ def test_delete_keeps_the_movements(services, pesos):
     assert services.transactions.tags_for([expense.id]) == {}
 
 
+def test_merge_many_and_delete_many(services, pesos):
+    both = tagged_expense(services, pesos, ars("10"), "Viaje", "Vacaciones")
+    tagged_expense(services, pesos, ars("20"), "Paseo")
+    work = tagged_expense(services, pesos, ars("30"), "Trabajo")
+    viaje, vacaciones, paseo = (services.tags.find(n) for n in ["Viaje", "Vacaciones", "Paseo"])
+
+    services.tags.merge_many([viaje.id, vacaciones.id, paseo.id], vacaciones.id)
+
+    assert tag_names(services, both) == ["Vacaciones"]
+    assert services.tags.transaction_count(vacaciones.id) == 2
+    trabajo = services.tags.find("Trabajo")
+    assert services.tags.delete_many([vacaciones.id, trabajo.id]) == 3
+    assert services.tags.list_tags() == []
+    assert services.transactions.get(work.id).amount == ars("30")
+
+
 def test_summaries_add_up_in_pesos(services, pesos, dollars):
     services.exchange_rates.set_rate(date(2026, 11, 1), Decimal("1000"))
     tagged_expense(services, pesos, ars("5000"), "Viaje")

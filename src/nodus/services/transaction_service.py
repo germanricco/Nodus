@@ -121,12 +121,38 @@ class TransactionService:
 
     def delete(self, transaction_id: int) -> None:
         """Deletes a transaction. Deleting either leg of a transfer deletes the whole transfer."""
-        transaction = self.get(transaction_id)
+        self.delete_many([transaction_id])
+
+    def delete_many(self, transaction_ids: list[int]) -> None:
+        """Deletes every one of ``transaction_ids`` together, or none if one is missing.
+
+        A transfer goes whole, even when both of its legs are listed.
+        """
+        transactions = [self.get(transaction_id) for transaction_id in transaction_ids]
+        transfer_ids = {t.transfer_id for t in transactions if t.is_transfer}
         with self._database.transaction():
-            if transaction.is_transfer:
-                self._transactions.delete_transfer(transaction.transfer_id)
-            else:
-                self._transactions.delete(transaction_id)
+            for transfer_id in transfer_ids:
+                self._transactions.delete_transfer(transfer_id)
+            for transaction in transactions:
+                if not transaction.is_transfer:
+                    self._transactions.delete(transaction.id)
+
+    def set_category(self, transaction_ids: list[int], category_id: int) -> None:
+        """Moves every one of ``transaction_ids`` to ``category_id``, or none of them.
+
+        All must be expenses or incomes of the category's kind; transfers have no category.
+        """
+        category = require_found(self._categories.get(category_id), "La categoría no existe.")
+        transactions = [self.get(transaction_id) for transaction_id in transaction_ids]
+        if any(t.is_transfer for t in transactions):
+            raise ValidationError("Las transferencias no tienen categoría.")
+        if any(t.type is not category.kind for t in transactions):
+            raise ValidationError(
+                f"La categoría «{category.name}» no corresponde a todas las transacciones elegidas."
+            )
+        with self._database.transaction():
+            for transaction in transactions:
+                self._transactions.update(dataclasses.replace(transaction, category_id=category_id))
 
     def refund_summary(self, expense_id: int, ignore_id: int | None = None) -> RefundSummary:
         """What has been refunded of ``expense_id``, leaving out ``ignore_id`` (the refund

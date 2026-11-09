@@ -69,6 +69,16 @@ class TagRepository(Repository):
         row = self._fetch_one("SELECT COUNT(*) FROM transaction_tags WHERE tag_id = ?", (tag_id,))
         return row[0]
 
+    def count_tagged(self, tag_ids: list[int]) -> int:
+        """How many transactions carry at least one of ``tag_ids``."""
+        marks = ", ".join("?" * len(tag_ids))
+        row = self._fetch_one(
+            "SELECT COUNT(DISTINCT transaction_id) FROM transaction_tags"
+            f" WHERE tag_id IN ({marks})",
+            tuple(tag_ids),
+        )
+        return row[0]
+
     def reassign(self, source_id: int, target_id: int) -> None:
         """Gives ``target_id`` to every transaction tagged ``source_id``, which loses it."""
         self._execute(
