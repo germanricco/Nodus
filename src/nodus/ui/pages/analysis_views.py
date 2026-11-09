@@ -211,7 +211,7 @@ class TrendsView(AnalysisView):
             color = self._theme.income if not month.total.is_negative else self._theme.expense
             segments = (StackSegment(None, color, month.total.cents),)
             return StackedBar(month.month.short_name, segments, title,
-                              (f"Ahorro {month.total.format()}",))  # fmt: skip
+                              (f"Ahorro {month.total.format()}",), month.month)  # fmt: skip
         by_id = {total.category.id: total for total in month.by_category}
         segments = [
             StackSegment(category_id, by_id[category_id].category.color,
@@ -226,7 +226,7 @@ class TrendsView(AnalysisView):
             f"{total.category.name} {total.total.format()}"
             for total in month.by_category[:TOOLTIP_CATEGORIES]
         ]
-        return StackedBar(month.month.short_name, tuple(segments), title, tuple(lines))
+        return StackedBar(month.month.short_name, tuple(segments), title, tuple(lines), month.month)
 
     def _bar_clicked(self, index: int, category_id: int | None) -> None:
         month = self._trends.months[index].month

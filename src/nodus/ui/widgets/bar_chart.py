@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Hashable
 from dataclasses import dataclass
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
@@ -15,6 +16,7 @@ from nodus.ui.widgets.chart_base import (
     lerp,
     rounded_bar_path,
     slot_index,
+    starting_values,
     with_alpha,
 )
 
@@ -23,7 +25,7 @@ from nodus.ui.widgets.chart_base import (
 class BarGroup:
     """One month: its label under the axis, what came in and what went out (both as
     positive amounts) and the lines of its tooltip. ``selected`` marks the month being
-    viewed."""
+    viewed, and ``key`` tells it apart from the others (the label repeats every year)."""
 
     label: str
     income: float
@@ -31,6 +33,11 @@ class BarGroup:
     tooltip_title: str
     tooltip_lines: tuple[str, ...]
     selected: bool = False
+    key: Hashable = None
+
+    @property
+    def identity(self) -> Hashable:
+        return self.label if self.key is None else self.key
 
 
 class BarChart(ColumnHoverChart):
@@ -52,6 +59,7 @@ class BarChart(ColumnHoverChart):
     def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
         super().__init__(theme, parent)
         self._groups: list[BarGroup] = []
+        # Where each bar begins the transition, in the order of ``_groups``.
         self._previous: list[tuple[float, float]] = []
         self.setMinimumHeight(120)
 
@@ -61,9 +69,10 @@ class BarChart(ColumnHoverChart):
     def set_groups(self, groups: list[BarGroup]) -> None:
         if groups == self._groups:
             return
-        shown = self._values_at(self.progress)
-        # Bars keep their place when the count stays; otherwise they grow from zero.
-        self._previous = shown if len(shown) == len(groups) else [(0.0, 0.0)] * len(groups)
+        values = self._values_at(self.progress)
+        shown = dict(zip((g.identity for g in self._groups), values, strict=True))
+        # A month on screen resizes from where it is; a new one grows from the baseline.
+        self._previous = starting_values(shown, [g.identity for g in groups], (0.0, 0.0))
         self._groups = groups
         self.hover_index = None
         self._start_transition()

@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.money import Money
 from nodus.ui.theme.theme import Theme
-from nodus.ui.widgets.chart_base import AnimatedChart, lerp, with_alpha
+from nodus.ui.widgets.chart_base import AnimatedChart, lerp, starting_values, with_alpha
 
 HOVER_MS = 160
 
@@ -310,8 +310,11 @@ class ProportionBar(AnimatedChart):
     def set_segments(self, segments: list[Segment]) -> None:
         if segments == self._segments:
             return
-        shown = self._shares(self.progress)
-        self._previous = shown if len(shown) == len(segments) else []
+        shares = self._shares(self.progress)
+        shown = dict(zip((s.key for s in self._segments), shares, strict=True))
+        # Each part slides from its width on screen; a new one grows from nothing. The
+        # first time, the parts grow from the left together.
+        self._previous = starting_values(shown, [s.key for s in segments], 0.0) if shown else []
         self._segments = segments
         self._start_transition()
 

@@ -164,6 +164,37 @@ def test_line_chart_morphs_from_the_previous_line(qtbot, monkeypatch):
     assert chart._values_at(chart.progress) == [300, 500]
 
 
+def test_line_chart_starts_each_day_where_it_was_despite_gaps(qtbot):
+    """Days without a value (no exchange rate yet) must not shift the others: switching
+    the currency of a line with a gap used to start every day from another's value."""
+    chart = make_line_chart(qtbot)
+    chart.set_points(line_points([None, None, 100, 100, 50]))
+
+    chart.set_points(line_points([None, None, 7, 7, 3]))
+
+    assert chart._values_at(0) == [None, None, 100, 100, 50]  # exactly what was on screen
+    assert chart._values_at(0.5) == [None, None, 53.5, 53.5, 26.5]
+
+
+def test_line_chart_day_that_appears_starts_at_its_value(qtbot):
+    chart = make_line_chart(qtbot)
+    chart.set_points(line_points([None, 100, 200]))
+
+    chart.set_points(line_points([40, 100, 300]))
+
+    assert chart._values_at(0.5) == [40, 100, 250]
+
+
+def test_line_chart_of_another_period_morphs_by_position(qtbot):
+    chart = make_line_chart(qtbot)
+    chart.set_points(line_points([100, 300]))
+
+    later = [LinePoint(date(2027, 1, day), 500.0) for day in (1, 2, 3)]
+    chart.set_points(later)
+
+    assert chart._values_at(0) == [100, 200, 300]  # the old shape, stretched
+
+
 def test_hidden_chart_plays_its_transition_when_shown(qtbot, monkeypatch):
     monkeypatch.setattr(chart_base, "DURATION_MS", 200)
     chart = BarChart(LIGHT)
@@ -187,6 +218,26 @@ def test_bars_grow_from_zero_and_keep_place_on_update(qtbot):
     qtbot.mouseMove(chart, QPoint(10, 50))
     assert chart.hover_index == 0
     chart.grab()
+
+
+def test_bars_follow_their_month_when_the_period_moves(qtbot):
+    """Moving the period one month keeps the count of bars; each must still start from
+    its own month, and the month that enters grows from the baseline."""
+    chart = make(qtbot, BarChart(LIGHT))
+    chart.set_groups([BarGroup("Oct", 100, 60, "", ()), BarGroup("Nov", 40, 20, "", ())])
+
+    chart.set_groups([BarGroup("Nov", 40, 20, "", ()), BarGroup("Dic", 80, 10, "", ())])
+
+    assert chart._values_at(0) == [(40, 20), (0, 0)]
+
+
+def test_bars_of_the_same_label_in_another_year_are_other_months(qtbot):
+    chart = make(qtbot, BarChart(LIGHT))
+    chart.set_groups([BarGroup("Nov", 100, 60, "", (), key=(2025, 11))])
+
+    chart.set_groups([BarGroup("Nov", 40, 20, "", (), key=(2026, 11))])
+
+    assert chart._values_at(0) == [(0, 0)]
 
 
 def make_donut(qtbot):
@@ -262,3 +313,17 @@ def test_money_label_shortens_an_amount_that_does_not_fit(qtbot):
 
     label.resize(400, 20)
     assert label.text() == "$ 8.835.000,00"
+
+
+def test_proportion_bar_parts_follow_their_key(qtbot):
+    """A part that leaves must not hand its width to the next one."""
+    bar = make(
+        qtbot,
+        ProportionBar(LIGHT, [Segment("#0f0", 1, "ars"), Segment("#00f", 1, "eur"),
+                              Segment("#f00", 2, "usd")]),
+        (200, 10),
+    )  # fmt: skip
+
+    bar.set_segments([Segment("#0f0", 1, "ars"), Segment("#f00", 1, "usd")])
+
+    assert bar._shares(0) == [0.25, 0.5]

@@ -19,7 +19,13 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QWidget
 
 from nodus.ui.theme.theme import Theme
-from nodus.ui.widgets.chart_base import ColumnHoverChart, lerp, resample, with_alpha
+from nodus.ui.widgets.chart_base import (
+    ColumnHoverChart,
+    lerp,
+    resample,
+    starting_values,
+    with_alpha,
+)
 
 # Up/down dots are drawn only while they stay readable.
 MAX_CHANGE_DOTS = 31
@@ -102,7 +108,9 @@ class LineChart(ColumnHoverChart):
         self._format_axis = format_axis
         self._format_day = format_day
         self._points: list[LinePoint] = []
-        self._previous: list[float | None] | None = None
+        # Where each point begins the transition; None the first time, when the line
+        # draws itself from left to right instead.
+        self._start: list[float | None] | None = None
         self.setMinimumHeight(180)
 
     def sizeHint(self) -> QSize:  # noqa: N802
@@ -112,8 +120,12 @@ class LineChart(ColumnHoverChart):
         """Shows ``points``, moving from what was shown before."""
         if points == self._points:
             return
-        had_data = any(p.value is not None for p in self._points)
-        self._previous = self._shown_values() if had_data else None
+        shown = {
+            point.day: value
+            for point, value in zip(self._points, self._values_at(self.progress), strict=True)
+            if value is not None
+        }
+        self._start = self._starts(points, shown) if shown else None
         self._points = points
         self.hover_index = None
         self._start_transition()
@@ -121,19 +133,24 @@ class LineChart(ColumnHoverChart):
     def points(self) -> list[LinePoint]:
         return self._points
 
-    def _shown_values(self) -> list[float | None]:
-        """The values currently on screen, mid-transition included."""
-        return self._values_at(self.progress)
+    @staticmethod
+    def _starts(points: list[LinePoint], shown: dict[date, float]) -> list[float | None]:
+        """Each day begins where it was on screen, so a change in the data (a new
+        transaction, another currency) moves only what changed. A day that was not shown
+        appears at its value. With no day in common (another period), the old line's shape
+        morphs into the new one point by point."""
+        if any(point.day in shown for point in points):
+            return starting_values(shown, [p.day for p in points], None)
+        return list(resample(list(shown.values()), len(points)))
 
     def _values_at(self, progress: float) -> list[float | None]:
+        """The values on screen at ``progress`` of the transition."""
         targets = [p.value for p in self._points]
-        if self._previous is None or progress >= 1:
+        if self._start is None or progress >= 1:
             return targets
-        known = [v for v in self._previous if v is not None]
-        start = resample(known, len(targets)) if known else [0.0] * len(targets)
         return [
-            None if target is None else lerp(begin, target, progress)
-            for begin, target in zip(start, targets, strict=True)
+            None if target is None else lerp(target if begin is None else begin, target, progress)
+            for begin, target in zip(self._start, targets, strict=True)
         ]
 
     # Geometry
@@ -175,7 +192,7 @@ class LineChart(ColumnHoverChart):
             painter.end()
             return
         positions = self._positions(values, plot)
-        if self._previous is None and self.progress < 1:
+        if self._start is None and self.progress < 1:
             # First appearance: reveal from left to right.
             painter.setClipRect(
                 QRectF(0, 0, plot.left() + plot.width() * self.progress + 2, self.height())
@@ -273,7 +290,7 @@ class LineChart(ColumnHoverChart):
             return
         plot = self._plot_rect()
         # While the line draws itself, dots appear as it reaches them.
-        revealed = plot.left() + plot.width() * (self.progress if self._previous is None else 1)
+        revealed = plot.left() + plot.width() * (self.progress if self._start is None else 1)
         for index in changes:
             position = positions[index]
             if position is None or position.x() > revealed + 1:

@@ -7,7 +7,8 @@ it rebuilds its series.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Hashable, Mapping, Sequence
+from typing import TypeVar
 
 from PySide6.QtCore import QEasingCurve, QPointF, QRectF, Qt, QVariantAnimation
 from PySide6.QtGui import (
@@ -28,9 +29,23 @@ from nodus.ui.theme.theme import Theme
 # Length of every chart and figure transition. Tests set it to 0 to check the final state.
 DURATION_MS = 450
 
+K = TypeVar("K", bound=Hashable)
+V = TypeVar("V")
+
 
 def lerp(start: float, end: float, progress: float) -> float:
     return start + (end - start) * progress
+
+
+def starting_values(shown: Mapping[K, V], keys: Sequence[K], baseline: V) -> list[V]:
+    """Where each new item begins its transition: where the item with the same key was on
+    screen, or ``baseline`` if it is new.
+
+    Charts match old and new data by identity (a day, a month, a category), never by
+    position: a list can lose, gain or shift items, and matching by position would make
+    each one start from another's place.
+    """
+    return [shown.get(key, baseline) for key in keys]
 
 
 def resample(values: Sequence[float], count: int) -> list[float]:

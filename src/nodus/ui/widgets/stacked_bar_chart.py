@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Hashable
 from dataclasses import dataclass
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
@@ -16,6 +16,7 @@ from nodus.ui.widgets.chart_base import (
     lerp,
     rounded_bar_path,
     slot_index,
+    starting_values,
     with_alpha,
 )
 
@@ -35,12 +36,17 @@ class StackSegment:
 @dataclass(frozen=True)
 class StackedBar:
     """One month: its label under the axis, its pieces from the bottom up and the lines
-    of its tooltip."""
+    of its tooltip. ``key`` tells it apart from the others (the label repeats every year)."""
 
     label: str
     segments: tuple[StackSegment, ...]
     tooltip_title: str
     tooltip_lines: tuple[str, ...]
+    key: Hashable = None
+
+    @property
+    def identity(self) -> Hashable:
+        return self.label if self.key is None else self.key
 
 
 class StackedBarChart(ColumnHoverChart):
@@ -78,14 +84,13 @@ class StackedBarChart(ColumnHoverChart):
     def set_bars(self, bars: list[StackedBar], average: float | None = None) -> None:
         if bars == self._bars and average == self.average:
             return
-        shown = self._values_at(self.progress)
-        if len(shown) == len(bars):  # same months: each piece resizes from where it is
-            self._previous = [
-                {s.key: v for s, v in zip(old.segments, values, strict=True)}
-                for old, values in zip(self._bars, shown, strict=True)
-            ]
-        else:  # different months: every bar grows from the baseline
-            self._previous = [{} for _ in bars]
+        shown = {
+            old.identity: {s.key: v for s, v in zip(old.segments, values, strict=True)}
+            for old, values in zip(self._bars, self._values_at(self.progress), strict=True)
+        }
+        # A month on screen resizes each piece from where it is; a new one grows from the
+        # baseline.
+        self._previous = starting_values(shown, [bar.identity for bar in bars], {})
         self._bars = bars
         self.average = average
         self.hover_index = None

@@ -93,6 +93,7 @@ def flow_bar_groups(flow: list[MonthFlow], selected: Month | None = None) -> lis
                 f"Ahorro {month.savings.format()}",
             ),
             selected=month.month == selected,
+            key=month.month,
         )
         for month in flow
     ]

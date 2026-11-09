@@ -71,6 +71,15 @@ def test_pieces_resize_by_category_and_new_months_grow(qtbot):
     assert chart._values_at(0.5) == [[5], [10]]
 
 
+def test_months_keep_their_pieces_when_the_period_moves(qtbot):
+    chart = make_chart(qtbot)
+    chart.set_bars([bar("Oct", (1, 100)), bar("Nov", (1, 40))])
+
+    chart.set_bars([bar("Nov", (1, 40)), bar("Dic", (1, 80))])
+
+    assert chart._values_at(0) == [[40], [0]]
+
+
 def test_click_reports_the_month_and_category(qtbot):
     chart = make_chart(qtbot)
     chart.set_bars([bar("Oct", (1, 300), (2, 100)), bar("Nov", (1, 200))])

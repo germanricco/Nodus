@@ -5,6 +5,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 ## 1.2.0
 
 - Actualiza Nodus con un clic: cuando hay una versión nueva, «Actualizar» la descarga, la instala sin preguntas y vuelve a abrir Nodus. Desde la 1.1.0 hay que actualizar a mano esta última vez.
+- Arreglo: al cambiar entre pesos y dólares, el gráfico del patrimonio ya no repite el último cambio; los gráficos de barras siguen a cada mes al mover el período.
 - Arreglo: Nodus anclado a la barra de tareas muestra su ícono en lugar de un recuadro en blanco. Si ya lo tenías anclado, desánclalo y vuelve a anclarlo después de actualizar.
 
 ## 1.1.0 — 2026-11-07
