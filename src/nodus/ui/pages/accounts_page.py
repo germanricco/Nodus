@@ -4,8 +4,15 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
 
 from nodus.models.account import Account
 from nodus.models.money import Money
@@ -287,4 +294,9 @@ class AccountsPage(Page):
         set_style_property(text, "muted", True)
         card.body.addWidget(title)
         card.body.addWidget(text)
+        self.empty_create_button = QPushButton("Agregar cuenta")
+        self.empty_create_button.setObjectName("PrimaryButton")
+        self.empty_create_button.clicked.connect(lambda: self.open_account_dialog())
+        card.body.addSpacing(4)
+        card.body.addWidget(self.empty_create_button, alignment=Qt.AlignmentFlag.AlignLeft)
         return card

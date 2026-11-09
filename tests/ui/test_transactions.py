@@ -253,7 +253,7 @@ class TestTransactionsPage:
         page.type_filter.setCurrentText("Tipo")
         page.search_input.setText("viejo")
         assert column(page, AMOUNT) == []
-        assert page.empty_label.isVisibleTo(page)
+        assert page.empty_state.isVisibleTo(page)
 
         page.period_selector.set_period(Period.of_months(NOVEMBER.previous()))
         assert column(page, AMOUNT) == ["-$ 99,00"]

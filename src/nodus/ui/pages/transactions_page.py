@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import partial
 from html import escape
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -34,6 +34,7 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.row_actions import RowAction
 from nodus.ui.widgets.selectable_table import SelectableTable
@@ -199,13 +200,11 @@ class TransactionsPage(Page):
 
         self.model = TransactionTableModel(theme_manager.theme)
         self.table = self._build_table()
-        self.empty_label = QLabel("Sin transacciones con estos filtros")
-        self.empty_label.setObjectName("EmptyState")
-        self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.empty_state = EmptyState()
         card = Card()
         card.body.setContentsMargins(8, 8, 8, 8)
         card.body.addWidget(self.table)
-        card.body.addWidget(self.empty_label, stretch=1)
+        card.body.addWidget(self.empty_state, stretch=1)
         self.totals_label = QLabel()
         self.totals_label.setObjectName("FieldHint")
         self.totals_label.setContentsMargins(8, 4, 8, 0)
@@ -265,7 +264,13 @@ class TransactionsPage(Page):
         )
         self.totals_label.setVisible(has_rows)
         self.table.setVisible(has_rows)
-        self.empty_label.setVisible(not has_rows)
+        self.empty_state.setVisible(not has_rows)
+        if self._has_filters():
+            self.empty_state.set_message(
+                "Sin transacciones con estos filtros", "Limpiar filtros", self.clear_filters
+            )
+        else:
+            self.empty_state.set_message("Sin transacciones en este período")
         self._update_actions()
         self.clear_filters_button.setEnabled(self._has_filters())
         for combo in self._filter_combos():

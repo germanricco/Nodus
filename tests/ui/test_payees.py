@@ -51,7 +51,7 @@ def populated(services, pesos):
 
 def test_empty_state_explains_how_payees_appear(page):
     assert page.table.isHidden()
-    assert page.empty_label.text() == NO_PAYEES_TEXT
+    assert page.empty_state.text() == NO_PAYEES_TEXT
 
 
 def test_lists_most_used_first_with_totals(services, page, populated):
@@ -80,7 +80,7 @@ def test_search_ignores_case_and_accents(services, page, populated):
     assert column(page, NAME) == ["Verdulería"]
     page.search_input.setText("zzz")
     assert page.table.isHidden()
-    assert "búsqueda" in page.empty_label.text()
+    assert "búsqueda" in page.empty_state.text()
 
 
 def actions_of(page, name: str):

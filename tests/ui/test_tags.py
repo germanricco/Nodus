@@ -55,7 +55,7 @@ def populated(services, pesos):
 
 def test_empty_state_explains_how_tags_appear(page):
     assert page.table.isHidden()
-    assert page.empty_label.text() == NO_TAGS_TEXT
+    assert page.empty_state.text() == NO_TAGS_TEXT
 
 
 def test_lists_most_used_first_with_totals(page, populated):

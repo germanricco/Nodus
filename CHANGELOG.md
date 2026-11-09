@@ -12,6 +12,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - En el Dashboard, «Ver todas ›» pasa al encabezado de cada tarjeta, en el mismo lugar en todas, y deja más lugar para la lista.
 - Análisis más fácil de leer: las cifras de Tendencias y Flujo de caja se ven más grandes, un «—» reemplaza al aviso repetido cuando no hay período anterior, y el detalle por mes ya no lista meses en cero antes del primer movimiento ni los que todavía no llegaron.
 - Ajustes más ordenado: cada opción dice en una línea qué hace, con su control a la derecha; «Abrir Nodus al iniciar Windows» y «Buscar actualizaciones al iniciar» pasan a ser interruptores, y «Restaurar una copia», que reemplaza tus datos, queda aparte y en rojo. Ajustes se mueve al pie de la barra lateral, como en las apps de Windows, y deja la barra superior.
+- Una lista vacía ofrece el paso siguiente: «Agregar cuenta» cuando todavía no hay cuentas, «Limpiar filtros» cuando los filtros de Transacciones no dejan nada, y «Borrar búsqueda» o «Agregar beneficiario» (o etiqueta) en Beneficiarios y Etiquetas.
 
 ## 1.2.0
 

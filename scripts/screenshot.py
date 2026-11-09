@@ -150,6 +150,13 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.show_page(PageId.DASHBOARD)
         app.processEvents()
         save(window, args.out / f"dashboard-full-{mode.value}.png")
+        # Empty states: a search that matches nothing offers to clear it.
+        for page_id in (PageId.TRANSACTIONS, PageId.PAYEES):
+            window.show_page(page_id)
+            window.page(page_id).search_input.setText("zzz")
+            app.processEvents()
+            save(window, args.out / f"{page_id.name.lower()}-empty-{mode.value}.png")
+            window.page(page_id).search_input.clear()
         # Settings, whole: the data and about cards are below the fold.
         window.resize(window.width(), FULL_SETTINGS_HEIGHT)
         window.show_page(PageId.SETTINGS)

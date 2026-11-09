@@ -14,7 +14,7 @@ from PySide6.QtCore import (
     Signal,
 )
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QLabel, QLineEdit
+from PySide6.QtWidgets import QLineEdit
 
 from nodus.models.money import Money
 from nodus.models.payee import normalize_name
@@ -25,6 +25,7 @@ from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.row_actions import RowAction
 from nodus.ui.widgets.selectable_table import SelectableTable
 from nodus.ui.widgets.selection_bar import SelectionBar
@@ -164,6 +165,7 @@ class SummaryPage(Page, Generic[S]):
         ``chosen_word`` agrees with the items in the selection bar ("seleccionados")."""
         super().__init__(title)
         self._no_items_text, self._no_matches_text = texts
+        self._noun = noun
         self._summaries: list[S] = []
 
         self.search_input = QLineEdit()
@@ -187,14 +189,11 @@ class SummaryPage(Page, Generic[S]):
         self.proxy.setSourceModel(self.model)
         self.proxy.setSortRole(SORT_ROLE)
         self.table = self._build_table()
-        self.empty_label = QLabel()
-        self.empty_label.setObjectName("EmptyState")
-        self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.empty_label.setWordWrap(True)
+        self.empty_state = EmptyState()
         card = Card()
         card.body.setContentsMargins(8, 8, 8, 8)
         card.body.addWidget(self.table)
-        card.body.addWidget(self.empty_label, stretch=1)
+        card.body.addWidget(self.empty_state, stretch=1)
         self.content_layout.addWidget(card, stretch=1)
 
         self.search_input.textChanged.connect(self._show_matches)
@@ -278,8 +277,15 @@ class SummaryPage(Page, Generic[S]):
         )
         has_rows = self.model.rowCount() > 0
         self.table.setVisible(has_rows)
-        self.empty_label.setText(self._no_matches_text if self._summaries else self._no_items_text)
-        self.empty_label.setVisible(not has_rows)
+        if self._summaries:
+            self.empty_state.set_message(
+                self._no_matches_text, "Borrar búsqueda", self.search_input.clear
+            )
+        else:
+            self.empty_state.set_message(
+                self._no_items_text, f"Agregar {self._noun}", self.create_item
+            )
+        self.empty_state.setVisible(not has_rows)
         self._update_actions()
 
     def _build_table(self) -> SelectableTable:
