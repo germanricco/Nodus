@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 
 from nodus.models.category import Category
 from nodus.models.transaction import TransactionType
@@ -11,6 +11,7 @@ from nodus.services.container import Services
 from nodus.ui.dialogs.category_dialog import CategoryDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
+from nodus.ui.navigation import history_focus
 from nodus.ui.pages.page import Page
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
@@ -22,20 +23,22 @@ SYSTEM_HINT = "Recibe las transacciones de las categorías que se eliminan."
 
 
 class CategoryRow(QWidget):
-    """One category: color, name and the actions it allows.
+    """One category: color, name and the menu of the actions it allows.
 
-    Subcategories are indented. "Otros" offers no actions, since it cannot change.
+    Subcategories are indented. "Otros" cannot change, so its menu only shows its movements.
     """
 
+    transactions_requested = Signal(object)  # Category
     edit_requested = Signal(object)  # Category
     delete_requested = Signal(object)  # Category
     add_subcategory_requested = Signal(object)  # Category
 
     INDENT = 28
 
-    def __init__(self, category: Category) -> None:
+    def __init__(self, category: Category, has_movements: bool = True) -> None:
         super().__init__()
         self.category = category
+        self.has_movements = has_movements
         layout = QHBoxLayout(self)
         layout.setContentsMargins(self.INDENT if category.is_subcategory else 0, 4, 0, 4)
         layout.setSpacing(10)
@@ -47,30 +50,28 @@ class CategoryRow(QWidget):
             tag = QLabel("sistema")
             tag.setObjectName("Tag")
             tag.setToolTip(SYSTEM_HINT)
-            layout.addWidget(tag)
+            layout.addWidget(tag, alignment=Qt.AlignmentFlag.AlignVCenter)
         layout.addStretch()
 
-        self.subcategory_button: QPushButton | None = None
-        self.more_button: MoreButton | None = None
-        if category.is_system:
-            return
-        if not category.is_subcategory:
-            self.subcategory_button = QPushButton("+ Subcategoría")
-            self.subcategory_button.setObjectName("SmallButton")
-            self.subcategory_button.clicked.connect(
-                lambda: self.add_subcategory_requested.emit(category)
-            )
-            layout.addWidget(self.subcategory_button)
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
         install_context_menu(self, self.actions)
 
     def actions(self) -> list[RowAction]:
-        """Editing and deleting; "Otros" offers nothing, since it cannot change."""
+        """Its movements, editing and deleting; "Otros" only shows its movements, since it
+        cannot change."""
         category = self.category
+        result = [
+            RowAction(
+                "Ver movimientos",
+                lambda: self.transactions_requested.emit(category),
+                "list",
+                enabled=self.has_movements,
+            )
+        ]
         if category.is_system:
-            return []
-        result = [RowAction("Editar", lambda: self.edit_requested.emit(category), "pencil")]
+            return result
+        result.append(RowAction("Editar", lambda: self.edit_requested.emit(category), "pencil"))
         if not category.is_subcategory:
             result.append(
                 RowAction(
@@ -89,6 +90,8 @@ class CategoryRow(QWidget):
 
 class CategoriesPage(Page):
     """Two cards, expenses then incomes, each listing categories with their subcategories."""
+
+    transactions_requested = Signal(object)  # TransactionFocus
 
     def __init__(self, services: Services, event_bus: EventBus) -> None:
         super().__init__("Categorías")
@@ -139,7 +142,11 @@ class CategoriesPage(Page):
         return card
 
     def _row(self, category: Category) -> CategoryRow:
-        row = CategoryRow(category)
+        focus = history_focus(self._services, category_id=category.id)
+        row = CategoryRow(category, has_movements=focus is not None)
+        row.transactions_requested.connect(
+            lambda _category: self.transactions_requested.emit(focus)
+        )
         row.edit_requested.connect(self.open_category_dialog)
         row.delete_requested.connect(self.delete_category)
         row.add_subcategory_requested.connect(

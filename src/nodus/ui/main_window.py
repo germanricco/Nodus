@@ -72,6 +72,9 @@ class MainWindow(QMainWindow):
         dashboard.navigate_requested.connect(self.show_page)
         accounts = AccountsPage(services, event_bus, theme_manager)
         accounts.navigate_requested.connect(self.show_page)
+        accounts.transactions_requested.connect(self.show_transactions)
+        categories = CategoriesPage(services, event_bus)
+        categories.transactions_requested.connect(self.show_transactions)
         dashboard.transactions_requested.connect(self.show_transactions)
         budgets = BudgetsPage(services, event_bus, theme_manager)
         budgets.transactions_requested.connect(self.show_transactions)
@@ -92,7 +95,7 @@ class MainWindow(QMainWindow):
             PageId.RECURRING: RecurringPage(services, event_bus),
             PageId.BUDGETS: budgets,
             PageId.ANALYSIS: analysis,
-            PageId.CATEGORIES: CategoriesPage(services, event_bus),
+            PageId.CATEGORIES: categories,
             PageId.PAYEES: payees,
             PageId.TAGS: tags,
             PageId.SETTINGS: SettingsPage(services, event_bus, theme_manager),

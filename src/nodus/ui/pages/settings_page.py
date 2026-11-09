@@ -44,6 +44,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.date_input import DateInput
+from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.setting_row import SettingRow
 from nodus.ui.widgets.style import clear_layout, set_style_property
@@ -78,7 +79,7 @@ def secondary_button(text: str, on_click: Callable[[], object]) -> QPushButton:
 
 
 class RateRow(QWidget):
-    """One entry of the rate history, with a button to delete it."""
+    """One entry of the rate history, with its menu to delete it."""
 
     delete_requested = Signal(object)  # ExchangeRate
 
@@ -92,10 +93,16 @@ class RateRow(QWidget):
         day.setMinimumWidth(90)
         layout.addWidget(day)
         layout.addWidget(QLabel(format_rate(rate)), stretch=1)
-        self.delete_button = QPushButton("Eliminar")
-        self.delete_button.setObjectName("SmallButton")
-        self.delete_button.clicked.connect(lambda: self.delete_requested.emit(rate))
-        layout.addWidget(self.delete_button)
+        self.more_button = MoreButton(self.actions)
+        layout.addWidget(self.more_button)
+        install_context_menu(self, self.actions)
+
+    def actions(self) -> list[RowAction]:
+        return [
+            RowAction(
+                "Eliminar", lambda: self.delete_requested.emit(self.rate), "trash", destructive=True
+            )
+        ]
 
 
 class SettingsPage(Page):

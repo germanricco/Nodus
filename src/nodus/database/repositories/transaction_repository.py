@@ -61,6 +61,17 @@ class TransactionRepository(Repository):
             params.append(criteria.limit)
         return [self._from_row(row) for row in self._fetch_all(sql, params)]
 
+    def date_range(self, criteria: TransactionFilter) -> tuple[date, date] | None:
+        """The first and last day of the matching transactions, or None if there are none."""
+        conditions, params = self._where(criteria)
+        sql = _SELECT.replace("t.*, a.currency", "MIN(t.occurred_on), MAX(t.occurred_on)")
+        if conditions:
+            sql += " WHERE " + " AND ".join(conditions)
+        first, last = self._fetch_one(sql, params)
+        if first is None:
+            return None
+        return date.fromisoformat(first), date.fromisoformat(last)
+
     def list_refunds_of(self, expense_id: int) -> list[Transaction]:
         """The refunds of ``expense_id``, newest first."""
         rows = self._fetch_all(

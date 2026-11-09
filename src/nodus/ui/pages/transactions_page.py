@@ -254,8 +254,8 @@ class TransactionsPage(Page):
         self.reload()
 
     def focus(self, focus: TransactionFocus) -> None:
-        """Shows the period of ``focus`` with only its category, payee or tag filtered, as
-        other pages ask for.
+        """Shows the period of ``focus`` with only its account, category, payee or tag
+        filtered, as other pages ask for.
 
         Does not reload: the caller shows the page, which refreshes it.
         """
@@ -265,6 +265,7 @@ class TransactionsPage(Page):
         self.period_selector.set_period(focus.period)
         self.period_selector.blockSignals(False)
         for combo, item_id in (
+            (self.account_filter, focus.account_id),
             (self.category_filter, focus.category_id),
             (self.payee_filter, focus.payee_id),
             (self.tag_filter, focus.tag_id),

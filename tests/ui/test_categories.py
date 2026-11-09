@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from factories import ars, category_id, expense_draft
 from menus import run_action, texts
@@ -105,22 +107,36 @@ class TestCategoriesPage:
         income_names = [r.category.name for r in rows(page) if r.category.kind is INCOME]
         assert income_names == ["Reembolsos", "Sueldo", "Trabajo freelance", "Otros"]
 
-    def test_otros_has_no_actions_and_subcategories_cannot_nest(self, services, page):
+    def test_otros_only_shows_movements_and_subcategories_cannot_nest(self, services, page):
         vivienda = category_id(services, "Vivienda", EXPENSE)
         services.categories.create("Alquiler", EXPENSE, "#000000", parent_id=vivienda)
         page.refresh()
 
         otros = row_named(page, "Otros")
-        assert otros.actions() == []
-        assert otros.more_button is None
+        assert texts(otros.actions()) == ["Ver movimientos"]
         tags = [label for label in otros.findChildren(QLabel) if label.objectName() == "Tag"]
         assert [tag.text() for tag in tags] == ["sistema"]
         assert tags[0].toolTip() == categories_page.SYSTEM_HINT
-        assert texts(row_named(page, "Alquiler").actions()) == ["Editar", "Eliminar"]
-        assert row_named(page, "Alquiler").subcategory_button is None
-        vivienda_row = row_named(page, "Vivienda")
-        assert "Agregar subcategoría" in texts(vivienda_row.actions())
-        assert vivienda_row.subcategory_button is not None
+        assert texts(row_named(page, "Alquiler").actions()) == [
+            "Ver movimientos",
+            "Editar",
+            "Eliminar",
+        ]
+        assert "Agregar subcategoría" in texts(row_named(page, "Vivienda").actions())
+
+    def test_see_movements_spans_the_category_history(self, qtbot, services, page, pesos):
+        ocio = category_id(services, "Ocio", EXPENSE)
+        services.transactions.create(
+            expense_draft(services, pesos.id, ars("10"), date(2026, 3, 5), category_id=ocio)
+        )
+        page.refresh()
+        assert not row_named(page, "Ropa").actions()[0].enabled  # no movements
+
+        with qtbot.waitSignal(page.transactions_requested) as signal:
+            run_action(row_named(page, "Ocio").actions(), "Ver movimientos")
+
+        focus = signal.args[0]
+        assert (focus.category_id, focus.period.start) == (ocio, date(2026, 3, 1))
 
     def test_delete_after_confirmation_moves_transactions(
         self, qtbot, monkeypatch, services, event_bus, page, pesos

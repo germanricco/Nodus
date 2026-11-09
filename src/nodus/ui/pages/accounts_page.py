@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 
 from nodus.models.account import Account
 from nodus.models.money import Money
@@ -15,7 +15,7 @@ from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS
-from nodus.ui.navigation import PageId
+from nodus.ui.navigation import PageId, history_focus
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
@@ -27,13 +27,14 @@ from nodus.ui.widgets.style import clear_layout, set_style_property
 
 
 class AccountRow(QWidget):
-    """One account: currency badge, name and type, balance, and its actions.
+    """One account: currency badge, name and type, balance, and the menu of its actions.
 
-    A savings or investment account also shows what it gained by itself and offers to
-    update its value.
+    A savings or investment account also shows what it gained by itself, and its menu
+    offers to update its value.
     """
 
     edit_requested = Signal(object)  # Account
+    transactions_requested = Signal(object)  # Account
     value_update_requested = Signal(object)  # Account
     archive_toggled = Signal(object)  # Account
     delete_requested = Signal(object)  # Account
@@ -44,9 +45,11 @@ class AccountRow(QWidget):
         balance: Money,
         hide_balance: bool = False,
         value_change: Money | None = None,
+        has_movements: bool = True,
     ) -> None:
         super().__init__()
         self.account = account
+        self.has_movements = has_movements
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 6, 0, 6)
         layout.setSpacing(12)
@@ -75,19 +78,6 @@ class AccountRow(QWidget):
         balance_label.setObjectName("RowAmount")
         layout.addWidget(balance_label)
 
-        self.value_button = QPushButton("Actualizar valor")
-        self.value_button.setObjectName("SmallButton")
-        self.value_button.setToolTip(
-            "Anota lo que vale hoy; la diferencia es rendimiento, no un ingreso"
-        )
-        self.value_button.clicked.connect(lambda: self.value_update_requested.emit(account))
-        # Hidden but keeping its room, so every balance lines up.
-        policy = self.value_button.sizePolicy()
-        policy.setRetainSizeWhenHidden(True)
-        self.value_button.setSizePolicy(policy)
-        layout.addWidget(self.value_button)
-        # Only once it has a parent: shown before, it would flash as a window of its own.
-        self.value_button.setVisible(self.can_update_value)
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
         install_context_menu(self, self.actions)
@@ -100,7 +90,14 @@ class AccountRow(QWidget):
     def actions(self) -> list[RowAction]:
         """Everything the account allows, for the «⋯» and the right click."""
         account = self.account
-        result = []
+        result = [
+            RowAction(
+                "Ver movimientos",
+                lambda: self.transactions_requested.emit(account),
+                "list",
+                enabled=self.has_movements,
+            )
+        ]
         if self.can_update_value:
             result.append(
                 RowAction(
@@ -128,6 +125,7 @@ class AccountsPage(Page):
     """
 
     navigate_requested = Signal(object)  # PageId
+    transactions_requested = Signal(object)  # TransactionFocus
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -218,11 +216,16 @@ class AccountsPage(Page):
                 if account.type.changes_value
                 else None
             )
+            focus = history_focus(self._services, account_id=account.id)
             row = AccountRow(
                 account,
                 balances[account.id],
                 self._services.settings.amounts_hidden(),
                 value_change,
+                has_movements=focus is not None,
+            )
+            row.transactions_requested.connect(
+                lambda _account, focus=focus: self.transactions_requested.emit(focus)
             )
             row.edit_requested.connect(self.open_account_dialog)
             row.value_update_requested.connect(self.open_value_dialog)

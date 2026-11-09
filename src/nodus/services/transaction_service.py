@@ -182,6 +182,10 @@ class TransactionService:
     def list_transactions(self, criteria: TransactionFilter) -> list[Transaction]:
         return self._transactions.list(criteria)
 
+    def date_range(self, criteria: TransactionFilter) -> tuple[date, date] | None:
+        """The first and last day of the transactions matching ``criteria``, if any."""
+        return self._transactions.date_range(criteria)
+
     # Transfers
 
     def create_transfer(self, draft: TransferDraft) -> Transfer:

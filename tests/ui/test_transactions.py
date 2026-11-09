@@ -20,6 +20,7 @@ from nodus.ui.dialogs.transaction_dialog import (
 )
 from nodus.ui.navigation import PageId
 from nodus.ui.pages import transactions_page
+from nodus.ui.pages.accounts_page import AccountRow
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.widgets.selectors import HEADING_ROLE, MANAGE_ROLE
 from nodus.ui.widgets.transaction_table import AMOUNT, CATEGORY, PAYEE
@@ -469,6 +470,21 @@ class TestTransactionsPage:
             dialog.save_button.click()
 
         assert {services.transactions.get(i).category_id for i in ids} == {ocio}
+
+
+def test_account_movements_open_filtered_by_account(services, window, pesos, dollars):
+    services.transactions.create(expense_draft(services, pesos.id, ars("10"), date(2026, 3, 5)))
+    window.show_page(PageId.ACCOUNTS)
+    accounts = window.page(PageId.ACCOUNTS)
+    banco = next(r for r in accounts.findChildren(AccountRow) if r.account.id == pesos.id)
+
+    run_action(banco.actions(), "Ver movimientos")
+
+    transactions = window.page(PageId.TRANSACTIONS)
+    assert window.current_page is transactions
+    assert transactions.account_filter.current_id() == pesos.id
+    assert transactions.period_selector.period().start == date(2026, 3, 1)
+    assert column(transactions, AMOUNT) == ["-$ 10,00"]
 
 
 class TestAddTransactionButton:

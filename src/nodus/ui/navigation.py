@@ -7,6 +7,8 @@ from datetime import date
 from enum import Enum
 
 from nodus.models.period import Month, Period
+from nodus.models.transaction_filter import TransactionFilter
+from nodus.services.container import Services
 
 
 class PageId(Enum):
@@ -34,16 +36,30 @@ class PageId(Enum):
 
 @dataclass(frozen=True)
 class TransactionFocus:
-    """The movements a page sends the user to: a period, narrowed to one category, payee
-    or tag when set. One object instead of a growing list of signal arguments."""
+    """The movements a page sends the user to: a period, narrowed to one category, payee,
+    tag or account when set. One object instead of a growing list of signal arguments."""
 
     period: Period
     category_id: int | None = None
     payee_id: int | None = None
     tag_id: int | None = None
+    account_id: int | None = None
 
 
 def history_period(first_on: date, last_on: date) -> Period:
     """The whole months from ``first_on`` to ``last_on`` or today, whichever is later, to
     show everything a payee or tag has, scheduled movements included."""
     return Period.of_months(Month.of(first_on), Month.of(max(last_on, date.today())))
+
+
+def history_focus(
+    services: Services, account_id: int | None = None, category_id: int | None = None
+) -> TransactionFocus | None:
+    """Every movement of an account or a category, from its first to today; None when it
+    has none, so menus can disable «Ver movimientos»."""
+    span = services.transactions.date_range(
+        TransactionFilter(account_id=account_id, category_id=category_id)
+    )
+    if span is None:
+        return None
+    return TransactionFocus(history_period(*span), category_id=category_id, account_id=account_id)

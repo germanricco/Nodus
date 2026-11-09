@@ -156,7 +156,23 @@ class TestAccountsPage:
         assert services.accounts.get(dollars.id).is_archived
         assert "ARCHIVADAS" in texts(page)
         archived_row = next(r for r in rows(page) if r.account.id == dollars.id)
-        assert [a.text for a in archived_row.actions()] == ["Editar", "Desarchivar", "Eliminar"]
+        assert [a.text for a in archived_row.actions()] == [
+            "Ver movimientos",
+            "Editar",
+            "Desarchivar",
+            "Eliminar",
+        ]
+
+    def test_see_movements_filters_by_the_account(self, qtbot, services, page, pesos, dollars):
+        services.transactions.create(expense_draft(services, pesos.id, ars("10")))
+        page.refresh()
+        by_name = {row.account.name: row for row in rows(page)}
+        assert not by_name["Ahorro"].actions()[0].enabled  # no movements
+
+        with qtbot.waitSignal(page.transactions_requested) as signal:
+            run_action(by_name["Banco"].actions(), "Ver movimientos")
+
+        assert signal.args[0].account_id == pesos.id
 
     def test_refreshes_when_accounts_change(self, services, event_bus, page):
         services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("10"))
@@ -211,11 +227,12 @@ class TestValueAdjustment:
     def test_only_savings_and_investments_offer_it(self, page, event_bus, pesos, investment):
         event_bus.accounts_changed.emit()
 
-        offered = {row.account.name: row.value_button.isVisibleTo(row) for row in rows(page)}
+        offered = {
+            row.account.name: "Actualizar valor" in [a.text for a in row.actions()]
+            for row in rows(page)
+        }
 
         assert offered == {"Banco": False, "MP Inversiones": True}
-        in_menu = {row.account.name: row.actions()[0].text for row in rows(page)}
-        assert in_menu == {"Banco": "Editar", "MP Inversiones": "Actualizar valor"}
 
     def test_shows_the_difference_and_saves_it_as_gain(
         self, qtbot, services, event_bus, investment

@@ -4,6 +4,7 @@ from decimal import Decimal
 
 import pytest
 from factories import FakeRegistry, ars, eur, expense_draft
+from menus import run_action
 
 from nodus.models.account import AccountType
 from nodus.models.currency import FOREIGN_CURRENCIES, Currency
@@ -60,7 +61,7 @@ def test_delete_rate_after_confirmation(monkeypatch, services, page):
     page.refresh()
     monkeypatch.setattr(settings_page, "confirm", lambda *_args: True)
 
-    rate_rows(page)[0].delete_button.click()
+    run_action(rate_rows(page)[0].actions(), "Eliminar")
 
     assert services.exchange_rates.history() == []
 
