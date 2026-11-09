@@ -57,7 +57,7 @@ Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la �
 </picture>
 
 ### Saber a quién va tu dinero
-Cada gasto o ingreso puede decir a quién le pagaste o quién te pagó: el supermercado, la empresa de luz, tu empleador. Escribes unas letras para elegirlo, o un nombre nuevo para sumarlo, y Nodus completa la categoría que sueles usar con él. La página Beneficiarios muestra cuántos movimientos y cuánto dinero fue o vino de cada uno, así que una pregunta como «¿cuánto gasto en el supermercado?» se responde con un clic. Los repetidos, como «Coto» y «Coto Online», se pueden unir en uno.
+Cada gasto o ingreso puede decir a quién le pagaste o quién te pagó: el supermercado, la empresa de luz, tu empleador. Escribes unas letras para elegirlo, o un nombre nuevo para sumarlo, y Nodus completa la categoría que sueles usar con él. La página Beneficiarios muestra cuántos movimientos y cuánto dinero fue o vino de cada uno, así que una pregunta como «¿cuánto gasto en el supermercado?» se responde con un clic; un doble clic abre la página de cada uno, con todos sus movimientos. Los repetidos, como «Coto» y «Coto Online», se pueden unir en uno.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/payees-dark.png">
@@ -65,7 +65,7 @@ Cada gasto o ingreso puede decir a quién le pagaste o quién te pagó: el super
 </picture>
 
 ### Agrupar lo que va junto
-Un viaje mezcla pasajes, hotel y comidas; un trabajo aparte trae ingresos y los gastos que lo acompañan. Las etiquetas agrupan movimientos de distintas categorías: escribes unas letras en el formulario para elegir una, o un nombre nuevo para crearla, y cada movimiento lleva las que necesite. La página Etiquetas muestra cuántos movimientos y cuánto dinero suma cada una, la lista de movimientos se filtra por etiqueta y Análisis también reparte tus gastos por etiqueta. Puedes renombrarlas, cambiarles el color, unirlas o borrarlas sin perder ningún movimiento. Etiquetas y categorías aceptan cualquier color: además de las muestras de siempre, el «+» abre un círculo cromático, que también acepta un código hexadecimal.
+Un viaje mezcla pasajes, hotel y comidas; un trabajo aparte trae ingresos y los gastos que lo acompañan. Las etiquetas agrupan movimientos de distintas categorías: escribes unas letras en el formulario para elegir una, o un nombre nuevo para crearla, y cada movimiento lleva las que necesite. La página Etiquetas muestra cuántos movimientos y cuánto dinero suma cada una, y cada etiqueta tiene su página con todos sus movimientos; la lista de movimientos se filtra por etiqueta y Análisis también reparte tus gastos por etiqueta. Puedes renombrarlas, cambiarles el color, unirlas o borrarlas sin perder ningún movimiento. Etiquetas y categorías aceptan cualquier color: además de las muestras de siempre, el «+» abre un círculo cromático, que también acepta un código hexadecimal.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/tags-dark.png">

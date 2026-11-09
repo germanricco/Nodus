@@ -59,7 +59,7 @@ One form covers expenses, income and transfers, and it starts on the account you
 </picture>
 
 ### Know who your money goes to
-Each expense or income can say who you paid or who paid you: the supermarket, the power company, your employer. Type a few letters to pick one, or a new name to add it, and Nodus fills in the category you usually use with it. The Payees page shows how many transactions and how much money went to or came from each one, so a question like "how much do I spend at the supermarket?" takes one click. Duplicates such as "Coto" and "Coto Online" can be merged into one.
+Each expense or income can say who you paid or who paid you: the supermarket, the power company, your employer. Type a few letters to pick one, or a new name to add it, and Nodus fills in the category you usually use with it. The Payees page shows how many transactions and how much money went to or came from each one, so a question like "how much do I spend at the supermarket?" takes one click, and a double click opens its own page with every one of its transactions. Duplicates such as "Coto" and "Coto Online" can be merged into one.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/payees-dark.png">
@@ -67,7 +67,7 @@ Each expense or income can say who you paid or who paid you: the supermarket, th
 </picture>
 
 ### Tag what belongs together
-A trip mixes flights, a hotel and meals; a side job brings income and the expenses that come with it. Tags group transactions across categories: type a few letters in the form to pick one, or a new name to create it, and give each transaction as many as it needs. The Tags page shows how many transactions and how much money each tag adds up to, the transactions list filters by tag, and Analysis splits your spending by tag too. Tags can be renamed, recolored, merged or deleted without losing a single transaction. Tags and categories take any color you like: beyond the ready-made swatches, a color wheel opens with the «+», and it also accepts a hex code.
+A trip mixes flights, a hotel and meals; a side job brings income and the expenses that come with it. Tags group transactions across categories: type a few letters in the form to pick one, or a new name to create it, and give each transaction as many as it needs. The Tags page shows how many transactions and how much money each tag adds up to, each tag has its own page with all of its transactions, the transactions list filters by tag, and Analysis splits your spending by tag too. Tags can be renamed, recolored, merged or deleted without losing a single transaction. Tags and categories take any color you like: beyond the ready-made swatches, a color wheel opens with the «+», and it also accepts a hex code.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/tags-dark.png">

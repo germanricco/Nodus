@@ -127,18 +127,23 @@ class TagService:
         for transaction in transactions:
             for tag in tags_by_transaction.get(transaction.id, []):
                 by_tag[tag.id].append(transaction)
-        summaries = []
-        for tag in self._tags.list():
-            tagged = by_tag[tag.id]
-            net, unconverted = net_in_pesos(tagged, self._exchange_rates)
-            dates = [t.occurred_on for t in tagged]
-            summaries.append(
-                TagSummary(
-                    tag, len(tagged), net, unconverted,
-                    min(dates, default=None), max(dates, default=None),
-                )
-            )  # fmt: skip
+        summaries = [self._summary(tag, by_tag[tag.id]) for tag in self._tags.list()]
         return sorted(summaries, key=lambda s: (-s.count, name_sort_key(s.tag.name)))
+
+    def summary(self, tag_id: int) -> TagSummary:
+        """One tag with its totals, for its own page."""
+        tag = self.get(tag_id)
+        tagged = self._transactions.list_transactions(
+            TransactionFilter(tag_id=tag_id, is_transfer=False)
+        )
+        return self._summary(tag, tagged)
+
+    def _summary(self, tag: Tag, tagged: list[Transaction]) -> TagSummary:
+        net, unconverted = net_in_pesos(tagged, self._exchange_rates)
+        dates = [t.occurred_on for t in tagged]
+        return TagSummary(
+            tag, len(tagged), net, unconverted, min(dates, default=None), max(dates, default=None)
+        )
 
     def _checked(self, tag: Tag) -> Tag:
         """``tag`` if its name is usable and no other tag has it."""

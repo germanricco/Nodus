@@ -14,6 +14,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Ajustes más ordenado: cada opción dice en una línea qué hace, con su control a la derecha; «Abrir Nodus al iniciar Windows» y «Buscar actualizaciones al iniciar» pasan a ser interruptores, y «Restaurar una copia», que reemplaza tus datos, queda aparte y en rojo. Ajustes se mueve al pie de la barra lateral, como en las apps de Windows, y deja la barra superior.
 - Una lista vacía ofrece el paso siguiente: «Agregar cuenta» cuando todavía no hay cuentas, «Limpiar filtros» cuando los filtros de Transacciones no dejan nada, y «Borrar búsqueda» o «Agregar beneficiario» (o etiqueta) en Beneficiarios y Etiquetas.
 - Cada cuenta tiene su página: un clic en la cuenta, en Cuentas o en la barra lateral, muestra su saldo (y en pesos, si es en dólares o en euros), el rendimiento de una inversión, la línea de su saldo en el tiempo y todos sus movimientos, con los mismos menús y la misma selección que Transacciones. «‹ Cuentas» o Esc vuelven; eliminar la cuenta queda al pie, en una «Zona de peligro».
+- Cada beneficiario y cada etiqueta también tienen su página: un doble clic en la lista (o «Abrir» en su menú) muestra cuántos movimientos tiene, cuánto suman, el último y, en un beneficiario, su categoría habitual, con todos sus movimientos debajo, «Editar» y «Unir con…» arriba y «Eliminar» al pie.
 
 ## 1.2.0
 

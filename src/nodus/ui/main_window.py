@@ -36,9 +36,11 @@ from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.dashboard_page import DashboardPage
 from nodus.ui.pages.detail_page import DetailPage
 from nodus.ui.pages.page import Page
+from nodus.ui.pages.payee_detail_page import PayeeDetailPage
 from nodus.ui.pages.payees_page import PayeesPage
 from nodus.ui.pages.recurring_page import RecurringPage
 from nodus.ui.pages.settings_page import SettingsPage
+from nodus.ui.pages.tag_detail_page import TagDetailPage
 from nodus.ui.pages.tags_page import TagsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.rate_updater import RateUpdater
@@ -89,11 +91,15 @@ class MainWindow(QMainWindow):
         payees.transactions_requested.connect(self.show_transactions)
         tags = TagsPage(services, event_bus, theme_manager)
         tags.transactions_requested.connect(self.show_transactions)
+        payees.detail_requested.connect(lambda i: self.show_detail(DetailId.PAYEE, i))
+        tags.detail_requested.connect(lambda i: self.show_detail(DetailId.TAG, i))
         transactions = TransactionsPage(services, event_bus, theme_manager)
         transactions.navigate_requested.connect(self.show_page)
         accounts.detail_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
         self._details: dict[DetailId, DetailPage] = {
             DetailId.ACCOUNT: AccountDetailPage(services, event_bus, theme_manager),
+            DetailId.PAYEE: PayeeDetailPage(services, event_bus, theme_manager),
+            DetailId.TAG: TagDetailPage(services, event_bus, theme_manager),
         }
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,

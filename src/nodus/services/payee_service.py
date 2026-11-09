@@ -159,6 +159,15 @@ class PayeeService:
         summaries = [self._summary(p, by_payee[p.id], categories) for p in self._payees.list()]
         return sorted(summaries, key=lambda s: (-s.count, name_sort_key(s.payee.name)))
 
+    def summary(self, payee_id: int) -> PayeeSummary:
+        """One payee with its totals, for its own page."""
+        payee = self.get(payee_id)
+        transactions = self._transactions.list_transactions(
+            TransactionFilter(payee_id=payee_id, is_transfer=False)
+        )
+        categories = {c.id: c for c in self._categories.list_categories()}
+        return self._summary(payee, transactions, categories)
+
     def _summary(
         self, payee: Payee, transactions: list[Transaction], categories: dict[int, Category]
     ) -> PayeeSummary:

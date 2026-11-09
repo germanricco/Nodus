@@ -124,6 +124,8 @@ def test_summaries_add_up_in_pesos(services, pesos, dollars):
     )  # fmt: skip
     assert (viaje.first_on, viaje.last_on) == (date(2026, 10, 1), date(2026, 11, 3))
     assert (sin_uso.count, sin_uso.net, sin_uso.first_on) == (0, ars("0"), None)
+    assert services.tags.summary(viaje.tag.id) == viaje
+    assert services.tags.summary(sin_uso.tag.id) == sin_uso
 
 
 def test_filter_by_tag(services, pesos):

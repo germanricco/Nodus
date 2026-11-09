@@ -143,13 +143,14 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
 
 class SummaryPage(Page, Generic[S]):
     """Every item with its movements, sortable by any column, with a search that ignores
-    case and accents. A double click opens the item's transactions; its «⋯» or a right
+    case and accents. A double click opens the item's page; its «⋯» or a right
     click offers every action, and several rows can be chosen to merge or delete them.
 
     Subclasses load the summaries and carry out the actions.
     """
 
     transactions_requested = Signal(object)  # TransactionFocus
+    detail_requested = Signal(int)  # item id
 
     def __init__(
         self,
@@ -205,6 +206,9 @@ class SummaryPage(Page, Generic[S]):
     def load_summaries(self) -> list[S]:
         raise NotImplementedError
 
+    def item_id(self, summary: S) -> int:
+        raise NotImplementedError
+
     def focus_of(self, summary: S) -> TransactionFocus:
         """The movements of ``summary``, which has at least one."""
         raise NotImplementedError
@@ -237,9 +241,10 @@ class SummaryPage(Page, Generic[S]):
         return [self.summary_at(row) for row in self.table.selected_rows()]
 
     def row_actions(self, row: int) -> list[RowAction]:
-        """The menu of a row: its movements, edit, merge and delete."""
+        """The menu of a row: its page, its movements, edit, merge and delete."""
         summary = self.summary_at(row)
         return [
+            RowAction("Abrir", lambda: self.open_detail(summary)),
             RowAction(
                 "Ver movimientos",
                 lambda: self.show_transactions(summary),
@@ -255,6 +260,9 @@ class SummaryPage(Page, Generic[S]):
             ),
             RowAction("Eliminar", lambda: self.delete_items([summary]), "trash", destructive=True),
         ]
+
+    def open_detail(self, summary: S) -> None:
+        self.detail_requested.emit(self.item_id(summary))
 
     def show_transactions(self, summary: S) -> None:
         if summary.count:
@@ -293,7 +301,7 @@ class SummaryPage(Page, Generic[S]):
         table.setObjectName("SortableTable")
         table.setSortingEnabled(True)
         table.sortByColumn(COUNT, Qt.SortOrder.DescendingOrder)
-        table.row_activated.connect(lambda row: self.show_transactions(self.summary_at(row)))
+        table.row_activated.connect(lambda row: self.open_detail(self.summary_at(row)))
         bind_delete_key(table, self.delete_selected)
         table.selection_changed.connect(self._update_actions)
         return table

@@ -30,6 +30,7 @@ from nodus.ui.widgets.money_label import MoneyLabel, masked
 from nodus.ui.widgets.net_worth_card import signed
 from nodus.ui.widgets.row_actions import MoreButton, RowAction
 from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.transaction_table import ACCOUNT
 
 SUMMARY_WIDTH = 300
 
@@ -91,6 +92,8 @@ class AccountDetailPage(DetailPage):
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
         self.list_view.empty_state.set_message("Esta cuenta todavía no tiene movimientos.")
+        # Every row would repeat the account.
+        self.list_view.table.setColumnHidden(ACCOUNT, True)
         self.content_layout.addWidget(self.list_view, stretch=1)
 
         self.danger_card, self.delete_button = danger_zone("", "Eliminar cuenta", self.delete)

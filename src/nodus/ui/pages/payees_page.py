@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from PySide6.QtWidgets import QWidget
+
 from nodus.services.container import Services
 from nodus.services.payee_service import PayeeSummary
 from nodus.services.sorting import name_sort_key
@@ -17,6 +19,36 @@ from nodus.ui.widgets.color import color_icon
 CATEGORY = TOTAL + 1
 NO_PAYEES_TEXT = "Aún no hay beneficiarios: se crean al escribir uno nuevo al cargar un movimiento."
 NO_MATCHES_TEXT = "Ningún beneficiario coincide con la búsqueda"
+
+
+def payee_delete_warning(summaries: list[PayeeSummary]) -> str:
+    """What deleting payees does: their movements stay, without a payee."""
+    if len(summaries) == 1:
+        text = f"Se va a eliminar «{summaries[0].payee.name}»."
+    else:
+        text = f"Se van a eliminar {len(summaries)} beneficiarios."
+    count = sum(summary.count for summary in summaries)
+    if count:
+        left = "queda" if count == 1 else "quedan"
+        text += f" {movements_text(count)} {left} sin beneficiario."
+    return text
+
+
+def delete_payees(
+    parent: QWidget, services: Services, event_bus: EventBus, summaries: list[PayeeSummary]
+) -> bool:
+    """Deletes the payees of ``summaries`` once the user confirms."""
+    title = (
+        "Eliminar beneficiario"
+        if len(summaries) == 1
+        else f"Eliminar {len(summaries)} beneficiarios"
+    )
+    if not confirm(parent, title, payee_delete_warning(summaries)):
+        return False
+    services.payees.delete_many([summary.payee.id for summary in summaries])
+    event_bus.payees_changed.emit()
+    event_bus.transactions_changed.emit()
+    return True
 
 
 class PayeeTableModel(SummaryTableModel[PayeeSummary]):
@@ -68,6 +100,9 @@ class PayeesPage(SummaryPage[PayeeSummary]):
     def load_summaries(self) -> list[PayeeSummary]:
         return self._services.payees.summaries()
 
+    def item_id(self, summary: PayeeSummary) -> int:
+        return summary.payee.id
+
     def focus_of(self, summary: PayeeSummary) -> TransactionFocus:
         period = history_period(summary.first_on, summary.last_on)
         return TransactionFocus(period, payee_id=summary.payee.id)
@@ -83,16 +118,4 @@ class PayeesPage(SummaryPage[PayeeSummary]):
         MergePayeeDialog(self._services, self._event_bus, payees, parent=self.window()).exec()
 
     def delete_items(self, summaries: list[PayeeSummary]) -> None:
-        count = sum(summary.count for summary in summaries)
-        if len(summaries) == 1:
-            title, text = "Eliminar beneficiario", f"Se va a eliminar «{summaries[0].payee.name}»."
-        else:
-            title = f"Eliminar {len(summaries)} beneficiarios"
-            text = f"Se van a eliminar {len(summaries)} beneficiarios."
-        if count:
-            left = "queda" if count == 1 else "quedan"
-            text += f" {movements_text(count)} {left} sin beneficiario."
-        if confirm(self.window(), title, text):
-            self._services.payees.delete_many([summary.payee.id for summary in summaries])
-            self._event_bus.payees_changed.emit()
-            self._event_bus.transactions_changed.emit()
+        delete_payees(self.window(), self._services, self._event_bus, summaries)

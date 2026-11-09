@@ -174,6 +174,11 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.show_detail(DetailId.ACCOUNT, investment.id)
         app.processEvents()
         save(window, args.out / f"account-detail-{mode.value}.png")
+        # The page of the most used payee.
+        payee = services.payees.summaries()[0].payee
+        window.show_detail(DetailId.PAYEE, payee.id)
+        app.processEvents()
+        save(window, args.out / f"payee-detail-{mode.value}.png")
         # Empty states: a search that matches nothing offers to clear it.
         for page_id in (PageId.TRANSACTIONS, PageId.PAYEES):
             window.show_page(page_id)

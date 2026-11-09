@@ -92,8 +92,8 @@ def test_row_menu_offers_every_action(page, populated):
 
     actions = actions_of(page, "Kiosco")
 
-    assert texts(actions) == ["Ver movimientos", "Editar", "Unir con…", "Eliminar"]
-    assert [a.enabled for a in actions] == [False, True, True, True]  # no movements to show
+    assert texts(actions) == ["Abrir", "Ver movimientos", "Editar", "Unir con…", "Eliminar"]
+    assert [a.enabled for a in actions] == [True, False, True, True, True]  # no movements to show
 
 
 def test_selection_bar_merges_and_deletes_several(

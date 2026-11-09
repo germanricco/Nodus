@@ -285,3 +285,9 @@ class TestSummaries:
         assert (unused.count, unused.net, unused.top_category, unused.first_on) == (
             0, ars("0"), None, None,
         )  # fmt: skip
+        assert services.payees.summary(coto.payee.id) == coto
+        assert services.payees.summary(unused.payee.id) == unused
+
+    def test_summary_of_a_missing_payee(self, services):
+        with pytest.raises(NotFoundError):
+            services.payees.summary(999)

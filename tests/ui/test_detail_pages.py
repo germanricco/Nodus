@@ -1,10 +1,12 @@
 """Pages about one item: how to get there and back, what they show, and deleting."""
 
 from factories import ars, expense_draft, usd
+from menus import run_action
 from PySide6.QtCore import Qt
 
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.ui.navigation import DetailId, PageId
-from nodus.ui.pages import accounts_page
+from nodus.ui.pages import accounts_page, payees_page
 from nodus.ui.pages.accounts_page import AccountRow
 
 
@@ -75,3 +77,69 @@ class TestAccountDetail:
         assert answers and "«Banco»" in answers[0]
         assert [a.id for a in services.accounts.list_accounts()] == [dollars.id]
         assert window.current_page is window.page(PageId.ACCOUNTS)
+
+
+class TestPayeeDetail:
+    def test_a_double_click_opens_it_with_its_figures(self, qtbot, services, window, pesos):
+        for amount in ("100", "50"):
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars(amount), payee_name="Coto")
+            )
+        services.transactions.create(expense_draft(services, pesos.id, ars("7")))
+        window.show_page(PageId.PAYEES)
+        payees = window.page(PageId.PAYEES)
+
+        payees.table.row_activated.emit(0)
+
+        detail = window.detail(DetailId.PAYEE)
+        assert window.current_page is detail
+        assert detail.title_label.text() == "Coto"
+        figures = {caption: label.text() for caption, label in detail.figure_labels.items()}
+        assert figures["Movimientos"] == "2"
+        assert figures["Total"] == "-$ 150,00"
+        assert figures["Categoría habitual"] != "—"
+        assert detail.list_view.model.rowCount() == 2
+        assert not detail.merge_button.isEnabled()  # no other payee to merge with
+        qtbot.keyClick(detail, Qt.Key.Key_Escape)
+        assert window.current_page is payees
+
+    def test_the_danger_zone_keeps_the_movements(self, monkeypatch, services, window, pesos):
+        services.transactions.create(
+            expense_draft(services, pesos.id, ars("100"), payee_name="Coto")
+        )
+        coto = services.payees.find("Coto")
+        answers = []
+        monkeypatch.setattr(
+            payees_page, "confirm", lambda _parent, _title, text: answers.append(text) or True
+        )
+        window.show_detail(DetailId.PAYEE, coto.id)
+        detail = window.detail(DetailId.PAYEE)
+        assert "1 movimiento queda sin beneficiario" in detail.delete_warning(detail.summary)
+
+        detail.delete_button.click()
+
+        assert answers
+        assert services.payees.find("Coto") is None
+        assert len(services.transactions.list_transactions(TransactionFilter())) == 1
+        assert window.current_page is window.page(PageId.PAYEES)
+
+
+class TestTagDetail:
+    def test_the_menu_opens_it_and_a_merge_goes_back(self, services, event_bus, window, pesos):
+        services.transactions.create(
+            expense_draft(services, pesos.id, ars("100"), tag_names=("Viaje", "Vacaciones"))
+        )
+        viaje, vacaciones = services.tags.find("Viaje"), services.tags.find("Vacaciones")
+        window.show_page(PageId.TAGS)
+        tags = window.page(PageId.TAGS)
+        row = [tags.summary_at(r).tag.id for r in range(tags.proxy.rowCount())].index(viaje.id)
+
+        run_action(tags.row_actions(row), "Abrir")
+
+        detail = window.detail(DetailId.TAG)
+        assert window.current_page is detail
+        assert detail.title_label.text() == "Viaje"
+        assert detail.merge_button.isEnabled()
+        services.tags.merge_many([viaje.id], vacaciones.id)
+        event_bus.tags_changed.emit()
+        assert window.current_page is tags
