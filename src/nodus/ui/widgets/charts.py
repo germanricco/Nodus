@@ -6,10 +6,11 @@ import math
 from dataclasses import dataclass
 
 from PySide6.QtCore import QEasingCurve, QPointF, QRectF, QSize, Qt, QVariantAnimation, Signal
-from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
+from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.money import Money
+from nodus.ui.theme.design import TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import AnimatedChart, lerp, starting_values, with_alpha
 
@@ -216,11 +217,8 @@ class DonutChart(AnimatedChart):
             caption, text, extra = self._caption, total.format() if total else "", ""
         else:
             caption, text, extra = self._caption, self._empty_text, ""
-        caption_font = QFont(self.font())
-        caption_font.setPointSizeF(self.font().pointSizeF() * 0.9)
-        value_font = QFont(self.font())
-        value_font.setPointSizeF(self.font().pointSizeF() * 1.35)
-        value_font.setWeight(QFont.Weight.DemiBold)
+        caption_font = role_font(TextRole.NOTE)
+        value_font = role_font(TextRole.FIGURE_SMALL)
         middle = ring.center().y() - (8 if extra else 0)
         inner = ring.adjusted(self.THICKNESS, 0, -self.THICKNESS, 0)
         painter.setPen(QColor(self._theme.text_muted))

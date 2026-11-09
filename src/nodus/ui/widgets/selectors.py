@@ -21,6 +21,7 @@ from nodus.models.account import Account
 from nodus.models.payee import Payee
 from nodus.models.tag import Tag
 from nodus.services.category_service import CategoryNode
+from nodus.ui.theme.design import TextRole, role_font
 from nodus.ui.widgets.color import color_icon
 
 # Item data: a section heading ("Gastos") instead of a choice, and how deep a choice is.
@@ -67,9 +68,7 @@ class _SectionDelegate(QStyledItemDelegate):
         self, painter: QPainter, option: QStyleOptionViewItem, index: _Index
     ) -> None:
         painter.save()
-        font = QFont(option.font)
-        font.setPointSizeF(font.pointSizeF() * 0.85)
-        font.setWeight(QFont.Weight.DemiBold)
+        font = role_font(TextRole.LABEL)
         painter.setFont(font)
         color = option.palette.color(QPalette.ColorRole.PlaceholderText)
         painter.setPen(color)

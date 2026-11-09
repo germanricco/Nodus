@@ -9,7 +9,6 @@ from datetime import date
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import (
     QColor,
-    QFont,
     QLinearGradient,
     QPainter,
     QPainterPath,
@@ -18,6 +17,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QWidget
 
+from nodus.ui.theme.design import TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -207,8 +207,7 @@ class LineChart(ColumnHoverChart):
 
     def _paint_grid(self, painter: QPainter, plot: QRectF, known: list[float]) -> None:
         low, high = value_range(known)
-        small = QFont(self.font())
-        small.setPointSizeF(self.font().pointSizeF() * 0.85)
+        small = role_font(TextRole.NOTE)
         painter.setFont(small)
         for step in range(3):
             y = plot.bottom() - plot.height() * step / 2

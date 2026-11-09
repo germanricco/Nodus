@@ -6,9 +6,10 @@ from collections.abc import Callable, Hashable
 from dataclasses import dataclass
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
+from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
+from nodus.ui.theme.design import TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -168,8 +169,7 @@ class StackedBarChart(ColumnHoverChart):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         all_values = self._values_at(self.progress)
         baseline, per_cent = self._scale(all_values)
-        small = QFont(self.font())
-        small.setPointSizeF(self.font().pointSizeF() * 0.85)
+        small = role_font(TextRole.NOTE)
         painter.setFont(small)
         for index, (slot, bar, values) in enumerate(
             zip(self._slots(), self._bars, all_values, strict=True)

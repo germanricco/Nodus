@@ -9,6 +9,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
+from nodus.ui.theme.design import TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -102,8 +103,7 @@ class BarChart(ColumnHoverChart):
         room = baseline - top
         largest = max([v for pair in values for v in pair] + [1.0])
 
-        small = QFont(self.font())
-        small.setPointSizeF(self.font().pointSizeF() * 0.85)
+        small = role_font(TextRole.NOTE)
         for index, (slot, group, pair) in enumerate(
             zip(self._slots(), self._groups, values, strict=True)
         ):

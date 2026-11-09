@@ -24,6 +24,7 @@ from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.currency import Currency
 from nodus.models.money import Money
+from nodus.ui.theme.design import TextRole, role_font
 from nodus.ui.theme.theme import Theme
 
 # Length of every chart and figure transition. Tests set it to 0 to check the final state.
@@ -146,9 +147,8 @@ class AnimatedChart(QWidget):
     ) -> None:
         """A floating box near ``anchor`` with a muted ``title`` and bold ``lines``, kept
         inside the widget."""
-        title_font = QFont(self.font())
-        title_font.setPointSizeF(self.font().pointSizeF() * 0.85)
-        line_font = QFont(self.font())
+        title_font = role_font(TextRole.NOTE)
+        line_font = role_font(TextRole.BODY)
         line_font.setWeight(QFont.Weight.DemiBold)
         title_metrics, line_metrics = QFontMetricsF(title_font), QFontMetricsF(line_font)
         padding, spacing = 10.0, 3.0

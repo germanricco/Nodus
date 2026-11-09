@@ -10,6 +10,7 @@ from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QApplication
 
+from nodus.ui.theme.design import design_tokens
 from nodus.ui.theme.theme import DARK, LIGHT, Theme, ThemeMode
 
 
@@ -69,7 +70,9 @@ class ThemeManager(QObject):
     def _apply(self) -> None:
         self._app.setPalette(self._palette(self._theme))
         self._app.setStyleSheet(
-            self._template.substitute(self._theme.tokens(), icons=self._icons_dir)
+            self._template.substitute(
+                self._theme.tokens(), **design_tokens(), icons=self._icons_dir
+            )
         )
 
     @staticmethod
