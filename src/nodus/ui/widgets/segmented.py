@@ -6,6 +6,8 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont, QFontMetrics
 from PySide6.QtWidgets import QButtonGroup, QFrame, QHBoxLayout, QPushButton, QWidget
 
+from nodus.ui.theme.design import Space
+
 
 class SegmentedControl(QFrame):
     """Buttons of which exactly one is checked; emits ``changed`` with its index."""
@@ -16,8 +18,8 @@ class SegmentedControl(QFrame):
         super().__init__(parent)
         self.setObjectName("SegmentedControl")
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(3, 3, 3, 3)
-        layout.setSpacing(2)
+        layout.setContentsMargins(Space.XS, Space.XS, Space.XS, Space.XS)
+        layout.setSpacing(Space.XXS)
         self._group = QButtonGroup(self)
         self.buttons: list[QPushButton] = []
         for index, label in enumerate(labels):
@@ -33,7 +35,7 @@ class SegmentedControl(QFrame):
         self._group.idToggled.connect(lambda index, checked: checked and self.changed.emit(index))
 
     # Horizontal padding of a segment in the stylesheet (QPushButton#Segment), plus a margin.
-    SEGMENT_PADDING = 2 * 14 + 4
+    SEGMENT_PADDING = 2 * Space.L + Space.XS
 
     def _reserve_bold_width(self, button: QPushButton) -> None:
         """The checked segment is bold, so each one is sized for its bold text; otherwise

@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QWid
 
 from nodus.models.period import Period, QuickPeriod
 from nodus.ui.dialogs.date_range_dialog import DateRangeDialog
+from nodus.ui.theme.design import Space
 
 
 class PeriodSelector(QWidget):
@@ -33,7 +34,7 @@ class PeriodSelector(QWidget):
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
+        layout.setSpacing(Space.XS)
         self.previous_button = self._arrow("‹", "Período anterior")
         self.next_button = self._arrow("›", "Período siguiente")
         self.period_button = QPushButton()

@@ -21,6 +21,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.page import Page
 from nodus.ui.pages.transaction_list_view import TransactionListView
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.selectors import (
@@ -97,7 +98,7 @@ class TransactionsPage(Page):
         self.clear_filters_button.setObjectName("SecondaryButton")
         self.clear_filters_button.clicked.connect(self.clear_filters)
         filters = QHBoxLayout()
-        filters.setSpacing(8)
+        filters.setSpacing(Space.S)
         for widget in self._filter_combos():
             filters.addWidget(widget)
         filters.addWidget(self.search_input, stretch=1)

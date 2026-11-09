@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBox
 
 from nodus.models.payee import normalize_name
 from nodus.services.tag_service import TagService
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.color import color_icon
 from nodus.ui.widgets.name_completer import NameCompleter
 
@@ -39,11 +40,11 @@ class TagInput(QWidget):
         self._names: list[str] = []
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
+        layout.setSpacing(Space.XS)
         self.chips = QWidget()
         self._chips_layout = QHBoxLayout(self.chips)
         self._chips_layout.setContentsMargins(0, 0, 0, 0)
-        self._chips_layout.setSpacing(6)
+        self._chips_layout.setSpacing(Space.XS)
         self.line_edit = QLineEdit()
         self.line_edit.setPlaceholderText("Opcional · Enter para agregar")
         self.names_completer = NameCompleter(

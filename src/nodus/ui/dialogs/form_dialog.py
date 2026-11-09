@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.services.errors import ValidationError
+from nodus.ui.theme.design import Space
 
 # The main button of a dialog that edits something that already exists.
 SAVE_CHANGES = "Guardar cambios"
@@ -34,7 +35,7 @@ class FormDialog(QDialog):
     """
 
     MIN_WIDTH = 460
-    MARGIN = 24
+    MARGIN = Space.XXL
 
     def __init__(
         self, title: str, parent: QWidget | None = None, action: str = SAVE_CHANGES
@@ -43,8 +44,8 @@ class FormDialog(QDialog):
         self.setWindowTitle(title)
 
         layout = self._layout = QVBoxLayout(self)
-        layout.setContentsMargins(self.MARGIN, 20, self.MARGIN, 20)
-        layout.setSpacing(16)
+        layout.setContentsMargins(self.MARGIN, Space.XL, self.MARGIN, Space.XL)
+        layout.setSpacing(Space.L)
         layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
         # A fixed-size layout overrides the widget's minimum width; a strut keeps it.
         layout.addStrut(self.MIN_WIDTH - 2 * self.MARGIN)
@@ -54,7 +55,7 @@ class FormDialog(QDialog):
         layout.addWidget(heading)
 
         self.form = QFormLayout()
-        self.form.setSpacing(10)
+        self.form.setSpacing(Space.M)
         layout.addLayout(self.form)
 
         self.error_label = QLabel()

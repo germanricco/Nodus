@@ -17,6 +17,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.labels import movements_text, transactions_text, unconverted_note
 from nodus.ui.pages.page import Page
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
@@ -123,8 +124,8 @@ class TransactionListView(Card):
         self.empty_state = EmptyState()
         self.totals_label = QLabel()
         self.totals_label.setObjectName("FieldHint")
-        self.totals_label.setContentsMargins(8, 4, 8, 0)
-        self.body.setContentsMargins(8, 8, 8, 8)
+        self.totals_label.setContentsMargins(Space.S, Space.XS, Space.S, 0)
+        self.body.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
         self.body.addWidget(self.table)
         self.body.addWidget(self.empty_state, stretch=1)
         self.body.addWidget(self.totals_label)

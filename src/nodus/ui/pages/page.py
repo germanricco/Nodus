@@ -2,6 +2,8 @@
 
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
+from nodus.ui.theme.design import Space
+
 
 class Page(QWidget):
     """A main section: a title and a content area that subclasses fill.
@@ -14,8 +16,8 @@ class Page(QWidget):
     def __init__(self, title: str) -> None:
         super().__init__()
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(32, 24, 32, 24)
-        layout.setSpacing(16)
+        layout.setContentsMargins(Space.XXXL, Space.XXL, Space.XXXL, Space.XXL)
+        layout.setSpacing(Space.L)
         header = QWidget()
         # As tall as the selection bar, which takes the header's place, so nothing below
         # moves when rows are chosen.
@@ -30,7 +32,7 @@ class Page(QWidget):
         self._selection_bar: QWidget | None = None
         layout.addWidget(header)
         self.content_layout = QVBoxLayout()
-        self.content_layout.setSpacing(16)
+        self.content_layout.setSpacing(Space.L)
         layout.addLayout(self.content_layout, stretch=1)
 
     def add_header_button(self, text: str, primary: bool = False) -> QPushButton:

@@ -15,6 +15,7 @@ from nodus.services.dashboard_service import relative_change
 from nodus.services.net_worth_service import NetWorth, NetWorthPoint
 from nodus.ui.formatting import format_date
 from nodus.ui.labels import HELD_IN_LABELS, rate_text
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
@@ -54,7 +55,7 @@ class CurrencyLegend(QWidget):
         super().__init__()
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        layout.setSpacing(Space.S)
         self.dot = ColorDot("#000000", size=10)
         name = QLabel(HELD_IN_LABELS[currency])
         set_style_property(name, "muted", True)
@@ -97,7 +98,7 @@ class NetWorthCard(Card):
             )
             self.body.addWidget(self.chart, stretch=1)
         self.composition = ProportionBar(self._theme)
-        self.body.addSpacing(4)
+        self.body.addSpacing(Space.XS)
         self.body.addWidget(self.composition)
         self._build_legend()
         theme_manager.theme_changed.connect(self._set_theme)
@@ -106,7 +107,7 @@ class NetWorthCard(Card):
 
     def _build_header(self) -> None:
         header = QHBoxLayout()
-        header.setSpacing(12)
+        header.setSpacing(Space.M)
         title = QLabel("PATRIMONIO NETO")
         title.setObjectName("CardTitle")
         self.currency_input = SegmentedControl(CURRENCY_LABELS)
@@ -122,7 +123,7 @@ class NetWorthCard(Card):
         self.change_caption = QLabel("vs. inicio del período")
         self.change_caption.setObjectName("FieldHint")
         change = QVBoxLayout()
-        change.setSpacing(2)
+        change.setSpacing(Space.XXS)
         change.addWidget(self.change_badge, alignment=Qt.AlignmentFlag.AlignRight)
         change.addWidget(self.change_caption, alignment=Qt.AlignmentFlag.AlignRight)
         header.addLayout(change)
@@ -139,7 +140,7 @@ class NetWorthCard(Card):
         self.day_label = QLabel()
         set_style_property(self.day_label, "muted", True)
         row = QHBoxLayout()
-        row.setSpacing(10)
+        row.setSpacing(Space.S)
         row.addWidget(self.total_label)
         row.addWidget(self.day_label, alignment=Qt.AlignmentFlag.AlignBottom)
         row.addStretch()
@@ -156,7 +157,7 @@ class NetWorthCard(Card):
             column_widget = QWidget()
             column = QVBoxLayout(column_widget)
             column.setContentsMargins(0, 0, 0, 0)
-            column.setSpacing(2)
+            column.setSpacing(Space.XXS)
             caption = QLabel(HELD_IN_LABELS[currency].upper())
             caption.setObjectName("StatCaption")
             amount = AnimatedMoneyLabel()

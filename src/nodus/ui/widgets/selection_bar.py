@@ -7,6 +7,7 @@ from collections.abc import Callable
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.style import set_style_property
 
 
@@ -23,8 +24,8 @@ class SelectionBar(QFrame):
         self.setObjectName("SelectionBar")
         self._chosen_word = chosen_word
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(14, 4, 6, 4)
-        layout.setSpacing(10)
+        layout.setContentsMargins(Space.M, Space.XS, Space.S, Space.XS)
+        layout.setSpacing(Space.S)
         self.count_label = QLabel()
         self.count_label.setObjectName("RowTitle")
         self.detail_label = QLabel()
@@ -33,7 +34,7 @@ class SelectionBar(QFrame):
         layout.addWidget(self.count_label)
         layout.addWidget(self.detail_label, stretch=1)
         self._actions = QHBoxLayout()
-        self._actions.setSpacing(8)
+        self._actions.setSpacing(Space.S)
         layout.addLayout(self._actions)
         self.clear_button = QPushButton("✕")
         self.clear_button.setObjectName("SmallButton")

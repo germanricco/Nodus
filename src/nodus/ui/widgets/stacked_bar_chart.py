@@ -9,7 +9,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
-from nodus.ui.theme.design import TextRole, role_font
+from nodus.ui.theme.design import Radius, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -182,7 +182,7 @@ class StackedBarChart(ColumnHoverChart):
             for position, (segment, rect) in enumerate(pieces):
                 painter.setBrush(with_alpha(segment.color, 0.35 if faded else 0.9))
                 if position in (outer_up, outer_down):
-                    painter.drawPath(rounded_bar_path(rect, 4, position == outer_up))
+                    painter.drawPath(rounded_bar_path(rect, Radius.S, position == outer_up))
                 else:
                     painter.drawRect(rect)
             painter.setPen(QColor(self._theme.text_muted))
@@ -214,7 +214,7 @@ class StackedBarChart(ColumnHoverChart):
         box = QRectF(self.width() - width, y - 18, width, 16)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(self._theme.surface))
-        painter.drawRoundedRect(box, 4, 4)
+        painter.drawRoundedRect(box, Radius.S, Radius.S)
         painter.setPen(QColor(self._theme.warning))
         painter.drawText(box, Qt.AlignmentFlag.AlignCenter, text)
 

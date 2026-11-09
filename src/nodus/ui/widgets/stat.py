@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 from nodus.models.money import Money
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.money_label import MoneyLabel
 from nodus.ui.widgets.style import set_style_property
 
@@ -23,7 +24,7 @@ class Stat(QWidget):
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
+        layout.setSpacing(Space.XXS)
         caption_label = QLabel(caption.upper())
         caption_label.setObjectName("StatCaption")
         layout.addWidget(caption_label)

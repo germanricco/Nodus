@@ -16,6 +16,8 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QVBoxLayout, QWidget
 
+from nodus.ui.theme.design import Space
+
 # What a dragged row carries: "<list id>:<row index>", so a list only accepts its own rows.
 ROW_MIME_TYPE = "application/x-nodus-row"
 
@@ -73,7 +75,7 @@ class _ListRow(QWidget):
         self.index = index
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
+        layout.setSpacing(Space.XS)
         self.handle = DragHandle()
         layout.addWidget(self.handle)
         layout.addWidget(content, stretch=1)
@@ -97,7 +99,7 @@ class ReorderableList(QWidget):
 
     order_changed = Signal(list)
 
-    SPACING = 8  # as between the rows of a Card, so a reorderable list looks the same
+    SPACING = Space.S  # as between the rows of a Card, so a reorderable list looks the same
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)

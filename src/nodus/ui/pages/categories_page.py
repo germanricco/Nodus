@@ -13,6 +13,7 @@ from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import history_focus
 from nodus.ui.pages.page import Page
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
@@ -40,8 +41,10 @@ class CategoryRow(QWidget):
         self.category = category
         self.has_movements = has_movements
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(self.INDENT if category.is_subcategory else 0, 4, 0, 4)
-        layout.setSpacing(10)
+        layout.setContentsMargins(
+            self.INDENT if category.is_subcategory else 0, Space.XS, 0, Space.XS
+        )
+        layout.setSpacing(Space.S)
         layout.addWidget(ColorDot(category.color))
         name = QLabel(category.name)
         name.setObjectName("RowTitle")
@@ -103,7 +106,7 @@ class CategoriesPage(Page):
         container = QWidget()
         self._sections = QVBoxLayout(container)
         self._sections.setContentsMargins(0, 0, 0, 0)
-        self._sections.setSpacing(16)
+        self._sections.setSpacing(Space.L)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(container)

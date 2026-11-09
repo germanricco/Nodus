@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from nodus.models.payee import normalize_name
 from nodus.services.payee_service import PayeeService
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.name_completer import NameCompleter
 
 
@@ -27,7 +28,7 @@ class PayeeInput(QWidget):
         self._last_chosen_id: int | None = None
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
+        layout.setSpacing(Space.XXS)
         self.line_edit = QLineEdit()
         self.line_edit.setPlaceholderText("Opcional")
         self.names = NameCompleter(

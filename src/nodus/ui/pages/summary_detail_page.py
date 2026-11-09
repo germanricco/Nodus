@@ -17,6 +17,7 @@ from nodus.ui.pages.dashboard_cards import FigureTile
 from nodus.ui.pages.detail_page import DetailPage, danger_zone
 from nodus.ui.pages.summary_page import S
 from nodus.ui.pages.transaction_list_view import TransactionListView
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.money_label import masked
 
@@ -56,7 +57,7 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self.merge_button.clicked.connect(lambda: self.merge_item(self.summary))
 
         figures = QHBoxLayout()
-        figures.setSpacing(12)
+        figures.setSpacing(Space.M)
         self.figure_labels: dict[str, QLabel] = {}
         for caption in ("Movimientos", "Total", "Último movimiento", *self.CAPTIONS):
             label = QLabel()

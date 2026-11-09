@@ -22,6 +22,7 @@ from nodus.ui.navigation import DetailId
 from nodus.ui.pages.accounts_page import account_delete_warning, delete_account
 from nodus.ui.pages.detail_page import DetailPage, danger_zone
 from nodus.ui.pages.transaction_list_view import TransactionListView
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.chart_base import format_compact
@@ -65,7 +66,7 @@ class AccountDetailPage(DetailPage):
         self.add_header_widget(self.more_button)
 
         top = QHBoxLayout()
-        top.setSpacing(16)
+        top.setSpacing(Space.L)
         summary = Card()
         summary.setFixedWidth(SUMMARY_WIDTH)
         self.kind_label = QLabel()

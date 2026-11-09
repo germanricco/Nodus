@@ -20,6 +20,7 @@ from nodus.models.money import Money
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.icons import icon, logo_pixmap
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -35,7 +36,7 @@ class SidebarAccountRow(QWidget):
     def __init__(self, name: str, balance: Money, hidden: bool) -> None:
         super().__init__()
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 2, 4, 2)
+        layout.setContentsMargins(0, Space.XXS, Space.XS, Space.XXS)
         label = QLabel(name)
         label.setObjectName("SidebarItem")
         layout.addWidget(label, stretch=1)
@@ -72,8 +73,8 @@ class Sidebar(QFrame):
         self.setFixedWidth(self.WIDTH)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 16, 12, 8)
-        layout.setSpacing(2)
+        layout.setContentsMargins(Space.M, Space.L, Space.M, Space.S)
+        layout.setSpacing(Space.XXS)
 
         layout.addWidget(self._build_logo())
 
@@ -166,8 +167,8 @@ class Sidebar(QFrame):
     def _build_logo(self) -> QWidget:
         logo = QWidget()
         row = QHBoxLayout(logo)
-        row.setContentsMargins(8, 4, 8, 12)
-        row.setSpacing(10)
+        row.setContentsMargins(Space.S, Space.XS, Space.S, Space.M)
+        row.setSpacing(Space.S)
         image = QLabel()
         image.setPixmap(logo_pixmap(self.LOGO_SIZE))
         image.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -213,7 +214,7 @@ class Sidebar(QFrame):
         container.setObjectName("SidebarAccounts")
         self._accounts_layout = QVBoxLayout(container)
         self._accounts_layout.setContentsMargins(0, 0, 0, 0)
-        self._accounts_layout.setSpacing(6)
+        self._accounts_layout.setSpacing(Space.S)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

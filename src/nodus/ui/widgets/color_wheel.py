@@ -27,6 +27,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.ui.theme.design import Space
+
 # Positions of the brightness slider; enough steps for every value of a hex digit pair.
 VALUE_STEPS = 1000
 PREVIEW_SIZE = 28
@@ -135,8 +137,8 @@ class ColorWheelPopup(QFrame):
         # A code set or typed is kept as is, since going through HSV may shift a digit.
         self._exact: str | None = None
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(12)
+        layout.setContentsMargins(Space.L, Space.L, Space.L, Space.L)
+        layout.setSpacing(Space.M)
 
         self.wheel = HueSaturationWheel()
         self.wheel.changed.connect(self._on_wheel_changed)
@@ -155,7 +157,7 @@ class ColorWheelPopup(QFrame):
         self.hex_input.setFixedWidth(100)
         self.hex_input.textEdited.connect(self._on_hex_edited)
         code = QHBoxLayout()
-        code.setSpacing(10)
+        code.setSpacing(Space.S)
         code.addWidget(self.preview)
         code.addWidget(self.hex_input)
         code.addStretch()

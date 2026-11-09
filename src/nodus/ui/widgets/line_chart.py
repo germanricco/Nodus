@@ -17,7 +17,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QWidget
 
-from nodus.ui.theme.design import TextRole, role_font
+from nodus.ui.theme.design import Space, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -222,11 +222,17 @@ class LineChart(ColumnHoverChart):
                 )
         painter.setPen(QColor(self._theme.text_muted))
         for index in self._axis_indexes(plot, painter):
-            # Centered under its point, but kept inside the widget at both ends.
-            left = min(max(self._x(index, plot) - 40, 0), self.width() - 80)
+            # Centered under its point; near an end of the widget it leans against that
+            # edge, moving no further than needed so it keeps clear of its neighbor.
+            center = self._x(index, plot)
+            left, align = center - 40, Qt.AlignmentFlag.AlignHCenter
+            if left < 0:
+                left, align = 0, Qt.AlignmentFlag.AlignLeft
+            elif left + 80 > self.width():
+                left, align = self.width() - 80, Qt.AlignmentFlag.AlignRight
             painter.drawText(
-                QRectF(left, plot.bottom() + 4, 80, self.BOTTOM - 4),
-                Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
+                QRectF(left, plot.bottom() + Space.XS, 80, self.BOTTOM - Space.XS),
+                align | Qt.AlignmentFlag.AlignTop,
                 self._format_day(self._points[index].day),
             )
 

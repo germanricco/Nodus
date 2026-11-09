@@ -34,6 +34,7 @@ from nodus.ui.pages.dashboard_cards import (
     muted_label,
 )
 from nodus.ui.pages.page import Page
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.net_worth_card import NetWorthCard
@@ -105,7 +106,7 @@ class DashboardPage(Page):
         grid_page = QWidget()
         self._grid = QGridLayout(grid_page)
         self._grid.setContentsMargins(0, 0, 0, 0)
-        self._grid.setSpacing(16)
+        self._grid.setSpacing(Space.L)
         self._layout: tuple[bool, bool, bool] | None = None
         # Owned by the grid page from the start, so a card left out of the grid (upcoming
         # payments without charges) never becomes a window of its own when shown.
@@ -293,6 +294,6 @@ class DashboardPage(Page):
         buttons.addStretch()
         card.body.addWidget(title)
         card.body.addWidget(text)
-        card.body.addSpacing(8)
+        card.body.addSpacing(Space.S)
         card.body.addLayout(buttons)
         return card

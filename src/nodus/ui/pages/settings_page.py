@@ -39,6 +39,7 @@ from nodus.ui.formatting import format_date
 from nodus.ui.labels import rate_text
 from nodus.ui.pages.page import Page
 from nodus.ui.rate_updater import RateUpdater
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
@@ -88,7 +89,7 @@ class RateRow(QWidget):
         super().__init__()
         self.rate = rate
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 2, 0, 2)
+        layout.setContentsMargins(0, Space.XXS, 0, Space.XXS)
         day = QLabel(format_date(rate.rate_date))
         set_style_property(day, "muted", True)
         day.setMinimumWidth(90)
@@ -120,7 +121,7 @@ class SettingsPage(Page):
         container = QWidget()
         sections = QVBoxLayout(container)
         sections.setContentsMargins(0, 0, 0, 0)
-        sections.setSpacing(16)
+        sections.setSpacing(Space.L)
         sections.addWidget(self._appearance_card())
         sections.addWidget(self._rate_card())
         sections.addWidget(self._data_card())
@@ -207,7 +208,7 @@ class SettingsPage(Page):
         self.current_rate_date_label = QLabel()
         set_style_property(self.current_rate_date_label, "muted", True)
         current = QHBoxLayout()
-        current.setSpacing(12)
+        current.setSpacing(Space.M)
         current.addWidget(self.current_rate_label)
         current.addWidget(self.current_rate_date_label, alignment=Qt.AlignmentFlag.AlignBottom)
         current.addStretch()
@@ -215,9 +216,9 @@ class SettingsPage(Page):
         self.official_rate_label = QLabel("Oficial, desde DolarApi")
         set_style_property(self.official_rate_label, "muted", True)
         current.addWidget(self.official_rate_label, alignment=Qt.AlignmentFlag.AlignBottom)
-        card.body.addSpacing(4)
+        card.body.addSpacing(Space.XS)
         card.body.addLayout(current)
-        card.body.addSpacing(4)
+        card.body.addSpacing(Space.XS)
 
         self.rate_date_input = DateInput()
         self.rate_value_input = AmountInput(Currency.ARS)
@@ -228,7 +229,7 @@ class SettingsPage(Page):
         self.save_rate_button.clicked.connect(self.save_rate)
         self.rate_value_input.line_edit.returnPressed.connect(self.save_rate)
         form = QHBoxLayout()
-        form.setSpacing(8)
+        form.setSpacing(Space.S)
         form.addWidget(self.rate_date_input)
         self.rate_unit_label = QLabel()
         form.addWidget(self.rate_unit_label)
@@ -244,7 +245,7 @@ class SettingsPage(Page):
 
         history_title = QLabel("HISTORIAL")
         history_title.setObjectName("CardTitle")
-        card.body.addSpacing(8)
+        card.body.addSpacing(Space.S)
         card.body.addWidget(history_title)
         self._history = QVBoxLayout()
         self._history.setSpacing(0)
@@ -371,7 +372,7 @@ class SettingsPage(Page):
         separator = QFrame()
         separator.setObjectName("Separator")
         separator.setFixedHeight(1)
-        card.body.addSpacing(4)
+        card.body.addSpacing(Space.XS)
         card.body.addWidget(separator)
         restore_row = SettingRow(
             "Restaurar una copia",

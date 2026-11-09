@@ -3,6 +3,7 @@
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -22,8 +23,8 @@ class TopBar(QFrame):
         super().__init__()
         self.setObjectName("TopBar")
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(24, 12, 24, 12)
-        layout.setSpacing(8)
+        layout.setContentsMargins(Space.XXL, Space.M, Space.XXL, Space.M)
+        layout.setSpacing(Space.S)
 
         self._add_button = QPushButton("Agregar transacción")
         self._add_button.setObjectName("PrimaryButton")

@@ -24,6 +24,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import FREQUENCY_LABELS, charge_amount_text
 from nodus.ui.pages.dashboard_cards import FigureTile, due_status_label
 from nodus.ui.pages.page import Page
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_context_menu
@@ -73,8 +74,8 @@ class RecurringChargeRow(QWidget):
         super().__init__()
         self.charge = charge
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 6, 0, 6)
-        layout.setSpacing(12)
+        layout.setContentsMargins(0, Space.S, 0, Space.S)
+        layout.setSpacing(Space.M)
         layout.addWidget(ColorDot(category.color))
 
         texts = QVBoxLayout()
@@ -156,7 +157,7 @@ class RecurringPage(Page):
         container = QWidget()
         self._sections = QVBoxLayout(container)
         self._sections.setContentsMargins(0, 0, 0, 0)
-        self._sections.setSpacing(16)
+        self._sections.setSpacing(Space.L)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(container)
@@ -249,7 +250,7 @@ class RecurringPage(Page):
     def _summary_card(self, summary: RecurringSummary) -> Card:
         card = Card()
         tiles = QHBoxLayout()
-        tiles.setSpacing(8)
+        tiles.setSpacing(Space.S)
         monthly, yearly = summary_text(summary)
         self.monthly_label = QLabel(monthly)
         self.yearly_label = QLabel(yearly)

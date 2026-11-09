@@ -1,15 +1,17 @@
-"""Nodus's design scale: the typeface and the text sizes every screen picks from.
+"""Nodus's design scale: the typeface, text sizes, spacing and corners every screen
+picks from.
 
-Each text plays a named role instead of choosing its own size, so every page looks alike
-and the whole look changes from here: another typeface, or a role a little larger. The
-stylesheet refers to the roles as tokens (``$title_size``) and widgets that paint
-themselves ask for ``role_font``. Light and dark themes share this scale; only colors
-differ between them (``theme.py``).
+Each text plays a named role and each gap or corner takes a named step instead of a
+number of its own, so every page looks alike and the whole look changes from here:
+another typeface, roomier cards, rounder corners. The stylesheet refers to the scale as
+tokens (``$title_size``, ``$space_m``, ``$radius_l``); Python code uses ``Space``,
+``Radius`` and ``role_font``. Light and dark themes share this scale; only colors differ
+between them (``theme.py``).
 """
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, IntEnum
 
 from PySide6.QtGui import QFont
 
@@ -41,6 +43,31 @@ class TextRole(Enum):
         return self.value[1]
 
 
+class Space(IntEnum):
+    """Gaps and margins in pixels, on a 4 px grid (as Fluent's spacing ramp), plus a
+    hairline step for the tightest pairs, such as a value and its caption."""
+
+    XXS = 2
+    XS = 4
+    S = 8
+    M = 12
+    L = 16
+    XL = 20
+    XXL = 24
+    XXXL = 32
+
+
+class Radius(IntEnum):
+    """Corner radii in pixels: the larger the surface, the rounder. Something inside
+    another rounded thing takes a smaller step, so their corners run parallel. Circles
+    and pills take half their height instead."""
+
+    S = 4  # checkboxes, progress bars, chart bars
+    M = 6  # fields, segments, menu items: controls inside a larger frame
+    L = 8  # buttons, menus, tags, figure tiles
+    XL = 12  # cards and panels
+
+
 def role_font(role: TextRole) -> QFont:
     """The font of ``role``, for widgets that paint their own text (charts, delegates)."""
     font = QFont(FONT_FAMILY)
@@ -51,10 +78,12 @@ def role_font(role: TextRole) -> QFont:
 
 def design_tokens() -> dict[str, str]:
     """The scale as stylesheet tokens: ``font_family``, ``<role>_size`` and
-    ``<role>_weight`` for each role."""
+    ``<role>_weight`` for each text role, ``space_<step>`` and ``radius_<step>``."""
     tokens = {"font_family": f'"{FONT_FAMILY}"'}
     for role in TextRole:
         name = role.name.lower()
         tokens[f"{name}_size"] = f"{role.size}pt"
         tokens[f"{name}_weight"] = str(role.weight)
+    tokens.update({f"space_{step.name.lower()}": f"{step}px" for step in Space})
+    tokens.update({f"radius_{step.name.lower()}": f"{step}px" for step in Radius})
     return tokens

@@ -1,7 +1,8 @@
 /* Nodus stylesheet. Words starting with a dollar sign are tokens filled in by
    ThemeManager: colors of the theme (theme.py), the typeface and text roles of the design
    scale (design.py: $title_size, $title_weight…) and "icons", the folder of the icons.
-   Sizes come only from the design scale, never as numbers here. */
+   Text sizes, gaps and corners come only from the design scale, never as numbers
+   here, except corners and offsets derived from an element's own size. */
 
 QWidget {
     font-family: $font_family;
@@ -27,15 +28,15 @@ QMainWindow, #ContentArea, #PageStack {
 
 #NavButton {
     text-align: left;
-    padding: 8px 12px;
+    padding: $space_s $space_m;
     border: none;
-    border-radius: 8px;
+    border-radius: $radius_l;
     background: transparent;
 }
 
 #NavButton[collapsed="true"] {
     text-align: center;
-    padding: 8px;
+    padding: $space_s;
 }
 
 #NavButton:hover {
@@ -52,7 +53,7 @@ QMainWindow, #ContentArea, #PageStack {
     color: $text_muted;
     font-size: $label_size;
     font-weight: $label_weight;
-    padding: 16px 8px 4px 8px;
+    padding: $space_l $space_s $space_xs $space_s;
 }
 
 #SectionToggle {
@@ -60,7 +61,7 @@ QMainWindow, #ContentArea, #PageStack {
     font-size: $label_size;
     font-weight: $label_weight;
     text-align: left;
-    padding: 16px 8px 4px 8px;
+    padding: $space_l $space_s $space_xs $space_s;
     border: none;
     background: transparent;
 }
@@ -74,13 +75,13 @@ QMainWindow, #ContentArea, #PageStack {
 }
 
 #SidebarItem {
-    padding-left: 8px;
+    padding-left: $space_s;
 }
 
 #SidebarFooter {
     color: $text_muted;
     font-size: $label_size;
-    padding: 8px;
+    padding: $space_s;
 }
 
 /* Top bar and pages */
@@ -98,7 +99,7 @@ QMainWindow, #ContentArea, #PageStack {
 #Card {
     background: $surface;
     border: 1px solid $border;
-    border-radius: 12px;
+    border-radius: $radius_xl;
 }
 
 #CardTitle, #StatCaption {
@@ -125,13 +126,13 @@ QMainWindow, #ContentArea, #PageStack {
 /* Where a dragged row of a ReorderableList would land. */
 #DropIndicator {
     background: $accent;
-    border-radius: 1px;
+    border-radius: 1px; /* geometry: half its height */
 }
 
 #Badge {
     background: $accent_soft;
     color: $accent;
-    border-radius: 16px;
+    border-radius: 16px; /* geometry: half its height */
     min-width: 32px;
     max-width: 32px;
     min-height: 32px;
@@ -154,8 +155,8 @@ QMainWindow, #ContentArea, #PageStack {
 #Tag {
     background: $accent_soft;
     color: $accent;
-    border-radius: 8px;
-    padding: 1px 8px;
+    border-radius: $radius_l;
+    padding: $space_xxs $space_s;
     font-size: $label_size;
     font-weight: $label_weight;
 }
@@ -163,7 +164,7 @@ QMainWindow, #ContentArea, #PageStack {
 #RowAmount {
     font-size: $strong_size;
     font-weight: $strong_weight;
-    padding-right: 8px;
+    padding-right: $space_s;
 }
 
 #EmptyState {
@@ -178,7 +179,7 @@ QMainWindow, #ContentArea, #PageStack {
 QPushButton#IconButton {
     background: $surface;
     border: 1px solid $border;
-    border-radius: 10px;
+    border-radius: $radius_l;
 }
 
 QPushButton#IconButton:hover {
@@ -188,7 +189,7 @@ QPushButton#IconButton:hover {
 QLabel#NotificationCount {
     background: $expense;
     color: #ffffff;
-    border-radius: 9px;
+    border-radius: 9px; /* geometry: half its height */
     font-size: $label_size;
     font-weight: $display_weight;
 }
@@ -197,7 +198,7 @@ QFrame#NotificationPanel,
 QFrame#ColorWheelPopup {
     background: $surface;
     border: 1px solid $border;
-    border-radius: 10px;
+    border-radius: $radius_xl;
 }
 
 QFrame#Separator {
@@ -210,8 +211,8 @@ QPushButton#PrimaryButton {
     background: $accent;
     color: $on_accent;
     border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
+    border-radius: $radius_l;
+    padding: $space_s $space_l;
     font-weight: $strong_weight;
 }
 
@@ -222,12 +223,12 @@ QPushButton#PrimaryButton:hover {
 QPushButton#SecondaryButton, QPushButton#SmallButton {
     background: $surface;
     border: 1px solid $border;
-    border-radius: 8px;
-    padding: 8px 16px;
+    border-radius: $radius_l;
+    padding: $space_s $space_l;
 }
 
 QPushButton#SmallButton {
-    padding: 4px 10px;
+    padding: $space_xs $space_m;
     font-size: $note_size;
 }
 
@@ -236,8 +237,8 @@ QPushButton#DangerButton {
     background: $surface;
     color: $expense;
     border: 1px solid $border;
-    border-radius: 8px;
-    padding: 8px 16px;
+    border-radius: $radius_l;
+    padding: $space_s $space_l;
 }
 
 QPushButton#DangerButton:hover {
@@ -253,7 +254,7 @@ QPushButton#SecondaryButton:hover, QPushButton#SmallButton:hover {
 
 QFrame#SelectionBar {
     background: $accent_soft;
-    border-radius: 10px;
+    border-radius: $radius_xl;
 }
 
 /* The «⋯» that opens a row's actions */
@@ -261,7 +262,7 @@ QFrame#SelectionBar {
 QPushButton#MoreButton {
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: $radius_m;
     padding: 0;
 }
 
@@ -273,7 +274,7 @@ QPushButton#MoreButton:hover, QPushButton#MoreButton:pressed {
 #DangerZone {
     background: $surface;
     border: 1px solid $expense;
-    border-radius: 12px;
+    border-radius: $radius_xl;
 }
 
 /* A link in a card's header, such as «Ver todas ›». */
@@ -323,9 +324,9 @@ QTextBrowser#NewsText {
 QLineEdit, QComboBox, QDateEdit {
     background: $background;
     border: 1px solid $border;
-    border-radius: 6px;
-    padding: 6px 8px;
-    min-height: 20px;
+    border-radius: $radius_m;
+    padding: $space_xs $space_s;
+    min-height: 24px;
 }
 
 QLineEdit:focus, QComboBox:focus, QDateEdit:focus {
@@ -376,7 +377,7 @@ QComboBox QAbstractItemView {
 /* Check boxes: a box with the theme border, filled with the accent when checked. */
 
 QCheckBox {
-    spacing: 8px;
+    spacing: $space_s;
 }
 
 QCheckBox:disabled {
@@ -387,7 +388,7 @@ QCheckBox::indicator {
     width: 16px;
     height: 16px;
     border: 1px solid $text_muted;
-    border-radius: 4px;
+    border-radius: $radius_s;
     background: $background;
 }
 
@@ -409,13 +410,13 @@ QCheckBox::indicator:disabled {
 
 QProgressBar {
     border: none;
-    border-radius: 4px;
+    border-radius: $radius_s;
     background: $hover;
     max-height: 8px;
 }
 
 QProgressBar::chunk {
-    border-radius: 4px;
+    border-radius: $radius_s;
     background: $accent;
 }
 
@@ -424,14 +425,14 @@ QProgressBar::chunk {
 #SegmentedControl {
     background: $background;
     border: 1px solid $border;
-    border-radius: 8px;
+    border-radius: $radius_l;
 }
 
 QPushButton#Segment {
     background: transparent;
     border: none;
-    border-radius: 6px;
-    padding: 6px 14px;
+    border-radius: $radius_m;
+    padding: $space_xs $space_l;
     color: $text_muted;
 }
 
@@ -454,8 +455,8 @@ QPushButton#Segment:disabled {
 QPushButton#PeriodButton {
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 8px;
-    padding: 4px 24px 4px 12px;
+    border-radius: $radius_l;
+    padding: $space_xs $space_xxl $space_xs $space_m;
     font-weight: $strong_weight;
     min-width: 130px;
 }
@@ -477,13 +478,13 @@ QPushButton#PeriodButton::menu-indicator {
 QMenu {
     background: $surface;
     border: 1px solid $border;
-    border-radius: 8px;
-    padding: 6px;
+    border-radius: $radius_l;
+    padding: $space_xs;
 }
 
 QMenu::item {
-    padding: 7px 24px 7px 12px;
-    border-radius: 6px;
+    padding: $space_s $space_xxl $space_s $space_m;
+    border-radius: $radius_m;
 }
 
 QMenu::item:selected {
@@ -497,13 +498,13 @@ QMenu::item:disabled {
 }
 
 QMenu::icon {
-    padding-left: 10px;
+    padding-left: $space_s;
 }
 
 QMenu::separator {
     height: 1px;
     background: $border;
-    margin: 5px 6px;
+    margin: $space_xs $space_xs;
 }
 
 /* Tables */
@@ -517,7 +518,7 @@ QTableView {
 }
 
 QTableView::item {
-    padding: 0 8px;
+    padding: 0 $space_s;
     border-bottom: 1px solid $border;
 }
 
@@ -526,14 +527,14 @@ QHeaderView::section {
     color: $text_muted;
     border: none;
     border-bottom: 1px solid $border;
-    padding: 8px;
+    padding: $space_s;
     font-size: $label_size;
     font-weight: $label_weight;
 }
 
 /* Room for the sort arrow, which Qt draws at the right edge of the section. */
 #SortableTable QHeaderView::section {
-    padding-right: 20px;
+    padding-right: $space_xl;
 }
 
 QCalendarWidget QWidget {
@@ -551,8 +552,8 @@ QCalendarWidget QTableView::item {
 QCalendarWidget QToolButton {
     background: transparent;
     border: none;
-    border-radius: 6px;
-    padding: 4px 8px;
+    border-radius: $radius_m;
+    padding: $space_xs $space_s;
     font-weight: $strong_weight;
 }
 
@@ -569,7 +570,7 @@ QCalendarWidget QToolButton#qt_calendar_nextmonth {
 }
 
 QCalendarWidget QToolButton#qt_calendar_monthbutton {
-    padding-right: 22px;
+    padding-right: $space_xxl;
 }
 
 QCalendarWidget QToolButton::menu-indicator {
@@ -605,12 +606,12 @@ QScrollArea {
 QScrollBar:vertical {
     background: transparent;
     width: 10px;
-    margin: 2px;
+    margin: $space_xxs;
 }
 
 QScrollBar::handle:vertical {
     background: $border;
-    border-radius: 3px;
+    border-radius: 3px; /* geometry: half its height */
     min-height: 24px;
 }
 
@@ -622,14 +623,14 @@ QToolTip {
     background: $surface;
     color: $text;
     border: 1px solid $border;
-    padding: 4px;
+    padding: $space_xs;
 }
 
 /* Relative change pill (ChangeBadge) */
 
 QLabel#ChangeBadge {
-    border-radius: 9px;
-    padding: 2px 8px;
+    border-radius: 9px; /* geometry: half its height */
+    padding: $space_xxs $space_s;
     font-size: $note_size;
     font-weight: $strong_weight;
     background: $hover;
@@ -639,7 +640,7 @@ QLabel#ChangeBadge {
 /* Nothing to compare with: a plain "—", not a pill. */
 QLabel#ChangeBadge[tone="empty"] {
     background: transparent;
-    padding: 2px 0px;
+    padding: $space_xxs 0;
 }
 
 QLabel#ChangeBadge[tone="good"] {
@@ -660,7 +661,7 @@ QLabel#ChangeBadge[tone="warning"] {
 /* Dashboard: category rows that light up under the mouse, and boxed figures */
 
 QFrame#CategoryLine {
-    border-radius: 6px;
+    border-radius: $radius_m;
 }
 
 QFrame#CategoryLine[highlighted="true"] {
@@ -669,15 +670,15 @@ QFrame#CategoryLine[highlighted="true"] {
 
 QFrame#FigureTile {
     border: 1px solid $border;
-    border-radius: 10px;
+    border-radius: $radius_l;
 }
 
 /* Tag chips (TagInput, tags column) */
 
 QToolButton#TagChip {
     border: 1px solid $border;
-    border-radius: 10px;
-    padding: 2px 8px;
+    border-radius: 10px; /* geometry: half its height */
+    padding: $space_xxs $space_s;
     background: $hover;
     color: $text;
     font-size: $note_size;
@@ -690,12 +691,12 @@ QToolButton#TagChip:hover {
 QSlider::groove:horizontal {
     height: 6px;
     background: $border;
-    border-radius: 3px;
+    border-radius: 3px; /* geometry: half its height */
 }
 
 QSlider::handle:horizontal {
     width: 16px;
-    margin: -5px 0;
+    margin: -5px 0; /* geometry: centers the handle on the groove */
     background: $accent;
-    border-radius: 8px;
+    border-radius: 8px; /* geometry: half its height */
 }

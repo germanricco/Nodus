@@ -32,6 +32,7 @@ from nodus.ui.pages.dashboard_cards import (
     muted_label,
     percent,
 )
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.bar_chart import BarChart
@@ -119,7 +120,7 @@ class TrendsView(AnalysisView):
         self._trends: Trends | None = None
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
+        layout.setSpacing(Space.L)
 
         self.metric_input = SegmentedControl([metric.value for metric in METRICS])
         metric_row = QHBoxLayout()
@@ -135,7 +136,7 @@ class TrendsView(AnalysisView):
         self.total_tile = FigureTile("Total", self.total_label, self.change_badge, large=True)
         self.previous_tile = FigureTile("Período anterior", self.previous_label, large=True)
         tiles = QHBoxLayout()
-        tiles.setSpacing(16)
+        tiles.setSpacing(Space.L)
         for tile in (self.total_tile, self.previous_tile,
                      FigureTile("Promedio mensual", self.average_label, large=True)):  # fmt: skip
             tiles.addWidget(tile, stretch=1)
@@ -151,7 +152,7 @@ class TrendsView(AnalysisView):
         self.categories_card, self._category_rows = rows_card("Por categoría")
         self.payees_card, self._payee_rows = rows_card("Por beneficiario")
         breakdown = QHBoxLayout()
-        breakdown.setSpacing(16)
+        breakdown.setSpacing(Space.L)
         breakdown.addWidget(self.categories_card, stretch=1)
         breakdown.addWidget(self.payees_card, stretch=1)
         layout.addLayout(breakdown)
@@ -366,7 +367,7 @@ class CashFlowView(AnalysisView):
         self._report: CashFlowReport | None = None
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
+        layout.setSpacing(Space.L)
 
         self.income_label = AnimatedMoneyLabel(highlight_positive=True)
         self.expenses_label = AnimatedMoneyLabel()
@@ -378,7 +379,7 @@ class CashFlowView(AnalysisView):
         self.rate_badge = ChangeBadge(none_text=NO_PREVIOUS_TEXT, unit="pp")
         self.rate_badge.setToolTip("Diferencia en puntos porcentuales")
         tiles = QHBoxLayout()
-        tiles.setSpacing(16)
+        tiles.setSpacing(Space.L)
         for caption, value, badge in (
             ("Ingresos", self.income_label, self.income_badge),
             ("Gastos", self.expenses_label, self.expenses_badge),
@@ -542,7 +543,7 @@ class NetWorthView(AnalysisView):
         self._period: Period | None = None
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
+        layout.setSpacing(Space.L)
 
         self.card = NetWorthCard(services, theme_manager)
         self.card.chart.setMinimumHeight(StackedBarChart.MIN_HEIGHT)

@@ -27,6 +27,7 @@ from nodus.ui.labels import days_left_text, unconverted_note
 from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.dashboard_cards import BudgetRow, CategoryLine, FigureTile, muted_label
 from nodus.ui.pages.page import Page
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.budget_bar import budget_pill, usage_text
@@ -84,7 +85,7 @@ class BudgetsPage(Page):
         container = QWidget()
         self._sections = QVBoxLayout(container)
         self._sections.setContentsMargins(0, 0, 0, 0)
-        self._sections.setSpacing(16)
+        self._sections.setSpacing(Space.L)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(container)
@@ -161,7 +162,7 @@ class BudgetsPage(Page):
         self.spent_label = QLabel(month.spent.format())
         self.remaining_label = QLabel((-month.remaining if over else month.remaining).format())
         tiles = QHBoxLayout()
-        tiles.setSpacing(8)
+        tiles.setSpacing(Space.S)
         for caption, value in (
             ("Presupuestado", self.limit_label),
             ("Gastado", self.spent_label),

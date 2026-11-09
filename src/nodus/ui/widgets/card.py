@@ -2,6 +2,8 @@
 
 from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
 
+from nodus.ui.theme.design import Space
+
 
 class Card(QFrame):
     """A surface with a border and rounded corners, optionally titled.
@@ -13,8 +15,8 @@ class Card(QFrame):
         super().__init__(parent)
         self.setObjectName("Card")
         self.body = QVBoxLayout(self)
-        self.body.setContentsMargins(20, 16, 20, 16)
-        self.body.setSpacing(8)
+        self.body.setContentsMargins(Space.XL, Space.L, Space.XL, Space.L)
+        self.body.setSpacing(Space.S)
         if title:
             title_label = QLabel(title.upper())
             title_label.setObjectName("CardTitle")

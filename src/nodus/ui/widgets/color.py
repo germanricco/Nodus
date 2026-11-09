@@ -16,6 +16,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
 
 from nodus.models.palette import PALETTE
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.color_wheel import ColorWheelPopup, hue_ring_gradient
 
 
@@ -92,7 +93,7 @@ class ColorPicker(QWidget):
         super().__init__(parent)
         self._grid = QGridLayout(self)
         self._grid.setContentsMargins(0, 0, 0, 0)
-        self._grid.setSpacing(8)
+        self._grid.setSpacing(Space.S)
         self._group = QButtonGroup(self)
         self._swatches: dict[str, QPushButton] = {}
         self.wheel_swatch = WheelSwatch()

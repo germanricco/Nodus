@@ -41,6 +41,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.ui.theme.design import Radius
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
 from nodus.ui.widgets.row_actions import RowAction, show_menu
@@ -64,11 +65,11 @@ def paint_check_box(painter: QPainter, area: QRect, state: Qt.CheckState) -> Non
     if state == Qt.CheckState.Unchecked:
         painter.setPen(QPen(QColor(theme.text_muted), 1.3))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(box.adjusted(0.5, 0.5, -0.5, -0.5), 4, 4)
+        painter.drawRoundedRect(box.adjusted(0.5, 0.5, -0.5, -0.5), Radius.S, Radius.S)
     else:
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(theme.accent))
-        painter.drawRoundedRect(box, 4, 4)
+        painter.drawRoundedRect(box, Radius.S, Radius.S)
         pen = QPen(QColor(theme.on_accent), 2)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)

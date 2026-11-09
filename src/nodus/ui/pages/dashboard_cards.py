@@ -28,6 +28,7 @@ from nodus.services.dashboard_service import CategoryTotal, Comparison, MonthFlo
 from nodus.services.recurring_charge_service import UPCOMING_DAYS
 from nodus.ui.formatting import format_date
 from nodus.ui.labels import days_left_text, due_label, estimate_text, unconverted_note
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
@@ -103,7 +104,7 @@ def flow_bar_groups(flow: list[MonthFlow], selected: Month | None = None) -> lis
 def card_header(card: Card, title: str) -> QHBoxLayout:
     """A title on the left with room on the right, e.g. for a ``ChangeBadge``."""
     header = QHBoxLayout()
-    header.setSpacing(8)
+    header.setSpacing(Space.S)
     label = QLabel(title.upper())
     label.setObjectName("CardTitle")
     header.addWidget(label)
@@ -138,8 +139,8 @@ class CategoryLine(QFrame):
         self.setObjectName("CategoryLine")
         self.name = name
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(6, 3, 6, 3)
-        layout.setSpacing(8)
+        layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
+        layout.setSpacing(Space.S)
         layout.addWidget(ColorDot(color, size=10))
         texts = QVBoxLayout()
         texts.setSpacing(0)
@@ -190,8 +191,8 @@ class FigureTile(QFrame):
         super().__init__()
         self.setObjectName("FigureTile")
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 8, 12, 8)
-        layout.setSpacing(2)
+        layout.setContentsMargins(Space.M, Space.S, Space.M, Space.S)
+        layout.setSpacing(Space.XXS)
         # Tiles in a row share their height; the figures stay on top, lined up.
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         caption_label = QLabel(caption.upper())
@@ -211,8 +212,8 @@ class LatestTransactionRow(QWidget):
     def __init__(self, item: TransactionListItem, transfer_color: str) -> None:
         super().__init__()
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 4, 0, 4)
-        layout.setSpacing(10)
+        layout.setContentsMargins(0, Space.XS, 0, Space.XS)
+        layout.setSpacing(Space.S)
         layout.addWidget(ColorDot(item.category_color or transfer_color, size=10))
         texts = QVBoxLayout()
         texts.setSpacing(0)
@@ -275,8 +276,8 @@ class UpcomingPaymentRow(QWidget):
         super().__init__()
         self.charge = charge
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 4, 0, 4)
-        layout.setSpacing(8)
+        layout.setContentsMargins(0, Space.XS, 0, Space.XS)
+        layout.setSpacing(Space.S)
         texts = QVBoxLayout()
         texts.setSpacing(0)
         name = QLabel(charge.name)
@@ -353,14 +354,14 @@ class BudgetRow(QWidget):
         super().__init__()
         self.budget = budget
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 2, 0, 6)
-        layout.setSpacing(2)
+        layout.setContentsMargins(0, Space.XXS, 0, Space.S)
+        layout.setSpacing(Space.XXS)
         self.line = CategoryLine(budget.category.color, budget.category.name)
         self.line.hovered.connect(self.line.set_highlighted)
         self.line.clicked.connect(self.clicked)
         self.bar = BudgetBar(theme, budget)
         bar_row = QHBoxLayout()
-        bar_row.setContentsMargins(24, 0, 6, 0)  # under the name, past the color dot
+        bar_row.setContentsMargins(Space.XXL, 0, Space.S, 0)  # under the name, past the color dot
         bar_row.addWidget(self.bar)
         layout.addWidget(self.line)
         layout.addLayout(bar_row)
@@ -418,16 +419,16 @@ class CashFlowCard(Card):
         self.caption_label = muted_label("")
         self.body.addWidget(self.savings_label)
         self.body.addWidget(self.caption_label)
-        self.body.addSpacing(6)
+        self.body.addSpacing(Space.S)
         self.proportion = ProportionBar(theme)
         self.body.addWidget(self.proportion)
-        self.body.addSpacing(6)
+        self.body.addSpacing(Space.S)
 
         self.income_label = AnimatedMoneyLabel(highlight_positive=True, compact_when_narrow=True)
         self.expenses_label = AnimatedMoneyLabel(compact_when_narrow=True)
         self.saved_label = QLabel()
         tiles = QHBoxLayout()
-        tiles.setSpacing(8)
+        tiles.setSpacing(Space.S)
         for caption, value in (
             ("Ingresos", self.income_label),
             ("Gastos", self.expenses_label),
@@ -441,7 +442,7 @@ class CashFlowCard(Card):
         self.body.addWidget(self.unconverted_label)
         trend_title = QLabel("MES A MES")
         trend_title.setObjectName("StatCaption")
-        self.body.addSpacing(6)
+        self.body.addSpacing(Space.S)
         self.body.addWidget(trend_title)
         self.chart = BarChart(theme)
         self.body.addWidget(self.chart, stretch=1)
@@ -499,7 +500,7 @@ class ExpensesCard(Card):
         self._legend.setContentsMargins(0, 0, 0, 0)
         self._legend.setSpacing(0)
         self._chart_area = QBoxLayout(QBoxLayout.Direction.TopToBottom)
-        self._chart_area.setSpacing(16)
+        self._chart_area.setSpacing(Space.L)
         self._chart_area.addWidget(self.donut, stretch=1)
         self._chart_area.addWidget(self.legend_panel)
         self.body.addLayout(self._chart_area, stretch=1)
@@ -603,7 +604,7 @@ class ComparisonCard(Card):
         super().__init__()
         card_header(self, "Frente al período anterior")
         self._rows = QVBoxLayout()
-        self._rows.setSpacing(2)
+        self._rows.setSpacing(Space.XXS)
         self.body.addLayout(self._rows)
         self.body.addStretch()
         self.rows: list[CategoryLine] = []

@@ -22,6 +22,7 @@ from nodus.services.sorting import name_sort_key
 from nodus.ui.labels import unconverted_note
 from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.page import Page
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
@@ -192,7 +193,7 @@ class SummaryPage(Page, Generic[S]):
         self.table = self._build_table()
         self.empty_state = EmptyState()
         card = Card()
-        card.body.setContentsMargins(8, 8, 8, 8)
+        card.body.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
         card.body.addWidget(self.table)
         card.body.addWidget(self.empty_state, stretch=1)
         self.content_layout.addWidget(card, stretch=1)

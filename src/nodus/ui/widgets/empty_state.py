@@ -7,6 +7,8 @@ from collections.abc import Callable
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 
+from nodus.ui.theme.design import Space
+
 
 class EmptyState(QWidget):
     """A centered message where the rows would be and, when there is one, a button with the
@@ -16,7 +18,7 @@ class EmptyState(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         layout = QVBoxLayout(self)
-        layout.setSpacing(12)
+        layout.setSpacing(Space.M)
         layout.addStretch()
         self.label = QLabel()
         self.label.setObjectName("EmptyState")

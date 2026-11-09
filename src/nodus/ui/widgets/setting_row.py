@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.style import set_style_name
 
 
@@ -17,10 +18,10 @@ class SettingRow(QWidget):
     def __init__(self, title: str, detail: str = "", parent: QWidget | None = None) -> None:
         super().__init__(parent)
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 4, 0, 4)
-        layout.setSpacing(8)
+        layout.setContentsMargins(0, Space.XS, 0, Space.XS)
+        layout.setSpacing(Space.S)
         texts = QVBoxLayout()
-        texts.setSpacing(2)
+        texts.setSpacing(Space.XXS)
         self.title = QLabel(title)
         self.title.setObjectName("RowTitle")
         self.detail = QLabel(detail)

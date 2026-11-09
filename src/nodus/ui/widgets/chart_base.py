@@ -24,7 +24,7 @@ from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.ui.theme.design import TextRole, role_font
+from nodus.ui.theme.design import Radius, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 
 # Length of every chart and figure transition. Tests set it to 0 to check the final state.
@@ -169,7 +169,7 @@ class AnimatedChart(QWidget):
         painter.save()
         painter.setPen(with_alpha(self._theme.border, 1))
         painter.setBrush(QColor(self._theme.surface))
-        painter.drawRoundedRect(box, 8, 8)
+        painter.drawRoundedRect(box, Radius.L, Radius.L)
         painter.setFont(title_font)
         painter.setPen(QColor(self._theme.text_muted))
         top = box.top() + padding

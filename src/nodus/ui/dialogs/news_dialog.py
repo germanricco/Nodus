@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 from nodus.services.changelog import ChangelogEntry
 from nodus.services.update_service import Release
 from nodus.ui.formatting import format_date
+from nodus.ui.theme.design import Space
 
 HEADING_SPACE = 20
 
@@ -64,8 +65,8 @@ class NewsDialog(QDialog):
         self.setWindowTitle(title)
         self.resize(560, 520)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 20, 24, 20)
-        layout.setSpacing(12)
+        layout.setContentsMargins(Space.XXL, Space.XL, Space.XXL, Space.XL)
+        layout.setSpacing(Space.M)
 
         heading = QLabel(title)
         heading.setObjectName("DialogTitle")

@@ -25,6 +25,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.navigation import PageId, history_focus
 from nodus.ui.pages.page import Page
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.money_label import MoneyLabel, masked
@@ -98,8 +99,8 @@ class AccountRow(QWidget):
         self.account = account
         self.has_movements = has_movements
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 6, 0, 6)
-        layout.setSpacing(12)
+        layout.setContentsMargins(0, Space.S, 0, Space.S)
+        layout.setSpacing(Space.M)
 
         badge = QLabel(account.currency.value)
         badge.setObjectName("Badge")
@@ -200,7 +201,7 @@ class AccountsPage(Page):
         container = QWidget()
         page_layout = QVBoxLayout(container)
         page_layout.setContentsMargins(0, 0, 0, 0)
-        page_layout.setSpacing(16)
+        page_layout.setSpacing(Space.L)
         # The net worth card lives as long as the page, so its figures count to new values.
         self.net_worth_card = NetWorthCard(services, theme_manager, compact=True)
         self.net_worth_card.set_amounts_hidden(services.settings.amounts_hidden())
@@ -210,7 +211,7 @@ class AccountsPage(Page):
         )
         page_layout.addWidget(self.net_worth_card)
         self._sections = QVBoxLayout()
-        self._sections.setSpacing(16)
+        self._sections.setSpacing(Space.L)
         # The active accounts, when there are enough to reorder.
         self.account_list: ReorderableList | None = None
         page_layout.addLayout(self._sections)
@@ -322,6 +323,6 @@ class AccountsPage(Page):
         self.empty_create_button = QPushButton("Agregar cuenta")
         self.empty_create_button.setObjectName("PrimaryButton")
         self.empty_create_button.clicked.connect(lambda: self.open_account_dialog())
-        card.body.addSpacing(4)
+        card.body.addSpacing(Space.XS)
         card.body.addWidget(self.empty_create_button, alignment=Qt.AlignmentFlag.AlignLeft)
         return card

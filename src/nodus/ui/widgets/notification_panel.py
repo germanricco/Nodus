@@ -6,6 +6,7 @@ from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from nodus.services.notification_service import Notice, NoticeKind
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 ACTION_LABELS = {
@@ -24,8 +25,8 @@ class NoticeRow(QWidget):
     def __init__(self, notice: Notice) -> None:
         super().__init__()
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 8, 0, 8)
-        layout.setSpacing(2)
+        layout.setContentsMargins(0, Space.S, 0, Space.S)
+        layout.setSpacing(Space.XXS)
         title = QLabel(notice.title)
         title.setObjectName("RowTitle")
         title.setWordWrap(True)
@@ -35,7 +36,7 @@ class NoticeRow(QWidget):
         layout.addWidget(title)
         layout.addWidget(detail)
         buttons = QHBoxLayout()
-        buttons.setSpacing(6)
+        buttons.setSpacing(Space.S)
         self.news_button: QPushButton | None = None
         if notice.kind is NoticeKind.UPDATE and notice.notes:
             self.news_button = QPushButton("Qué trae")
@@ -51,7 +52,7 @@ class NoticeRow(QWidget):
             self.dismiss_button.setToolTip("No volver a avisar de esta versión")
             buttons.addWidget(self.dismiss_button)
         buttons.addStretch()
-        layout.addSpacing(4)
+        layout.addSpacing(Space.XS)
         layout.addLayout(buttons)
 
 
@@ -70,7 +71,7 @@ class NotificationPanel(QFrame):
         self.setObjectName("NotificationPanel")
         self.setFixedWidth(WIDTH)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 12, 16, 12)
+        layout.setContentsMargins(Space.L, Space.M, Space.L, Space.M)
         layout.setSpacing(0)
         title = QLabel("NOTIFICACIONES")
         title.setObjectName("CardTitle")
@@ -86,7 +87,7 @@ class NotificationPanel(QFrame):
         if not notices:
             empty = QLabel("Sin novedades")
             set_style_property(empty, "muted", True)
-            empty.setContentsMargins(0, 10, 0, 4)
+            empty.setContentsMargins(0, Space.S, 0, Space.XS)
             self._rows.addWidget(empty)
         for index, notice in enumerate(notices):
             if index:

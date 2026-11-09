@@ -19,6 +19,7 @@ from nodus.services.errors import UpdateError
 from nodus.services.update_service import Release, UpdateService
 from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.style import set_style_name
 
 MEBIBYTE = 1024 * 1024  # what Windows calls a MB
@@ -51,8 +52,8 @@ class UpdateDialog(QDialog):
         self.setMinimumWidth(420)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 20, 24, 20)
-        layout.setSpacing(12)
+        layout.setContentsMargins(Space.XXL, Space.XL, Space.XXL, Space.XL)
+        layout.setSpacing(Space.M)
         self.status_label = QLabel(f"Descargando Nodus {release.version}…")
         self.status_label.setObjectName("DialogTitle")
         layout.addWidget(self.status_label)

@@ -9,7 +9,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
-from nodus.ui.theme.design import TextRole, role_font
+from nodus.ui.theme.design import Radius, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -121,7 +121,7 @@ class BarChart(ColumnHoverChart):
                 rect = QRectF(left + offset, baseline - height, bar_width, height)
                 painter.setPen(Qt.PenStyle.NoPen)
                 painter.setBrush(with_alpha(color, 0.35 if faded else 0.9))
-                painter.drawPath(rounded_bar_path(rect, 4, True))
+                painter.drawPath(rounded_bar_path(rect, Radius.S, True))
             font = QFont(small)
             font.setWeight(QFont.Weight.DemiBold if group.selected else QFont.Weight.Normal)
             painter.setFont(font)
