@@ -128,10 +128,10 @@ Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nue
 
 ## Hoja de ruta
 
-Nodus crece por versiones pequeñas y estables. La **v1.0**, la primera estable, incluye cuentas, transacciones, cotización del dólar, rendimiento de inversiones, dashboard, cargos recurrentes, presupuestos, beneficiarios, etiquetas, reembolsos, análisis, copias de seguridad y exportación. La **v1.1** sumó euros y pesos chilenos, billeteras virtuales, cuentas en el orden que quieras, cualquier color para categorías y etiquetas, abrir con Windows, enviar comentarios desde la aplicación y un resumen de las novedades después de cada actualización. Lo que viene:
+Nodus crece por versiones pequeñas y estables. La **v1.0**, la primera estable, incluye cuentas, transacciones, cotización del dólar, rendimiento de inversiones, dashboard, cargos recurrentes, presupuestos, beneficiarios, etiquetas, reembolsos, análisis, copias de seguridad y exportación. La **v1.1** sumó euros y pesos chilenos, billeteras virtuales, cuentas en el orden que quieras, cualquier color para categorías y etiquetas, abrir con Windows, enviar comentarios desde la aplicación y un resumen de las novedades después de cada actualización. La **v1.3** trajo actualizar con un clic, un menú en cada fila, selección de varias filas a la vez, una página para cada cuenta, beneficiario y etiqueta, y una interfaz más ordenada. Lo que viene:
 
-- **v1.3 — Metas y grupos de cuentas:** ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.
-- **v1.4 — Inversiones:** una sección propia para seguirlas.
+- **v1.4 — Metas y grupos de cuentas:** ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.
+- **v1.5 — Inversiones:** una sección propia para seguirlas.
 
 ## Tecnología
 

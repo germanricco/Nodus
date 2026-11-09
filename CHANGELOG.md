@@ -2,31 +2,16 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
-## 1.3.0
+## 1.3.0 — 2026-11-09
 
-- Las acciones de cada fila, en un mismo lugar: el botón «⋯» al final de la fila o el clic derecho abren un menú con todo lo que se puede hacer con ella, en todas las listas. Los botones «Editar», «Eliminar» y «Unir con…» dejan el encabezado de Transacciones, Beneficiarios y Etiquetas.
-- «Ver movimientos» también en el menú de cada cuenta y de cada categoría, con toda su historia. Las filas de Cuentas, Categorías y el historial de cotizaciones ya no tienen botones sueltos: todo está en su menú.
-- En Transacciones, al pasar el mouse por una celda recortada («Supermercado…», «Banco → Aho…») se ve su texto completo.
-- Varias filas a la vez: marca las casillas (o usa Ctrl y Mayús) y aparece una barra con lo que se puede hacer con todas. En Transacciones suma lo elegido, en verde y rojo, y permite editarlas juntas (categoría, beneficiario, nota y etiquetas para agregar o quitar; solo cambia lo que completes) o eliminarlas; en Beneficiarios y Etiquetas, unirlas en una sola o eliminarlas. Esc suelta la selección.
-- Cada botón dice lo que hace: «Agregar cuenta» al crear y «Guardar cambios» al editar, y los botones de crear se llaman igual en todas las páginas («Agregar cuenta», «Agregar categoría», «Agregar beneficiario»…). Al confirmar algo que no se puede deshacer, el botón va en rojo y nombra lo que pasa: «Eliminar 3 transacciones».
-- En el Dashboard, «Ver todas ›» pasa al encabezado de cada tarjeta, en el mismo lugar en todas, y deja más lugar para la lista.
-- Análisis más fácil de leer: las cifras de Tendencias y Flujo de caja se ven más grandes, un «—» reemplaza al aviso repetido cuando no hay período anterior, y el detalle por mes ya no lista meses en cero antes del primer movimiento ni los que todavía no llegaron.
-- Ajustes más ordenado: cada opción dice en una línea qué hace, con su control a la derecha; «Abrir Nodus al iniciar Windows» y «Buscar actualizaciones al iniciar» pasan a ser interruptores, y «Restaurar una copia», que reemplaza tus datos, queda aparte y en rojo. Ajustes se mueve al pie de la barra lateral, como en las apps de Windows, y deja la barra superior.
-- Una lista vacía ofrece el paso siguiente: «Agregar cuenta» cuando todavía no hay cuentas, «Limpiar filtros» cuando los filtros de Transacciones no dejan nada, y «Borrar búsqueda» o «Agregar beneficiario» (o etiqueta) en Beneficiarios y Etiquetas.
-- Cada cuenta tiene su página: un clic en la cuenta, en Cuentas o en la barra lateral, muestra su saldo (y en pesos, si es en dólares o en euros), el rendimiento de una inversión, la línea de su saldo en el tiempo y todos sus movimientos, con los mismos menús y la misma selección que Transacciones. La flecha junto al título o Esc vuelven, como el botón Atrás de Windows; eliminar la cuenta queda al pie, en una «Zona de peligro».
-- Cada beneficiario y cada etiqueta también tienen su página: un doble clic en la lista (o «Abrir» en su menú) muestra cuántos movimientos tiene, cuánto suman, el último y, en un beneficiario, su categoría habitual, con todos sus movimientos debajo, «Editar» y «Unir con…» arriba y «Eliminar» al pie.
-- Las listas responden al mouse: la fila bajo el cursor se ilumina, como en el panel de la izquierda, sin quedar elegida. Pasa en las tablas de Transacciones, Beneficiarios y Etiquetas, y en las listas de cuentas, categorías, cargos recurrentes, cotizaciones y las cuentas de la barra lateral.
-- Textos, márgenes y esquinas siguen una misma escala en toda la aplicación, así que cada pantalla se ve igual de ordenada. Arreglo: en los gráficos de línea, como el del patrimonio, la última fecha ya no se pisa con la anterior.
-- En Análisis, los informes se eligen con pestañas debajo del título, y cada uno dice en una línea qué muestra. El período queda arriba a la derecha, como en el resto de las páginas, y «Gastos / Ingresos / Ahorro» queda junto a las cifras que cambia.
-- Todas las listas responden igual. El doble clic en una fila hace su acción principal, la misma que aparece en negrita en su menú: editar una categoría, una transacción o un cargo, pagar un cargo, abrir un beneficiario o una etiqueta. Lo que borra nunca va con doble clic. En el Dashboard, las últimas transacciones y los próximos pagos también tienen su menú y su doble clic, y en Análisis un clic en un mes de Flujo de caja muestra sus movimientos.
-- Cargos recurrentes más limpios, en la página y en el Dashboard: cada cargo tiene un solo botón verde ✓ para registrar el pago, y «Omitir» pasa a su menú. Cuándo vence se ve en una etiqueta de color: roja si está vencido, ámbar si vence esta semana y gris si falta más.
-- Arreglo: después de abrir el menú del clic derecho en varias filas seguidas, ya no quedan todas resaltadas.
-
-## 1.2.0
-
-- Actualiza Nodus con un clic: cuando hay una versión nueva, «Actualizar» la descarga, la instala sin preguntas y vuelve a abrir Nodus. Desde la 1.1.0 hay que actualizar a mano esta última vez.
-- Arreglo: al cambiar entre pesos y dólares, el gráfico del patrimonio ya no repite el último cambio; los gráficos de barras siguen a cada mes al mover el período.
-- Arreglo: Nodus anclado a la barra de tareas muestra su ícono en lugar de un recuadro en blanco. Si ya lo tenías anclado, desánclalo y vuelve a anclarlo después de actualizar.
+- Actualiza Nodus con un clic: cuando hay una versión nueva, «Actualizar» la descarga, la instala y vuelve a abrir Nodus. Desde la 1.1.0 hay que actualizar a mano esta última vez.
+- Un menú para cada fila: el «⋯» al final o el clic derecho muestran todo lo que se puede hacer con ella, en todas las listas. La opción en negrita es la que hace el doble clic.
+- Varias filas a la vez: marca las casillas (o usa Ctrl y Mayús) para editar juntas varias transacciones, unir beneficiarios o etiquetas, o eliminarlos. La barra de arriba suma lo elegido.
+- Cada cuenta, beneficiario y etiqueta tiene su página, con sus cifras y todos sus movimientos. La flecha junto al título o Esc vuelven.
+- Cargos recurrentes más claros: un botón ✓ para pagar y el vencimiento en una etiqueta de color; «Omitir» pasa al menú.
+- Análisis con pestañas debajo del título y cifras más grandes; un clic en un mes de Flujo de caja muestra sus movimientos.
+- Una interfaz más ordenada: las filas se iluminan bajo el mouse, cada botón dice lo que hace, Ajustes está al pie de la barra lateral, las listas vacías ofrecen el paso siguiente y textos y márgenes siguen una misma escala.
+- Arreglos: el gráfico del patrimonio ya no repite el último cambio al pasar a dólares y su última fecha ya no se pisa con la anterior. Nodus anclado a la barra de tareas muestra su ícono; si ya lo tenías anclado, desánclalo y vuelve a anclarlo.
 
 ## 1.1.0 — 2026-11-07
 
