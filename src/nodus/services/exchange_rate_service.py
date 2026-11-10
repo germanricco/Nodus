@@ -48,12 +48,20 @@ class ExchangeRateService:
         return self._rates.list(currency, HOME_CURRENCY)
 
     def rate_on(self, day: date, currency: Currency = Currency.USD) -> ExchangeRate | None:
-        """The rate of ``currency`` in force on ``day``, or None if none was entered on or
-        before it."""
-        return self._rates.latest_on_or_before(day, currency, HOME_CURRENCY)
+        """The rate of ``currency`` in force on ``day``; None only when it has none at all.
+
+        A day before the first rate takes that first one, the closest known (as MoneyMatter
+        values a date before its first stored rate). Otherwise everything before the app
+        started fetching rates would be "sin cotización" in one currency and not in the
+        other: amounts already in the target need no rate, the rest do, so the same history
+        would add up differently in pesos and in dollars.
+        """
+        in_force = self._rates.latest_on_or_before(day, currency, HOME_CURRENCY)
+        return in_force or self._rates.earliest_after(day, currency, HOME_CURRENCY)
 
     def convert(self, money: Money, target: Currency, day: date) -> Money | None:
-        """``money`` in ``target`` at the rates of ``day``; None when a rate is missing.
+        """``money`` in ``target`` at the rates of ``day``; None when a currency involved
+        has no rate at all.
 
         Callers show "sin cotización" for None rather than an invented figure.
         """

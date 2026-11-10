@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, category_id, expense_draft, income_draft, usd
+from factories import ars, category_id, eur, expense_draft, income_draft, usd
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
@@ -22,8 +22,8 @@ def earn(services, account, amount, on, **overrides):
 
 
 @pytest.fixture
-def history(services, pesos, dollars):
-    """Three months of movements, a transfer, a dollar expense with and without a rate,
+def history(services, pesos, dollars, euros):
+    """Three months of movements, a transfer, a dollar expense, a euro one without a rate
     and one month in the previous period."""
     services.exchange_rates.set_rate(date(2026, 10, 1), Decimal("1000"))
     earn(services, pesos, ars("1000"), date(2026, 9, 1))
@@ -31,7 +31,7 @@ def history(services, pesos, dollars):
     earn(services, pesos, ars("1000"), date(2026, 10, 1))
     spend(services, pesos, ars("200"), date(2026, 10, 5), payee_name="Coto")
     spend(services, dollars, usd("1"), date(2026, 10, 6), payee_name="Día")  # $ 1.000
-    spend(services, dollars, usd("2"), date(2026, 9, 20))  # before any rate
+    spend(services, euros, eur("2"), date(2026, 9, 20))  # the euro has no rate
     spend(
         services, pesos, ars("100"), date(2026, 11, 2),
         category_id=category_id(services, "Servicios", EXPENSE),

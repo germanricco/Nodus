@@ -2,6 +2,11 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.4.0
+
+- La variación del patrimonio dice cuánto se debe a la cotización («+1,2 % por la cotización»); al pasar el mouse, muestra cómo se movió. Por eso el mismo período puede subir en pesos y bajar en dólares.
+- Arreglo: los días anteriores a la primera cotización ya no quedan «sin cotización»: usan la primera. Antes, el patrimonio, el Dashboard, Análisis y Presupuestos sumaban distinto en pesos y en dólares los movimientos de esos días.
+
 ## 1.3.0 — 2026-11-09
 
 - Actualiza Nodus con un clic: cuando hay una versión nueva, «Actualizar» la descarga, la instala y vuelve a abrir Nodus. Desde la 1.1.0 hay que actualizar a mano esta última vez.

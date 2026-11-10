@@ -19,12 +19,6 @@ def blue_rate(value: str = "1200") -> ExchangeRate:
 
 
 class TestExchangeRate:
-    def test_converts_base_to_quote(self):
-        assert blue_rate().convert(usd("10")) == ars("12000")
-
-    def test_converts_quote_to_base_rounding_to_cent(self):
-        assert blue_rate("1200").convert(ars("1000")) == usd("0.83")
-
     @pytest.mark.parametrize("value", ["0", "-5"])
     def test_rejects_non_positive_rate(self, value):
         with pytest.raises(ValueError):

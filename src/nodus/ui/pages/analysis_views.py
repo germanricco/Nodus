@@ -40,7 +40,13 @@ from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.chart_base import format_compact
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
-from nodus.ui.widgets.net_worth_card import CURRENCIES, CURRENCY_LABELS, NetWorthCard, signed
+from nodus.ui.widgets.net_worth_card import (
+    CURRENCIES,
+    CURRENCY_LABELS,
+    NetWorthCard,
+    rate_effect_text,
+    signed,
+)
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
 from nodus.ui.widgets.style import clear_layout
@@ -458,17 +464,24 @@ class NetWorthTableModel(QAbstractTableModel):
     def __init__(self, theme: Theme) -> None:
         super().__init__()
         self._points: list[NetWorthPoint] = []
+        self._rate_effects: list[Money | None] = []
         self._opening: NetWorth | None = None
         self._currency = Currency.ARS
         self._held: list[Currency] = []
         self._theme = theme
 
     def set_points(
-        self, points: list[NetWorthPoint], opening: NetWorth | None, currency: Currency
+        self,
+        points: list[NetWorthPoint],
+        opening: NetWorth | None,
+        currency: Currency,
+        rate_effects: list[Money | None] | None = None,
     ) -> None:
-        """``opening`` is the net worth before the first point, to show its change."""
+        """``opening`` is the net worth before the first point, to show its change;
+        ``rate_effects``, how much of each point's change comes from the rates."""
         self.beginResetModel()
         self._points, self._opening, self._currency = points, opening, currency
+        self._rate_effects = rate_effects or [None] * len(points)
         self._held = list(points[0].net_worth.by_currency) if points else []
         self.endResetModel()
 
@@ -516,6 +529,8 @@ class NetWorthTableModel(QAbstractTableModel):
                 signed(change) if change is not None else "—",
             ][column]
         is_change = column == self.change_column
+        if role == Qt.ItemDataRole.ToolTipRole and is_change:
+            return rate_effect_text(self._rate_effects[row], self._previous(row)) or None
         if role == Qt.ItemDataRole.ForegroundRole and is_change and change is not None:
             return QColor(self._theme.amount_color(change))
         if role == Qt.ItemDataRole.TextAlignmentRole and column != MONTH:
@@ -524,12 +539,15 @@ class NetWorthTableModel(QAbstractTableModel):
 
     def _change(self, row: int) -> Money | None:
         """The move from the previous point (the opening one for the first row)."""
-        before = self._points[row - 1].net_worth if row else self._opening
         current = self._points[row].net_worth.total_in[self._currency]
-        previous = before.total_in[self._currency] if before else None
+        previous = self._previous(row)
         if current is None or previous is None:
             return None
         return current - previous
+
+    def _previous(self, row: int) -> Money | None:
+        before = self._points[row - 1].net_worth if row else self._opening
+        return before.total_in[self._currency] if before else None
 
     @staticmethod
     def _month_text(day: date) -> str:
@@ -579,7 +597,14 @@ class NetWorthView(AnalysisView):
         if self._period is None:
             return
         net_worth = self._services.net_worth
+        currency = self.card.currency()
         points = net_worth.month_ends(self._period, date.today())
-        opening = net_worth.net_worth(self._period.start - timedelta(days=1))
-        self.model.set_points(points, opening, self.card.currency())
+        opening_day = self._period.start - timedelta(days=1)
+        opening = net_worth.net_worth(opening_day)
+        starts = [opening_day, *(point.day for point in points[:-1])]
+        effects = [
+            net_worth.rate_effect(point, start, currency)
+            for point, start in zip(points, starts, strict=False)
+        ]
+        self.model.set_points(points, opening, currency, effects)
         fit_rows(self.table)

@@ -112,13 +112,21 @@ def test_month_ends_of_a_short_period(services, pesos):
     assert totals == [ars("100000"), ars("70000"), ars("70000")]
 
 
-def test_history_without_a_rate_leaves_a_gap(services, pesos, dollars):
+def test_days_before_the_first_rate_take_it_in_both_currencies(services, pesos, dollars):
+    """Pesos and dollars cover the same days, so their changes start from the same point."""
     services.exchange_rates.set_rate(date(2026, 11, 3), Decimal("1000"))
 
     points = services.net_worth.history(Period.of_months(Month(2026, 11)), TODAY)
 
-    totals = [p.net_worth.total_in[Currency.ARS] for p in points]
-    assert totals == [None, None, ars("600000"), ars("600000"), ars("600000")]
+    assert [p.net_worth.total_in[Currency.ARS] for p in points] == [ars("600000")] * 5
+    assert [p.net_worth.total_in[Currency.USD] for p in points] == [usd("600")] * 5
+
+
+def test_without_any_rate_only_the_subtotals(services, pesos, dollars):
+    net_worth = services.net_worth.net_worth(TODAY)
+
+    assert net_worth.total_in == {Currency.ARS: None, Currency.USD: None}
+    assert net_worth.by_currency[Currency.USD] == usd("500")
 
 
 def test_history_of_a_future_period_is_empty(services, pesos):
@@ -167,3 +175,34 @@ def test_account_history_follows_one_account_from_its_first_movement(services, p
 
 def test_account_history_without_movements_is_today(services, pesos):
     assert services.net_worth.account_history(pesos.id, TODAY) == [(TODAY, ars("100000"))]
+
+
+def test_rate_effect_tells_why_pesos_and_dollars_move_apart(services, pesos):
+    """The case a user reported: almost everything in pesos and the dollar falling 1,2 %
+    between two days. In pesos the net worth falls by what was spent, in dollars it rises;
+    the part from the rate is what tells them apart."""
+    day_1, day_2 = date(2026, 11, 3), date(2026, 11, 4)
+    services.exchange_rates.set_rate(day_1, Decimal("1000"))
+    services.exchange_rates.set_rate(day_2, Decimal("988"))
+    services.transactions.create(expense_draft(services, pesos.id, ars("100"), day_2))
+
+    start, end = services.net_worth.history(Period(day_1, day_2), TODAY)
+
+    def change(currency):
+        first, last = start.net_worth.total_in[currency], end.net_worth.total_in[currency]
+        return (last.cents - first.cents) / first.cents
+
+    assert round(change(Currency.ARS), 3) == -0.001
+    assert round(change(Currency.USD), 3) == 0.011
+    assert services.net_worth.rate_effect(end, day_1, Currency.ARS) == ars("0")
+    effect = services.net_worth.rate_effect(end, day_1, Currency.USD)
+    assert effect == usd("1.21")  # US$ 99,90 at 1.000 became US$ 101,11 at 988
+    # What is left of the change is the US$ 0,10 spent.
+    usd_change = end.net_worth.total_in[Currency.USD] - start.net_worth.total_in[Currency.USD]
+    assert usd_change - effect == usd("-0.10")
+
+
+def test_rate_effect_without_a_rate_is_none(services, pesos, dollars):
+    end = services.net_worth.history(Period(TODAY, TODAY), TODAY)[-1]
+
+    assert services.net_worth.rate_effect(end, TODAY, Currency.ARS) is None

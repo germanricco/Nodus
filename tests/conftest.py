@@ -10,7 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 if sys.platform == "win32":
     os.environ.setdefault("QT_QPA_FONTDIR", os.path.join(os.environ["WINDIR"], "Fonts"))
 
-from factories import ars, usd  # noqa: E402
+from factories import ars, eur, usd  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
 from nodus.models.account import Account, AccountType  # noqa: E402
@@ -49,3 +49,10 @@ def pesos(services) -> Account:
 def dollars(services) -> Account:
     """A dollar savings account starting with US$ 500."""
     return services.accounts.create("Ahorro", AccountType.SAVINGS, Currency.USD, usd("500"))
+
+
+@pytest.fixture
+def euros(services) -> Account:
+    """A euro account starting with € 0. Tests give the euro no rate, the one case a
+    movement cannot be converted: a day before the first rate takes that first one."""
+    return services.accounts.create("Viaje", AccountType.CASH, Currency.EUR, eur("0"))

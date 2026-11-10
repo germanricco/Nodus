@@ -18,7 +18,9 @@ def test_rate_on_uses_latest_rate_not_after_the_day(services):
 
     assert services.exchange_rates.rate_on(OCT_15).rate == Decimal("1100")
     assert services.exchange_rates.rate_on(NOV_1).rate == Decimal("1250")
-    assert services.exchange_rates.rate_on(date(2026, 9, 1)) is None
+    # Before the first rate, that first one; without any, None.
+    assert services.exchange_rates.rate_on(date(2026, 9, 1)).rate == Decimal("1100")
+    assert services.exchange_rates.rate_on(OCT_15, Currency.EUR) is None
 
 
 def test_setting_same_day_replaces_rate(services):

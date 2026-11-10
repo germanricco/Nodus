@@ -4,7 +4,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, expense_draft, income_draft, usd
+from factories import ars, eur, expense_draft, income_draft, usd
 
 from nodus.models.palette import PALETTE
 from nodus.models.transaction_filter import TransactionFilter
@@ -107,11 +107,11 @@ def test_merge_many_and_delete_many(services, pesos):
     assert services.transactions.get(work.id).amount == ars("30")
 
 
-def test_summaries_add_up_in_pesos(services, pesos, dollars):
+def test_summaries_add_up_in_pesos(services, pesos, dollars, euros):
     services.exchange_rates.set_rate(date(2026, 11, 1), Decimal("1000"))
     tagged_expense(services, pesos, ars("5000"), "Viaje")
     tagged_expense(services, dollars, usd("10"), "Viaje")
-    tagged_expense(services, dollars, usd("1"), "Viaje", on=date(2026, 10, 1))  # no rate yet
+    tagged_expense(services, euros, eur("1"), "Viaje", on=date(2026, 10, 1))  # no euro rate
     services.transactions.create(
         income_draft(services, pesos.id, ars("1000"), date(2026, 11, 3), tag_names=("Viaje",))
     )

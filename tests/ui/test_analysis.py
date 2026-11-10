@@ -1,6 +1,7 @@
 """The analysis page and its reports."""
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 from factories import ars, category_id, eur, expense_draft, income_draft
@@ -312,3 +313,24 @@ def test_the_reports_are_tabs_under_the_title_with_what_each_shows(page):
     page.tabs.set_index(CASH_FLOW_TAB)
 
     assert page.tab_description.text() == CashFlowView.DESCRIPTION
+
+
+def test_net_worth_change_says_how_much_comes_from_the_rate(services, filled):
+    services.exchange_rates.set_rate(date(2026, 9, 1), Decimal("1000"))
+    services.exchange_rates.set_rate(date(2026, 10, 1), Decimal("1250"))
+    filled.refresh()
+    view = net_worth_view(filled)
+    caption = view.card.change_caption
+
+    assert caption.text() == "vs. inicio del período"  # all in pesos, the rate is not used
+    view.card.currency_input.set_index(1)
+
+    assert caption.text() == "vs. inicio del período · -20 % por la cotización"
+    assert caption.toolTip().splitlines() == [
+        "US$ 1 = $ 1.000,00 → $ 1.250,00",
+        "El resto de la variación es por tus movimientos.",
+    ]
+    october = view.model.index(1, view.model.change_column)
+    september = view.model.index(0, view.model.change_column)
+    assert view.model.data(october, Qt.ItemDataRole.ToolTipRole) == "-20 % por la cotización"
+    assert view.model.data(september, Qt.ItemDataRole.ToolTipRole) is None  # same rate

@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, category_id, expense_draft, income_draft, usd
+from factories import ars, category_id, eur, expense_draft, income_draft, usd
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
@@ -49,19 +49,20 @@ def test_expenses_grouped_by_top_level_category_largest_first(services, pesos):
     ]
 
 
-def test_dollar_movements_convert_at_their_day_or_are_reported(services, dollars):
-    services.transactions.create(
-        expense_draft(services, dollars.id, usd("10"), on=date(2026, 11, 1))
-    )
+def test_foreign_movements_convert_at_their_day_or_are_reported(services, dollars, euros):
     services.exchange_rates.set_rate(date(2026, 11, 3), Decimal("1200"))
-    services.transactions.create(
-        expense_draft(services, dollars.id, usd("20"), on=date(2026, 11, 4))
-    )
+    services.exchange_rates.set_rate(date(2026, 11, 4), Decimal("1300"))
+    for amount, day in ((usd("10"), 1), (usd("20"), 4)):
+        services.transactions.create(
+            expense_draft(services, dollars.id, amount, on=date(2026, 11, day))
+        )
+    services.transactions.create(expense_draft(services, euros.id, eur("5"), on=date(2026, 11, 4)))
 
     summary = services.dashboard.summary(NOVEMBER)
 
-    assert summary.expenses == ars("24000")
-    assert summary.unconverted == 1
+    # The 1st, before the first rate, takes it: 10 × 1.200 + 20 × 1.300.
+    assert summary.expenses == ars("38000")
+    assert summary.unconverted == 1  # the euro has no rate at all
 
 
 def test_relative_change():

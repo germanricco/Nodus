@@ -10,11 +10,19 @@ from nodus.ui.widgets.style import set_style_property
 def format_change(change: float, unit: str = "%") -> str:
     """ "↗ 12 %", "↘ 9,5 %" or "→ 0 %", with one decimal only below 10. ``unit`` "pp"
     shows a change of a rate in percentage points."""
+    arrow = "↗" if change > 0 else "↘" if change < 0 else "→"
+    return f"{arrow} {_percent_number(change)} {unit}"
+
+
+def format_signed_percent(change: float) -> str:
+    """ "+1,2 %" or "-0,4 %": a part of a change, written as the badge writes it."""
+    return f"{'-' if change < 0 else '+'}{_percent_number(change)} %"
+
+
+def _percent_number(change: float) -> str:
     percent = abs(change) * 100
     text = f"{percent:.1f}" if percent < 10 else f"{percent:.0f}"
-    text = text.replace(".", ",").removesuffix(",0")
-    arrow = "↗" if change > 0 else "↘" if change < 0 else "→"
-    return f"{arrow} {text} {unit}"
+    return text.replace(".", ",").removesuffix(",0")
 
 
 class ChangeBadge(QLabel):

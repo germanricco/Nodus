@@ -43,6 +43,16 @@ class ExchangeRateRepository(Repository):
         )
         return self._from_row(row) if row else None
 
+    def earliest_after(self, day: date, base: Currency, quote: Currency) -> ExchangeRate | None:
+        """The oldest rate dated after ``day``, the closest one for a day before them all."""
+        row = self._fetch_one(
+            "SELECT * FROM exchange_rates"
+            " WHERE base_currency = ? AND quote_currency = ? AND rate_date > ?"
+            " ORDER BY rate_date ASC LIMIT 1",
+            (base.value, quote.value, day.isoformat()),
+        )
+        return self._from_row(row) if row else None
+
     def list(self, base: Currency, quote: Currency) -> list[ExchangeRate]:
         """History of a pair, newest first."""
         rows = self._fetch_all(

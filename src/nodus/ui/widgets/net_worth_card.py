@@ -19,7 +19,7 @@ from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.change_badge import ChangeBadge
+from nodus.ui.widgets.change_badge import ChangeBadge, format_signed_percent
 from nodus.ui.widgets.chart_base import format_compact
 from nodus.ui.widgets.charts import ProportionBar, Segment
 from nodus.ui.widgets.color import ColorDot
@@ -32,6 +32,7 @@ from nodus.ui.widgets.style import set_style_property
 # The net worth can be shown in these; the parts held in any currency are listed apart.
 CURRENCIES = list(TOTAL_CURRENCIES)
 CURRENCY_LABELS = [currency.symbol for currency in CURRENCIES]
+CHANGE_CAPTION = "vs. inicio del período"
 # A color for the Chilean peso, which the theme has no role for.
 CLP_COLOR = "#3498db"
 
@@ -39,6 +40,15 @@ CLP_COLOR = "#3498db"
 def signed(money: Money) -> str:
     """ "+$ 118.400,00" or "-$ 2.000,00": a change always shows its sign."""
     return money.format() if money.is_negative else f"+{money.format()}"
+
+
+def rate_effect_text(effect: Money | None, start: Money | None) -> str:
+    """ "+1,2 % por la cotización": the part of a change that comes from the rates, over
+    the same starting value as the change; empty when there is none to tell."""
+    if effect is None or start is None or effect.is_zero:
+        return ""
+    change = relative_change(start + effect, start)
+    return "" if change is None else f"{format_signed_percent(change)} por la cotización"
 
 
 def share(part: Money, whole: Money) -> str:
@@ -120,7 +130,7 @@ class NetWorthCard(Card):
         header.addWidget(self.currency_input)
         header.addStretch()
         self.change_badge = ChangeBadge()
-        self.change_caption = QLabel("vs. inicio del período")
+        self.change_caption = QLabel(CHANGE_CAPTION)
         self.change_caption.setObjectName("FieldHint")
         change = QVBoxLayout()
         change.setSpacing(Space.XXS)
@@ -226,12 +236,9 @@ class NetWorthCard(Card):
         self._show_rates(net_worth, day)
         if self.chart is not None:
             history = self._services.net_worth.history(period, date.today()) if period else []
-            opening = (
-                self._services.net_worth.net_worth(period.start - timedelta(days=1))
-                if period
-                else None
-            )
-            self._show_trend(history, opening, currency, has_total)
+            opening_day = period.start - timedelta(days=1) if period else None
+            opening = self._services.net_worth.net_worth(opening_day) if opening_day else None
+            self._show_trend(history, opening, opening_day, currency, has_total)
 
     def _show_composition(self, net_worth: NetWorth, currency: Currency, day: date) -> None:
         convert = self._services.exchange_rates.convert
@@ -274,6 +281,7 @@ class NetWorthCard(Card):
         self,
         history: list[NetWorthPoint],
         opening: NetWorth | None,
+        opening_day: date | None,
         currency: Currency,
         has_total: bool,
     ) -> None:
@@ -289,21 +297,53 @@ class NetWorthCard(Card):
             value = point.net_worth.total_in[currency]
             points.append(LinePoint(point.day, None if value is None else value.cents))
         self.chart.set_points(points)
-        known = [p.value for p in points if p.value is not None]
+        known = [p for p in history if p.net_worth.total_in[currency] is not None]
         first = opening.total_in[currency] if opening else None
+        start_day = opening_day
         if first is None and len(known) >= 2:
-            first = Money(int(known[0]), currency)
-        if has_total and known and first is not None:
-            last = Money(int(known[-1]), currency)
+            first, start_day = known[0].net_worth.total_in[currency], known[0].day
+        if has_total and known and first is not None and start_day is not None:
+            end = known[-1]
+            last = end.net_worth.total_in[currency]
+            assert last is not None
             difference = last - first
             self.change_badge.set_change(
                 relative_change(last, first),
                 "" if difference.is_zero or self._hidden else signed(difference),
             )
+            self._show_rate_effect(end, start_day, first, currency)
             self.change_caption.show()
         else:
             self.change_badge.set_change(None)
             self.change_caption.hide()
+
+    def _show_rate_effect(
+        self, end: NetWorthPoint, start_day: date, first: Money, currency: Currency
+    ) -> None:
+        """Adds to the caption how much of the change comes from the rates, so the same
+        period reads differently in pesos and in dollars for a reason the card tells. A
+        percent, which says nothing of how much there is, so it stays with hidden amounts."""
+        effect = self._services.net_worth.rate_effect(end, start_day, currency)
+        text = rate_effect_text(effect, first)
+        self.change_caption.setText(f"{CHANGE_CAPTION} · {text}" if text else CHANGE_CAPTION)
+        tip = self._rates_moved_tip(end, start_day, currency) if text else ""
+        self.change_caption.setToolTip(tip)
+
+    def _rates_moved_tip(self, end: NetWorthPoint, start_day: date, currency: Currency) -> str:
+        """ "US$ 1 = $ 1.600,00 → $ 1.580,00" for each rate the total went through that
+        moved (those of the foreign currencies held, and of ``currency`` when it is one),
+        and that the rest of the change is the user's own."""
+        rate_on = self._services.exchange_rates.rate_on
+        held = {c for c, amount in end.net_worth.by_currency.items() if not amount.is_zero}
+        lines = []
+        for foreign in (c for c in Currency if c.is_foreign and (c in held or c is currency)):
+            before, after = rate_on(start_day, foreign), rate_on(end.day, foreign)
+            if before and after and before.rate != after.rate:
+                start_text = rate_text(foreign, before.quote, before.rate)
+                end_text = Money.from_decimal(after.rate, after.quote).format()
+                lines.append(f"{start_text} → {end_text}")
+        lines.append("El resto de la variación es por tus movimientos.")
+        return "\n".join(lines)
 
     # Chart formatting
 

@@ -23,8 +23,8 @@ class NetWorth:
 
     ``by_currency`` adds the balances held in each currency without converting anything:
     pesos and dollars always, other currencies when some account holds them.
-    ``total_in`` expresses everything in pesos or in dollars; it is None for one of them
-    when a conversion was needed and no exchange rate exists yet.
+    ``total_in`` expresses everything in pesos or in dollars, at the rates of its day; it
+    is None for one of them when a conversion was needed and that currency has no rate.
     """
 
     by_currency: dict[Currency, Money]
@@ -149,6 +149,20 @@ class NetWorthService:
                     by_currency[amount.currency] += amount
             points.append(NetWorthPoint(day, self._net_worth(dict(by_currency), day)))
         return points
+
+    def rate_effect(self, end: NetWorthPoint, start_day: date, target: Currency) -> Money | None:
+        """How much of the change in ``target`` since ``start_day`` comes from the rates
+        moving, not from the user's movements: what is held at the end, valued at the end's
+        rates minus at those of ``start_day``. None when a rate is missing.
+
+        Each day is valued at its own rate, so the same history can rise in pesos and fall
+        in dollars; this is the part that tells them apart.
+        """
+        at_end = end.net_worth.total_in[target]
+        at_start = self._total_in(end.net_worth.by_currency, target, start_day)
+        if at_end is None or at_start is None:
+            return None
+        return at_end - at_start
 
     @staticmethod
     def _zeros(held: set[Currency]) -> dict[Currency, Money]:

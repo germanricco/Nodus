@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, category_id, expense_draft, income_draft, usd
+from factories import ars, category_id, eur, expense_draft, income_draft, usd
 
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
@@ -254,7 +254,7 @@ class TestSuggestedCategory:
 
 class TestSummaries:
     def test_totals_converted_and_most_used_first(
-        self, services, pesos, dollars, groceries, services_category
+        self, services, pesos, dollars, euros, groceries, services_category
     ):
         services.exchange_rates.set_rate(date(2026, 11, 3), Decimal("1000"))
         services.payees.create("Sin uso")
@@ -266,7 +266,7 @@ class TestSummaries:
         )
         services.transactions.create(
             expense_draft(
-                services, dollars.id, usd("1"), date(2026, 11, 1),
+                services, euros.id, eur("1"), date(2026, 11, 1),
                 payee_name="Coto", category_id=services_category,
             )
         )  # fmt: skip

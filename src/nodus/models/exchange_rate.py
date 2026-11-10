@@ -50,11 +50,3 @@ class ExchangeRate:
             raise ValueError("An exchange rate needs two different currencies")
         if self.rate <= 0:
             raise ValueError("Exchange rate must be positive")
-
-    def convert(self, money: Money) -> Money:
-        """Converts between ``base`` and ``quote`` in either direction, rounding to the cent."""
-        if money.currency is self.base:
-            return Money.from_decimal(money.to_decimal() * self.rate, self.quote)
-        if money.currency is self.quote:
-            return Money.from_decimal(money.to_decimal() / self.rate, self.base)
-        raise ValueError(f"This rate does not convert {money.currency.value}")
