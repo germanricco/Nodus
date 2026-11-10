@@ -244,8 +244,9 @@ def test_cash_flow_table_leaves_out_months_of_zeros():
         flow(Month(2026, 12)),  # still to come
         flow(Month(2027, 1), "3"),  # a movement already logged ahead
     ]
+    history = [Month(2026, 9), Month(2026, 10), Month(2026, 11)]
 
-    listed = months_to_list(months, Month(2026, 11))
+    listed = months_to_list(months, history)
 
     assert [f.month for f in listed] == [
         Month(2026, 9),

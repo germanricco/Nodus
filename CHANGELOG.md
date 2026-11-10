@@ -9,6 +9,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - La variación del patrimonio dice cuánto se debe a la cotización («+1,2 % por la cotización»); al pasar el mouse, muestra cómo se movió. Por eso el mismo período puede subir en pesos y bajar en dólares.
 - Arreglo: los días anteriores a la primera cotización ya no quedan «sin cotización»: usan la primera. Antes, el patrimonio, el Dashboard, Análisis y Presupuestos sumaban distinto en pesos y en dólares los movimientos de esos días.
 - Arreglo: un gasto con fecha futura ya no baja el saldo de hoy; se descuenta el día que le toca. Últimas transacciones tampoco lo muestra antes de tiempo.
+- Arreglo: el promedio mensual de Análisis cuenta solo los meses desde tu primer movimiento hasta hoy. Antes, quien usaba Nodus hacía un mes veía su gasto repartido entre los 12 meses del período. La sugerencia de un presupuesto sigue la misma regla y dice cuántos meses promedia.
 
 ## 1.3.0 — 2026-11-09
 

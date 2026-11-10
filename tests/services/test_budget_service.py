@@ -7,6 +7,7 @@ from factories import TODAY, ars, category_id, expense_draft, income_draft, usd
 from nodus.models.budget import BudgetState
 from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
+from nodus.services.budget_service import BudgetSuggestion
 from nodus.services.errors import ValidationError
 
 NOVEMBER = Month.of(TODAY)
@@ -128,7 +129,31 @@ def test_suggestion_is_the_average_of_the_last_three_months(services, pesos):
         spend(services, pesos.id, ars(amount), on=date(2026, month, 10))
     spend(services, pesos.id, ars("900000"), on=date(2026, 7, 10))  # too old to count
 
-    assert services.budgets.suggestion(category, NOVEMBER) == ars("350000")
+    assert services.budgets.suggestion(category, NOVEMBER) == BudgetSuggestion(ars("350000"), 3)
+
+
+def test_suggestion_counts_only_the_months_of_use(services, pesos):
+    """One month of use suggests that month, not a third of it."""
+    category = food(services)
+    spend(services, pesos.id, ars("90000"), on=date(2026, 10, 10))
+
+    assert services.budgets.suggestion(category, NOVEMBER) == BudgetSuggestion(ars("90000"), 1)
+
+
+def test_suggestion_averages_two_months_of_use_over_two(services, pesos):
+    category = food(services)
+    spend(services, pesos.id, ars("100000"), on=date(2026, 9, 10))
+    spend(services, pesos.id, ars("200000"), on=date(2026, 10, 10))
+
+    assert services.budgets.suggestion(category, NOVEMBER) == BudgetSuggestion(ars("150000"), 2)
+
+
+def test_suggestion_ignores_the_month_being_set(services, pesos):
+    """The history begins in November itself: nothing before it to suggest from."""
+    category = food(services)
+    spend(services, pesos.id, ars("90000"), on=date(2026, 11, 2))
+
+    assert services.budgets.suggestion(category, NOVEMBER) is None
 
 
 def test_deleting_a_category_deletes_its_limits(services):

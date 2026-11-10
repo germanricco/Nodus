@@ -21,6 +21,7 @@ from nodus.models.bulk_changes import BulkChanges
 from nodus.models.money import Money
 from nodus.models.palette import palette_color
 from nodus.models.payee import Payee, normalize_name
+from nodus.models.period import Month, Period
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction, TransactionType, Transfer
 from nodus.services.errors import ValidationError, require_found
@@ -225,6 +226,14 @@ class TransactionService:
     def date_range(self, criteria: TransactionFilter) -> tuple[date, date] | None:
         """The first and last day of the transactions matching ``criteria``, if any."""
         return self._transactions.date_range(criteria)
+
+    def history_months(self, period: Period, today: date | None = None) -> list[Month]:
+        """The months of ``period`` with a history (``Period.months_since``): what a monthly
+        average divides by. None of them before the first movement."""
+        span = self.date_range(TransactionFilter())
+        if span is None:
+            return []
+        return period.months_since(span[0], today or date.today())
 
     # Transfers
 

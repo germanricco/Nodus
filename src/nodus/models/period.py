@@ -121,6 +121,16 @@ class Period:
         count = (last.year - first.year) * 12 + last.month - first.month + 1
         return [first.shifted(i) for i in range(count)]
 
+    def months_since(self, first_day: date, today: date) -> list[Month]:
+        """The months of the period with a history: from the one of ``first_day`` (the
+        first movement) through the current one.
+
+        A month before the first movement, or still to come, is not a month without
+        spending: there is nothing to know about it yet, so it does not count in an average.
+        """
+        first, current = Month.of(first_day), Month.of(today)
+        return [month for month in self.months() if first <= month <= current]
+
     def contains(self, day: date) -> bool:
         return self.start <= day <= self.end
 

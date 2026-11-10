@@ -58,7 +58,59 @@ class TestTrends:
         assert trends.change == pytest.approx(3.0)
 
     def test_average_per_month(self, services, history):
-        assert services.analysis.trends(SEP_NOV, Metric.EXPENSES).average == ars("533.33")
+        trends = services.analysis.trends(SEP_NOV, Metric.EXPENSES, date(2026, 11, 10))
+
+        assert trends.average == ars("533.33")
+
+    def test_one_month_of_use_averages_that_month(self, services, pesos):
+        """A user's first month, seen over the last 12: the average is that month, not a
+        twelfth of it."""
+        spend(services, pesos, ars("56000"), date(2026, 11, 6))
+        year = Period.last_months(12, date(2026, 11, 10))
+
+        trends = services.analysis.trends(year, Metric.EXPENSES, date(2026, 11, 10))
+
+        assert trends.history == [Month(2026, 11)]
+        assert trends.average == ars("56000")
+
+    def test_an_empty_month_after_the_first_movement_counts_as_zero(self, services, pesos):
+        spend(services, pesos, ars("300"), date(2026, 9, 5))
+        spend(services, pesos, ars("300"), date(2026, 11, 5))
+
+        trends = services.analysis.trends(SEP_NOV, Metric.EXPENSES, date(2026, 11, 10))
+
+        assert trends.average == ars("200")  # October spent nothing, and that says something
+
+    def test_months_still_to_come_do_not_count(self, services, pesos):
+        """A whole year seen in November: December has not come, even with an installment
+        already logged in it."""
+        spend(services, pesos, ars("1000"), date(2026, 10, 5))
+        spend(services, pesos, ars("3000"), date(2026, 11, 5))
+        spend(services, pesos, ars("5000"), date(2026, 12, 5))
+
+        trends = services.analysis.trends(Period.year(2026), Metric.EXPENSES, date(2026, 11, 10))
+
+        assert trends.history == [Month(2026, 10), Month(2026, 11)]
+        assert trends.average == ars("2000")
+
+    def test_the_first_movement_of_any_kind_starts_the_history(self, services, pesos):
+        """An income in September starts the history: October and November without
+        spending are months of zero spending."""
+        earn(services, pesos, ars("1000"), date(2026, 9, 1))
+        spend(services, pesos, ars("900"), date(2026, 11, 5))
+
+        trends = services.analysis.trends(SEP_NOV, Metric.EXPENSES, date(2026, 11, 10))
+
+        assert trends.average == ars("300")
+
+    def test_savings_average_the_same_months(self, services, pesos):
+        earn(services, pesos, ars("1000"), date(2026, 11, 1))
+        spend(services, pesos, ars("400"), date(2026, 11, 5))
+        year = Period.last_months(12, date(2026, 11, 10))
+
+        trends = services.analysis.trends(year, Metric.SAVINGS, date(2026, 11, 10))
+
+        assert trends.average == ars("600")
 
     def test_categories_and_payees_largest_first(self, services, history):
         trends = services.analysis.trends(SEP_NOV, Metric.EXPENSES)
@@ -115,6 +167,8 @@ class TestTrends:
         trends = services.analysis.trends(SEP_NOV, Metric.EXPENSES)
 
         assert trends.total == ars("0")
+        assert trends.history == []
+        assert trends.average == ars("0")
         assert trends.change is None
         assert trends.categories == []
 

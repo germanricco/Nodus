@@ -99,7 +99,9 @@ class Services:
         settings = SettingsService(database, SettingsRepository(database))
         backups = BackupService(database, database.path.parent / "backups")
         dashboard = DashboardService(transactions, categories, exchange_rates)
-        budgets = BudgetService(database, BudgetRepository(database), categories, dashboard)
+        budgets = BudgetService(
+            database, BudgetRepository(database), categories, dashboard, transactions
+        )
         return cls(
             accounts=accounts,
             categories=categories,

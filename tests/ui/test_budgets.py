@@ -68,8 +68,18 @@ class TestDialog:
         qtbot.addWidget(dialog)
 
         assert dialog.amount_input.money() == ars("30000")
-        assert "$ 30.000,00" in dialog.suggestion_hint.text()
+        assert dialog.suggestion_hint.text() == "Promedio de los últimos 3 meses: $ 30.000,00"
         assert dialog.windowTitle() == "Nuevo presupuesto"
+
+    def test_after_one_month_of_use_suggests_that_month(self, qtbot, services, event_bus, pesos):
+        leisure = expense("Ocio", services)
+        spend(services, pesos.id, "30000", leisure, on=date(2026, 10, 3))
+
+        dialog = BudgetDialog(services, event_bus, NOVEMBER, services.categories.get(leisure))
+        qtbot.addWidget(dialog)
+
+        assert dialog.amount_input.money() == ars("30000")
+        assert dialog.suggestion_hint.text() == "Lo gastado el mes pasado: $ 30.000,00"
 
     def test_changing_a_limit_starts_from_the_current_one(self, qtbot, services, event_bus):
         food = expense("Supermercado y comida", services)

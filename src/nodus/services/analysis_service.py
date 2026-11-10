@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import date
 from enum import Enum
 
 from nodus.models.category import Category
@@ -83,7 +84,8 @@ class TagTotal:
 @dataclass(frozen=True)
 class Trends:
     """A metric month by month along a period, against the period of the same length right
-    before it. ``categories``, ``payees`` and ``tags`` are empty for savings."""
+    before it. ``categories``, ``payees`` and ``tags`` are empty for savings; ``history``
+    holds the months that count in the average (``Period.months_since``)."""
 
     metric: Metric
     period: Period
@@ -94,6 +96,7 @@ class Trends:
     payees: list[PayeeTotal]  # largest first, "without payee" last
     tags: list[TagTotal]  # largest first; untagged movements are left out
     unconverted: int
+    history: list[Month]
 
     @property
     def change(self) -> float | None:
@@ -101,9 +104,12 @@ class Trends:
 
     @property
     def average(self) -> Money:
-        """The monthly average along the period."""
-        count = max(len(self.months), 1)
-        return Money(round(self.total.cents / count), SUMMARY_CURRENCY)
+        """The monthly average of the months with a history: one month of use averages
+        that month, not that month spread over the whole period."""
+        counted = [m.total for m in self.months if m.month in self.history]
+        if not counted:
+            return Money.zero(SUMMARY_CURRENCY)
+        return Money(round(_sum(counted).cents / len(counted)), SUMMARY_CURRENCY)
 
 
 @dataclass(frozen=True)
@@ -125,13 +131,15 @@ class FlowTotals:
 @dataclass(frozen=True)
 class CashFlowReport:
     """Income, expenses and savings of each month of a period, with the totals of the
-    period and of the one before it."""
+    period and of the one before it. ``history`` holds its months with a history
+    (``Period.months_since``)."""
 
     period: Period
     months: list[MonthFlow]
     current: FlowTotals
     previous: FlowTotals
     unconverted: int
+    history: list[Month]
 
 
 def _sum(amounts) -> Money:
@@ -151,18 +159,19 @@ class AnalysisService:
         self._payees = payees
         self._exchange_rates = exchange_rates
 
-    def trends(self, period: Period, metric: Metric) -> Trends:
+    def trends(self, period: Period, metric: Metric, today: date | None = None) -> Trends:
         converted = self._converted(period)
         movements = converted.movements
         months = period.months()
         previous = self._converted(period.previous()).movements
+        history = self._transactions.history_months(period, today)
         if metric is Metric.SAVINGS:
             month_totals = [
                 MonthTrend(flow.month, flow.savings, []) for flow in month_flows(movements, months)
             ]
             return Trends(
                 metric, period, month_totals, _sum(m.total for m in month_totals),
-                _savings(previous), [], [], [], converted.unconverted,
+                _savings(previous), [], [], [], converted.unconverted, history,
             )  # fmt: skip
         kind = metric.kind
         chosen = [m for m in movements if m.kind is kind]
@@ -177,9 +186,10 @@ class AnalysisService:
             payees=self._by_payee(chosen),
             tags=self._by_tag(chosen),
             unconverted=converted.unconverted,
+            history=history,
         )
 
-    def cash_flow(self, period: Period) -> CashFlowReport:
+    def cash_flow(self, period: Period, today: date | None = None) -> CashFlowReport:
         converted = self._converted(period)
         previous = self._converted(period.previous()).movements
         return CashFlowReport(
@@ -188,6 +198,7 @@ class AnalysisService:
             current=_flow_totals(converted.movements),
             previous=_flow_totals(previous),
             unconverted=converted.unconverted,
+            history=self._transactions.history_months(period, today),
         )
 
     def _converted(self, period: Period):

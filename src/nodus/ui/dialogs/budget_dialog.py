@@ -8,7 +8,7 @@ from nodus.models.category import Category
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.period import Month, format_month
-from nodus.services.budget_service import SUGGESTION_MONTHS
+from nodus.services.budget_service import BudgetSuggestion
 from nodus.services.category_service import CategoryNode
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
@@ -86,10 +86,8 @@ class BudgetDialog(FormDialog):
         )
         self.suggestion_hint.setVisible(suggestion is not None)
         if suggestion is not None:
-            self.suggestion_hint.setText(
-                f"Promedio de los últimos {SUGGESTION_MONTHS} meses: {suggestion.format()}"
-            )
-            self.amount_input.set_money(suggestion)
+            self.suggestion_hint.setText(suggestion_text(suggestion))
+            self.amount_input.set_money(suggestion.amount)
 
     def save(self) -> None:
         category_id = self.category_input.current_id()
@@ -97,3 +95,12 @@ class BudgetDialog(FormDialog):
             raise ValidationError("Elige una categoría.")
         self._services.budgets.set_limit(category_id, self._month, self.amount_input.money())
         self._event_bus.budgets_changed.emit()
+
+
+def suggestion_text(suggestion: BudgetSuggestion) -> str:
+    """ "Promedio de los últimos 3 meses: $ 350.000,00", or, after a single month of use,
+    "Lo gastado el mes pasado: $ 90.000,00"."""
+    amount = suggestion.amount.format()
+    if suggestion.months == 1:
+        return f"Lo gastado el mes pasado: {amount}"
+    return f"Promedio de los últimos {suggestion.months} meses: {amount}"

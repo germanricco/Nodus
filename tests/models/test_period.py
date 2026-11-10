@@ -74,6 +74,32 @@ def test_label(period, label):
     assert period.label() == label
 
 
+class TestMonthsSince:
+    """The months with a history: what a monthly average divides by."""
+
+    YEAR = Period.year(2026)
+
+    def test_from_the_month_of_the_first_movement_through_the_current_one(self):
+        months = self.YEAR.months_since(date(2026, 9, 28), date(2026, 11, 5))
+
+        assert months == [Month(2026, 9), Month(2026, 10), Month(2026, 11)]
+
+    def test_one_month_of_use_is_one_month(self):
+        assert self.YEAR.months_since(date(2026, 11, 6), date(2026, 11, 9)) == [Month(2026, 11)]
+
+    def test_a_history_older_than_the_period_counts_all_its_months_until_today(self):
+        months = self.YEAR.months_since(date(2020, 1, 1), date(2026, 3, 31))
+
+        assert months == [Month(2026, 1), Month(2026, 2), Month(2026, 3)]
+
+    def test_a_period_already_over_counts_whole(self):
+        assert len(self.YEAR.months_since(date(2020, 1, 1), date(2027, 6, 1))) == 12
+
+    def test_nothing_when_the_history_starts_after_the_period_or_it_has_not_come(self):
+        assert self.YEAR.months_since(date(2027, 2, 1), date(2027, 3, 1)) == []
+        assert self.YEAR.months_since(date(2020, 1, 1), date(2025, 12, 31)) == []
+
+
 def test_contains_is_inclusive():
     period = Period.of_months(Month(2026, 11))
 

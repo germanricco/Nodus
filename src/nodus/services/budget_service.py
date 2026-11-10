@@ -17,6 +17,7 @@ from nodus.models.transaction import TransactionType
 from nodus.services.category_service import CategoryService
 from nodus.services.dashboard_service import CategoryTotal, DashboardService
 from nodus.services.errors import ValidationError
+from nodus.services.transaction_service import TransactionService
 
 # Budgets are kept in pesos, the currency of the dashboard's totals.
 CURRENCY = Currency.ARS
@@ -24,6 +25,15 @@ CURRENCY = Currency.ARS
 SUGGESTION_MONTHS = 3
 # Suggestions are rounded to whole thousands of pesos (in cents), as people set limits.
 SUGGESTION_ROUNDING = 1000_00
+
+
+@dataclass(frozen=True)
+class BudgetSuggestion:
+    """A limit to start from: what was spent per month in the ``months`` before, which
+    may be fewer than ``SUGGESTION_MONTHS`` when Nodus has been used for less."""
+
+    amount: Money
+    months: int
 
 
 @dataclass(frozen=True)
@@ -64,11 +74,13 @@ class BudgetService:
         budgets: BudgetRepository,
         categories: CategoryService,
         dashboard: DashboardService,
+        transactions: TransactionService,
     ) -> None:
         self._database = database
         self._budgets = budgets
         self._categories = categories
         self._dashboard = dashboard
+        self._transactions = transactions
 
     def set_limit(self, category_id: int, month: Month, amount: Money) -> None:
         """Sets the limit from ``month`` on; earlier months keep the one they had."""
@@ -115,20 +127,23 @@ class BudgetService:
         budgets = self.month_budgets(Month.of(today), today).budgets
         return [b for b in budgets if b.state is BudgetState.OVER]
 
-    def suggestion(self, category_id: int, month: Month) -> Money | None:
-        """The average spending of the months before ``month``, rounded to thousands;
-        None when nothing was spent in the category."""
+    def suggestion(self, category_id: int, month: Month) -> BudgetSuggestion | None:
+        """The average spending of the ``SUGGESTION_MONTHS`` months before ``month``,
+        rounded to thousands; None when nothing was spent in the category. Only the months
+        with a history count, so a month of use does not suggest a third of it."""
+        before = Period.of_months(month.shifted(-SUGGESTION_MONTHS), month.previous())
+        months = self._transactions.history_months(before, month.previous().end)
         total = 0
-        for back in range(1, SUGGESTION_MONTHS + 1):
-            summary = self._dashboard.summary(Period.of_months(month.shifted(-back)))
+        for counted in months:
+            summary = self._dashboard.summary(Period.of_months(counted))
             total += sum(
                 t.total.cents for t in summary.expenses_by_category if t.category.id == category_id
             )
         if total <= 0:
             return None
-        average = total / SUGGESTION_MONTHS
+        average = total / len(months)
         rounded = max(1, round(average / SUGGESTION_ROUNDING)) * SUGGESTION_ROUNDING
-        return Money(rounded, CURRENCY)
+        return BudgetSuggestion(Money(rounded, CURRENCY), len(months))
 
     def _require_budgetable(self, category_id: int) -> Category:
         category = self._categories.get(category_id)

@@ -355,16 +355,16 @@ class CashFlowTableModel(QAbstractTableModel):
         return None
 
 
-def months_to_list(months: list[MonthFlow], current: Month) -> list[MonthFlow]:
-    """The months of the table, without the empty ones before the first movement or still
-    to come (a year that has not ended), which would only be rows of zeros. An empty month
-    in between stays: it says something."""
+def months_to_list(months: list[MonthFlow], history: list[Month]) -> list[MonthFlow]:
+    """The months of the table: those with a history (the report's ``history``), even if
+    empty, since an empty month says something, plus any later one with a movement already
+    logged ahead. Months before the first movement or still to come would only be rows of
+    zeros."""
 
     def empty(flow: MonthFlow) -> bool:
         return flow.income.is_zero and flow.expenses.is_zero
 
-    first = next((i for i, flow in enumerate(months) if not empty(flow)), len(months))
-    return [flow for flow in months[first:] if flow.month <= current or not empty(flow)]
+    return [flow for flow in months if flow.month in history or not empty(flow)]
 
 
 class CashFlowView(AnalysisView):
@@ -443,7 +443,7 @@ class CashFlowView(AnalysisView):
         self.chart.set_groups(flow_bar_groups(report.months))
         self.unconverted_label.setText(unconverted_note(report.unconverted))
         self.unconverted_label.setVisible(bool(report.unconverted))
-        self.model.set_months(months_to_list(report.months, Month.of(date.today())))
+        self.model.set_months(months_to_list(report.months, report.history))
         fit_rows(self.table)
 
     def _open_month(self, flow: MonthFlow) -> None:
