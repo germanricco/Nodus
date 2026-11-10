@@ -9,7 +9,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
-from nodus.ui.theme.design import Chart, Radius, TextRole, role_font
+from nodus.ui.theme.design import Chart, Line, Opacity, Radius, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -118,7 +118,7 @@ class BarChart(ColumnHoverChart):
                 height = max(room * value / largest, 2.0)
                 rect = QRectF(left + offset, baseline - height, bar_width, height)
                 painter.setPen(Qt.PenStyle.NoPen)
-                painter.setBrush(with_alpha(color, 0.35 if faded else 0.9))
+                painter.setBrush(with_alpha(color, Opacity.FADED if faded else Opacity.BAR))
                 painter.drawPath(rounded_bar_path(rect, Radius.S, True))
             font = QFont(small)
             font.setWeight(QFont.Weight.DemiBold if group.selected else QFont.Weight.Normal)
@@ -129,7 +129,7 @@ class BarChart(ColumnHoverChart):
                 Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
                 group.label,
             )
-        painter.setPen(QPen(with_alpha(self._theme.border, 1), 1))
+        painter.setPen(QPen(QColor(self._theme.border), Line.THIN))
         painter.drawLine(QPointF(0, baseline), QPointF(self.width(), baseline))
         if self.hover_index is not None:
             slot = self._slots()[self.hover_index]

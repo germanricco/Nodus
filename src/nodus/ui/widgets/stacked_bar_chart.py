@@ -9,7 +9,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
-from nodus.ui.theme.design import Chart, Radius, TextRole, role_font
+from nodus.ui.theme.design import Chart, Line, Opacity, Radius, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -178,7 +178,7 @@ class StackedBarChart(ColumnHoverChart):
             outer_down = max((i for i, (s, _) in enumerate(pieces) if s.value < 0), default=None)
             painter.setPen(Qt.PenStyle.NoPen)
             for position, (segment, rect) in enumerate(pieces):
-                painter.setBrush(with_alpha(segment.color, 0.35 if faded else 0.9))
+                painter.setBrush(with_alpha(segment.color, Opacity.FADED if faded else Opacity.BAR))
                 if position in (outer_up, outer_down):
                     painter.drawPath(rounded_bar_path(rect, Radius.S, position == outer_up))
                 else:
@@ -189,7 +189,7 @@ class StackedBarChart(ColumnHoverChart):
                 Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
                 bar.label,
             )
-        painter.setPen(QPen(with_alpha(self._theme.border, 1), 1))
+        painter.setPen(QPen(QColor(self._theme.border), Line.THIN))
         painter.drawLine(QPointF(0, baseline), QPointF(self.width(), baseline))
         if self.average is not None and self._bars:
             self._paint_average(painter, baseline - self.average * per_cent)
@@ -203,7 +203,7 @@ class StackedBarChart(ColumnHoverChart):
         painter.end()
 
     def _paint_average(self, painter: QPainter, y: float) -> None:
-        pen = QPen(QColor(self._theme.warning), 1.5, Qt.PenStyle.DashLine)
+        pen = QPen(QColor(self._theme.warning), Line.STROKE, Qt.PenStyle.DashLine)
         painter.setPen(pen)
         painter.drawLine(QPointF(0, y), QPointF(self.width(), y))
         # The label sits on a patch of the card's color, so it reads over a bar.

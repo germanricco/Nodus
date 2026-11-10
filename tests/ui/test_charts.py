@@ -6,7 +6,6 @@ from PySide6.QtCore import QPoint, QPointF, Qt
 
 from nodus.models.currency import Currency
 from nodus.ui.theme.theme import LIGHT
-from nodus.ui.widgets import chart_base
 from nodus.ui.widgets.bar_chart import BarChart, BarGroup
 from nodus.ui.widgets.change_badge import ChangeBadge, format_change
 from nodus.ui.widgets.chart_base import format_compact, resample
@@ -150,10 +149,9 @@ def test_line_chart_hover_finds_the_nearest_known_point(qtbot):
     chart.grab()  # paints the hover guide and box without errors
 
 
-def test_line_chart_morphs_from_the_previous_line(qtbot, monkeypatch):
+def test_line_chart_morphs_from_the_previous_line(qtbot, animations):
     chart = make_line_chart(qtbot)
     chart.set_points(line_points([100, 100]))
-    monkeypatch.setattr(chart_base, "DURATION_MS", 300)
 
     chart.set_points(line_points([300, 500]))
 
@@ -195,8 +193,7 @@ def test_line_chart_of_another_period_morphs_by_position(qtbot):
     assert chart._values_at(0) == [100, 200, 300]  # the old shape, stretched
 
 
-def test_hidden_chart_plays_its_transition_when_shown(qtbot, monkeypatch):
-    monkeypatch.setattr(chart_base, "DURATION_MS", 200)
+def test_hidden_chart_plays_its_transition_when_shown(qtbot, animations):
     chart = BarChart(LIGHT)
     qtbot.addWidget(chart)
 
@@ -290,10 +287,9 @@ def test_proportion_bar_slides_to_new_shares(qtbot):
     assert bar._shares(0.5) == [0.625, 0.375]
 
 
-def test_animated_money_label_counts_to_the_new_amount(qtbot, monkeypatch):
+def test_animated_money_label_counts_to_the_new_amount(qtbot, animations):
     label = AnimatedMoneyLabel(ars("100"))
     qtbot.addWidget(label)
-    monkeypatch.setattr(chart_base, "DURATION_MS", 200)
 
     label.set_money(ars("300"))
 

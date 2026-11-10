@@ -16,7 +16,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
 
 from nodus.models.palette import PALETTE
-from nodus.ui.theme.design import ControlSize, Space
+from nodus.ui.theme.design import ControlSize, Line, Space
 from nodus.ui.widgets.color_wheel import ColorWheelPopup, hue_ring_gradient
 
 
@@ -67,7 +67,7 @@ class WheelSwatch(QPushButton):
         ring.addEllipse(center, radius, radius)
         ring.addEllipse(center, radius - 4, radius - 4)
         painter.fillPath(ring, QBrush(hue_ring_gradient(center)))
-        painter.setPen(QPen(self.palette().windowText(), 1.6))
+        painter.setPen(QPen(self.palette().windowText(), Line.STROKE))
         arm = radius / 3
         painter.drawLine(
             QPointF(center.x() - arm, center.y()), QPointF(center.x() + arm, center.y())

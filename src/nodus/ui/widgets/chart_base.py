@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Hashable, Mapping, Sequence
 from typing import TypeVar
 
-from PySide6.QtCore import QEasingCurve, QPointF, QRectF, Qt, QVariantAnimation
+from PySide6.QtCore import QPointF, QRectF, Qt, QVariantAnimation
 from PySide6.QtGui import (
     QColor,
     QFont,
@@ -24,11 +24,8 @@ from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.ui.theme.design import Radius, TextRole, role_font
+from nodus.ui.theme.design import Easing, Motion, Radius, TextRole, motion_ms, role_font
 from nodus.ui.theme.theme import Theme
-
-# Length of every chart and figure transition. Tests set it to 0 to check the final state.
-DURATION_MS = 450
 
 K = TypeVar("K", bound=Hashable)
 V = TypeVar("V")
@@ -71,7 +68,7 @@ def resample(values: Sequence[float], count: int) -> list[float]:
 def with_alpha(color: str, alpha: float) -> QColor:
     """``color`` with an opacity from 0 to 1."""
     result = QColor(color)
-    result.setAlphaF(max(0.0, min(1.0, alpha)))
+    result.setAlphaF(alpha)
     return result
 
 
@@ -105,7 +102,7 @@ class AnimatedChart(QWidget):
         self._animation = QVariantAnimation(self)
         self._animation.setStartValue(0.0)
         self._animation.setEndValue(1.0)
-        self._animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self._animation.setEasingCurve(Easing.SETTLE)
         self._animation.valueChanged.connect(self._advance)
         self.setMouseTracking(True)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -117,7 +114,7 @@ class AnimatedChart(QWidget):
     def _start_transition(self) -> None:
         """Called by subclasses after storing new data."""
         self._animation.stop()
-        if DURATION_MS <= 0:
+        if motion_ms(Motion.SLOW) <= 0:
             self.progress = 1.0
             self._pending = False
         elif self.isVisible():
@@ -130,7 +127,7 @@ class AnimatedChart(QWidget):
     def _play(self) -> None:
         self._pending = False
         self.progress = 0.0
-        self._animation.setDuration(DURATION_MS)
+        self._animation.setDuration(motion_ms(Motion.SLOW))
         self._animation.start()
 
     def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
@@ -167,7 +164,7 @@ class AnimatedChart(QWidget):
         box = QRectF(max(2.0, x), y, width, height)
 
         painter.save()
-        painter.setPen(with_alpha(self._theme.border, 1))
+        painter.setPen(QColor(self._theme.border))
         painter.setBrush(QColor(self._theme.surface))
         painter.drawRoundedRect(box, Radius.L, Radius.L)
         painter.setFont(title_font)

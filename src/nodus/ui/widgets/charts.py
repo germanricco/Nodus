@@ -5,16 +5,14 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from PySide6.QtCore import QEasingCurve, QPointF, QRectF, QSize, Qt, QVariantAnimation, Signal
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QVariantAnimation, Signal
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.money import Money
-from nodus.ui.theme.design import Chart, TextRole, role_font
+from nodus.ui.theme.design import Chart, Easing, Motion, Opacity, TextRole, motion_ms, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import AnimatedChart, lerp, starting_values, with_alpha
-
-HOVER_MS = 160
 
 
 @dataclass(frozen=True)
@@ -90,7 +88,7 @@ class DonutChart(AnimatedChart):
         self._pop_animation = QVariantAnimation(self)
         self._pop_animation.setStartValue(0.0)
         self._pop_animation.setEndValue(1.0)
-        self._pop_animation.setEasingCurve(QEasingCurve.Type.OutBack)
+        self._pop_animation.setEasingCurve(Easing.POP)
         self._pop_animation.valueChanged.connect(self._set_pop)
         self.setMinimumSize(Chart.DONUT_MIN_SIZE, Chart.DONUT_MIN_SIZE)
 
@@ -128,7 +126,7 @@ class DonutChart(AnimatedChart):
             return
         self.hover_index = index
         self._pop_animation.stop()
-        self._pop_animation.setDuration(HOVER_MS)
+        self._pop_animation.setDuration(motion_ms(Motion.FAST))
         self._pop_animation.start()
         self.update()
 
@@ -199,7 +197,7 @@ class DonutChart(AnimatedChart):
             hovered = index == self.hover_index
             faded = self.hover_index is not None and not hovered
             thickness = self.THICKNESS + (self.POP * self._pop if hovered else 0)
-            color = with_alpha(segment.color, 0.35 if faded else 1.0)
+            color = with_alpha(segment.color, Opacity.FADED) if faded else QColor(segment.color)
             painter.setPen(self._pen(color, thickness))
             # Qt angles are in 1/16 degree and run counterclockwise from 3 o'clock.
             painter.drawArc(ring, int((90 - start) * 16), int(-span * 16))

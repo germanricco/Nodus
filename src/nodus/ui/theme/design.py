@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from enum import Enum, IntEnum
 
+from PySide6.QtCore import QEasingCurve
 from PySide6.QtGui import QFont
 
 FONT_FAMILY = "Segoe UI"
@@ -110,9 +111,58 @@ class ControlSize:
 class Line:
     """Lines in pixels, and how strong the soft ones are."""
 
-    THIN = 1  # dividers and borders
-    THICK = 2  # the chosen tab's mark, where a dragged row lands
+    THIN = 1  # dividers, borders, chart grids
+    STROKE = 1.5  # the strokes of an icon drawn in code: ticks, a crossed-out switch
+    THICK = 2  # the chosen tab's mark, where a dragged row lands, a budget's pace
+    DATA = 2.5  # the line of a line chart
+    MARK = 3  # the point of a line under the mouse
     SOFT_ALPHA = 90  # opacity (of 255) of a divider inside a list, softer than a border
+
+
+class Opacity:
+    """How opaque a drawn shape is, from 0 to 1, where the theme's colors alone cannot
+    say it: a bar that steps back, a fill that fades."""
+
+    FADED = 0.35  # bars and slices other than the one pointed at
+    BAR = 0.9  # a chart bar at rest
+    OVER = 0.3  # the part of a budget beyond its limit
+    GRID = 0.8  # chart grid lines
+    AREA = 0.32  # the top of the area under a line, which fades out downwards
+    GUIDE = 0.7  # the line that follows the mouse across a chart
+    DISABLED = 0.4  # a control that cannot be used
+
+
+class Motion(IntEnum):
+    """How long a change takes on screen, in milliseconds: quick for an answer to the
+    mouse, slower for data that changes, so the eye can follow it. ``motion_ms`` gives
+    the length to use, which is 0 when the user asked for less motion."""
+
+    FAST = 160  # a slice that grows under the mouse
+    SLOW = 450  # charts and figures moving to new data
+
+
+class Easing:
+    """The curve of each kind of motion."""
+
+    SETTLE = QEasingCurve.Type.OutCubic  # fast, then slowing into place
+    POP = QEasingCurve.Type.OutBack  # overshoots a little, for what answers the mouse
+
+
+class _MotionPreference:
+    """Whether the user asked for less motion; read on every transition, so a change
+    applies at once."""
+
+    reduced = False
+
+
+def set_reduced_motion(reduced: bool) -> None:
+    """Turns every transition into a jump to its end (the «Reducir animaciones» choice)."""
+    _MotionPreference.reduced = reduced
+
+
+def motion_ms(step: Motion) -> int:
+    """How long ``step`` lasts now: 0 when motion is reduced."""
+    return 0 if _MotionPreference.reduced else int(step)
 
 
 class Layout:

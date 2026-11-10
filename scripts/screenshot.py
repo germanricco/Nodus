@@ -43,9 +43,9 @@ from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
 from nodus.ui.navigation import DetailId, PageId  # noqa: E402
 from nodus.ui.pages.accounts_page import AccountRow  # noqa: E402
+from nodus.ui.theme.design import set_reduced_motion  # noqa: E402
 from nodus.ui.theme.theme import ThemeMode  # noqa: E402
 from nodus.ui.theme.theme_manager import ThemeManager  # noqa: E402
-from nodus.ui.widgets import chart_base  # noqa: E402
 from nodus.ui.widgets.row_actions import build_menu  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -385,7 +385,7 @@ def main() -> int:
     args.out.mkdir(parents=True, exist_ok=True)
 
     # Charts are captured in their final state, not halfway through their transitions.
-    chart_base.DURATION_MS = 0
+    set_reduced_motion(True)
     app = QApplication(sys.argv)
     with tempfile.TemporaryDirectory() as data_dir:
         database = Database.open(Path(data_dir) / "nodus.db")

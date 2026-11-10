@@ -6,7 +6,7 @@ from PySide6.QtCore import QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QAbstractButton, QWidget
 
-from nodus.ui.theme.design import ControlSize
+from nodus.ui.theme.design import ControlSize, Line, Opacity
 from nodus.ui.theme.theme_manager import active_theme
 
 
@@ -34,14 +34,14 @@ class ToggleSwitch(QAbstractButton):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         if not self.isEnabled():
-            painter.setOpacity(0.4)
+            painter.setOpacity(Opacity.DISABLED)
         track = QRectF(self.rect()).adjusted(0.75, 0.75, -0.75, -0.75)
         radius = track.height() / 2
         if on:
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(theme.accent))
         else:
-            painter.setPen(QPen(QColor(theme.text_muted), 1.5))
+            painter.setPen(QPen(QColor(theme.text_muted), Line.STROKE))
             painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawRoundedRect(track, radius, radius)
 
@@ -51,6 +51,6 @@ class ToggleSwitch(QAbstractButton):
         painter.setBrush(QColor(theme.on_accent if on else theme.text_muted))
         painter.drawEllipse(QRectF(x, self.KNOB_MARGIN, size, size))
         if self.hasFocus():
-            painter.setPen(QPen(QColor(theme.accent), 1))
+            painter.setPen(QPen(QColor(theme.accent), Line.THIN))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRoundedRect(track, radius, radius)

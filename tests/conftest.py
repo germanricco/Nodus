@@ -16,14 +16,22 @@ from nodus.database.database import Database  # noqa: E402
 from nodus.models.account import Account, AccountType  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
-from nodus.ui.widgets import chart_base  # noqa: E402
+from nodus.ui.theme.design import set_reduced_motion  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
-def no_animations(monkeypatch):
+def no_animations():
     """Charts and figures jump to their final state, so tests can check it right away.
-    Tests of the transitions themselves set a duration again."""
-    monkeypatch.setattr(chart_base, "DURATION_MS", 0)
+    Tests of the transitions themselves turn motion back on (``animations``)."""
+    set_reduced_motion(True)
+    yield
+    set_reduced_motion(False)
+
+
+@pytest.fixture
+def animations():
+    """Transitions play at their normal length, for the tests of the transitions."""
+    set_reduced_motion(False)
 
 
 @pytest.fixture

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QEasingCurve, QSize, Qt, QVariantAnimation
+from PySide6.QtCore import QSize, Qt, QVariantAnimation
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.models.money import Money
+from nodus.ui.theme.design import Easing, Motion, motion_ms
 from nodus.ui.widgets import chart_base
 from nodus.ui.widgets.style import set_style_property
 
@@ -94,15 +95,15 @@ class AnimatedMoneyLabel(MoneyLabel):
             previous is None
             or previous.currency is not money.currency
             or previous == money
-            or chart_base.DURATION_MS <= 0
+            or motion_ms(Motion.SLOW) <= 0
         ):
             self._show(money)
             return
         self._animation = QVariantAnimation(self)
         self._animation.setStartValue(float(previous.cents))
         self._animation.setEndValue(float(money.cents))
-        self._animation.setDuration(chart_base.DURATION_MS)
-        self._animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self._animation.setDuration(motion_ms(Motion.SLOW))
+        self._animation.setEasingCurve(Easing.SETTLE)
         self._animation.valueChanged.connect(
             lambda cents: self._show(Money(round(cents), money.currency))
         )

@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
 
 from nodus.models.budget import Budget, BudgetState, used_percent_label
-from nodus.ui.theme.design import ControlSize
+from nodus.ui.theme.design import ControlSize, Line, Opacity
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import AnimatedChart, format_compact, lerp, with_alpha
 from nodus.ui.widgets.style import set_style_property
@@ -93,7 +93,7 @@ class BudgetBar(AnimatedChart):
         used = lerp(0.0, self.budget.used, self.progress)
         color = state_color(self._theme, self.budget.state)
         if used > 1:
-            painter.setBrush(with_alpha(self._theme.expense, 0.3))
+            painter.setBrush(with_alpha(self._theme.expense, Opacity.OVER))
             painter.drawRoundedRect(track, radius, radius)
             excess = track.width() * (used - 1) / used
             painter.setBrush(QColor(color))
@@ -111,6 +111,6 @@ class BudgetBar(AnimatedChart):
                 )
         if self.shows_pace:
             x = track.left() + track.width() * self.budget.elapsed
-            painter.setPen(QPen(QColor(self._theme.text_muted), 2))
+            painter.setPen(QPen(QColor(self._theme.text_muted), Line.THICK))
             painter.drawLine(int(x), 0, int(x), self.height())
         painter.end()

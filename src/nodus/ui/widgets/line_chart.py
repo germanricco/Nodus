@@ -17,7 +17,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QWidget
 
-from nodus.ui.theme.design import Chart, Space, TextRole, role_font
+from nodus.ui.theme.design import Chart, Line, Opacity, Space, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -210,7 +210,9 @@ class LineChart(ColumnHoverChart):
         painter.setFont(small)
         for step in range(3):
             y = plot.bottom() - plot.height() * step / 2
-            painter.setPen(QPen(with_alpha(self._theme.border, 0.8), 1, Qt.PenStyle.DashLine))
+            painter.setPen(
+                QPen(with_alpha(self._theme.border, Opacity.GRID), Line.THIN, Qt.PenStyle.DashLine)
+            )
             painter.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y))
             if known:
                 painter.setPen(QColor(self._theme.text_muted))
@@ -272,13 +274,13 @@ class LineChart(ColumnHoverChart):
         area.lineTo(run[0].x(), plot.bottom())
         area.closeSubpath()
         gradient = QLinearGradient(0, plot.top(), 0, plot.bottom())
-        gradient.setColorAt(0, with_alpha(self._theme.accent, 0.32))
-        gradient.setColorAt(1, with_alpha(self._theme.accent, 0.0))
+        gradient.setColorAt(0, with_alpha(self._theme.accent, Opacity.AREA))
+        gradient.setColorAt(1, with_alpha(self._theme.accent, 0))
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(gradient)
         painter.drawPath(area)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        pen = QPen(QColor(self._theme.accent), 2.5)
+        pen = QPen(QColor(self._theme.accent), Line.DATA)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         painter.setPen(pen)
@@ -300,14 +302,16 @@ class LineChart(ColumnHoverChart):
             if position is None or position.x() > revealed + 1:
                 continue
             color = self._theme.income if directions[index] > 0 else self._theme.expense
-            painter.setPen(QPen(QColor(self._theme.surface), 2))
+            painter.setPen(QPen(QColor(self._theme.surface), Line.THICK))
             painter.setBrush(QColor(color))
             painter.drawEllipse(position, 5, 5)
 
     def _paint_hover(self, painter: QPainter, point: QPointF, plot: QRectF) -> None:
-        painter.setPen(QPen(with_alpha(self._theme.text_muted, 0.7), 1, Qt.PenStyle.DashLine))
+        painter.setPen(
+            QPen(with_alpha(self._theme.text_muted, Opacity.GUIDE), Line.THIN, Qt.PenStyle.DashLine)
+        )
         painter.drawLine(QPointF(point.x(), plot.top()), QPointF(point.x(), plot.bottom()))
-        painter.setPen(QPen(QColor(self._theme.accent), 3))
+        painter.setPen(QPen(QColor(self._theme.accent), Line.MARK))
         painter.setBrush(QColor(self._theme.surface))
         painter.drawEllipse(point, 6, 6)
         hovered = self._points[self.hover_index]
