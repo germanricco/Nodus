@@ -9,6 +9,9 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - La variación del patrimonio dice cuánto se debe a la cotización («+1,2 % por la cotización»); al pasar el mouse, muestra cómo se movió. Por eso el mismo período puede subir en pesos y bajar en dólares.
 - Las listas desplegables, las sugerencias y los menús dejan aire alrededor de sus opciones: la última ya no toca el borde, y todas las opciones tienen el mismo alto, con punto de color o sin él.
 - Un clic en cualquier parte de una fecha, también sobre el texto, abre el calendario, no solo en la flecha. El calendario es más grande y fácil de usar: días más espaciados, el elegido resaltado como en las listas y los de otros meses atenuados.
+- Al anotar una transacción, la categoría y la cuenta de destino arrancan sin elegir, en lugar de la primera de la lista, así nunca se guarda una que no elegiste. El beneficiario sigue completando su categoría, la cuenta es la última que usaste (o la única que tienes) y el cursor ya está en el monto.
+- «Vincular a un gasto» aparece solo al elegir la categoría «Reembolsos».
+- Si falta un dato o hay un error, el aviso aparece en rojo debajo del campo que lo causa, todos a la vez, y se borra apenas lo corriges. Vale para todos los formularios.
 - Arreglo: los días anteriores a la primera cotización ya no quedan «sin cotización»: usan la primera. Antes, el patrimonio, el Dashboard, Análisis y Presupuestos sumaban distinto en pesos y en dólares los movimientos de esos días.
 - Arreglo: un gasto con fecha futura ya no baja el saldo de hoy; se descuenta el día que le toca. Últimas transacciones tampoco lo muestra antes de tiempo.
 - Arreglo: el promedio mensual de Análisis cuenta solo los meses desde tu primer movimiento hasta hoy. Antes, quien usaba Nodus hacía un mes veía su gasto repartido entre los 12 meses del período. La sugerencia de un presupuesto sigue la misma regla y dice cuántos meses promedia.

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QLineEdit, QWidget
 from nodus.models.category import Category
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
-from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import TRANSACTION_TYPE_LABELS
 from nodus.ui.widgets.color import ColorPicker
@@ -53,6 +53,8 @@ class CategoryDialog(FormDialog):
         self.form.addRow("Tipo", self.kind_input)
         self.form.addRow("Dentro de", self.parent_input)
         self.form.addRow("Color", self.color_input)
+        self.bind_field(self.name_input, "name")
+        self.bind_field(self.parent_input, "parent_id")
 
         self.kind_input.currentIndexChanged.connect(self._fill_parents)
         if category:
@@ -78,6 +80,9 @@ class CategoryDialog(FormDialog):
         self.color_input.set_color(category.color)
         self.kind_input.setEnabled(False)
         self.parent_input.setEnabled(False)
+
+    def missing(self) -> dict[QWidget, str]:
+        return self.required((self.name_input, TYPE_NAME))
 
     def save(self) -> None:
         name = self.name_input.text()

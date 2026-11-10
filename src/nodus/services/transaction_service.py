@@ -311,12 +311,13 @@ class TransactionService:
     def _build_transaction(
         self, transaction_id: int | None, draft: TransactionDraft
     ) -> Transaction:
-        account = self._active_account(draft.account_id)
-        self._require_amount_for(draft.amount, account)
+        account = self._active_account(draft.account_id, "account_id")
+        self._require_amount_for(draft.amount, account, "amount")
         category = require_found(self._categories.get(draft.category_id), "La categoría no existe.")
         if category.kind is not draft.type:
             raise ValidationError(
-                f"La categoría «{category.name}» no corresponde a este tipo de transacción."
+                f"La categoría «{category.name}» no corresponde a este tipo de transacción.",
+                field="category_id",
             )
         income = draft.type is TransactionType.INCOME
         refund_of_id = draft.refund_of_id if income else None
@@ -345,7 +346,8 @@ class TransactionService:
         if amount.currency is expense.amount.currency and amount > summary.remaining:
             raise ValidationError(
                 f"El reembolso supera lo que queda por reembolsar de ese gasto:"
-                f" {summary.remaining.format()}."
+                f" {summary.remaining.format()}.",
+                field="amount",
             )
 
     def _require_covers_refunds(self, expense_id: int, amount: Money) -> None:
@@ -354,7 +356,8 @@ class TransactionService:
         if amount.currency is refunded.currency and amount < refunded:
             raise ValidationError(
                 f"Ya se reembolsaron {refunded.format()} de este gasto:"
-                " el monto no puede ser menor."
+                " el monto no puede ser menor.",
+                field="amount",
             )
 
     def _build_transfer(
@@ -364,12 +367,14 @@ class TransactionService:
         leg_ids: tuple[int | None, int | None] = (None, None),
     ) -> Transfer:
         if draft.from_account_id == draft.to_account_id:
-            raise ValidationError("La cuenta de origen y la de destino deben ser distintas.")
-        source = self._active_account(draft.from_account_id)
-        destination = self._active_account(draft.to_account_id)
+            raise ValidationError(
+                "La cuenta de origen y la de destino deben ser distintas.", field="to_account_id"
+            )
+        source = self._active_account(draft.from_account_id, "from_account_id")
+        destination = self._active_account(draft.to_account_id, "to_account_id")
         amount_in = self._incoming_amount(draft, source, destination)
-        self._require_amount_for(draft.amount_out, source)
-        self._require_amount_for(amount_in, destination)
+        self._require_amount_for(draft.amount_out, source, "amount_out")
+        self._require_amount_for(amount_in, destination, "amount_in")
         note = draft.note.strip()
         outgoing_id, incoming_id = leg_ids
         return Transfer(
@@ -389,24 +394,30 @@ class TransactionService:
             if draft.amount_in is not None and draft.amount_in != draft.amount_out:
                 raise ValidationError(
                     "Entre cuentas de la misma moneda, el monto que sale y el que entra"
-                    " deben ser iguales."
+                    " deben ser iguales.",
+                    field="amount_in",
                 )
             return draft.amount_out
         if draft.amount_in is None:
-            raise ValidationError("Indica el monto que entra en la cuenta de destino.")
+            raise ValidationError(
+                "Indica el monto que entra en la cuenta de destino.", field="amount_in"
+            )
         return draft.amount_in
 
-    def _active_account(self, account_id: int) -> Account:
+    def _active_account(self, account_id: int, field: str) -> Account:
+        """The account, if it exists and is not archived; ``field`` names it in the draft."""
         account = require_found(self._accounts.get(account_id), "La cuenta no existe.")
         if account.is_archived:
-            raise ValidationError(f"La cuenta «{account.name}» está archivada.")
+            raise ValidationError(f"La cuenta «{account.name}» está archivada.", field=field)
         return account
 
     @staticmethod
-    def _require_amount_for(amount: Money, account: Account) -> None:
+    def _require_amount_for(amount: Money, account: Account, field: str) -> None:
+        """``amount`` is positive and in the account's currency; ``field`` names it."""
         if amount.currency is not account.currency:
             raise ValidationError(
-                f"El monto debe estar en {account.currency.value}, la moneda de «{account.name}»."
+                f"El monto debe estar en {account.currency.value}, la moneda de «{account.name}».",
+                field=field,
             )
         if amount.cents <= 0:
-            raise ValidationError("El monto debe ser mayor que cero.")
+            raise ValidationError("El monto debe ser mayor que cero.", field=field)

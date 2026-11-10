@@ -12,10 +12,10 @@ from nodus.models.period import Period, format_date
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
-from nodus.services.errors import ValidationError
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder
+from nodus.ui.widgets.input_error import InputError
 from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.table import record_table
 from nodus.ui.widgets.transaction_table import DESCRIPTION, TAGS, TransactionTableModel
@@ -101,7 +101,7 @@ class RefundPickerDialog(FormDialog):
     def save(self) -> None:
         rows = self.table.selectionModel().selectedRows()
         if not rows:
-            raise ValidationError("Elige el gasto que se reembolsa.")
+            raise InputError("Elige el gasto que se reembolsa.", self.table)
         self.chosen = self.model.item(rows[0].row()).transaction
 
 

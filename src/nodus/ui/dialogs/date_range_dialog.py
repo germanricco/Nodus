@@ -5,9 +5,9 @@ from __future__ import annotations
 from PySide6.QtWidgets import QWidget
 
 from nodus.models.period import Period
-from nodus.services.errors import ValidationError
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.widgets.date_input import DateInput
+from nodus.ui.widgets.input_error import InputError
 
 
 class DateRangeDialog(FormDialog):
@@ -27,5 +27,5 @@ class DateRangeDialog(FormDialog):
     def save(self) -> None:
         start, end = self.start_input.day(), self.end_input.day()
         if end < start:
-            raise ValidationError("«Desde» no puede ser posterior a «Hasta».")
+            raise InputError("«Hasta» no puede ser anterior a «Desde».", self.end_input)
         self.period = Period(start, end)

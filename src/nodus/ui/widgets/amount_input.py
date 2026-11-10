@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
 
 from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.services.errors import ValidationError
+from nodus.ui.widgets.input_error import InputError
 
 _ALLOWED = re.compile(r"^-?[\d.,]+$")
 
@@ -23,11 +23,12 @@ def parse_amount(text: str) -> Decimal:
 
     The comma is the decimal separator and the dot groups thousands ("1.234,56"). Since
     many people also type "12.50", a lone dot followed by one or two digits is read as a
-    decimal point. Raises ``ValidationError`` when the text is not a number.
+    decimal point. Raises ``ValueError``, with a message for the user, when the text is
+    not a number.
     """
     cleaned = text.strip().replace(" ", "")
     if not _ALLOWED.match(cleaned):
-        raise ValidationError(f"«{text.strip()}» no es un monto válido.")
+        raise ValueError(f"«{text.strip()}» no es un monto válido.")
     if "," in cleaned:
         normalized = cleaned.replace(".", "").replace(",", ".")
     elif re.search(r"^-?\d*\.\d{1,2}$", cleaned):
@@ -37,7 +38,7 @@ def parse_amount(text: str) -> Decimal:
     try:
         return Decimal(normalized)
     except InvalidOperation as error:
-        raise ValidationError(f"«{text.strip()}» no es un monto válido.") from error
+        raise ValueError(f"«{text.strip()}» no es un monto válido.") from error
 
 
 class AmountInput(QWidget):
@@ -62,11 +63,15 @@ class AmountInput(QWidget):
             self.line_edit.setPlaceholderText(_ZERO_HINTS[currency.decimals > 0])
 
     def money(self) -> Money:
-        """The typed amount; an empty field counts as zero."""
+        """The typed amount; an empty field counts as zero. Raises ``InputError`` about
+        this field when the text is not an amount."""
         text = self.line_edit.text()
-        amount = parse_amount(text) if text.strip() else Decimal(0)
+        try:
+            amount = parse_amount(text) if text.strip() else Decimal(0)
+        except ValueError as error:
+            raise InputError(str(error), self) from error
         if not self._currency.decimals and amount != amount.to_integral_value():
-            raise ValidationError("Los pesos chilenos no llevan centavos.")
+            raise InputError("Los pesos chilenos no llevan centavos.", self)
         return Money.from_decimal(amount, self._currency)
 
     def set_money(self, money: Money) -> None:

@@ -14,8 +14,16 @@ from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.services.transaction_service import TransactionDraft, TransferDraft
 from nodus.ui.dialogs.account_fields import required_account, selectable_accounts
-from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
-from nodus.ui.dialogs.installment_fields import InstallmentFields
+from nodus.ui.dialogs.form_dialog import (
+    ACCOUNT_PLACEHOLDER,
+    CATEGORY_PLACEHOLDER,
+    CHOOSE_ACCOUNT,
+    CHOOSE_CATEGORY,
+    SAVE_CHANGES,
+    TYPE_AMOUNT,
+    FormDialog,
+)
+from nodus.ui.dialogs.installment_fields import ASK_COUNT, InstallmentFields
 from nodus.ui.dialogs.refund_picker import RefundField
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import rate_text
@@ -73,8 +81,12 @@ class TransactionDialog(FormDialog):
 
         self.mode_input = SegmentedControl(MODE_LABELS)
         self.add_above_form(self.mode_input)
+        # Nothing stands chosen that the user did not choose: only the account comes
+        # filled in, with the last one used.
         self.account_input = AccountComboBox()
+        self.account_input.set_placeholder(ACCOUNT_PLACEHOLDER)
         self.to_account_input = AccountComboBox()
+        self.to_account_input.set_placeholder(ACCOUNT_PLACEHOLDER)
         self.amount_input = AmountInput(Currency.ARS)
         self.amount_in_input = AmountInput(Currency.USD)
         self.installment_fields = InstallmentFields()
@@ -86,6 +98,7 @@ class TransactionDialog(FormDialog):
         self.rate_hint.setObjectName("FieldHint")
         self.payee_input = PayeeInput(services.payees)
         self.category_input = CategoryComboBox()
+        self.category_input.set_placeholder(CATEGORY_PLACEHOLDER)
         self.date_input = DateInput()
         self.note_input = QLineEdit()
         self.note_input.setPlaceholderText("Opcional")
@@ -124,6 +137,13 @@ class TransactionDialog(FormDialog):
         self.form.addRow("Reembolso de", self.refund_input)
         self.form.addRow("", self.refunded_hint)
 
+        # The names the services give these fields in their errors.
+        self.bind_field(self.account_input, "account_id", "from_account_id")
+        self.bind_field(self.to_account_input, "to_account_id")
+        self.bind_field(self.amount_input, "amount", "amount_out")
+        self.bind_field(self.amount_in_input, "amount_in")
+        self.bind_field(self.category_input, "category_id")
+
         self._load_accounts()
         self.mode_input.changed.connect(self._update_mode)
         self.account_input.currentIndexChanged.connect(self._update_currencies)
@@ -131,8 +151,9 @@ class TransactionDialog(FormDialog):
         self.amount_input.line_edit.textChanged.connect(self._update_rate_hint)
         self.amount_in_input.line_edit.textChanged.connect(self._update_rate_hint)
         self.payee_input.payee_chosen.connect(self._suggest_category)
-        self.category_input.activated.connect(self._mark_category_picked)
-        self.refund_input.changed.connect(self._suggest_refund_category)
+        self.category_input.activated.connect(self._category_chosen)
+        self.category_input.currentIndexChanged.connect(self._update_refund_row)
+        self.refund_input.changed.connect(self._update_refund_row)
         self.installment_fields.changed.connect(self._update_installments)
         self.amount_input.line_edit.textChanged.connect(self._update_installments)
         self.date_input.dateChanged.connect(self._update_installments)
@@ -140,9 +161,8 @@ class TransactionDialog(FormDialog):
         if transaction:
             self._load(transaction)
         else:
-            # Most movements go to the same account as the previous one. An archived or
-            # deleted account is not in the list, so the first one stays selected.
-            self.account_input.select(services.settings.last_account_id())
+            # Most movements go to the same account as the previous one.
+            self.account_input.offer(services.settings.last_account_id())
         self._update_mode()
 
     def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
@@ -158,6 +178,9 @@ class TransactionDialog(FormDialog):
         self.form.labelForField(self.date_input).setText(FIRST_INSTALLMENT_LABEL)
         super().showEvent(event)  # gives every label the width of the longest
         self._update_installments()
+        # The amount is what is always typed, so it is ready for the keyboard.
+        self.amount_input.line_edit.setFocus()
+        self.amount_input.line_edit.selectAll()
 
     @property
     def is_transfer_mode(self) -> bool:
@@ -242,14 +265,10 @@ class TransactionDialog(FormDialog):
         self.form.setRowVisible(self.payee_input, not transfer)
         self.form.setRowVisible(self.category_input, not transfer)
         self.form.setRowVisible(self.tag_input, not transfer)
-        income = self.mode_input.index() == INCOME_MODE
-        self.form.setRowVisible(self.refund_input, income)
         expense = self.mode_input.index() == EXPENSE_MODE
         self.form.setRowVisible(self.refunded_hint, expense and bool(self.refunded_hint.text()))
         self.form.setRowVisible(self.installment_fields, expense)
-        if transfer:
-            self._pick_distinct_destination()
-        else:
+        if not transfer:
             kind = _MODE_TYPES[self.mode_input.index()]
             self.category_input.set_categories(
                 [(None, self._services.categories.category_tree(kind))]
@@ -259,8 +278,38 @@ class TransactionDialog(FormDialog):
             payee = self._services.payees.find(self.payee_input.text())
             if payee is not None:
                 self._suggest_category(payee)
+        self._update_refund_row()
         self._update_currencies()
         self._update_installments()
+
+    def _update_refund_row(self) -> None:
+        """«Reembolso de» only for a refund: an income in «Reembolsos», or one already
+        linked to an expense."""
+        income = self.mode_input.index() == INCOME_MODE
+        linked = self.refund_input.expense_id() is not None
+        self.form.setRowVisible(self.refund_input, income and (self._is_refund() or linked))
+
+    def _is_refund(self) -> bool:
+        chosen = self.category_input.current_id()
+        return chosen is not None and chosen == self._refunds_category_id()
+
+    def _category_chosen(self) -> None:
+        """The user picked a category: it is kept over the payee's, and leaving
+        «Reembolsos» drops the link to an expense, so no hidden link is ever saved."""
+        self._category_picked = True
+        if not self._is_refund():
+            self.refund_input.set_expense(None)
+        self._update_refund_row()
+
+    def _refunds_category_id(self) -> int | None:
+        return next(
+            (
+                category.id
+                for category in self._services.categories.list_categories(TransactionType.INCOME)
+                if category.name == REFUNDS_CATEGORY
+            ),
+            None,
+        )
 
     def _update_installments(self) -> None:
         """Names «Monto» and «Fecha» for what they are in a purchase in installments, and
@@ -285,9 +334,6 @@ class TransactionDialog(FormDialog):
         self.installments_hint.setText(hint or "")
         self.installments_hint.setVisible(hint is not None)
 
-    def _mark_category_picked(self) -> None:
-        self._category_picked = True
-
     def _suggest_category(self, payee: Payee) -> None:
         if self._category_picked or self.is_transfer_mode:
             return
@@ -295,25 +341,6 @@ class TransactionDialog(FormDialog):
         category_id = self._services.payees.suggested_category(payee.id, kind)
         if category_id is not None:
             self.category_input.select(category_id)
-
-    def _suggest_refund_category(self) -> None:
-        """A refund goes to the "Reembolsos" income category, unless one was picked."""
-        if self._category_picked or self.refund_input.expense_id() is None:
-            return
-        for category in self._services.categories.list_categories(TransactionType.INCOME):
-            if category.name == REFUNDS_CATEGORY:
-                self.category_input.select(category.id)
-                return
-
-    def _pick_distinct_destination(self) -> None:
-        """For a new transfer, starts with a destination other than the source."""
-        source, destination = self.account_input.current_id(), self.to_account_input.current_id()
-        if self._transaction or source != destination:
-            return
-        for index in range(self.to_account_input.count()):
-            if self.to_account_input.itemData(index) != source:
-                self.to_account_input.setCurrentIndex(index)
-                return
 
     def _update_currencies(self) -> None:
         """Amount fields follow their account's currency; "Entra" only when they differ."""
@@ -343,6 +370,18 @@ class TransactionDialog(FormDialog):
 
     # Saving
 
+    def missing(self) -> dict[QWidget, str]:
+        """What each mode needs: rows the mode hides are left out by ``required``."""
+        fields = self.installment_fields
+        return self.required(
+            (self.account_input, CHOOSE_ACCOUNT),
+            (self.to_account_input, "Elige la cuenta de destino."),
+            (fields.other_input if fields.is_other else fields.count_input, ASK_COUNT),
+            (self.amount_input, TYPE_AMOUNT),
+            (self.amount_in_input, "Escribe el monto que entra."),
+            (self.category_input, CHOOSE_CATEGORY),
+        )
+
     def save(self) -> None:
         if self.is_transfer_mode:
             self._save_transfer()
@@ -352,8 +391,7 @@ class TransactionDialog(FormDialog):
 
     def _save_transaction(self) -> None:
         category_id = self.category_input.current_id()
-        if category_id is None:
-            raise ValidationError("Elige una categoría.")
+        assert category_id is not None  # ``missing`` asks for it first
         draft = TransactionDraft(
             account_id=required_account(self.account_input).id,
             type=_MODE_TYPES[self.mode_input.index()],

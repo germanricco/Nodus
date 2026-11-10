@@ -22,6 +22,7 @@ from nodus.services.category_service import CategoryNode
 from nodus.ui.theme.design import Popup, TextRole, role_font
 from nodus.ui.widgets.color import color_icon
 from nodus.ui.widgets.combo_box import ComboBox, ListPopupDelegate, paint_divider
+from nodus.ui.widgets.style import set_style_property
 
 # Item data: a section heading ("Gastos") instead of a choice, and how deep a choice is.
 HEADING_ROLE = Qt.ItemDataRole.UserRole + 1
@@ -115,10 +116,24 @@ class _SelectorComboBox(ComboBox):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._has_manage_item = False
+        self._starts_empty = False
         self.setMinimumContentsLength(14)
         self.setSizeAdjustPolicy(ComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.setItemDelegate(_SectionDelegate(self))
         self.view().pressed.connect(self._on_item_pressed)
+
+    def set_placeholder(self, text: str) -> None:
+        """Starts empty, showing ``text`` in gray, until something is chosen: for a form
+        where no choice is likely enough to stand there unasked."""
+        self.setPlaceholderText(text)
+        self._starts_empty = True
+        self.currentIndexChanged.connect(self._mark_empty)
+        self.setCurrentIndex(-1)
+        self._mark_empty()
+
+    def _mark_empty(self) -> None:
+        """The placeholder in gray (``[empty="true"]``), so it never reads as a choice."""
+        set_style_property(self, "empty", self.currentIndex() < 0)
 
     def enable_manage_item(self) -> None:
         """Ends the list with «Editar» from the next time it is filled."""
@@ -137,13 +152,15 @@ class _SelectorComboBox(ComboBox):
         return self.currentData()
 
     def select(self, item_id: int | None) -> None:
-        """Selects the item with ``item_id``; falls back to the first selectable item."""
+        """Selects the item with ``item_id``. Without it, the list shows its placeholder
+        if it has one (``set_placeholder``), or else its first selectable item."""
+        fallback = -1 if self._starts_empty else self._first_selectable()
         index = next(
             (
                 i for i in range(self.count())
-                if self.itemData(i) == item_id and self._is_choice(i)
+                if item_id is not None and self.itemData(i) == item_id and self._is_choice(i)
             ),
-            self._first_selectable(),
+            fallback,
         )  # fmt: skip
         self.setCurrentIndex(index)
 
@@ -202,6 +219,13 @@ class AccountComboBox(_SelectorComboBox):
     def set_accounts(self, accounts: list[Account], all_label: str | None = None) -> None:
         self._accounts = {account.id: account for account in accounts}
         self._fill(((account.name, account.id) for account in accounts), all_label)
+
+    def offer(self, account_id: int | None) -> None:
+        """Selects ``account_id`` (the last one used), or the only account when there is
+        just one: the choice is certain. Otherwise the list waits to be chosen."""
+        self.select(account_id)
+        if self.current_id() is None and self.count() == 1:
+            self.setCurrentIndex(0)
 
     def current_account(self) -> Account | None:
         account_id = self.current_id()

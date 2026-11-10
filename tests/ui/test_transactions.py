@@ -56,9 +56,10 @@ class TestTransactionDialog:
         self, qtbot, services, event_bus, pesos, dollars
     ):
         first = make_dialog(qtbot, services, event_bus)
-        assert first.account_input.current_id() == pesos.id  # the first in the user's order
+        assert first.account_input.current_id() is None  # two accounts, none used yet
         first.account_input.select(dollars.id)
         first.amount_input.line_edit.setText("100")
+        first.category_input.select(category_id(services, "Ocio", EXPENSE))
         save(qtbot, first)
 
         assert make_dialog(qtbot, services, event_bus).account_input.current_id() == dollars.id
@@ -148,14 +149,17 @@ class TestTransactionDialog:
         transfer = services.transactions.get_transfer(outgoing.transfer_id)
         assert transfer.incoming.amount == usd("100")
 
-    def test_new_transfer_starts_with_a_different_destination(
+    def test_new_transfer_waits_for_its_destination(
         self, qtbot, services, event_bus, pesos, dollars
     ):
+        """A wrong destination moves money to the wrong account: it is always chosen."""
+        services.settings.set_last_account_id(pesos.id)
         dialog = make_dialog(qtbot, services, event_bus)
 
         dialog.mode_input.set_index(TRANSFER_MODE)
 
-        assert dialog.account_input.current_id() != dialog.to_account_input.current_id()
+        assert dialog.account_input.current_id() == pesos.id
+        assert dialog.to_account_input.current_id() is None
 
     def test_same_currency_transfer_hides_incoming_amount(self, qtbot, services, event_bus, pesos):
         services.accounts.create("Efectivo", pesos.type, pesos.currency, ars("0"))
@@ -192,6 +196,8 @@ class TestTransactionDialog:
         assert not dialog.mode_input.buttons[TRANSFER_MODE].isEnabled()
 
         dialog.mode_input.set_index(INCOME_MODE)
+        assert dialog.category_input.current_id() is None  # an expense category no longer fits
+        dialog.category_input.select(category_id(services, "Sueldo", TransactionType.INCOME))
         save(qtbot, dialog)
 
         assert services.transactions.get(expense.id).type is TransactionType.INCOME
@@ -199,10 +205,12 @@ class TestTransactionDialog:
     def test_invalid_amount_keeps_dialog_open_with_error(self, qtbot, services, event_bus, pesos):
         dialog = make_dialog(qtbot, services, event_bus)
         dialog.amount_input.line_edit.setText("0")
+        dialog.category_input.select(category_id(services, "Ocio", EXPENSE))
 
         save(qtbot, dialog)
 
-        assert dialog.error_label.text() == "El monto debe ser mayor que cero."
+        assert dialog.field_error(dialog.amount_input) == "El monto debe ser mayor que cero."
+        assert not dialog.error_label.isVisibleTo(dialog)
         assert all_transactions(services) == []
 
 

@@ -148,9 +148,9 @@ class TagService:
     def _checked(self, tag: Tag) -> Tag:
         """``tag`` if its name is usable and no other tag has it."""
         if not tag.normalized_name:
-            raise ValidationError("El nombre debe tener letras o números.")
+            raise ValidationError("El nombre debe tener letras o números.", field="name")
         existing = self._tags.find_by_normalized(tag.normalized_name)
         if existing is not None and existing.id != tag.id:
             hint = "; para juntarlas usa «Unir con…»" if tag.id is not None else ""
-            raise ValidationError(f"Ya existe «{existing.name}»{hint}.")
+            raise ValidationError(f"Ya existe «{existing.name}»{hint}.", field="name")
         return tag

@@ -11,8 +11,13 @@ from nodus.models.period import Month, format_month
 from nodus.services.budget_service import BudgetSuggestion
 from nodus.services.category_service import CategoryNode
 from nodus.services.container import Services
-from nodus.services.errors import ValidationError
-from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
+from nodus.ui.dialogs.form_dialog import (
+    CATEGORY_PLACEHOLDER,
+    CHOOSE_CATEGORY,
+    SAVE_CHANGES,
+    TYPE_AMOUNT,
+    FormDialog,
+)
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.selectors import CategoryComboBox
@@ -47,6 +52,8 @@ class BudgetDialog(FormDialog):
         self._month = month
 
         self.category_input = CategoryComboBox()
+        if category is None:
+            self.category_input.set_placeholder(CATEGORY_PLACEHOLDER)
         candidates = [category] if category else self._free_categories(limits)
         self.category_input.set_categories([(None, [CategoryNode(c, []) for c in candidates])])
         self.category_input.setEnabled(category is None)
@@ -62,6 +69,8 @@ class BudgetDialog(FormDialog):
         scope_hint.setWordWrap(True)
 
         self.form.addRow("Categoría", self.category_input)
+        self.bind_field(self.category_input, "category_id")
+        self.bind_field(self.amount_input, "limit")
         self.form.addRow("Límite mensual", self.amount_input)
         self.form.addRow("", self.suggestion_hint)
         self.form.addRow("", scope_hint)
@@ -89,10 +98,14 @@ class BudgetDialog(FormDialog):
             self.suggestion_hint.setText(suggestion_text(suggestion))
             self.amount_input.set_money(suggestion.amount)
 
+    def missing(self) -> dict[QWidget, str]:
+        return self.required(
+            (self.category_input, CHOOSE_CATEGORY), (self.amount_input, TYPE_AMOUNT)
+        )
+
     def save(self) -> None:
         category_id = self.category_input.current_id()
-        if category_id is None:
-            raise ValidationError("Elige una categoría.")
+        assert category_id is not None  # ``missing`` asks for it first
         self._services.budgets.set_limit(category_id, self._month, self.amount_input.money())
         self._event_bus.budgets_changed.emit()
 

@@ -71,7 +71,7 @@ def test_range_dialog_rejects_an_end_before_the_start(qtbot):
 
     qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
 
-    assert "posterior" in dialog.error_label.text()
+    assert "anterior" in dialog.field_error(dialog.end_input)
     assert dialog.period == NOVEMBER
     dialog.end_input.set_day(date(2026, 11, 25))
     qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)

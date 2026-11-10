@@ -52,12 +52,22 @@ def choose_in_picker(monkeypatch, expense):
     monkeypatch.setattr(RefundPickerDialog, "exec", fake_exec)
 
 
-def test_refund_row_only_for_income(qtbot, services, event_bus, pesos):
+def pick_category(dialog, category: int) -> None:
+    """Chooses ``category`` as the user does, from the list."""
+    dialog.category_input.select(category)
+    dialog.category_input.activated.emit(dialog.category_input.currentIndex())
+
+
+def test_refund_row_only_for_a_refund(qtbot, services, event_bus, pesos):
     dialog = make_dialog(qtbot, services, event_bus)
 
     assert not dialog.form.isRowVisible(dialog.refund_input)
     dialog.mode_input.set_index(INCOME_MODE)
+    assert not dialog.form.isRowVisible(dialog.refund_input)  # an income, not yet a refund
+    pick_category(dialog, category_id(services, "Reembolsos", INCOME))
     assert dialog.form.isRowVisible(dialog.refund_input)
+    pick_category(dialog, category_id(services, "Sueldo", INCOME))
+    assert not dialog.form.isRowVisible(dialog.refund_input)
 
 
 def test_linking_a_refund_from_the_dialog(monkeypatch, qtbot, services, event_bus, pesos, shoes):
@@ -65,14 +75,30 @@ def test_linking_a_refund_from_the_dialog(monkeypatch, qtbot, services, event_bu
     dialog = make_dialog(qtbot, services, event_bus)
     dialog.mode_input.set_index(INCOME_MODE)
     dialog.amount_input.line_edit.setText("400")
+    pick_category(dialog, category_id(services, "Reembolsos", INCOME))
 
     dialog.refund_input.choose()
 
     assert "Zapatillas" in dialog.refund_input.summary_label.text()
     assert "queda $ 1.000,00" in dialog.refund_input.summary_label.text()
-    assert dialog.category_input.current_id() == category_id(services, "Reembolsos", INCOME)
     qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
     assert services.transactions.refund_summary(shoes.id).refunded == ars("400")
+
+
+def test_leaving_refunds_drops_the_link(monkeypatch, qtbot, services, event_bus, pesos, shoes):
+    """A link the user can no longer see is never saved."""
+    choose_in_picker(monkeypatch, shoes)
+    dialog = make_dialog(qtbot, services, event_bus)
+    dialog.mode_input.set_index(INCOME_MODE)
+    dialog.amount_input.line_edit.setText("400")
+    pick_category(dialog, category_id(services, "Reembolsos", INCOME))
+    dialog.refund_input.choose()
+
+    pick_category(dialog, category_id(services, "Sueldo", INCOME))
+    qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+    assert dialog.refund_input.expense_id() is None
+    assert services.transactions.refund_summary(shoes.id).refunded == ars("0")
 
 
 def test_editing_keeps_or_removes_the_link(qtbot, services, event_bus, pesos, shoes):
@@ -117,7 +143,7 @@ def test_picker_requires_a_choice(qtbot, services, pesos, shoes):
     qtbot.addWidget(picker)
 
     qtbot.mouseClick(picker.save_button, Qt.MouseButton.LeftButton)
-    assert "Elige" in picker.error_label.text()
+    assert "Elige" in picker.field_error(picker.table)
 
     picker.table.selectRow(0)
     qtbot.mouseClick(picker.save_button, Qt.MouseButton.LeftButton)

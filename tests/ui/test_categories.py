@@ -92,7 +92,7 @@ class TestCategoryDialog:
 
         qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
 
-        assert dialog.error_label.text() == "Ya existe una categoría con ese nombre."
+        assert dialog.field_error(dialog.name_input) == "Ya existe una categoría con ese nombre."
 
 
 class TestCategoriesPage:

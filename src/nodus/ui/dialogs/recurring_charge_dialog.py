@@ -12,10 +12,18 @@ from nodus.models.period import format_date
 from nodus.models.recurring_charge import Frequency, RecurringCharge
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
-from nodus.services.errors import ValidationError
 from nodus.services.recurring_charge_service import RecurringChargeDraft
 from nodus.ui.dialogs.account_fields import required_account, selectable_accounts
-from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
+from nodus.ui.dialogs.form_dialog import (
+    ACCOUNT_PLACEHOLDER,
+    CATEGORY_PLACEHOLDER,
+    CHOOSE_ACCOUNT,
+    CHOOSE_CATEGORY,
+    SAVE_CHANGES,
+    TYPE_AMOUNT,
+    TYPE_NAME,
+    FormDialog,
+)
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import FREQUENCY_LABELS
 from nodus.ui.widgets.amount_input import AmountInput
@@ -27,8 +35,10 @@ from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
 def account_input_for(
     services: Services, amount_input: AmountInput, used_ids: list[int]
 ) -> AccountComboBox:
-    """An account picker whose currency the amount field follows."""
+    """An account picker whose currency the amount field follows; empty until chosen
+    when there is no account to offer."""
     combo = AccountComboBox()
+    combo.set_placeholder(ACCOUNT_PLACEHOLDER)
     combo.set_accounts(selectable_accounts(services, used_ids))
 
     def follow() -> None:
@@ -67,6 +77,7 @@ class RecurringChargeDialog(FormDialog):
             services, self.amount_input, [charge.account_id] if charge else []
         )
         self.category_input = CategoryComboBox()
+        self.category_input.set_placeholder(CATEGORY_PLACEHOLDER)
         self.category_input.set_categories(
             [(None, services.categories.category_tree(TransactionType.EXPENSE))]
         )
@@ -91,13 +102,17 @@ class RecurringChargeDialog(FormDialog):
         self.form.addRow("Frecuencia", self.frequency_input)
         self.form.addRow("Próximo cobro", self.due_input)
         self.form.addRow("Nota", self.note_input)
+        self.bind_field(self.name_input, "name")
+        self.bind_field(self.amount_input, "amount")
+        self.bind_field(self.account_input, "account_id")
+        self.bind_field(self.category_input, "category_id")
 
         self.account_input.currentIndexChanged.connect(self._follow_currency)
         self.dollars_input.toggled.connect(self._follow_currency)
         if charge:
             self._load(charge)
         else:
-            self.account_input.select(services.settings.last_account_id())
+            self.account_input.offer(services.settings.last_account_id())
         self._follow_currency()
 
     def _follow_currency(self) -> None:
@@ -124,10 +139,17 @@ class RecurringChargeDialog(FormDialog):
         self.due_input.set_day(charge.next_due_on)
         self.note_input.setText(charge.note)
 
+    def missing(self) -> dict[QWidget, str]:
+        return self.required(
+            (self.name_input, TYPE_NAME),
+            (self.amount_input, TYPE_AMOUNT),
+            (self.account_input, CHOOSE_ACCOUNT),
+            (self.category_input, CHOOSE_CATEGORY),
+        )
+
     def save(self) -> None:
         category_id = self.category_input.current_id()
-        if category_id is None:
-            raise ValidationError("Elige una categoría.")
+        assert category_id is not None  # ``missing`` asks for it first
         draft = RecurringChargeDraft(
             name=self.name_input.text(),
             amount=self.amount_input.money(),
@@ -189,6 +211,8 @@ class PayChargeDialog(FormDialog):
         self.form.addRow("Cuenta", self.account_input)
         self.form.addRow("Fecha", self.date_input)
         self.form.addRow("", self.next_hint)
+        self.bind_field(self.amount_input, "amount")
+        self.bind_field(self.account_input, "account_id")
 
         self.account_input.currentIndexChanged.connect(self._fill_amount)
         self._fill_amount()
@@ -220,6 +244,9 @@ class PayChargeDialog(FormDialog):
             else "la cotización guardada; corrígelo con lo que te cobraron"
         )
         self.rate_hint.setText(f"A {rate.format()} por dólar, {source}.")
+
+    def missing(self) -> dict[QWidget, str]:
+        return self.required((self.amount_input, TYPE_AMOUNT), (self.account_input, CHOOSE_ACCOUNT))
 
     def save(self) -> None:
         self._services.recurring.pay(

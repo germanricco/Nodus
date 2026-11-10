@@ -4,7 +4,6 @@ import pytest
 from factories import ars, usd
 
 from nodus.models.currency import Currency
-from nodus.services.errors import ValidationError
 from nodus.ui.widgets.amount_input import AmountInput, parse_amount
 
 
@@ -29,7 +28,7 @@ def test_parse_amount(text, expected):
 
 @pytest.mark.parametrize("text", ["abc", "1,2,3", "", "--5", "1.2.3,4,5", "$100"])
 def test_parse_amount_rejects_invalid(text):
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValueError):
         parse_amount(text)
 
 

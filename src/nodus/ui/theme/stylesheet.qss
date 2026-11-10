@@ -321,6 +321,13 @@ QTextBrowser#NewsText {
     color: $expense;
 }
 
+/* A form's problem, under the field that causes it (dialogs/form_dialog.py), and that
+   field's border, until it changes. */
+#FieldError {
+    color: $expense;
+    font-size: $note_size;
+}
+
 #FieldHint {
     color: $text_muted;
     font-size: $note_size;
@@ -342,6 +349,12 @@ QLineEdit, QComboBox, QDateEdit {
 
 QLineEdit:focus, QComboBox:focus, QDateEdit:focus {
     border: 1px solid $accent;
+}
+
+/* After :focus, so a field in error keeps its red border while it is being fixed. */
+QLineEdit[error="true"], QComboBox[error="true"], QDateEdit[error="true"],
+QLineEdit[error="true"]:focus, QComboBox[error="true"]:focus, QDateEdit[error="true"]:focus {
+    border: 1px solid $expense;
 }
 
 QLineEdit:disabled, QComboBox:disabled {
@@ -375,6 +388,16 @@ QComboBox[filter="active"] {
 }
 
 QComboBox[filter] QAbstractItemView#ListPopup {
+    color: $text;
+}
+
+/* A form's list with nothing chosen yet shows its placeholder in gray, as a text field
+   does, so «Elegir categoría» never reads as a category. */
+QComboBox[empty="true"] {
+    color: $text_muted;
+}
+
+QComboBox[empty="true"] QAbstractItemView#ListPopup {
     color: $text;
 }
 

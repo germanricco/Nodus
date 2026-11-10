@@ -45,8 +45,10 @@ def save(qtbot, dialog) -> None:
 
 
 def fill(dialog, amount: str, count: int, note: str = "Heladera") -> None:
+    """A purchase ready to save: the category starts empty, so any one is picked."""
     dialog.amount_input.line_edit.setText(amount)
     dialog.installment_fields.set_count(count)
+    dialog.category_input.setCurrentIndex(0)
     dialog.note_input.setText(note)
 
 
@@ -221,6 +223,7 @@ class TestDialog:
         qtbot.keyClicks(fields.other_input, "10")
 
         assert hint_shown(dialog).startswith("10 cuotas de $ 7.500,00 · ")
+        dialog.category_input.setCurrentIndex(0)
         save(qtbot, dialog)
         assert len(all_transactions(services)) == 10
 
@@ -230,13 +233,14 @@ class TestDialog:
     ):
         dialog = make_dialog(qtbot, services, event_bus)
         dialog.amount_input.line_edit.setText("75.000")
+        dialog.category_input.setCurrentIndex(0)
         fields = dialog.installment_fields
         fields.count_input.setCurrentIndex(fields.count_input.findText("Otra cantidad…"))
         fields.other_input.setText(typed)
 
         save(qtbot, dialog)
 
-        assert dialog.error_label.text() == "Escribe en cuántas cuotas, de 2 a 72."
+        assert dialog.field_error(fields.other_input) == "Escribe en cuántas cuotas, de 2 a 72."
         assert all_transactions(services) == []
 
     def test_a_purchase_with_a_count_not_offered_opens_with_it(
@@ -310,9 +314,13 @@ class TestDialog:
     ):
         dialog = make_dialog(qtbot, services, event_bus)
         fill(dialog, "75.000", 6)
+        dialog.account_input.select(pesos.id)  # two accounts, none used yet
         dialog.mode_input.set_index(mode)
         if mode == TRANSFER_MODE:
+            dialog.to_account_input.select(dollars.id)
             dialog.amount_in_input.line_edit.setText("50")
+        else:  # an expense category no longer fits
+            dialog.category_input.select(category_id(services, "Sueldo", TransactionType.INCOME))
 
         save(qtbot, dialog)
 
@@ -328,7 +336,7 @@ class TestDialog:
 
         save(qtbot, dialog)
 
-        assert dialog.error_label.text() == (
+        assert dialog.field_error(dialog.amount_input) == (
             "El monto no alcanza para 6 cuotas de al menos un centavo."
         )
         assert all_transactions(services) == []

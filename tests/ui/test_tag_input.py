@@ -81,6 +81,7 @@ def make_dialog(qtbot, services, event_bus, transaction=None) -> TransactionDial
 def test_dialog_saves_and_loads_tags(qtbot, services, event_bus, pesos):
     dialog = make_dialog(qtbot, services, event_bus)
     dialog.amount_input.line_edit.setText("100")
+    dialog.category_input.setCurrentIndex(0)
     dialog.tag_input.add("Viaje")
     dialog.tag_input.line_edit.setText("Trabajo")  # typed, not yet added
 

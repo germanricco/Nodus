@@ -186,11 +186,11 @@ class PayeeService:
     def _checked(self, payee: Payee) -> Payee:
         """``payee`` if its name is usable and no other payee has it."""
         if not payee.normalized_name:
-            raise ValidationError("El nombre debe tener letras o números.")
+            raise ValidationError("El nombre debe tener letras o números.", field="name")
         if payee.default_category_id is not None:
             self._categories.get(payee.default_category_id)
         existing = self._payees.find_by_normalized(payee.normalized_name)
         if existing is not None and existing.id != payee.id:
             hint = "; para juntarlos usa «Unir con…»" if payee.id is not None else ""
-            raise ValidationError(f"Ya existe «{existing.name}»{hint}.")
+            raise ValidationError(f"Ya existe «{existing.name}»{hint}.", field="name")
         return payee

@@ -6,7 +6,8 @@ from collections.abc import Iterable
 
 from nodus.models.account import Account
 from nodus.services.container import Services
-from nodus.services.errors import ValidationError
+from nodus.ui.dialogs.form_dialog import CHOOSE_ACCOUNT
+from nodus.ui.widgets.input_error import InputError
 from nodus.ui.widgets.selectors import AccountComboBox
 
 
@@ -20,7 +21,8 @@ def selectable_accounts(services: Services, used_ids: Iterable[int] = ()) -> lis
 
 
 def required_account(combo: AccountComboBox) -> Account:
+    """The chosen account; ``InputError`` under ``combo`` when none is."""
     account = combo.current_account()
     if account is None:
-        raise ValidationError("Elige una cuenta.")
+        raise InputError(CHOOSE_ACCOUNT, combo)
     return account

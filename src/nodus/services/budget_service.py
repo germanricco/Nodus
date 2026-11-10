@@ -86,9 +86,9 @@ class BudgetService:
         """Sets the limit from ``month`` on; earlier months keep the one they had."""
         self._require_budgetable(category_id)
         if amount.currency is not CURRENCY:
-            raise ValidationError("El límite del presupuesto va en pesos.")
+            raise ValidationError("El límite del presupuesto va en pesos.", field="limit")
         if amount.cents <= 0:
-            raise ValidationError("El límite tiene que ser mayor que cero.")
+            raise ValidationError("El límite tiene que ser mayor que cero.", field="limit")
         with self._database.transaction():
             self._budgets.set(category_id, month, amount)
 

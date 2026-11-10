@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QLineEdit, QWidget
 from nodus.models.palette import palette_color
 from nodus.models.tag import Tag
 from nodus.services.container import Services
-from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.color import ColorPicker
@@ -43,12 +43,16 @@ class TagDialog(FormDialog):
         self.color_input = ColorPicker()
         self.form.addRow("Nombre", self.name_input)
         self.form.addRow("Color", self.color_input)
+        self.bind_field(self.name_input, "name")
 
         if tag:
             self.name_input.setText(tag.name)
             self.color_input.set_color(tag.color)
         else:
             self.color_input.set_color(palette_color(len(services.tags.list_tags())))
+
+    def missing(self) -> dict[QWidget, str]:
+        return self.required((self.name_input, TYPE_NAME))
 
     def save(self) -> None:
         name, color = self.name_input.text(), self.color_input.color()

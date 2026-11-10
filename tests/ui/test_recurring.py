@@ -105,7 +105,7 @@ class TestChargeDialog:
 
         click(qtbot, dialog.save_button)
 
-        assert "nombre" in dialog.error_label.text()
+        assert dialog.field_error(dialog.name_input) == "Escribe un nombre."
         assert services.recurring.list_charges() == []
 
 
@@ -231,6 +231,7 @@ class TestDollarChargesPaidInPesos:
         dialog.account_input.select(dollars.id)
         assert not dialog.form.isRowVisible(dialog.dollars_input)
         dialog.account_input.select(pesos.id)
+        dialog.category_input.select(category_id(services, "Servicios", TransactionType.EXPENSE))
         click(qtbot, dialog.save_button)
 
         (charge,) = services.recurring.list_charges()

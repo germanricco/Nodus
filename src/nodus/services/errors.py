@@ -11,7 +11,16 @@ T = TypeVar("T")
 
 
 class ValidationError(Exception):
-    """The requested operation breaks a business rule. The message explains which."""
+    """The requested operation breaks a business rule. The message explains which.
+
+    ``field`` names the piece of data at fault, as the draft calls it (``"amount"``,
+    ``"to_account_id"``, ``"name"``…), so a form can show the message under that field;
+    None when the rule involves no single one.
+    """
+
+    def __init__(self, message: str, field: str | None = None) -> None:
+        super().__init__(message)
+        self.field = field
 
 
 class NotFoundError(ValidationError):
@@ -41,5 +50,5 @@ def clean_name(name: str) -> str:
     """Trims a user-typed name and rejects it if nothing is left."""
     cleaned = name.strip()
     if not cleaned:
-        raise ValidationError("El nombre no puede estar vacío.")
+        raise ValidationError("El nombre no puede estar vacío.", field="name")
     return cleaned

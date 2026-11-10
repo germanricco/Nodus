@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
 from nodus.models.payee import Payee
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
-from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.selectors import CategoryComboBox
@@ -54,12 +54,16 @@ class PayeeDialog(FormDialog):
         hint.setWordWrap(True)
 
         self.form.addRow("Nombre", self.name_input)
+        self.bind_field(self.name_input, "name")
         self.form.addRow("Categoría", self.category_input)
         self.form.addRow("", hint)
 
         if payee:
             self.name_input.setText(payee.name)
             self.category_input.select(payee.default_category_id)
+
+    def missing(self) -> dict[QWidget, str]:
+        return self.required((self.name_input, TYPE_NAME))
 
     def save(self) -> None:
         name = self.name_input.text()

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QLineEdit, QWidget
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.services.container import Services
-from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
+from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS, CURRENCY_LABELS
 from nodus.ui.widgets.amount_input import AmountInput
@@ -54,6 +54,7 @@ class AccountDialog(FormDialog):
         self.form.addRow("Tipo", self.type_input)
         self.form.addRow("Moneda", self.currency_input)
         self.form.addRow("Saldo inicial", self.balance_input)
+        self.bind_field(self.name_input, "name")
 
         if account:
             self._load(account)
@@ -64,6 +65,9 @@ class AccountDialog(FormDialog):
         self.currency_input.setCurrentIndex(self.currency_input.findData(account.currency))
         self.currency_input.setEnabled(False)
         self.balance_input.set_money(account.initial_balance)
+
+    def missing(self) -> dict[QWidget, str]:
+        return self.required((self.name_input, TYPE_NAME))
 
     def save(self) -> None:
         name = self.name_input.text()

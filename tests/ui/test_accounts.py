@@ -62,7 +62,8 @@ class TestAccountDialog:
         qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
 
         assert dialog.isVisible()
-        assert dialog.error_label.text() == "El nombre no puede estar vacío."
+        assert dialog.field_error(dialog.name_input) == "Escribe un nombre."
+        assert not dialog.error_label.isVisibleTo(dialog)
         assert services.accounts.list_accounts() == []
 
     def test_invalid_amount_is_reported(self, qtbot, services, event_bus):
@@ -72,7 +73,7 @@ class TestAccountDialog:
 
         qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
 
-        assert "no es un monto válido" in dialog.error_label.text()
+        assert "no es un monto válido" in dialog.field_error(dialog.balance_input)
 
     def test_edit_loads_values_and_locks_currency(self, qtbot, services, event_bus, dollars):
         dialog = self.make(qtbot, services, event_bus, dollars)

@@ -62,6 +62,7 @@ def test_a_category_picked_by_hand_is_kept(qtbot, services, event_bus, pesos):
 def test_new_name_shows_hint_and_is_created_on_saving(qtbot, services, event_bus, pesos):
     dialog = make_dialog(qtbot, services, event_bus)
     dialog.amount_input.line_edit.setText("100")
+    dialog.category_input.setCurrentIndex(0)
 
     # QTest.keyClicks crashes on accented letters, so the name is set as a paste would.
     dialog.payee_input.line_edit.setText("Verdulería Don José")

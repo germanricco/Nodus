@@ -14,6 +14,7 @@ from nodus.services.errors import ValidationError
 from nodus.ui.formatting import format_date
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.combo_box import ComboBox
+from nodus.ui.widgets.input_error import InputError
 from nodus.ui.widgets.segmented import SegmentedControl
 
 TOTAL, PER_INSTALLMENT = range(2)
@@ -21,6 +22,8 @@ AMOUNT_MODES = ["Total", "Por cuota"]
 # What card purchases are usually paid in; any other count is typed after «Otra cantidad».
 COMMON_COUNTS = (1, 3, 6, 9, 12, 18)
 OTHER_COUNT = "Otra cantidad…"
+# What «Otra cantidad» asks for while it has no usable number.
+ASK_COUNT = f"Escribe en cuántas cuotas, de {MIN_INSTALLMENTS} a {MAX_INSTALLMENTS}."
 
 
 class InstallmentFields(QWidget):
@@ -102,9 +105,7 @@ class InstallmentFields(QWidget):
         """The plan for ``amount`` read as this row says; None for a single payment."""
         count = self.count
         if count is None:
-            raise ValidationError(
-                f"Escribe en cuántas cuotas, de {MIN_INSTALLMENTS} a {MAX_INSTALLMENTS}."
-            )
+            raise InputError(ASK_COUNT, self.other_input)
         if count == 1:
             return None
         try:
@@ -113,7 +114,7 @@ class InstallmentFields(QWidget):
             return InstallmentPlan(None, count, amount, first_due_on)
         except ValueError as error:
             raise ValidationError(
-                f"El monto no alcanza para {count} cuotas de al menos un centavo."
+                f"El monto no alcanza para {count} cuotas de al menos un centavo.", field="amount"
             ) from error
 
     def hint_text(self, amount: Money | None, first_due_on: date) -> str | None:

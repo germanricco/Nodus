@@ -122,7 +122,7 @@ class AccountService:
             raise ValidationError("La cuenta está archivada.")
         if value.currency is not account.currency:
             raise ValidationError(
-                f"El valor va en la moneda de la cuenta ({account.currency.value})."
+                f"El valor va en la moneda de la cuenta ({account.currency.value}).", field="value"
             )
         difference = value - self.balance(account.id, day)
         if difference.is_zero:

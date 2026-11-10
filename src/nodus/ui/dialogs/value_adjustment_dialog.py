@@ -10,7 +10,7 @@ from nodus.models.account import Account
 from nodus.models.money import Money
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
-from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.dialogs.form_dialog import TYPE_AMOUNT, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.widgets.amount_input import AmountInput
@@ -57,11 +57,15 @@ class ValueAdjustmentDialog(FormDialog):
         self.form.addRow("Valor actual", self.value_input)
         self.form.addRow("", self.difference_label)
         self.form.addRow("", hint)
+        self.bind_field(self.value_input, "value")
         self._add_undo_row()
 
         self.date_input.dateChanged.connect(self._show_balance)
         self.value_input.line_edit.textChanged.connect(self._show_difference)
         self._show_balance()
+
+    def missing(self) -> dict[QWidget, str]:
+        return self.required((self.value_input, TYPE_AMOUNT))
 
     def save(self) -> None:
         self._services.accounts.adjust_value(

@@ -187,7 +187,7 @@ class TestDialogs:
         dialog.name_input.setText("coto")
         qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
 
-        assert "Unir con" in dialog.error_label.text()
+        assert "Unir con" in dialog.field_error(dialog.name_input)
 
     def test_merge_explains_and_moves_transactions(self, qtbot, services, event_bus, populated):
         coto = services.payees.find("Coto")

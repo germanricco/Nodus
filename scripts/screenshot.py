@@ -62,6 +62,9 @@ DIALOGS = {
     "transaction-dialog": lambda services, event_bus, window: TransactionDialog(
         services, event_bus, window.theme_manager, parent=window
     ),
+    "transaction-dialog-errors": lambda services, event_bus, window: errors_dialog(
+        services, event_bus, window
+    ),
     "transaction-dialog-installments": lambda services, event_bus, window: installments_dialog(
         services, event_bus, window
     ),
@@ -123,6 +126,13 @@ def installments_dialog(services: Services, event_bus: EventBus, window: QWidget
         t for t in services.transactions.list_transactions(TransactionFilter()) if t.installment
     )
     return TransactionDialog(services, event_bus, window.theme_manager, installment, parent=window)
+
+
+def errors_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
+    """A new expense saved with nothing typed: each missing field says so under itself."""
+    dialog = TransactionDialog(services, event_bus, window.theme_manager, parent=window)
+    dialog.save_button.click()
+    return dialog
 
 
 def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:

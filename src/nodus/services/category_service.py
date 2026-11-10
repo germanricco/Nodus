@@ -95,11 +95,17 @@ class CategoryService:
     @staticmethod
     def _require_valid_parent(parent: Category, kind: TransactionType) -> None:
         if parent.is_subcategory:
-            raise ValidationError("Una subcategoría no puede tener subcategorías.")
+            raise ValidationError(
+                "Una subcategoría no puede tener subcategorías.", field="parent_id"
+            )
         if parent.is_system:
-            raise ValidationError(f"No se pueden agregar subcategorías a «{parent.name}».")
+            raise ValidationError(
+                f"No se pueden agregar subcategorías a «{parent.name}».", field="parent_id"
+            )
         if parent.kind is not kind:
-            raise ValidationError("Una subcategoría debe ser del mismo tipo que su categoría.")
+            raise ValidationError(
+                "Una subcategoría debe ser del mismo tipo que su categoría.", field="parent_id"
+            )
 
     @staticmethod
     @contextmanager
@@ -108,4 +114,6 @@ class CategoryService:
         try:
             yield
         except sqlite3.IntegrityError as error:
-            raise ValidationError("Ya existe una categoría con ese nombre.") from error
+            raise ValidationError(
+                "Ya existe una categoría con ese nombre.", field="name"
+            ) from error
