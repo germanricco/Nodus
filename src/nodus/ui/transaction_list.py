@@ -24,6 +24,20 @@ def refund_of_text(expense: Transaction, description: str) -> str:
     return f"Reembolso de «{description}» del {format_date(expense.occurred_on)}"
 
 
+def upcoming_text(day: date) -> str:
+    """ "Se descuenta el 10/12/2026", for a movement dated later than today."""
+    return f"Se descuenta el {format_date(day)}"
+
+
+def edit_text(transaction: Transaction) -> str:
+    """An installment edits, and deletes, its whole purchase; the menus say so."""
+    return "Editar compra" if transaction.installment else "Editar"
+
+
+def delete_text(transaction: Transaction) -> str:
+    return "Eliminar compra" if transaction.installment else "Eliminar"
+
+
 def refunded_text(amounts: list[Money]) -> str:
     """ "Reembolsado $ 400,00", or "Reembolsado $ 400,00 + US$ 2,00" across currencies."""
     return "Reembolsado " + " + ".join(amount.format() for amount in amounts)
@@ -31,7 +45,11 @@ def refunded_text(amounts: list[Money]) -> str:
 
 @dataclass(frozen=True)
 class TransactionListItem:
-    """Display texts for one movement. ``transaction`` is the outgoing leg of a transfer."""
+    """Display texts for one movement. ``transaction`` is the outgoing leg of a transfer.
+
+    ``upcoming`` marks one dated after today, such as an installment still to come: it is
+    shown dimmed, since it has not come off the account yet.
+    """
 
     transaction: Transaction
     description: str
@@ -43,6 +61,7 @@ class TransactionListItem:
     tone: str  # "positive", "negative" or "neutral", as MoneyLabel uses it
     refund_text: str = ""  # what the refund pays back, or what was refunded of the expense
     tags: tuple[Tag, ...] = ()
+    upcoming: bool = False
 
     @property
     def occurred_on(self) -> date:
@@ -73,6 +92,7 @@ class TransactionListBuilder:
         self._payee_names = {p.id: p.name for p in self._services.payees.list_payees()}
         self._refunded = self._services.transactions.refund_totals()
         self._tags = self._services.transactions.tags_for([t.id for t in transactions])
+        self._today = date.today()
         items: list[TransactionListItem] = []
         seen_transfers: set[str] = set()
         for transaction in transactions:
@@ -97,9 +117,12 @@ class TransactionListBuilder:
 
     def _regular_item(self, transaction: Transaction) -> TransactionListItem:
         category = self._categories[transaction.category_id]
+        description = self.describe(transaction)
+        if transaction.installment is not None:
+            description += f" · {transaction.installment.label}"
         return TransactionListItem(
             transaction=transaction,
-            description=self.describe(transaction),
+            description=description,
             category_name=category.name,
             category_color=category.color,
             payee_name=self._payee_names.get(transaction.payee_id, ""),
@@ -108,6 +131,7 @@ class TransactionListBuilder:
             tone="positive" if transaction.type is TransactionType.INCOME else "negative",
             refund_text=self._refund_text(transaction),
             tags=tuple(self._tags.get(transaction.id, [])),
+            upcoming=transaction.occurred_on > self._today,
         )
 
     def _transfer_item(self, transfer_id: str) -> TransactionListItem:
@@ -128,4 +152,5 @@ class TransactionListBuilder:
             ),
             amount_text=amount_text,
             tone="neutral",
+            upcoming=outgoing.occurred_on > self._today,
         )

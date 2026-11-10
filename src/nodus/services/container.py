@@ -10,6 +10,7 @@ from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.budget_repository import BudgetRepository
 from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.database.repositories.exchange_rate_repository import ExchangeRateRepository
+from nodus.database.repositories.installment_plan_repository import InstallmentPlanRepository
 from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.database.repositories.recurring_charge_repository import RecurringChargeRepository
 from nodus.database.repositories.settings_repository import SettingsRepository
@@ -25,6 +26,7 @@ from nodus.services.dashboard_service import DashboardService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.export_service import ExportService
 from nodus.services.http import downloader
+from nodus.services.installment_service import InstallmentService
 from nodus.services.net_worth_service import NetWorthService
 from nodus.services.news_service import NewsService
 from nodus.services.notification_service import NotificationService
@@ -59,6 +61,7 @@ class Services:
     rate_feed: RateFeedService
     notifications: NotificationService
     recurring: RecurringChargeService
+    installments: InstallmentService
     budgets: BudgetService
     payees: PayeeService
     analysis: AnalysisService
@@ -115,6 +118,9 @@ class Services:
                 settings, accounts, exchange_rates, backups, recurring, budgets
             ),
             recurring=recurring,
+            installments=InstallmentService(
+                database, InstallmentPlanRepository(database), transaction_repository, transactions
+            ),
             budgets=budgets,
             payees=payees,
             analysis=AnalysisService(transactions, categories, payees, exchange_rates),

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
+from PySide6.QtGui import QShowEvent
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from nodus.models.account import Account
 from nodus.models.currency import Currency
@@ -14,9 +15,11 @@ from nodus.services.errors import ValidationError
 from nodus.services.transaction_service import TransactionDraft, TransferDraft
 from nodus.ui.dialogs.account_fields import required_account, selectable_accounts
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
+from nodus.ui.dialogs.installment_fields import InstallmentFields
 from nodus.ui.dialogs.refund_picker import RefundField
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import rate_text
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.date_input import DateInput
@@ -28,6 +31,7 @@ from nodus.ui.widgets.tag_input import TagInput
 # Segment order of the mode selector.
 EXPENSE_MODE, INCOME_MODE, TRANSFER_MODE = range(3)
 MODE_LABELS = ["Gasto", "Ingreso", "Transferencia"]
+FIRST_INSTALLMENT_LABEL = "Primera cuota"
 _MODE_TYPES = {EXPENSE_MODE: TransactionType.EXPENSE, INCOME_MODE: TransactionType.INCOME}
 # The default income category for refunds.
 REFUNDS_CATEGORY = "Reembolsos"
@@ -44,6 +48,9 @@ class TransactionDialog(FormDialog):
     Choosing a known payee fills in its suggested category, unless the user already
     picked one by hand, which an edited transaction counts as. An income can be linked to
     the expense it pays back; an edited expense shows how much of it was refunded.
+
+    An expense can be paid in installments («Cuotas»). Opening any installment edits the
+    whole purchase, which stays an expense.
     """
 
     def __init__(
@@ -70,6 +77,11 @@ class TransactionDialog(FormDialog):
         self.to_account_input = AccountComboBox()
         self.amount_input = AmountInput(Currency.ARS)
         self.amount_in_input = AmountInput(Currency.USD)
+        self.installment_fields = InstallmentFields()
+        self.installments_hint = QLabel()
+        self.installments_hint.setObjectName("FieldHint")
+        self.installments_hint.setWordWrap(True)  # a long hint wraps; it never widens
+        self.installments_hint.hide()
         self.rate_hint = QLabel()
         self.rate_hint.setObjectName("FieldHint")
         self.payee_input = PayeeInput(services.payees)
@@ -86,7 +98,22 @@ class TransactionDialog(FormDialog):
 
         self.form.addRow("Cuenta", self.account_input)
         self.form.addRow("Hacia", self.to_account_input)
-        self.form.addRow("Monto", self.amount_input)
+        # How it is paid before how much: the amount then reads as the total or as one
+        # installment, and what the installments come to is said once, under it.
+        self.form.addRow("Cuotas", self.installment_fields)
+        # «Total | Por cuota» says how to read the amount, so it goes next to it, and
+        # the hint right under it.
+        self.amount_row = QWidget()
+        amount_layout = QVBoxLayout(self.amount_row)
+        amount_layout.setContentsMargins(0, 0, 0, 0)
+        amount_layout.setSpacing(Space.XS)
+        amount_line = QHBoxLayout()
+        amount_line.setSpacing(Space.S)
+        amount_line.addWidget(self.amount_input, stretch=1)
+        amount_line.addWidget(self.installment_fields.amount_mode)
+        amount_layout.addLayout(amount_line)
+        amount_layout.addWidget(self.installments_hint)
+        self.form.addRow("Monto", self.amount_row)
         self.form.addRow("Entra", self.amount_in_input)
         self.form.addRow("", self.rate_hint)
         self.form.addRow("Beneficiario", self.payee_input)
@@ -106,6 +133,9 @@ class TransactionDialog(FormDialog):
         self.payee_input.payee_chosen.connect(self._suggest_category)
         self.category_input.activated.connect(self._mark_category_picked)
         self.refund_input.changed.connect(self._suggest_refund_category)
+        self.installment_fields.changed.connect(self._update_installments)
+        self.amount_input.line_edit.textChanged.connect(self._update_installments)
+        self.date_input.dateChanged.connect(self._update_installments)
 
         if transaction:
             self._load(transaction)
@@ -114,6 +144,20 @@ class TransactionDialog(FormDialog):
             # deleted account is not in the list, so the first one stays selected.
             self.account_input.select(services.settings.last_account_id())
         self._update_mode()
+
+    def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
+        """Sizes the dialog for its widest look, so it keeps its width while installments
+        come and go: the amount with «Total | Por cuota», and the labels with «Primera
+        cuota». Measured here, once the style sheet has sized everything."""
+        self.ensurePolished()
+        switch = self.installment_fields.amount_mode
+        hidden = switch.isHidden()
+        switch.show()
+        self.amount_row.setMinimumWidth(self.amount_row.sizeHint().width())
+        switch.setHidden(hidden)
+        self.form.labelForField(self.date_input).setText(FIRST_INSTALLMENT_LABEL)
+        super().showEvent(event)  # gives every label the width of the longest
+        self._update_installments()
 
     @property
     def is_transfer_mode(self) -> bool:
@@ -146,6 +190,9 @@ class TransactionDialog(FormDialog):
             self.mode_input.set_segment_enabled(TRANSFER_MODE, False)
             self.account_input.select(transaction.account_id)
             self.amount_input.set_money(transaction.amount)
+            if transaction.installment is not None:
+                self._load_purchase(transaction)
+                return
             if transaction.payee_id is not None:
                 self.payee_input.set_text(self._services.payees.get(transaction.payee_id).name)
             tags = self._services.transactions.tags_for([transaction.id])
@@ -157,6 +204,20 @@ class TransactionDialog(FormDialog):
             self._show_refunded(transaction)
         self.date_input.set_day(transaction.occurred_on)
         self.note_input.setText(transaction.note)
+
+    def _load_purchase(self, installment: Transaction) -> None:
+        """An installment opens its whole purchase: the total, the count and the first day.
+        A purchase stays an expense."""
+        plan = self._services.installments.plan(installment.installment.plan_id)
+        self.mode_input.set_segment_enabled(INCOME_MODE, False)
+        self.amount_input.set_money(plan.total)
+        self.installment_fields.set_plan(plan)
+        if installment.payee_id is not None:
+            self.payee_input.set_text(self._services.payees.get(installment.payee_id).name)
+        tags = self._services.transactions.tags_for([installment.id])
+        self.tag_input.set_names([tag.name for tag in tags.get(installment.id, [])])
+        self.date_input.set_day(plan.first_due_on)
+        self.note_input.setText(installment.note)
 
     def _show_refunded(self, transaction: Transaction) -> None:
         """ "Reembolsado $ 400,00 de $ 1.000,00", for an expense with refunds."""
@@ -177,7 +238,6 @@ class TransactionDialog(FormDialog):
     def _update_mode(self) -> None:
         transfer = self.is_transfer_mode
         self.form.labelForField(self.account_input).setText("Desde" if transfer else "Cuenta")
-        self.form.labelForField(self.amount_input).setText("Sale" if transfer else "Monto")
         self.form.setRowVisible(self.to_account_input, transfer)
         self.form.setRowVisible(self.payee_input, not transfer)
         self.form.setRowVisible(self.category_input, not transfer)
@@ -186,6 +246,7 @@ class TransactionDialog(FormDialog):
         self.form.setRowVisible(self.refund_input, income)
         expense = self.mode_input.index() == EXPENSE_MODE
         self.form.setRowVisible(self.refunded_hint, expense and bool(self.refunded_hint.text()))
+        self.form.setRowVisible(self.installment_fields, expense)
         if transfer:
             self._pick_distinct_destination()
         else:
@@ -199,6 +260,30 @@ class TransactionDialog(FormDialog):
             if payee is not None:
                 self._suggest_category(payee)
         self._update_currencies()
+        self._update_installments()
+
+    def _update_installments(self) -> None:
+        """Names «Monto» and «Fecha» for what they are in a purchase in installments, and
+        shows what the installments come to."""
+        fields = self.installment_fields
+        in_installments = self.mode_input.index() == EXPENSE_MODE and fields.in_installments
+        fields.amount_mode.setVisible(in_installments)
+        amount_label = "Monto"
+        if in_installments:
+            amount_label = "Cuota" if fields.is_per_installment else "Total"
+        elif self.is_transfer_mode:
+            amount_label = "Sale"
+        self.form.labelForField(self.amount_row).setText(amount_label)
+        self.form.labelForField(self.date_input).setText(
+            FIRST_INSTALLMENT_LABEL if in_installments else "Fecha"
+        )
+        try:
+            amount = self.amount_input.money()
+        except ValidationError:
+            amount = None
+        hint = fields.hint_text(amount, self.date_input.day()) if in_installments else None
+        self.installments_hint.setText(hint or "")
+        self.installments_hint.setVisible(hint is not None)
 
     def _mark_category_picked(self) -> None:
         self._category_picked = True
@@ -281,10 +366,21 @@ class TransactionDialog(FormDialog):
             tag_names=self.tag_input.names(),
         )
         creates_tags = any(self._services.tags.find(name) is None for name in draft.tag_names)
-        if self._transaction:
+        plan = (
+            self.installment_fields.plan_for(draft.amount, draft.occurred_on)
+            if draft.type is TransactionType.EXPENSE
+            else None
+        )
+        installments = self._services.installments
+        if self._transaction and (plan or self._transaction.installment):
+            installments.update(self._transaction.id, draft, plan)
+        elif self._transaction:
             self._services.transactions.update(self._transaction.id, draft)
         else:
-            self._services.transactions.create(draft)
+            if plan:
+                installments.create(draft, plan)
+            else:
+                self._services.transactions.create(draft)
             self._services.settings.set_last_account_id(draft.account_id)
         if creates_tags:
             self._event_bus.tags_changed.emit()

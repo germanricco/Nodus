@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import TODAY, ars, category_id, charge_draft, eur, usd
+from factories import TODAY, ars, category_id, charge_draft, eur, light_theme, usd
 from menus import run_action
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
@@ -20,7 +20,7 @@ from nodus.ui.pages.recurring_page import RecurringChargeRow, RecurringPage
 
 @pytest.fixture
 def page(qtbot, services, event_bus) -> RecurringPage:
-    recurring = RecurringPage(services, event_bus)
+    recurring = RecurringPage(services, event_bus, light_theme())
     qtbot.addWidget(recurring)
     recurring.refresh(TODAY)
     return recurring
@@ -135,7 +135,7 @@ class TestPage:
         create(services, pesos.id, due=date(2026, 12, 20), name="Después")
         paused = create(services, pesos.id, name="Pausado")
         services.recurring.set_active(paused.id, False)
-        page = RecurringPage(services, event_bus)
+        page = RecurringPage(services, event_bus, light_theme())
         qtbot.addWidget(page)
 
         page.refresh(TODAY)
@@ -154,7 +154,7 @@ class TestPage:
                           (date(2026, 11, 11), "Día 11"), (date(2026, 11, 8), "Día 8"),
                           (date(2026, 11, 30), "Día 30")]:  # fmt: skip
             create(services, pesos.id, due=day, name=name)
-        page = RecurringPage(services, event_bus)
+        page = RecurringPage(services, event_bus, light_theme())
         qtbot.addWidget(page)
 
         page.refresh(date(2026, 11, 6))
@@ -165,7 +165,7 @@ class TestPage:
 
     def test_skip_pause_and_delete(self, qtbot, services, event_bus, pesos, monkeypatch):
         charge = create(services, pesos.id)
-        page = RecurringPage(services, event_bus)
+        page = RecurringPage(services, event_bus, light_theme())
         qtbot.addWidget(page)
         page.refresh(TODAY)
 

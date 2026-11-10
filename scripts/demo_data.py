@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.money import Money
 from nodus.models.period import Month
 from nodus.models.recurring_charge import Frequency
@@ -161,6 +162,16 @@ def load_demo_data(services: Services, today: date) -> None:
     subscription = charge("Suscripción en dólares", banco, usd("20"), "Servicios", monthly,
                           days_ago(26))  # fmt: skip
     services.recurring.pay(subscription.id, ars("33000"), days_ago(26), banco.id)
+
+    # A fridge in six installments on a card, bought two months ago: two or three paid,
+    # the rest still to come off the card month by month.
+    visa = services.accounts.create("Visa", AccountType.CREDIT_CARD, Currency.ARS, ars("0"))
+    first_installment = current.shifted(-2).day(10)
+    services.installments.create(
+        TransactionDraft(visa.id, expense, ars("750000"), first_installment,
+                         categories[(expense, "Vivienda")], "Heladera", "Frávega"),
+        InstallmentPlan(None, 6, ars("750000"), first_installment),
+    )  # fmt: skip
 
     # Budgets in every state: on track, ahead of the month, over the limit, and a limit
     # raised this month, so earlier months show the previous one.

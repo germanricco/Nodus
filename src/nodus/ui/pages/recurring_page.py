@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -16,18 +16,26 @@ from PySide6.QtWidgets import (
 from nodus.models.category import Category
 from nodus.models.recurring_charge import DueStatus, RecurringCharge
 from nodus.services.container import Services
+from nodus.services.installment_service import InstallmentSummary
 from nodus.services.recurring_charge_service import RecurringSummary
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import FREQUENCY_LABELS, charge_amount_text
-from nodus.ui.pages.dashboard_cards import FigureTile, due_status_label
+from nodus.ui.labels import FREQUENCY_LABELS, charge_amount_text, due_label
+from nodus.ui.pages.dashboard_cards import FigureTile, due_status_label, status_pill
 from nodus.ui.pages.page import Page
+from nodus.ui.pages.transaction_list_view import (
+    delete_transactions,
+    edit_transaction,
+    pay_off_actions,
+)
 from nodus.ui.theme.design import Space
+from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.color import ColorDot
 from nodus.ui.widgets.pay_button import PayButton
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.row_actions import RowAction
+from nodus.ui.widgets.schedule_row import ScheduleRow
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 GROUP_TITLES = {
@@ -36,6 +44,7 @@ GROUP_TITLES = {
     DueStatus.LATER: "Más adelante",
 }
 PAUSED_TITLE = "En pausa"
+INSTALLMENTS_TITLE = "Cuotas"
 EMPTY_TEXT = (
     "Anota acá lo que pagas todos los meses o todos los años: el alquiler, los servicios, "
     "Netflix, el gimnasio. Nodus te avisa cuándo vence cada uno y cuánto suman por mes."
@@ -51,8 +60,9 @@ def summary_text(summary: RecurringSummary) -> tuple[str, str]:
     return monthly, yearly
 
 
-class RecurringChargeRow(QWidget):
-    """One charge: category color, name and schedule, amount, when it is due and its actions.
+class RecurringChargeRow(ScheduleRow):
+    """One charge: category color, name and schedule, amount, when it is due, the ✓ that
+    pays it and its menu.
 
     Paused charges can't be paid or skipped, only resumed, edited or deleted.
     """
@@ -71,47 +81,26 @@ class RecurringChargeRow(QWidget):
         today: date,
         amount_text: str | None = None,
     ) -> None:
-        super().__init__()
-        self.charge = charge
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
-        layout.setSpacing(Space.M)
-        layout.addWidget(ColorDot(category.color))
-
-        texts = QVBoxLayout()
-        texts.setSpacing(0)
-        name = QLabel(charge.name)
-        name.setObjectName("RowTitle")
-        detail = QLabel(f"{FREQUENCY_LABELS[charge.frequency]} · {account_name} · {category.name}")
-        set_style_property(detail, "muted", True)
-        texts.addWidget(name)
-        texts.addWidget(detail)
-        layout.addLayout(texts, stretch=1)
-
-        amounts = QVBoxLayout()
-        amounts.setSpacing(0)
-        amount = QLabel(amount_text or charge.amount.format())
-        amount.setObjectName("RowAmount")
-        amount.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.status_label = (
-            due_status_label(charge, today) if charge.is_active else QLabel(PAUSED_TITLE)
+        if charge.is_active:
+            status = due_status_label(charge, today)
+        else:
+            status = QLabel(PAUSED_TITLE)
+            set_style_property(status, "muted", True)
+        pay_button = PayButton()
+        super().__init__(
+            category.color,
+            charge.name,
+            f"{FREQUENCY_LABELS[charge.frequency]} · {account_name} · {category.name}",
+            amount_text or charge.amount.format(),
+            status,
+            self.actions,
+            pay_button,
         )
-        if not charge.is_active:
-            set_style_property(self.status_label, "muted", True)
-        self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        amounts.addWidget(amount)
-        amounts.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignRight)
-        layout.addLayout(amounts)
-
-        self.pay_button = PayButton()
+        self.charge = charge
+        self.pay_button = pay_button
         self.pay_button.clicked.connect(lambda: self.pay_requested.emit(charge))
-        layout.addWidget(self.pay_button)
         if not charge.is_active:  # a paused charge is not paid; its room stays
             self.pay_button.hide()
-
-        self.more_button = MoreButton(self.actions)
-        layout.addWidget(self.more_button)
-        install_row_actions(self, self.actions)
 
     def actions(self) -> list[RowAction]:
         """Everything the charge allows, for the «⋯» and the right click."""
@@ -141,13 +130,47 @@ class RecurringChargeRow(QWidget):
         ]
 
 
-class RecurringPage(Page):
-    """The totals on top, then the charges grouped by when they are due."""
+class InstallmentPlanRow(ScheduleRow):
+    """A purchase in installments: what was bought, how far it goes («3 de 6 · Visa ·
+    Hogar»), the next installment and when it comes off.
 
-    def __init__(self, services: Services, event_bus: EventBus) -> None:
+    It has no ✓: each installment comes off the account by itself on its day. Its menu is
+    the one an installment has in Transacciones.
+    """
+
+    def __init__(
+        self,
+        summary: InstallmentSummary,
+        item: TransactionListItem,
+        color: str,
+        today: date,
+        actions: list[RowAction],
+    ) -> None:
+        upcoming = summary.upcoming
+        assert upcoming is not None
+        plan = summary.plan
+        super().__init__(
+            color,
+            summary.first.note or item.category_name,
+            f"{summary.paid} de {plan.count} · {item.account_text} · {item.category_name}",
+            upcoming.amount.format(),
+            status_pill(due_label((upcoming.occurred_on - today).days), "neutral"),
+            lambda: actions,
+        )
+        self.summary = summary
+
+
+class RecurringPage(Page):
+    """The totals on top, then the charges grouped by when they are due, and the purchases
+    in installments still running."""
+
+    def __init__(
+        self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
+    ) -> None:
         super().__init__("Cargos recurrentes")
         self._services = services
         self._event_bus = event_bus
+        self._theme_manager = theme_manager
         self.create_button = self.add_header_button("Agregar cargo", primary=True)
         self.create_button.clicked.connect(lambda: self.open_charge_dialog())
 
@@ -160,12 +183,15 @@ class RecurringPage(Page):
         scroll.setWidget(container)
         self.content_layout.addWidget(scroll)
         self.rows: list[RecurringChargeRow] = []
+        self.installment_rows: list[InstallmentPlanRow] = []
         self.monthly_label = QLabel()
+        self.installments_label = QLabel()
         self.yearly_label = QLabel()
         self.active_label = QLabel()
 
         for signal in (
             event_bus.recurring_changed,
+            event_bus.transactions_changed,
             event_bus.accounts_changed,
             event_bus.categories_changed,
             event_bus.exchange_rates_changed,
@@ -176,12 +202,14 @@ class RecurringPage(Page):
         today = today or date.today()
         clear_layout(self._sections)
         self.rows = []
+        self.installment_rows = []
         charges = self._services.recurring.list_charges()
-        if not charges:
+        purchases = self._services.installments.summaries(today)
+        if not charges and not purchases:
             self._sections.addWidget(self._empty_state())
             self._sections.addStretch()
             return
-        self._sections.addWidget(self._summary_card(self._services.recurring.summary(today)))
+        self._sections.addWidget(self._summary_card(self._services.recurring.summary(today), today))
         categories = {c.id: c for c in self._services.categories.list_categories()}
         accounts = {
             a.id: a.name for a in self._services.accounts.list_accounts(include_archived=True)
@@ -207,7 +235,50 @@ class RecurringPage(Page):
                 card.body.addWidget(row)
                 self.rows.append(row)
             self._sections.addWidget(card)
+        if purchases:
+            self._sections.addWidget(self._installments_card(purchases, categories, today))
         self._sections.addStretch()
+
+    def _installments_card(
+        self, purchases: list[InstallmentSummary], categories: dict, today: date
+    ) -> Card:
+        """The purchases with installments to come, soonest first, as Transacciones shows
+        their installments."""
+        card = Card(f"{INSTALLMENTS_TITLE} ({len(purchases)})")
+        items = TransactionListBuilder(self._services).build([p.upcoming for p in purchases])
+        for summary, item in zip(purchases, items, strict=True):
+            row = InstallmentPlanRow(
+                summary,
+                item,
+                categories[summary.first.category_id].color,
+                today,
+                self._installment_actions(item),
+            )
+            card.body.addWidget(row)
+            self.installment_rows.append(row)
+        return card
+
+    def _installment_actions(self, item: TransactionListItem) -> list[RowAction]:
+        """The menu an installment has in Transacciones: its purchase, edited, paid off
+        early or deleted."""
+        services, event_bus = self._services, self._event_bus
+        return [
+            RowAction(
+                "Editar compra",
+                lambda: edit_transaction(
+                    services, event_bus, self._theme_manager, item, self.window()
+                ),
+                "pencil",
+                default=True,
+            ),
+            *pay_off_actions(services, event_bus, item),
+            RowAction(
+                "Eliminar compra",
+                lambda: delete_transactions(services, event_bus, [item], self.window()),
+                "trash",
+                destructive=True,
+            ),
+        ]
 
     # Actions
 
@@ -243,7 +314,7 @@ class RecurringPage(Page):
         row.pause_toggled.connect(self.toggle_pause)
         row.delete_requested.connect(self.delete_charge)
 
-    def _summary_card(self, summary: RecurringSummary) -> Card:
+    def _summary_card(self, summary: RecurringSummary, today: date) -> Card:
         card = Card()
         tiles = QHBoxLayout()
         tiles.setSpacing(Space.S)
@@ -251,10 +322,15 @@ class RecurringPage(Page):
         self.monthly_label = QLabel(monthly)
         self.yearly_label = QLabel(yearly)
         self.active_label = QLabel(str(summary.active))
+        installments = self._services.installments.monthly(today)
+        self.installments_label = QLabel(
+            " + ".join(amount.format() for amount in installments) or "—"
+        )
         for caption, value in (
             ("Por mes", self.monthly_label),
             ("Por año", self.yearly_label),
             ("Activos", self.active_label),
+            ("Cuotas por mes", self.installments_label),
         ):
             tiles.addWidget(FigureTile(caption, value), stretch=1)
         card.body.addLayout(tiles)

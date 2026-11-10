@@ -53,6 +53,11 @@ class Month:
         """ "Nov", for chart axes."""
         return SHORT_MONTH_NAMES[self.month - 1]
 
+    def day(self, day_of_month: int) -> date:
+        """That day of this month, or its last day when the month is shorter: what a monthly
+        payment set on the 31st falls on in February."""
+        return self.start.replace(day=min(day_of_month, self.end.day))
+
     def shifted(self, months: int) -> Month:
         """The month ``months`` away (negative goes back)."""
         index = self.year * 12 + self.month - 1 + months

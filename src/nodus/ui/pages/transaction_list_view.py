@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import date
 from html import escape
 
 from PySide6.QtWidgets import QHeaderView, QLabel, QWidget
@@ -20,7 +22,12 @@ from nodus.ui.pages.page import Page
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
+from nodus.ui.transaction_list import (
+    TransactionListBuilder,
+    TransactionListItem,
+    delete_text,
+    edit_text,
+)
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.row_actions import RowAction
@@ -153,11 +160,16 @@ class TransactionListView(Card):
         return [self.model.item(row) for row in self.table.selected_rows()]
 
     def row_actions(self, row: int) -> list[RowAction]:
-        """The menu of a row: edit it and delete it."""
+        """The menu of a row: edit it and delete it; an installment, its whole purchase,
+        which can also be paid off early."""
         item = self.model.item(row)
+        transaction = item.transaction
         return [
-            RowAction("Editar", lambda: self.edit(item), "pencil", default=True),
-            RowAction("Eliminar", lambda: self.delete([item]), "trash", destructive=True),
+            RowAction(edit_text(transaction), lambda: self.edit(item), "pencil", default=True),
+            *pay_off_actions(self._services, self._event_bus, item),
+            RowAction(
+                delete_text(transaction), lambda: self.delete([item]), "trash", destructive=True
+            ),
         ]
 
     def edit(self, item: TransactionListItem) -> None:
@@ -223,18 +235,55 @@ def delete_transactions(
         event_bus.transactions_changed.emit()
 
 
+def pay_off_actions(
+    services: Services, event_bus: EventBus, item: TransactionListItem
+) -> list[RowAction]:
+    """For an installment: pay off the rest of its purchase, or undo it. The installments
+    still to come fall on today, or on the first one if it has not come yet."""
+    installment = item.transaction.installment
+    if installment is None:
+        return []
+    installments = services.installments
+    plan = installments.plan(installment.plan_id)
+
+    def run(change: Callable[[], None]) -> None:
+        change()
+        event_bus.transactions_changed.emit()
+
+    if plan.settled_on is not None:
+        return [
+            RowAction(
+                "Deshacer adelanto", lambda: run(lambda: installments.unsettle(plan.id)), "repeat"
+            )
+        ]
+    day = max(date.today(), plan.first_due_on)
+    return [
+        RowAction(
+            "Adelantar las cuotas que faltan",
+            lambda: run(lambda: installments.settle(plan.id, day)),
+            "skip",
+            enabled=not plan.remaining(day).is_zero,
+        )
+    ]
+
+
 def transaction_delete_warning(services: Services, items: list[TransactionListItem]) -> str:
     if len(items) == 1:
         item = items[0]
-        text = (
-            "Se va a eliminar la transferencia, con el movimiento de las dos cuentas."
-            if item.is_transfer
-            else f"Se va a eliminar «{item.description}» del {format_date(item.occurred_on)}."
-        )
+        installment = item.transaction.installment
+        if item.is_transfer:
+            text = "Se va a eliminar la transferencia, con el movimiento de las dos cuentas."
+        elif installment is not None:
+            name = item.transaction.note or item.category_name
+            text = f"Se van a eliminar las {installment.count} cuotas de «{name}»."
+        else:
+            text = f"Se va a eliminar «{item.description}» del {format_date(item.occurred_on)}."
     else:
         text = f"Se van a eliminar {transactions_text(len(items))}."
         if any(item.is_transfer for item in items):
             text += " Las transferencias se eliminan con el movimiento de las dos cuentas."
+        if any(item.transaction.installment for item in items):
+            text += " Las cuotas se eliminan con toda su compra."
     refunds = sum(
         len(services.transactions.refund_summary(item.transaction.id).refunds)
         for item in items

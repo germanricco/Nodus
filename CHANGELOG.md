@@ -4,8 +4,11 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 
 ## 1.4.0
 
+- Compras en cuotas: al anotar un gasto, elige en cuántas cuotas se paga y si el monto es el total o lo que vale cada una. Nodus anota todas las cuotas, cada una se descuenta de la cuenta el día que le toca y las que faltan se ven más tenues, con «3/6» junto al nombre. Recurrentes muestra las compras en curso y cuánto se llevan las cuotas por mes, y cada tarjeta dice cuánto queda por pagar.
+- Cualquier cuota abre su compra entera: cámbiala, adelanta las cuotas que faltan (y deshazlo si te equivocaste) o elimínala con todas sus cuotas.
 - La variación del patrimonio dice cuánto se debe a la cotización («+1,2 % por la cotización»); al pasar el mouse, muestra cómo se movió. Por eso el mismo período puede subir en pesos y bajar en dólares.
 - Arreglo: los días anteriores a la primera cotización ya no quedan «sin cotización»: usan la primera. Antes, el patrimonio, el Dashboard, Análisis y Presupuestos sumaban distinto en pesos y en dólares los movimientos de esos días.
+- Arreglo: un gasto con fecha futura ya no baja el saldo de hoy; se descuenta el día que le toca. Últimas transacciones tampoco lo muestra antes de tiempo.
 
 ## 1.3.0 — 2026-11-09
 

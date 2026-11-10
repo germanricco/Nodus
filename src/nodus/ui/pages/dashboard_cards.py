@@ -31,7 +31,12 @@ from nodus.ui.labels import days_left_text, due_label, estimate_text, unconverte
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
+from nodus.ui.transaction_list import (
+    TransactionListBuilder,
+    TransactionListItem,
+    delete_text,
+    edit_text,
+)
 from nodus.ui.widgets.bar_chart import BarChart, BarGroup
 from nodus.ui.widgets.budget_bar import BudgetBar, spent_of_limit
 from nodus.ui.widgets.card import Card
@@ -76,12 +81,17 @@ def percent(part: Money, whole: Money) -> str:
 DUE_TONES = {DueStatus.OVERDUE: "bad", DueStatus.SOON: "warning", DueStatus.LATER: "neutral"}
 
 
+def status_pill(text: str, tone: str) -> QLabel:
+    """A small colored pill, as the change badges: "bad", "warning", "good" or "neutral"."""
+    label = QLabel(text)
+    label.setObjectName("ChangeBadge")
+    set_style_property(label, "tone", tone)
+    return label
+
+
 def due_status_label(charge: RecurringCharge, today: date) -> QLabel:
     """When the charge is due, in a pill: red once overdue, amber within the week."""
-    label = QLabel(due_label(charge.days_until(today)))
-    label.setObjectName("ChangeBadge")
-    set_style_property(label, "tone", DUE_TONES[charge.status(today)])
-    return label
+    return status_pill(due_label(charge.days_until(today)), DUE_TONES[charge.status(today)])
 
 
 def flow_bar_groups(flow: list[MonthFlow], selected: Month | None = None) -> list[BarGroup]:
@@ -249,10 +259,16 @@ class LatestTransactionRow(QWidget):
         """The same menu as its row in Transacciones."""
         return [
             RowAction(
-                "Editar", lambda: self.edit_requested.emit(self.item), "pencil", default=True
+                edit_text(self.item.transaction),
+                lambda: self.edit_requested.emit(self.item),
+                "pencil",
+                default=True,
             ),
             RowAction(
-                "Eliminar", lambda: self.delete_requested.emit(self.item), "trash", destructive=True
+                delete_text(self.item.transaction),
+                lambda: self.delete_requested.emit(self.item),
+                "trash",
+                destructive=True,
             ),
         ]
 
@@ -279,8 +295,10 @@ class LatestTransactionsCard(Card):
     def show_period(self, period: Period, count: int = LATEST_COUNT) -> None:
         clear_layout(self._rows)
         # Extra rows leave room for transfers, whose two legs become one item.
+        # Only what already happened: installments still to come are not the latest.
+        end = min(period.end, date.today())
         transactions = self._services.transactions.list_transactions(
-            TransactionFilter(start=period.start, end=period.end, limit=count * 2)
+            TransactionFilter(start=period.start, end=end, limit=count * 2)
         )
         items = self._builder.build(transactions)[:count]
         if not items:

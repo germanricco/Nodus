@@ -100,25 +100,38 @@ class TransactionService:
     def create(self, draft: TransactionDraft) -> Transaction:
         transaction = self._build_transaction(None, draft)
         with self._database.transaction():
-            saved = self._transactions.add(self._with_payee(transaction, draft.payee_name))
-            self._set_tags(saved.id, draft.tag_names)
-            return saved
+            return self.stage(transaction, draft)
 
-    def validated(self, draft: TransactionDraft) -> Transaction:
+    def validated(self, draft: TransactionDraft, transaction_id: int | None = None) -> Transaction:
         """The transaction ``draft`` describes, checked against the rules but not saved, for
-        services that save it together with other changes. Its payee is not resolved."""
-        return self._build_transaction(None, draft)
+        services that save it together with other changes. Its payee is not resolved.
+        ``transaction_id`` is the one it would replace, so its refunds are checked too."""
+        return self._build_transaction(transaction_id, draft)
+
+    def stage(self, transaction: Transaction, draft: TransactionDraft) -> Transaction:
+        """Saves a validated ``transaction`` (added without an id, updated with one) with the
+        payee and tags of ``draft``, inside the database transaction the caller opened, for
+        services that save several together, as the installments of a purchase."""
+        transaction = self._with_payee(transaction, draft.payee_name)
+        if transaction.id is None:
+            transaction = self._transactions.add(transaction)
+        else:
+            self._transactions.update(transaction)
+        self._set_tags(transaction.id, draft.tag_names)
+        return transaction
 
     def update(self, transaction_id: int, draft: TransactionDraft) -> None:
-        if self.get(transaction_id).is_transfer:
+        current = self.get(transaction_id)
+        if current.is_transfer:
             raise ValidationError("Las transferencias se editan como transferencia.")
+        if current.installment is not None:
+            raise ValidationError("Las cuotas se editan desde su compra.")
         transaction = self._build_transaction(transaction_id, draft)
         with self._database.transaction():
             if transaction.type is TransactionType.INCOME:
                 # An expense turned into income can no longer be refunded.
                 self._transactions.unlink_refunds_of(transaction_id)
-            self._transactions.update(self._with_payee(transaction, draft.payee_name))
-            self._set_tags(transaction_id, draft.tag_names)
+            self.stage(transaction, draft)
 
     def delete(self, transaction_id: int) -> None:
         """Deletes a transaction. Deleting either leg of a transfer deletes the whole transfer."""
@@ -127,15 +140,19 @@ class TransactionService:
     def delete_many(self, transaction_ids: list[int]) -> None:
         """Deletes every one of ``transaction_ids`` together, or none if one is missing.
 
-        A transfer goes whole, even when both of its legs are listed.
+        A transfer goes whole, even when both of its legs are listed, and so does a purchase
+        in installments: the installments are one purchase, never half of one.
         """
         transactions = [self.get(transaction_id) for transaction_id in transaction_ids]
         transfer_ids = {t.transfer_id for t in transactions if t.is_transfer}
+        plan_ids = {t.installment.plan_id for t in transactions if t.installment}
         with self._database.transaction():
             for transfer_id in transfer_ids:
                 self._transactions.delete_transfer(transfer_id)
+            for plan_id in plan_ids:
+                self._transactions.delete_installments(plan_id)
             for transaction in transactions:
-                if not transaction.is_transfer:
+                if not transaction.is_transfer and transaction.installment is None:
                     self._transactions.delete(transaction.id)
 
     def bulk_edit(self, transaction_ids: list[int], changes: BulkChanges) -> None:

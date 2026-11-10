@@ -11,20 +11,20 @@ from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 
-# Initial balance plus incomes minus expenses plus value adjustments, up to a day when
-# one is given. COALESCE gives an account without any of them its initial balance.
+# Initial balance plus incomes minus expenses plus value adjustments, up to a day.
+# COALESCE gives an account without any of them its initial balance.
 _BALANCES_SQL = """
     SELECT a.id,
            a.initial_balance_cents
            + COALESCE((
                SELECT SUM(CASE t.type WHEN 'income' THEN t.amount_cents ELSE -t.amount_cents END)
                FROM transactions t
-               WHERE t.account_id = a.id AND (:day IS NULL OR t.occurred_on <= :day)
+               WHERE t.account_id = a.id AND t.occurred_on <= :day
            ), 0)
            + COALESCE((
                SELECT SUM(v.amount_cents)
                FROM value_adjustments v
-               WHERE v.account_id = a.id AND (:day IS NULL OR v.occurred_on <= :day)
+               WHERE v.account_id = a.id AND v.occurred_on <= :day
            ), 0) AS balance_cents
     FROM accounts a
 """
@@ -104,11 +104,10 @@ class AccountRepository(Repository):
         self._execute("DELETE FROM transactions WHERE account_id = ?", (account_id,))
         self._execute("DELETE FROM accounts WHERE id = ?", (account_id,))
 
-    def balances_cents(self, on: date | None = None) -> dict[int, int]:
-        """Balance of every account at the end of ``on`` (today's if None), in cents of the
-        account's own currency."""
-        day = on.isoformat() if on else None
-        rows = self._execute(_BALANCES_SQL, {"day": day}).fetchall()
+    def balances_cents(self, on: date) -> dict[int, int]:
+        """Balance of every account at the end of ``on``, in cents of the account's own
+        currency. The day is required: a balance without one would count the future."""
+        rows = self._execute(_BALANCES_SQL, {"day": on.isoformat()}).fetchall()
         return {row["id"]: row["balance_cents"] for row in rows}
 
     @staticmethod

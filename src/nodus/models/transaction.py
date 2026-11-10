@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import Enum
 
+from nodus.models.installment_plan import Installment
 from nodus.models.money import Money
 
 
@@ -27,7 +28,8 @@ class Transaction:
     account's currency. A transaction with a ``transfer_id`` is one leg of a transfer and
     has no category or payee; every other transaction has a category and may have a payee.
     An income with ``refund_of_id`` pays back that expense, so totals count it as less
-    spending instead of as income.
+    spending instead of as income. An expense with ``installment`` is one installment of a
+    purchase; the purchase is edited and deleted as a whole.
     """
 
     id: int | None
@@ -40,6 +42,7 @@ class Transaction:
     transfer_id: str | None = None
     payee_id: int | None = None
     refund_of_id: int | None = None
+    installment: Installment | None = None
 
     def __post_init__(self) -> None:
         if self.amount.cents <= 0:
@@ -50,6 +53,8 @@ class Transaction:
             raise ValueError("A transfer has no payee")
         if self.refund_of_id is not None and (self.is_transfer or self.type is not INCOME):
             raise ValueError("Only an income that is not a transfer can be a refund")
+        if self.installment is not None and (self.is_transfer or self.type is INCOME):
+            raise ValueError("Only an expense that is not a transfer can be an installment")
 
     @property
     def is_transfer(self) -> bool:

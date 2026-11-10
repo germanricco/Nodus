@@ -8,17 +8,20 @@ from datetime import date
 
 from nodus.database.repositories.base import Repository
 from nodus.models.currency import Currency
+from nodus.models.installment_plan import Installment
 from nodus.models.money import Money
 from nodus.models.payee import normalize_name
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 
 # The amount's currency is the account's, so every read joins accounts. The payee is
-# joined so the text search can match its name.
-_SELECT = (
-    "SELECT t.*, a.currency FROM transactions t JOIN accounts a ON a.id = t.account_id"
+# joined so the text search can match its name, and the installment plan for its count.
+_FROM = (
+    "FROM transactions t JOIN accounts a ON a.id = t.account_id"
     " LEFT JOIN payees p ON p.id = t.payee_id"
+    " LEFT JOIN installment_plans ip ON ip.id = t.installment_plan_id"
 )
+_SELECT = f"SELECT t.*, a.currency, ip.count AS installment_count {_FROM}"
 
 
 class TransactionRepository(Repository):
@@ -26,8 +29,8 @@ class TransactionRepository(Repository):
         transaction_id = self._insert(
             "INSERT INTO transactions"
             " (account_id, type, amount_cents, occurred_on, category_id, note, transfer_id,"
-            " payee_id, refund_of_id)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            " payee_id, refund_of_id, installment_plan_id, installment_number)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             self._values(transaction),
         )
         return dataclasses.replace(transaction, id=transaction_id)
@@ -36,6 +39,7 @@ class TransactionRepository(Repository):
         self._execute(
             "UPDATE transactions SET account_id = ?, type = ?, amount_cents = ?, occurred_on = ?,"
             " category_id = ?, note = ?, transfer_id = ?, payee_id = ?, refund_of_id = ?,"
+            " installment_plan_id = ?, installment_number = ?,"
             " updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')"
             " WHERE id = ?",
             (*self._values(transaction), transaction.id),
@@ -64,7 +68,7 @@ class TransactionRepository(Repository):
     def date_range(self, criteria: TransactionFilter) -> tuple[date, date] | None:
         """The first and last day of the matching transactions, or None if there are none."""
         conditions, params = self._where(criteria)
-        sql = _SELECT.replace("t.*, a.currency", "MIN(t.occurred_on), MAX(t.occurred_on)")
+        sql = f"SELECT MIN(t.occurred_on), MAX(t.occurred_on) {_FROM}"
         if conditions:
             sql += " WHERE " + " AND ".join(conditions)
         first, last = self._fetch_one(sql, params)
@@ -105,6 +109,10 @@ class TransactionRepository(Repository):
     def delete_transfer(self, transfer_id: str) -> None:
         self._execute("DELETE FROM transactions WHERE transfer_id = ?", (transfer_id,))
 
+    def delete_installments(self, plan_id: int) -> None:
+        """Deletes every installment of a purchase; a trigger then deletes its plan."""
+        self._execute("DELETE FROM transactions WHERE installment_plan_id = ?", (plan_id,))
+
     @staticmethod
     def _where(criteria: TransactionFilter) -> tuple[list[str], list]:
         conditions: list[str] = []
@@ -131,6 +139,9 @@ class TransactionRepository(Repository):
                 "t.id IN (SELECT transaction_id FROM transaction_tags WHERE tag_id = ?)"
             )
             params.append(criteria.tag_id)
+        if criteria.installment_plan_id is not None:
+            conditions.append("t.installment_plan_id = ?")
+            params.append(criteria.installment_plan_id)
         if criteria.type is not None:
             conditions.append("t.type = ?")
             params.append(criteria.type.value)
@@ -160,6 +171,7 @@ class TransactionRepository(Repository):
 
     @staticmethod
     def _values(transaction: Transaction) -> tuple:
+        installment = transaction.installment
         return (
             transaction.account_id,
             transaction.type.value,
@@ -170,6 +182,8 @@ class TransactionRepository(Repository):
             transaction.transfer_id,
             transaction.payee_id,
             transaction.refund_of_id,
+            installment.plan_id if installment else None,
+            installment.number if installment else None,
         )
 
     @staticmethod
@@ -185,4 +199,11 @@ class TransactionRepository(Repository):
             transfer_id=row["transfer_id"],
             payee_id=row["payee_id"],
             refund_of_id=row["refund_of_id"],
+            installment=(
+                Installment(
+                    row["installment_plan_id"], row["installment_number"], row["installment_count"]
+                )
+                if row["installment_plan_id"] is not None
+                else None
+            ),
         )

@@ -85,6 +85,8 @@ When a store gives your money back or a friend pays you their share, link that i
 ### Never forget what you pay every month
 Enter rent, utilities or subscriptions once, and Nodus shows what they add up to per month, what is due soon and what is overdue. Paying one takes two clicks: the expense is recorded and the charge moves on to its next date. A subscription with a fixed price in dollars can be paid from a peso account: Nodus estimates the pesos at the rate of your last payment, card taxes included, and you write down what actually came out.
 
+Purchases in installments are just as easy. When you record an expense, say it is paid in six installments and whether the amount is the total or what each one costs: Nodus writes down every installment on its date, each one comes off the account on its day, and Recurring shows how many are paid, the next one and what the installments take each month. Any installment opens the whole purchase to change it, pay off the rest early or delete it.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/recurring-dark.png">
   <img src="docs/images/recurring-light.png" alt="Recurring charges with their next dates and monthly total">
@@ -132,7 +134,7 @@ To update, click «Actualizar» when Nodus announces a new version: it downloads
 
 Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the dashboard, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. **v1.1** added euros and Chilean pesos, virtual wallets, accounts in your own order, any color for categories and tags, opening with Windows, sending feedback from the app and a summary of what's new after each update. **v1.3** brought one-click updates, a menu on every row, choosing several rows at once, a page for each account, payee and tag, and a tidier interface. Coming next:
 
-- **v1.4 — Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
+- **v1.4 — Installments, goals and account groups:** purchases paid in installments, saving for something specific, and grouping banks, investments and cash.
 - **v1.5 — Investments:** a section of its own to follow them.
 
 ## Technology

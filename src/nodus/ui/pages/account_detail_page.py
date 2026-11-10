@@ -72,12 +72,20 @@ class AccountDetailPage(DetailPage):
         self.balance_label = MoneyLabel()
         self.converted_label = QLabel()
         self.gain_label = QLabel()
+        self.pending_label = QLabel()
         self.kind_label = QLabel()
         self.balance_tile = FigureTile("Saldo", self.balance_label, large=True)
         self.converted_tile = FigureTile("En pesos", self.converted_label, large=True)
         self.gain_tile = FigureTile("Rendimiento", self.gain_label, large=True)
+        # What is still to come off the account in installments, as a card's statement
+        # lists the installments ahead.
+        self.pending_tile = FigureTile("Cuotas por pagar", self.pending_label, large=True)
         self.kind_tile = FigureTile("Tipo", self.kind_label, large=True)
-        for tile in (self.balance_tile, self.converted_tile, self.gain_tile, self.kind_tile):
+        tiles = (
+            self.balance_tile, self.converted_tile, self.gain_tile, self.pending_tile,
+            self.kind_tile,
+        )  # fmt: skip
+        for tile in tiles:
             figures.addWidget(tile, stretch=1)
         self.content_layout.addLayout(figures)
         chart_card = Card("Saldo en el tiempo")
@@ -135,6 +143,10 @@ class AccountDetailPage(DetailPage):
         if gain is not None:
             self.gain_label.setText(masked(gain) if self._hidden else signed(gain))
         self.value_button.setVisible(account.type.changes_value and not account.is_archived)
+        pending = self._services.installments.pending_for_account(account.id, today)
+        self.pending_tile.setVisible(pending is not None)
+        if pending is not None:
+            self.pending_label.setText(masked(pending) if self._hidden else pending.format())
 
         history = self._services.net_worth.account_history(account.id, today)
         self._daily = len(history) < 2 or (history[1][0] - history[0][0]).days == 1

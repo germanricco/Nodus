@@ -96,10 +96,12 @@ class TestTransactionDialog:
         # The layout applies a new size on the next pass of the event loop.
         dialog.mode_input.set_index(TRANSFER_MODE)
         qtbot.waitUntil(lambda: dialog.height() < expense_height)  # no payee, category, tags
+        transfer_width = dialog.width()
         dialog.mode_input.set_index(EXPENSE_MODE)
         qtbot.waitUntil(lambda: dialog.height() == expense_height)
 
-        assert dialog.width() == 460
+        # Only the height follows the fields: the width is the widest look's, always.
+        assert dialog.width() == transfer_width
 
     def test_fields_stay_in_place_across_modes(self, qtbot, services, event_bus, pesos, dollars):
         dialog = make_dialog(qtbot, services, event_bus)

@@ -90,18 +90,22 @@ class AccountService:
             self._accounts.set_positions({account_id: i for i, account_id in enumerate(order)})
 
     def balances(self, on: date | None = None) -> dict[int, Money]:
-        """Balance of every account (archived included) at the end of ``on``, or the current
-        one if None, keyed by account id."""
+        """Balance of every account (archived included) at the end of ``on``, today if None,
+        keyed by account id.
+
+        Movements dated later, such as the installments still to come, do not count yet:
+        each one comes off the balance on its own day, as it does in the bank.
+        """
         currencies = {a.id: a.currency for a in self._accounts.list(include_archived=True)}
         return {
             account_id: Money(cents, currencies[account_id])
-            for account_id, cents in self._accounts.balances_cents(on).items()
+            for account_id, cents in self._accounts.balances_cents(on or date.today()).items()
         }
 
     def balance(self, account_id: int, on: date | None = None) -> Money:
-        """The account's balance at the end of ``on``, or the current one if None."""
+        """The account's balance at the end of ``on``, today if None (see ``balances``)."""
         account = self.get(account_id)
-        return Money(self._accounts.balances_cents(on)[account.id], account.currency)
+        return self.balances(on)[account.id]
 
     def adjust_value(
         self, account_id: int, value: Money, day: date, note: str = ""

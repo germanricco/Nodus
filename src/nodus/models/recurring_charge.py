@@ -63,8 +63,7 @@ def next_due(day: date, frequency: Frequency, anchor_day: int) -> date:
     """
     if frequency.days:
         return day + timedelta(days=frequency.days)
-    month = Month.of(day).shifted(frequency.months)
-    return month.start.replace(day=min(anchor_day, month.end.day))
+    return Month.of(day).shifted(frequency.months).day(anchor_day)
 
 
 @dataclass(frozen=True)

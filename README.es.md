@@ -83,6 +83,8 @@ Cuando un comercio te devuelve dinero o un amigo te paga su parte, vinculas ese 
 ### No olvidarte de lo que pagas todos los meses
 Anotas el alquiler, los servicios o las suscripciones una sola vez, y Nodus te muestra cuánto suman por mes, qué vence pronto y qué está atrasado. Pagar uno toma dos clics: el gasto queda registrado y el cargo pasa a su próxima fecha. Una suscripción con precio fijo en dólares puede pagarse desde una cuenta en pesos: Nodus estima los pesos con la cotización de tu último pago, impuestos de la tarjeta incluidos, y tú anotas lo que realmente salió.
 
+Las compras en cuotas son igual de simples. Al anotar un gasto, dices que se paga en seis cuotas y si el monto es el total o lo que vale cada una: Nodus anota todas las cuotas en sus fechas, cada una se descuenta de la cuenta el día que le toca, y Recurrentes muestra cuántas pagaste, la próxima y cuánto se llevan las cuotas cada mes. Cualquier cuota abre la compra entera para cambiarla, adelantar lo que falta o eliminarla.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/recurring-dark.png">
   <img src="docs/images/recurring-light.png" alt="Los cargos recurrentes con sus próximas fechas y el total mensual">
@@ -130,7 +132,7 @@ Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nue
 
 Nodus crece por versiones pequeñas y estables. La **v1.0**, la primera estable, incluye cuentas, transacciones, cotización del dólar, rendimiento de inversiones, dashboard, cargos recurrentes, presupuestos, beneficiarios, etiquetas, reembolsos, análisis, copias de seguridad y exportación. La **v1.1** sumó euros y pesos chilenos, billeteras virtuales, cuentas en el orden que quieras, cualquier color para categorías y etiquetas, abrir con Windows, enviar comentarios desde la aplicación y un resumen de las novedades después de cada actualización. La **v1.3** trajo actualizar con un clic, un menú en cada fila, selección de varias filas a la vez, una página para cada cuenta, beneficiario y etiqueta, y una interfaz más ordenada. Lo que viene:
 
-- **v1.4 — Metas y grupos de cuentas:** ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.
+- **v1.4 — Cuotas, metas y grupos de cuentas:** compras en cuotas, ahorrar para algo concreto y agrupar bancos, inversiones y efectivo.
 - **v1.5 — Inversiones:** una sección propia para seguirlas.
 
 ## Tecnología

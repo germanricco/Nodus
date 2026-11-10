@@ -16,6 +16,7 @@ class TransactionFilter:
     and the names of the payee and the tags, these ignoring case and accents.
     ``is_transfer`` keeps only transfer legs (True) or only income and expenses (False), and
     ``refund_linked`` only refunds and refunded expenses (True) or neither (False).
+    ``installment_plan_id`` keeps the installments of one purchase.
     Dates are inclusive.
     """
 
@@ -29,4 +30,5 @@ class TransactionFilter:
     text: str | None = None
     is_transfer: bool | None = None
     refund_linked: bool | None = None
+    installment_plan_id: int | None = None
     limit: int | None = None

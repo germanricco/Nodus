@@ -61,6 +61,9 @@ DIALOGS = {
     "transaction-dialog": lambda services, event_bus, window: TransactionDialog(
         services, event_bus, window.theme_manager, parent=window
     ),
+    "transaction-dialog-installments": lambda services, event_bus, window: installments_dialog(
+        services, event_bus, window
+    ),
     "transfer-dialog": lambda services, event_bus, window: transfer_dialog(
         services, event_bus, window
     ),
@@ -111,6 +114,14 @@ def refund_dialog(services: Services, event_bus: EventBus, window: QWidget) -> Q
     tags = services.transactions.tags_for([refund.id for refund in refunds])
     refund = next(refund for refund in refunds if refund.id in tags)
     return TransactionDialog(services, event_bus, window.theme_manager, refund, parent=window)
+
+
+def installments_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
+    """The demo purchase in installments, open for editing: total, count and first one."""
+    installment = next(
+        t for t in services.transactions.list_transactions(TransactionFilter()) if t.installment
+    )
+    return TransactionDialog(services, event_bus, window.theme_manager, installment, parent=window)
 
 
 def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
@@ -166,6 +177,10 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.show_page(PageId.DASHBOARD)
         app.processEvents()
         save(window, args.out / f"dashboard-full-{mode.value}.png")
+        # Recurrentes, whole: the purchases in installments come after the charges.
+        window.show_page(PageId.RECURRING)
+        app.processEvents()
+        save(window, args.out / f"recurring-full-{mode.value}.png")
         # The page of one account: the demo investment, with its value updates.
         investment = next(
             a
@@ -175,6 +190,11 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.show_detail(DetailId.ACCOUNT, investment.id)
         app.processEvents()
         save(window, args.out / f"account-detail-{mode.value}.png")
+        # The card with the purchase in installments: what is still to pay.
+        card = next(a for a in services.accounts.list_accounts() if a.name == "Visa")
+        window.show_detail(DetailId.ACCOUNT, card.id)
+        app.processEvents()
+        save(window, args.out / f"card-detail-{mode.value}.png")
         # The page of the most used payee.
         payee = services.payees.summaries()[0].payee
         window.show_detail(DetailId.PAYEE, payee.id)

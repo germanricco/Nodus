@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 import pytest
 from factories import TODAY, ars, expense_draft, income_draft, usd
 
@@ -24,6 +26,24 @@ def test_balance_is_initial_plus_income_minus_expenses(services, pesos):
     services.transactions.create(expense_draft(services, pesos.id, ars("12345.67")))
 
     assert services.accounts.balance(pesos.id) == ars("137654.33")
+
+
+def test_a_future_movement_comes_off_the_balance_on_its_own_day(services, pesos):
+    """As in the bank: an installment still to come does not lower today's balance."""
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    services.transactions.create(expense_draft(services, pesos.id, ars("1000"), tomorrow))
+
+    assert services.accounts.balance(pesos.id) == ars("100000")
+    assert services.accounts.balances()[pesos.id] == ars("100000")
+    assert services.accounts.balance(pesos.id, tomorrow) == ars("99000")
+    assert services.net_worth.net_worth(today).by_currency[Currency.ARS] == ars("100000")
+
+
+def test_a_movement_dated_today_already_counts(services, pesos):
+    services.transactions.create(expense_draft(services, pesos.id, ars("1000"), date.today()))
+
+    assert services.accounts.balance(pesos.id) == ars("99000")
 
 
 def test_balances_covers_every_account_in_its_currency(services, pesos, dollars):

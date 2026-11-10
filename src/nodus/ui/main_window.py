@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
             PageId.TRANSACTIONS: transactions,
-            PageId.RECURRING: RecurringPage(services, event_bus),
+            PageId.RECURRING: RecurringPage(services, event_bus, theme_manager),
             PageId.BUDGETS: budgets,
             PageId.ANALYSIS: analysis,
             PageId.CATEGORIES: categories,

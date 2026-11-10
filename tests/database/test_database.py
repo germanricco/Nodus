@@ -299,3 +299,54 @@ def test_migration_8_keeps_accounts_and_everything_that_refers_to_them(db_path):
     with pytest.raises(sqlite3.IntegrityError), database.transaction():
         connection.execute("DELETE FROM accounts WHERE id = 1")  # it has a movement
     database.close()
+
+
+class TestInstallmentsMigration:
+    """009 adds installments to databases that already hold years of movements."""
+
+    def test_a_version_8_database_with_movements_migrates(self, db_path):
+        before = [m for m in load_packaged_migrations() if m.version <= 8]
+        old = Database.open(db_path, before)
+        old.connection.execute(
+            "INSERT INTO accounts (name, type, currency, initial_balance_cents)"
+            " VALUES ('Banco', 'bank', 'ARS', 0)"
+        )
+        category = old.connection.execute(
+            "SELECT id FROM categories WHERE kind = 'expense' LIMIT 1"
+        ).fetchone()[0]
+        old.connection.execute(
+            "INSERT INTO transactions (account_id, type, amount_cents, occurred_on, category_id)"
+            " VALUES (1, 'expense', 500, '2026-01-01', ?)",
+            (category,),
+        )
+        old.connection.commit()
+        old.close()
+
+        database = Database.open(db_path)
+
+        assert database.schema_version == 9
+        row = database.connection.execute(
+            "SELECT installment_plan_id, installment_number FROM transactions"
+        ).fetchone()
+        assert tuple(row) == (None, None)
+        assert database.connection.execute("PRAGMA foreign_key_check").fetchall() == []
+        database.close()
+
+    @pytest.mark.parametrize(
+        ("count", "total", "first", "settled"),
+        [
+            (1, 100, "2026-01-01", None),  # a single payment is not a plan
+            (73, 10_000, "2026-01-01", None),
+            (6, 5, "2026-01-01", None),  # less than a cent each
+            (6, 600, "2026-02-01", "2026-01-01"),  # paid off before it starts
+        ],
+    )
+    def test_the_table_refuses_what_the_model_refuses(self, db_path, count, total, first, settled):
+        database = Database.open(db_path)
+        with pytest.raises(sqlite3.IntegrityError):
+            database.connection.execute(
+                "INSERT INTO installment_plans (count, total_cents, first_due_on, settled_on)"
+                " VALUES (?, ?, ?, ?)",
+                (count, total, first, settled),
+            )
+        database.close()
