@@ -53,6 +53,12 @@ def value_range(values: list[float]) -> tuple[float, float]:
     return low - margin, high + margin
 
 
+def height(value: float, span: tuple[float, float]) -> float:
+    """Where ``value`` sits in ``span``, from 0 at its bottom to 1 at its top."""
+    low, high = span
+    return (value - low) / (high - low)
+
+
 def axis_indexes(count: int, fit: int) -> list[int]:
     """The points to label under the chart: every point when they all fit, otherwise one
     every few at a regular step. The last point (usually today) is always labeled; it takes
@@ -110,6 +116,9 @@ class LineChart(ColumnHoverChart):
         # Where each point begins the transition; None the first time, when the line
         # draws itself from left to right instead.
         self._start: list[float | None] | None = None
+        # The vertical span on screen when the transition began, so the axis moves with
+        # the line instead of stretching each frame's values to fill the height.
+        self._start_range: tuple[float, float] | None = None
         self.setMinimumHeight(Chart.LINE_MIN_HEIGHT)
 
     def sizeHint(self) -> QSize:  # noqa: N802
@@ -124,6 +133,8 @@ class LineChart(ColumnHoverChart):
             for point, value in zip(self._points, self._values_at(self.progress), strict=True)
             if value is not None
         }
+        # Both measured on the line as it is on screen, before anything changes.
+        self._start_range = self._range_at(self.progress) if shown else None
         self._start = self._starts(points, shown) if shown else None
         self._points = points
         self.hover_index = None
@@ -143,14 +154,41 @@ class LineChart(ColumnHoverChart):
         return list(resample(list(shown.values()), len(points)))
 
     def _values_at(self, progress: float) -> list[float | None]:
-        """The values on screen at ``progress`` of the transition."""
+        """The values on screen at ``progress`` of the transition.
+
+        The line moves on screen, not in value: each point goes from its height in the
+        old chart to its height in the new one while the axis moves between their spans
+        (``_range_at``), and this is the value at that height on the axis of the moment.
+        So a line drawn again in another currency keeps its place while the axis changes,
+        and a line flattening out flattens in front of the eye. Moving the values and
+        fitting the axis to them instead hides one or the other."""
         targets = [p.value for p in self._points]
-        if self._start is None or progress >= 1:
+        if self._start is None or self._start_range is None or progress >= 1:
             return targets
-        return [
-            None if target is None else lerp(target if begin is None else begin, target, progress)
-            for begin, target in zip(self._start, targets, strict=True)
-        ]
+        old, new = self._start_range, self._target_range()
+        now_low, now_high = self._range_at(progress)
+        values: list[float | None] = []
+        for begin, target in zip(self._start, targets, strict=True):
+            if target is None:
+                values.append(None)
+                continue
+            # A day that was not on screen appears at its new height.
+            end = height(target, new)
+            start = end if begin is None else height(begin, old)
+            values.append(lerp(now_low, now_high, lerp(start, end, progress)))
+        return values
+
+    def _target_range(self) -> tuple[float, float]:
+        return value_range([p.value for p in self._points if p.value is not None])
+
+    def _range_at(self, progress: float) -> tuple[float, float]:
+        """The vertical span on screen at ``progress``, from the one shown when the
+        transition began to the one the new points need."""
+        target = self._target_range()
+        if self._start_range is None or progress >= 1:
+            return target
+        (low, high), (new_low, new_high) = self._start_range, target
+        return lerp(low, new_low, progress), lerp(high, new_high, progress)
 
     # Geometry
 
@@ -168,8 +206,10 @@ class LineChart(ColumnHoverChart):
             return plot.center().x()
         return plot.left() + plot.width() * index / (count - 1)
 
-    def _positions(self, values: list[float | None], plot: QRectF) -> list[QPointF | None]:
-        low, high = value_range([v for v in values if v is not None])
+    def _positions(
+        self, values: list[float | None], plot: QRectF, span_range: tuple[float, float]
+    ) -> list[QPointF | None]:
+        low, high = span_range
         span = high - low
         return [
             None
@@ -186,11 +226,12 @@ class LineChart(ColumnHoverChart):
         plot = self._plot_rect()
         values = self._values_at(self.progress)
         known = [v for v in values if v is not None]
-        self._paint_grid(painter, plot, known)
+        span_range = self._range_at(self.progress)
+        self._paint_grid(painter, plot, span_range if known else None)
         if not known:
             painter.end()
             return
-        positions = self._positions(values, plot)
+        positions = self._positions(values, plot, span_range)
         if self._start is None and self.progress < 1:
             # First appearance: reveal from left to right.
             painter.setClipRect(
@@ -204,8 +245,10 @@ class LineChart(ColumnHoverChart):
             self._paint_hover(painter, positions[self.hover_index], plot)
         painter.end()
 
-    def _paint_grid(self, painter: QPainter, plot: QRectF, known: list[float]) -> None:
-        low, high = value_range(known)
+    def _paint_grid(
+        self, painter: QPainter, plot: QRectF, span_range: tuple[float, float] | None
+    ) -> None:
+        """Dashed guides, labeled with the values of ``span_range`` when there is one."""
         small = role_font(TextRole.NOTE)
         painter.setFont(small)
         for step in range(3):
@@ -214,7 +257,8 @@ class LineChart(ColumnHoverChart):
                 QPen(with_alpha(self._theme.border, Opacity.GRID), Line.THIN, Qt.PenStyle.DashLine)
             )
             painter.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y))
-            if known:
+            if span_range is not None:
+                low, high = span_range
                 painter.setPen(QColor(self._theme.text_muted))
                 painter.drawText(
                     QRectF(0, y - 9, self.LEFT - 8, 18),

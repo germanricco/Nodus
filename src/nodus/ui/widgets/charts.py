@@ -32,10 +32,13 @@ class Segment:
     share_text: str = ""
 
 
-def segment_spans(values: list[float], gap: float = 0.0) -> list[tuple[float, float]]:
+def segment_spans(
+    values: list[float], gap: float = 0.0, whole: float | None = None
+) -> list[tuple[float, float]]:
     """(start, span) in degrees for each value, clockwise from 12 o'clock, each slice
-    shortened by ``gap`` so neighbours do not touch."""
-    total = sum(values)
+    shortened by ``gap`` so neighbours do not touch. The values fill the circle, or the
+    share of it they are of ``whole`` when given."""
+    total = sum(values) if whole is None else whole
     if total <= 0:
         return []
     spans, start = [], 0.0
@@ -166,6 +169,14 @@ class DonutChart(AnimatedChart):
         cents = lerp(self._previous_total.cents, self._total.cents, self.progress)
         return Money(round(cents), self._total.currency)
 
+    def _spans(self, drawn: list[tuple[Segment, float]]) -> list[tuple[float, float]]:
+        """Where each drawn slice goes around the ring. Slices on their way to nothing
+        keep their share of what was there, so they shrink away over the empty ring
+        instead of filling it until the last frame."""
+        gap = self.GAP_DEGREES if len(drawn) > 1 else 0.0
+        whole = sum(self._previous.values()) if not self._segments else None
+        return segment_spans([value for _segment, value in drawn], gap, whole)
+
     # Painting
 
     def _ring(self) -> QRectF:
@@ -182,12 +193,12 @@ class DonutChart(AnimatedChart):
 
     def _paint_ring(self, painter: QPainter, ring: QRectF) -> None:
         drawn = self._drawn()
-        if not drawn:
+        if not self._segments:
             painter.setPen(self._pen(self._theme.border, self.THICKNESS))
             painter.drawEllipse(ring)
+        if not drawn:
             return
-        gap = self.GAP_DEGREES if len(drawn) > 1 else 0.0
-        spans = segment_spans([value for _segment, value in drawn], gap)
+        spans = self._spans(drawn)
         # First appearance: the ring sweeps in clockwise.
         sweep = 360.0 * self.progress if not self._previous else 360.0
         for index, ((segment, _value), (start, span)) in enumerate(zip(drawn, spans, strict=True)):

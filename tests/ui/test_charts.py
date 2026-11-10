@@ -22,6 +22,7 @@ from nodus.ui.widgets.line_chart import (
     LinePoint,
     axis_indexes,
     change_directions,
+    height,
     value_range,
 )
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
@@ -149,6 +150,12 @@ def test_line_chart_hover_finds_the_nearest_known_point(qtbot):
     chart.grab()  # paints the hover guide and box without errors
 
 
+def heights_at(chart, progress):
+    """Where each point is drawn at ``progress``, from 0 at the bottom to 1 at the top."""
+    span = chart._range_at(progress)
+    return [None if v is None else height(v, span) for v in chart._values_at(progress)]
+
+
 def test_line_chart_morphs_from_the_previous_line(qtbot, animations):
     chart = make_line_chart(qtbot)
     chart.set_points(line_points([100, 100]))
@@ -156,10 +163,67 @@ def test_line_chart_morphs_from_the_previous_line(qtbot, animations):
     chart.set_points(line_points([300, 500]))
 
     assert chart.progress < 1
-    middle = chart._values_at(0.5)
-    assert middle == [200, 300]
+    before = [height(100, value_range([100]))] * 2
+    after = [height(v, value_range([300, 500])) for v in (300, 500)]
+    middle = heights_at(chart, 0.5)
+    assert middle == pytest.approx([(b + a) / 2 for b, a in zip(before, after, strict=True)])
     qtbot.waitUntil(lambda: chart.progress == 1, timeout=2000)
     assert chart._values_at(chart.progress) == [300, 500]
+
+
+def test_line_chart_in_another_currency_keeps_its_place(qtbot):
+    """Pesos to dollars changes every value a thousandfold but not the shape: the line
+    stays put while the axis changes, instead of sinking and growing back."""
+    chart = make_line_chart(qtbot)
+    chart.set_points(line_points([3_400_000, 4_100_000, 3_800_000]))
+    start = heights_at(chart, 1)
+
+    chart.set_points(line_points([3_400, 4_100, 3_800]))
+
+    for step in range(11):
+        assert heights_at(chart, step / 10) == pytest.approx(start)
+
+
+def test_line_chart_axis_moves_with_the_line(qtbot):
+    """A line flattening out flattens on screen: the axis moves from the old span to the
+    new one instead of stretching each frame's values to fill the height, which kept the
+    old shape until the last frame."""
+    chart = make_line_chart(qtbot)
+    chart.set_points(line_points([100, 900, 300, 700]))
+    chart.set_points(line_points([660, 660, 660, 660]))
+    plot = chart._plot_rect()
+
+    def drawn_height(progress):
+        ys = [
+            p.y()
+            for p in chart._positions(chart._values_at(progress), plot, chart._range_at(progress))
+        ]
+        return max(ys) - min(ys)
+
+    assert chart._range_at(0) == value_range([100, 900, 300, 700])
+    heights = [drawn_height(step / 10) for step in range(11)]
+    assert heights == sorted(heights, reverse=True) and heights[-1] == 0
+    assert heights[5] < heights[0] * 0.7  # flattening shows by halfway
+    assert chart._range_at(1) == value_range([660])
+
+
+def test_line_chart_takes_a_new_period_in_the_middle_of_a_transition(qtbot):
+    """Two quick clicks on the period: the second month arrives while the first is
+    still moving in, and months of different lengths must not get stuck halfway."""
+    chart = make_line_chart(qtbot)
+    october = [LinePoint(date(2026, 10, day), 6.6) for day in range(1, 32)]
+    november = [LinePoint(date(2026, 11, day), float(day)) for day in range(1, 31)]
+    december = [LinePoint(date(2026, 12, day), 9.0) for day in range(1, 32)]
+    chart.set_points(october)
+    chart.set_points(november)
+    chart.progress = 0.4
+
+    chart.set_points(december)
+
+    assert chart.points() == december
+    chart.progress = 1
+    assert chart._values_at(1) == [9.0] * 31
+    chart.grab()
 
 
 def test_line_chart_starts_each_day_where_it_was_despite_gaps(qtbot):
@@ -174,13 +238,13 @@ def test_line_chart_starts_each_day_where_it_was_despite_gaps(qtbot):
     assert chart._values_at(0.5) == [None, None, 53.5, 53.5, 26.5]
 
 
-def test_line_chart_day_that_appears_starts_at_its_value(qtbot):
+def test_line_chart_day_that_appears_starts_at_its_new_height(qtbot):
     chart = make_line_chart(qtbot)
     chart.set_points(line_points([None, 100, 200]))
 
     chart.set_points(line_points([40, 100, 300]))
 
-    assert chart._values_at(0.5) == [40, 100, 250]
+    assert heights_at(chart, 0)[0] == pytest.approx(height(40, value_range([40, 100, 300])))
 
 
 def test_line_chart_of_another_period_morphs_by_position(qtbot):
@@ -277,6 +341,19 @@ def test_donut_slices_resize_by_key(qtbot):
 
     drawn = {segment.key: value for segment, value in donut._drawn()}
     assert drawn == {"b": 200, "c": 100, "a": 50}  # "a" shrinks away, "c" grows in
+
+
+def test_donut_slices_shrink_away_when_the_period_has_none(qtbot):
+    """Going to an empty period, the slices shrink over the empty ring; filling the whole
+    circle they kept the old picture until the last frame."""
+    donut = make_donut(qtbot)
+
+    donut.set_data([], "Total", None, "Sin gastos")
+    donut.progress = 0.5
+
+    covered = sum(span for _start, span in donut._spans(donut._drawn()))
+    assert covered == pytest.approx(180 - donut.GAP_DEGREES * 2)
+    donut.grab()
 
 
 def test_proportion_bar_slides_to_new_shares(qtbot):
