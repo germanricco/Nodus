@@ -132,10 +132,10 @@ To update, click «Actualizar» when Nodus announces a new version: it downloads
 
 ## Roadmap
 
-Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the dashboard, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. **v1.1** added euros and Chilean pesos, virtual wallets, accounts in your own order, any color for categories and tags, opening with Windows, sending feedback from the app and a summary of what's new after each update. **v1.3** brought one-click updates, a menu on every row, choosing several rows at once, a page for each account, payee and tag, and a tidier interface. Coming next:
+Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the dashboard, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. **v1.1** added euros and Chilean pesos, virtual wallets, accounts in your own order, any color for categories and tags, opening with Windows, sending feedback from the app and a summary of what's new after each update. **v1.3** brought one-click updates, a menu on every row, choosing several rows at once, a page for each account, payee and tag, and a tidier interface. **v1.4** added purchases paid in installments, the share of net worth's change that comes from the exchange rate, errors shown under the field that causes them, and payee suggestions that put first the ones you use. Coming next:
 
-- **v1.4 — Installments, goals and account groups:** purchases paid in installments, saving for something specific, and grouping banks, investments and cash.
-- **v1.5 — Investments:** a section of its own to follow them.
+- **v1.5 — Goals and account groups:** saving for something specific, and grouping banks, investments and cash.
+- **v1.6 — Investments:** a section of its own to follow them.
 
 ## Technology
 

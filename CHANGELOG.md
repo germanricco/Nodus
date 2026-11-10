@@ -2,7 +2,7 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
-## 1.4.0
+## 1.4.0 — 2026-11-10
 
 - Compras en cuotas: al anotar un gasto, elige en cuántas cuotas se paga y si el monto es el total o lo que vale cada una. Nodus anota todas las cuotas, cada una se descuenta de la cuenta el día que le toca y las que faltan se ven más tenues, con «3/6» junto al nombre. Recurrentes muestra las compras en curso y cuánto se llevan las cuotas por mes, y cada tarjeta dice cuánto queda por pagar.
 - Cualquier cuota abre su compra entera: cámbiala, adelanta las cuotas que faltan (y deshazlo si te equivocaste) o elimínala con todas sus cuotas.
