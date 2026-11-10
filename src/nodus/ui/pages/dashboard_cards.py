@@ -42,7 +42,7 @@ from nodus.ui.widgets.budget_bar import BudgetBar, spent_of_limit
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts import DonutChart, ProportionBar, Segment
-from nodus.ui.widgets.color import ColorDot
+from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 from nodus.ui.widgets.pay_button import PayButton

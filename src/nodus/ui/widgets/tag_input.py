@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
 
+from nodus.models.palette import NEW_TAG_COLOR
 from nodus.models.payee import normalize_name
 from nodus.services.tag_service import TagService
 from nodus.ui.theme.design import Space
@@ -12,7 +13,6 @@ from nodus.ui.widgets.color import color_icon
 from nodus.ui.widgets.name_completer import NameCompleter
 
 # Color of the chip of a tag that does not exist yet and is created on saving.
-NEW_TAG_COLOR = "#95a5a6"
 
 
 def new_names_hint(names: list[str]) -> str:

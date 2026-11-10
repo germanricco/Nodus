@@ -9,3 +9,7 @@ PALETTE = [
 def palette_color(index: int) -> str:
     """The ``index``-th preset color, starting over after the last one."""
     return PALETTE[index % len(PALETTE)]
+
+
+# A tag that does not exist yet, until it is saved and gets a color of its own.
+NEW_TAG_COLOR = "#95a5a6"

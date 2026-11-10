@@ -19,7 +19,6 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
-    QLabel,
     QLineEdit,
     QPushButton,
     QSlider,
@@ -27,7 +26,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.ui.theme.design import ControlSize, Layout, Popup, Space
+from nodus.ui.theme.design import ControlSize, Layout, Line, Popup, Space
+from nodus.ui.widgets.color_dot import ColorDot
 
 # Positions of the brightness slider; enough steps for every value of a hex digit pair.
 VALUE_STEPS = 1000
@@ -106,18 +106,19 @@ class HueSaturationWheel(QWidget):
         painter.drawEllipse(center, radius, radius)
         # Saturation fades towards white at the center…
         whiten = QRadialGradient(center, radius)
-        whiten.setColorAt(0, QColor(255, 255, 255, 255))
-        whiten.setColorAt(1, QColor(255, 255, 255, 0))
+        whiten.setColorAt(0, QColor(255, 255, 255, 255))  # geometry: the spectrum itself
+        whiten.setColorAt(1, QColor(255, 255, 255, 0))  # geometry: the spectrum itself
         painter.setBrush(QBrush(whiten))
         painter.drawEllipse(center, radius, radius)
         # …and brightness darkens everything evenly.
-        painter.setBrush(QColor(0, 0, 0, round(255 * (1 - self.value))))
+        painter.setBrush(QColor(0, 0, 0, round(255 * (1 - self.value))))  # geometry
         painter.drawEllipse(center, radius, radius)
         marker = self.marker_position()
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPen(QPen(QColor("#000000"), 3))
+        # A black ring around a white one shows on any hue, in either theme.
+        painter.setPen(QPen(QColor("#000000"), Line.MARK))  # geometry: seen on any hue
         painter.drawEllipse(marker, 6, 6)
-        painter.setPen(QPen(QColor("#ffffff"), 1.5))
+        painter.setPen(QPen(QColor("#ffffff"), Line.STROKE))  # geometry: seen on any hue
         painter.drawEllipse(marker, 6, 6)
         painter.end()
 
@@ -150,8 +151,7 @@ class ColorWheelPopup(QFrame):
         self.value_slider.valueChanged.connect(self._on_value_changed)
         layout.addWidget(self.value_slider)
 
-        self.preview = QLabel()
-        self.preview.setFixedSize(PREVIEW_SIZE, PREVIEW_SIZE)
+        self.preview = ColorDot(size=PREVIEW_SIZE)
         self.hex_input = QLineEdit()
         self.hex_input.setValidator(QRegularExpressionValidator(HEX_PATTERN, self.hex_input))
         self.hex_input.setFixedWidth(Layout.HEX_FIELD_WIDTH)
@@ -224,7 +224,7 @@ class ColorWheelPopup(QFrame):
         self.value_slider.setValue(round(self.wheel.value * VALUE_STEPS))
         self.value_slider.blockSignals(False)
         color = self.color()
-        self.preview.setStyleSheet(f"background: {color}; border-radius: {PREVIEW_SIZE // 2}px;")
+        self.preview.set_color(color)
         if update_hex:
             self.hex_input.setText(color)
             self.accept_button.setEnabled(True)

@@ -68,4 +68,4 @@ class ChangeBadge(QLabel):
         set_style_property(self, "tone", tone)
         # Re-polishing recolors the label but keeps the padding it had, and "empty" has
         # none. A new stylesheet of its own (a comment, one per tone) makes Qt recompute it.
-        self.setStyleSheet(f"/* {tone} */")
+        self.setStyleSheet(f"/* {tone} */")  # qss-refresh

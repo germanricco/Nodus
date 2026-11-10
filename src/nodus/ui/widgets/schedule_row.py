@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from nodus.ui.theme.design import Space
-from nodus.ui.widgets.color import ColorDot
+from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.row_actions import ActionsFor, MoreButton, install_row_actions
 from nodus.ui.widgets.style import set_style_property
 

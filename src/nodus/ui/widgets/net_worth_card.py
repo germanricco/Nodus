@@ -22,7 +22,7 @@ from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import ChangeBadge, format_signed_percent
 from nodus.ui.widgets.chart_base import format_compact
 from nodus.ui.widgets.charts import ProportionBar, Segment
-from nodus.ui.widgets.color import ColorDot
+from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.flow_layout import FlowLayout
 from nodus.ui.widgets.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel, masked
@@ -32,9 +32,9 @@ from nodus.ui.widgets.style import set_style_property
 # The net worth can be shown in these; the parts held in any currency are listed apart.
 CURRENCIES = list(TOTAL_CURRENCIES)
 CURRENCY_LABELS = [currency.symbol for currency in CURRENCIES]
+# Which chart series each currency takes, so a currency keeps its color everywhere.
+SERIES_ORDER = (Currency.ARS, Currency.USD, Currency.EUR, Currency.CLP)
 CHANGE_CAPTION = "vs. inicio del período"
-# A color for the Chilean peso, which the theme has no role for.
-CLP_COLOR = "#3498db"
 
 
 def signed(money: Money) -> str:
@@ -66,7 +66,7 @@ class CurrencyLegend(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.S)
-        self.dot = ColorDot("#000000", size=10)
+        self.dot = ColorDot(size=10)
         name = QLabel(HELD_IN_LABELS[currency])
         set_style_property(name, "muted", True)
         self.amount = AnimatedMoneyLabel()
@@ -365,12 +365,7 @@ class NetWorthCard(Card):
             self.show_day(*self._shown)
 
     def _colors(self) -> dict[Currency, str]:
-        return {
-            Currency.ARS: self._theme.accent,
-            Currency.USD: self._theme.income,
-            Currency.EUR: self._theme.warning,
-            Currency.CLP: CLP_COLOR,
-        }
+        return dict(zip(SERIES_ORDER, self._theme.series(), strict=True))
 
     def _set_theme(self, theme: Theme) -> None:
         self._theme = theme

@@ -45,7 +45,7 @@ QMainWindow, #ContentArea, #PageStack {
 
 #NavButton:checked {
     background: $accent_soft;
-    color: $accent;
+    color: $accent_text;
     font-weight: $strong_weight;
 }
 
@@ -131,7 +131,7 @@ QMainWindow, #ContentArea, #PageStack {
 
 #Badge {
     background: $accent_soft;
-    color: $accent;
+    color: $accent_text;
     border-radius: 16px; /* geometry: half its height */
     min-width: $badge;
     max-width: $badge;
@@ -154,7 +154,7 @@ QMainWindow, #ContentArea, #PageStack {
 /* Small label next to a name, like "sistema" on the "Otros" category */
 #Tag {
     background: $accent_soft;
-    color: $accent;
+    color: $accent_text;
     border-radius: $radius_l;
     padding: $space_xxs $space_s;
     font-size: $label_size;
@@ -199,7 +199,7 @@ QPushButton#BackButton:hover {
 
 QLabel#NotificationCount {
     background: $expense;
-    color: #ffffff;
+    color: $on_accent;
     border-radius: 9px; /* geometry: half its height */
     font-size: $label_size;
     font-weight: $display_weight;
@@ -293,7 +293,7 @@ QPushButton#LinkButton {
     background: transparent;
     border: none;
     padding: 0;
-    color: $accent;
+    color: $accent_text;
     font-size: $note_size;
 }
 
@@ -410,7 +410,7 @@ QAbstractItemView#ListPopup {
     padding: $popup_padding;
     outline: none;
     selection-background-color: $accent_soft;
-    selection-color: $accent;
+    selection-color: $accent_text;
 }
 
 QAbstractItemView#ListPopup::item {
@@ -421,7 +421,7 @@ QAbstractItemView#ListPopup::item {
 QAbstractItemView#ListPopup::item:selected,
 QAbstractItemView#ListPopup::item:hover {
     background: $accent_soft;
-    color: $accent;
+    color: $accent_text;
 }
 
 /* Check boxes: a box with the theme border, filled with the accent when checked. */
@@ -492,7 +492,7 @@ QPushButton#Segment:hover {
 
 QPushButton#Segment:checked {
     background: $surface;
-    color: $accent;
+    color: $accent_text;
     font-weight: $strong_weight;
 }
 
@@ -523,7 +523,7 @@ QPushButton#Tab:hover {
 }
 
 QPushButton#Tab:checked {
-    color: $accent;
+    color: $accent_text;
     font-weight: $strong_weight;
     border-bottom: $line_thick solid $accent;
 }
@@ -568,7 +568,7 @@ QMenu::item {
 
 QMenu::item:selected {
     background: $accent_soft;
-    color: $accent;
+    color: $accent_text;
 }
 
 QMenu::item:disabled {
@@ -637,7 +637,7 @@ QCalendarWidget {
 QCalendarWidget QTableView {
     outline: none;
     selection-background-color: $accent_soft;
-    selection-color: $accent;
+    selection-color: $accent_text;
 }
 
 QCalendarWidget QToolButton {

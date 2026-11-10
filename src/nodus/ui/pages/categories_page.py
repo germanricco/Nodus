@@ -15,7 +15,7 @@ from nodus.ui.navigation import history_focus
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.color import ColorDot
+from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout
 

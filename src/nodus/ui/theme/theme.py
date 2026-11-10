@@ -39,16 +39,25 @@ class Theme:
     hover: str
     text: str
     text_muted: str
-    accent: str
+    accent: str  # fills and borders: the primary button, a chosen box, the focus
     accent_hover: str
     accent_soft: str
-    on_accent: str
+    accent_text: str  # the violet as text: the current page, a chosen tab or option
+    on_accent: str  # text on a strong fill: the primary button, the bell's count
     income: str
     income_soft: str
     expense: str
     expense_soft: str
     warning: str
     warning_soft: str
+    # Series of a chart that are not the user's categories, e.g. the net worth by currency.
+    chart_1: str
+    chart_2: str
+    chart_3: str
+    chart_4: str
+
+    def series(self) -> tuple[str, str, str, str]:
+        return (self.chart_1, self.chart_2, self.chart_3, self.chart_4)
 
     def tokens(self) -> dict[str, str]:
         return asdict(self)
@@ -77,6 +86,7 @@ LIGHT = Theme(
     accent="#6d4fd6",
     accent_hover="#5e40c7",
     accent_soft="#ece8fb",
+    accent_text="#6d4fd6",
     on_accent="#ffffff",
     income="#1e8e4f",
     income_soft="#e2f3e8",
@@ -84,6 +94,10 @@ LIGHT = Theme(
     expense_soft="#fbe7e5",
     warning="#c47d0e",
     warning_soft="#fbefdc",
+    chart_1="#6d4fd6",
+    chart_2="#1e8e4f",
+    chart_3="#c47d0e",
+    chart_4="#3498db",
 )
 
 DARK = Theme(
@@ -98,6 +112,7 @@ DARK = Theme(
     accent="#8b72ec",
     accent_hover="#9d87f0",
     accent_soft="#2c2640",
+    accent_text="#8b72ec",
     on_accent="#ffffff",
     income="#3fbf74",
     income_soft="#1b3326",
@@ -105,4 +120,8 @@ DARK = Theme(
     expense_soft="#3b2325",
     warning="#e8a33d",
     warning_soft="#3a2e1c",
+    chart_1="#8b72ec",
+    chart_2="#3fbf74",
+    chart_3="#e8a33d",
+    chart_4="#3498db",
 )

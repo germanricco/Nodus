@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPointF, Qt
+from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import (
     QBrush,
     QColor,
@@ -13,7 +13,7 @@ from PySide6.QtGui import (
     QPen,
     QPixmap,
 )
-from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
+from PySide6.QtWidgets import QButtonGroup, QGridLayout, QPushButton, QWidget
 
 from nodus.models.palette import PALETTE
 from nodus.ui.theme.design import ControlSize, Line, Space
@@ -40,16 +40,34 @@ def colors_icon(colors: list[str], size: int = 12) -> QIcon:
     return QIcon(pixmap)
 
 
-class ColorDot(QLabel):
-    """A small filled circle in a category's color."""
+class ColorSwatch(QPushButton):
+    """A color to choose in the picker: a filled circle, ringed in the text color when
+    it is the chosen one."""
 
-    def __init__(self, color: str, size: int = 12, parent: QWidget | None = None) -> None:
+    def __init__(self, color: str, size: int, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self.color = color
+        self.setCheckable(True)
         self.setFixedSize(size, size)
-        self.set_color(color)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setProperty("color", color)
+        self.setToolTip(color)
 
-    def set_color(self, color: str) -> None:
-        self.setStyleSheet(f"background: {color}; border-radius: {self.width() // 2}px;")
+    def paintEvent(self, _event: QPaintEvent) -> None:  # noqa: N802
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        circle = QRectF(self.rect())
+        painter.setPen(Qt.PenStyle.NoPen)
+        if self.isChecked():
+            # The ring takes the outer edge and the color fills what is left inside it,
+            # so no edge of the color shows past the ring.
+            painter.setBrush(self.palette().windowText())
+            painter.drawEllipse(circle)
+            inset = Line.THICK
+            circle = circle.adjusted(inset, inset, -inset, -inset)
+        painter.setBrush(QColor(self.color))
+        painter.drawEllipse(circle)
+        painter.end()
 
 
 class WheelSwatch(QPushButton):
@@ -122,17 +140,7 @@ class ColorPicker(QWidget):
         self.wheel_popup.open_below(self.wheel_swatch)
 
     def _add_swatch(self, color: str) -> None:
-        swatch = QPushButton()
-        swatch.setCheckable(True)
-        swatch.setFixedSize(self.SWATCH_SIZE, self.SWATCH_SIZE)
-        swatch.setCursor(Qt.CursorShape.PointingHandCursor)
-        swatch.setProperty("color", color)
-        swatch.setToolTip(color)
-        radius = self.SWATCH_SIZE // 2
-        swatch.setStyleSheet(
-            f"QPushButton {{ background: {color}; border-radius: {radius}px; border: none; }}"
-            f"QPushButton:checked {{ border: 3px solid palette(window-text); }}"
-        )
+        swatch = ColorSwatch(color, self.SWATCH_SIZE)
         index = len(self._swatches)
         self._grid.addWidget(swatch, index // self.COLUMNS, index % self.COLUMNS)
         self._group.addButton(swatch)
