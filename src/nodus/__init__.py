@@ -1,6 +1,6 @@
 """Nodus: local-first personal finance desktop application."""
 
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 
 # How Windows tells Nodus apart from other programs on the taskbar. The running process
 # and the installer's shortcuts must carry the same one: a pinned window whose ID no
