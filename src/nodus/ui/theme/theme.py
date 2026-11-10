@@ -43,11 +43,12 @@ class Theme:
     accent_hover: str
     accent_soft: str
     accent_text: str  # the violet as text: the current page, a chosen tab or option
-    on_accent: str  # text on a strong fill: the primary button, the bell's count
+    on_accent: str  # text on the accent's fill: the primary button
     income: str
     income_soft: str
     expense: str
     expense_soft: str
+    on_expense: str  # text on the expense's fill: the bell's count
     warning: str
     warning_soft: str
     # Series of a chart that are not the user's categories, e.g. the net worth by currency.
@@ -88,11 +89,12 @@ LIGHT = Theme(
     accent_soft="#ece8fb",
     accent_text="#6d4fd6",
     on_accent="#ffffff",
-    income="#1e8e4f",
+    income="#1a7a44",
     income_soft="#e2f3e8",
-    expense="#d9453b",
+    expense="#c53026",
     expense_soft="#fbe7e5",
-    warning="#c47d0e",
+    on_expense="#ffffff",
+    warning="#97600b",
     warning_soft="#fbefdc",
     chart_1="#6d4fd6",
     chart_2="#1e8e4f",
@@ -109,15 +111,16 @@ DARK = Theme(
     hover="#27252d",
     text="#ecebef",
     text_muted="#9a98a3",
-    accent="#8b72ec",
-    accent_hover="#9d87f0",
+    accent="#795ce9",
+    accent_hover="#7055e3",
     accent_soft="#2c2640",
-    accent_text="#8b72ec",
+    accent_text="#9881ee",
     on_accent="#ffffff",
     income="#3fbf74",
     income_soft="#1b3326",
     expense="#ef6b60",
     expense_soft="#3b2325",
+    on_expense="#16151a",
     warning="#e8a33d",
     warning_soft="#3a2e1c",
     chart_1="#8b72ec",

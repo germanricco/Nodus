@@ -199,7 +199,7 @@ QPushButton#BackButton:hover {
 
 QLabel#NotificationCount {
     background: $expense;
-    color: $on_accent;
+    color: $on_expense;
     border-radius: 9px; /* geometry: half its height */
     font-size: $label_size;
     font-weight: $display_weight;

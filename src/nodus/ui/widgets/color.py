@@ -5,7 +5,6 @@ from __future__ import annotations
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import (
     QBrush,
-    QColor,
     QIcon,
     QPainter,
     QPainterPath,
@@ -17,11 +16,13 @@ from PySide6.QtWidgets import QButtonGroup, QGridLayout, QPushButton, QWidget
 
 from nodus.models.palette import PALETTE
 from nodus.ui.theme.design import ControlSize, Line, Space
+from nodus.ui.widgets.color_dot import paint_dot
 from nodus.ui.widgets.color_wheel import ColorWheelPopup, hue_ring_gradient
 
 
 def color_icon(color: str, size: int = 12) -> QIcon:
-    """A filled circle in ``color``, for item views and combo boxes that take icons."""
+    """A filled circle in ``color``, for item views and combo boxes that take icons.
+    Like ``ColorDot``, it is ringed when the color would fade into the surface."""
     return colors_icon([color], size)
 
 
@@ -32,10 +33,8 @@ def colors_icon(colors: list[str], size: int = 12) -> QIcon:
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    painter.setPen(Qt.PenStyle.NoPen)
     for index, color in enumerate(colors):
-        painter.setBrush(QColor(color))
-        painter.drawEllipse(index * (size + gap), 0, size, size)
+        paint_dot(painter, QRectF(index * (size + gap), 0, size, size), color)
     painter.end()
     return QIcon(pixmap)
 
@@ -65,8 +64,7 @@ class ColorSwatch(QPushButton):
             painter.drawEllipse(circle)
             inset = Line.THICK
             circle = circle.adjusted(inset, inset, -inset, -inset)
-        painter.setBrush(QColor(self.color))
-        painter.drawEllipse(circle)
+        paint_dot(painter, circle, self.color)
         painter.end()
 
 

@@ -2,9 +2,28 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QPainter, QPaintEvent
+from PySide6.QtCore import QRectF, Qt
+from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
+
+from nodus.ui.theme.contrast import outline_for
+from nodus.ui.theme.design import Line
+from nodus.ui.theme.theme_manager import active_theme
+
+
+def paint_dot(painter: QPainter, rect: QRectF, color: str) -> None:
+    """A circle in ``color`` filling ``rect``, ringed in a deeper shade of itself when
+    the color alone would fade into the theme's surface (a yellow on white), so every
+    dot reads as a shape without changing the color the user chose."""
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(QColor(color))
+    painter.drawEllipse(rect)
+    outline = outline_for(color, active_theme().surface)
+    if outline is not None:
+        half = Line.THIN / 2  # the ring's stroke stays inside the circle
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(outline), Line.THIN))
+        painter.drawEllipse(rect.adjusted(half, half, -half, -half))
 
 
 class ColorDot(QWidget):
@@ -28,7 +47,5 @@ class ColorDot(QWidget):
             return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(self._color))
-        painter.drawEllipse(self.rect())
+        paint_dot(painter, QRectF(self.rect()), self._color)
         painter.end()
