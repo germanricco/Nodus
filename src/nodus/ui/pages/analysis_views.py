@@ -39,6 +39,7 @@ from nodus.ui.widgets.bar_chart import BarChart
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.chart_base import format_compact
+from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 from nodus.ui.widgets.net_worth_card import (
     CURRENCIES,
@@ -61,7 +62,6 @@ PAYEES_SHOWN = 8
 NO_PAYEE_LABEL = "Sin beneficiario"
 TAGS_HINT = "Un movimiento con varias etiquetas suma en cada una."
 TOOLTIP_CATEGORIES = 3
-EMPTY_TEXT = "Sin movimientos en el período"
 # Shown, without a pill, where there is no previous period to compare with.
 NO_PREVIOUS_TEXT = "—"
 
@@ -79,13 +79,12 @@ def amount_label(money: Money) -> QLabel:
     return label
 
 
-def chart_card(title: str, chart: QWidget) -> tuple[Card, QLabel, QLabel]:
+def chart_card(title: str, chart: QWidget) -> tuple[Card, EmptyState, QLabel]:
     """A card with ``chart``, the label shown instead of it when the period is empty and
     the note about movements left out for lack of an exchange rate."""
     card = Card()
     card_header(card, title)
-    empty_label = muted_label(EMPTY_TEXT)
-    empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    empty_label = EmptyState(NO_MOVEMENTS_TEXT, compact=True)
     unconverted_label = muted_label("")
     unconverted_label.setWordWrap(True)
     card.body.addWidget(chart, stretch=1)
@@ -249,7 +248,7 @@ class TrendsView(AnalysisView):
     def _fill_categories(self, trends: Trends) -> None:
         clear_layout(self._category_rows)
         if not trends.categories:
-            self._category_rows.addWidget(muted_label(EMPTY_TEXT))
+            self._category_rows.addWidget(EmptyState(NO_MOVEMENTS_TEXT, compact=True))
         for total in trends.categories:
             row = CategoryLine(total.category.color, total.category.name)
             row.add(muted_label(percent(total.total, trends.total)))
@@ -266,7 +265,7 @@ class TrendsView(AnalysisView):
         named = [p for p in trends.payees if p.payee is not None][:PAYEES_SHOWN]
         without = [p for p in trends.payees if p.payee is None]
         if not trends.payees:
-            self._payee_rows.addWidget(muted_label(EMPTY_TEXT))
+            self._payee_rows.addWidget(EmptyState(NO_MOVEMENTS_TEXT, compact=True))
         for total in named + without:
             name = total.payee.name if total.payee else NO_PAYEE_LABEL
             color = self._theme.accent if total.payee else self._theme.border

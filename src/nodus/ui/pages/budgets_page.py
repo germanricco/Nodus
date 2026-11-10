@@ -32,9 +32,10 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout
 
 EMPTY_TEXT = (
     "Ponle un límite mensual a las categorías que quieres cuidar, como el supermercado o "
@@ -219,12 +220,5 @@ class BudgetsPage(Page):
         return card
 
     def _empty_state(self) -> Card:
-        card = Card()
-        title = QLabel("Aún no hay presupuestos")
-        title.setObjectName("RowTitle")
-        text = QLabel(EMPTY_TEXT)
-        text.setWordWrap(True)
-        set_style_property(text, "muted", True)
-        card.body.addWidget(title)
-        card.body.addWidget(text)
+        card, _state = empty_page_card("Todavía no hay presupuestos", EMPTY_TEXT)
         return card

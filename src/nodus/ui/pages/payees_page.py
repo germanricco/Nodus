@@ -17,8 +17,10 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.color import color_icon
 
 CATEGORY = TOTAL + 1
-NO_PAYEES_TEXT = "Aún no hay beneficiarios: se crean al escribir uno nuevo al cargar un movimiento."
-NO_MATCHES_TEXT = "Ningún beneficiario coincide con la búsqueda"
+NO_PAYEES_TEXT = (
+    "Todavía no hay beneficiarios: se crean al escribir uno nuevo al cargar un movimiento."
+)
+NO_MATCHES_TEXT = "Ningún beneficiario coincide con la búsqueda."
 
 
 def payee_delete_warning(summaries: list[PayeeSummary]) -> str:

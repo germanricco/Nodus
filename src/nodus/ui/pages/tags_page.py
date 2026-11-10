@@ -15,8 +15,8 @@ from nodus.ui.pages.summary_page import NAME, SummaryPage, SummaryTableModel
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.color import color_icon
 
-NO_TAGS_TEXT = "Aún no hay etiquetas: se crean al escribir una nueva al cargar un movimiento."
-NO_MATCHES_TEXT = "Ninguna etiqueta coincide con la búsqueda"
+NO_TAGS_TEXT = "Todavía no hay etiquetas: se crean al escribir una nueva al cargar un movimiento."
+NO_MATCHES_TEXT = "Ninguna etiqueta coincide con la búsqueda."
 
 
 def tag_delete_warning(services: Services, summaries: list[TagSummary]) -> str:

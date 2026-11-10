@@ -31,7 +31,7 @@ class TestTransactions:
     def test_an_empty_period_just_says_so(self, qtbot, services, event_bus, theme_manager):
         page = self.make_page(qtbot, services, event_bus, theme_manager)
 
-        assert page.empty_state.text() == "Sin transacciones en este período"
+        assert page.empty_state.text() == "Sin transacciones en este período."
         assert page.empty_state.action_button.isHidden()
 
     def test_filters_that_leave_nothing_can_be_cleared(

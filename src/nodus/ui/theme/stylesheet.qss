@@ -172,6 +172,15 @@ QMainWindow, #ContentArea, #PageStack {
     font-size: $strong_size;
 }
 
+#EmptyState[compact="true"] {
+    font-size: $body_size;
+}
+
+#EmptyStateTitle {
+    font-size: $strong_size;
+    font-weight: $strong_weight;
+}
+
 /* New version notice under the top bar */
 
 /* Top bar icons and the notifications panel */

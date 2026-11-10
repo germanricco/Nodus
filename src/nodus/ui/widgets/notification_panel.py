@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLay
 
 from nodus.services.notification_service import Notice, NoticeKind
 from nodus.ui.theme.design import Layout, Line, Popup, Space
+from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 ACTION_LABELS = {
@@ -84,10 +85,7 @@ class NotificationPanel(QFrame):
         clear_layout(self._rows)
         self.rows = []
         if not notices:
-            empty = QLabel("Sin novedades")
-            set_style_property(empty, "muted", True)
-            empty.setContentsMargins(0, Space.S, 0, Space.XS)
-            self._rows.addWidget(empty)
+            self._rows.addWidget(EmptyState("Sin novedades.", compact=True))
         for index, notice in enumerate(notices):
             if index:
                 separator = QFrame()

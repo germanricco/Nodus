@@ -158,10 +158,10 @@ class TransactionsPage(Page):
         self.list_view.show_matching(self.current_filter())
         if self._has_filters():
             self.empty_state.set_message(
-                "Sin transacciones con estos filtros", "Limpiar filtros", self.clear_filters
+                "Sin transacciones con estos filtros.", "Limpiar filtros", self.clear_filters
             )
         else:
-            self.empty_state.set_message("Sin transacciones en este período")
+            self.empty_state.set_message("Sin transacciones en este período.")
         self.clear_filters_button.setEnabled(self._has_filters())
         for combo in self._filter_combos():
             set_style_property(combo, "filter", "active" if combo.currentIndex() > 0 else "idle")

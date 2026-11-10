@@ -45,6 +45,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.date_input import DateInput
+from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.setting_row import SettingRow
@@ -339,9 +340,7 @@ class SettingsPage(Page):
         clear_layout(self._history)
         history = self._services.exchange_rates.history(currency)
         if not history:
-            empty = QLabel("Sin cotizaciones.")
-            set_style_property(empty, "muted", True)
-            self._history.addWidget(empty)
+            self._history.addWidget(EmptyState("Sin cotizaciones.", compact=True))
         for rate in history:
             row = RateRow(rate)
             row.delete_requested.connect(self._delete_rate)

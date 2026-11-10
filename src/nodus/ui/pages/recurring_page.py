@@ -33,6 +33,7 @@ from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.pay_button import PayButton
 from nodus.ui.widgets.row_actions import RowAction
 from nodus.ui.widgets.schedule_row import ScheduleRow
@@ -337,14 +338,7 @@ class RecurringPage(Page):
         return card
 
     def _empty_state(self) -> Card:
-        card = Card()
-        title = QLabel("Aún no hay cargos recurrentes")
-        title.setObjectName("RowTitle")
-        text = QLabel(EMPTY_TEXT)
-        text.setWordWrap(True)
-        set_style_property(text, "muted", True)
-        card.body.addWidget(title)
-        card.body.addWidget(text)
+        card, _state = empty_page_card("Todavía no hay cargos recurrentes", EMPTY_TEXT)
         return card
 
 

@@ -9,7 +9,6 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QScrollArea,
     QVBoxLayout,
     QWidget,
@@ -28,6 +27,7 @@ from nodus.ui.pages.page import Page
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
 from nodus.ui.widgets.money_label import MoneyLabel, masked
 from nodus.ui.widgets.net_worth_card import NetWorthCard, signed
 from nodus.ui.widgets.reorderable_list import ReorderableList
@@ -264,9 +264,7 @@ class AccountsPage(Page):
         there is more than one."""
         card = Card(title)
         if not accounts:
-            empty = QLabel("No hay cuentas activas.")
-            set_style_property(empty, "muted", True)
-            card.body.addWidget(empty)
+            card.body.addWidget(EmptyState("No hay cuentas activas.", compact=True))
         rows = None
         if reorderable and len(accounts) > 1:
             rows = self.account_list = ReorderableList()
@@ -312,17 +310,11 @@ class AccountsPage(Page):
         delete_account(self.window(), self._services, self._event_bus, account)
 
     def _empty_state(self) -> Card:
-        card = Card()
-        title = QLabel("Todavía no hay cuentas")
-        title.setObjectName("RowTitle")
-        text = QLabel("Una por cada lugar donde tengas dinero: banco, efectivo, dólares.")
-        text.setWordWrap(True)
-        set_style_property(text, "muted", True)
-        card.body.addWidget(title)
-        card.body.addWidget(text)
-        self.empty_create_button = QPushButton("Agregar cuenta")
-        self.empty_create_button.setObjectName("PrimaryButton")
-        self.empty_create_button.clicked.connect(lambda: self.open_account_dialog())
-        card.body.addSpacing(Space.XS)
-        card.body.addWidget(self.empty_create_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        card, state = empty_page_card(
+            "Todavía no hay cuentas",
+            "Una por cada lugar donde tengas dinero: banco, efectivo, dólares.",
+            "Agregar cuenta",
+            lambda: self.open_account_dialog(),
+        )
+        self.empty_create_button = state.action_button
         return card

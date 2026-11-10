@@ -44,6 +44,7 @@ from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts import DonutChart, ProportionBar, Segment
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.elided_label import ElidedLabel
+from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 from nodus.ui.widgets.pay_button import PayButton
 from nodus.ui.widgets.row_actions import RowAction, install_row_actions
@@ -301,7 +302,7 @@ class LatestTransactionsCard(Card):
         )
         items = self._builder.build(transactions)[:count]
         if not items:
-            self._rows.addWidget(muted_label("Sin movimientos en el período"))
+            self._rows.addWidget(EmptyState(NO_MOVEMENTS_TEXT, compact=True))
         transfer_color = self._theme_manager.theme.text_muted
         for item in items:
             row = LatestTransactionRow(item, transfer_color)
@@ -672,7 +673,7 @@ class ComparisonCard(Card):
         self.rows = []
         changes = comparison.categories[:COMPARISON_COUNT]
         if not changes:
-            self._rows.addWidget(muted_label("Sin gastos en el período"))
+            self._rows.addWidget(EmptyState("Sin gastos en el período.", compact=True))
         for change in changes:
             row = CategoryLine(change.category.color, change.category.name, change.current.format())
             badge = ChangeBadge(higher_is_better=False, none_text="Nueva")
