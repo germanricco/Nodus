@@ -53,7 +53,7 @@ class Calendar(QCalendarWidget):
     def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
         """Day names as captions, in the muted color of the theme shown now."""
         names = QTextCharFormat()
-        names.setFont(role_font(TextRole.LABEL))
+        names.setFont(role_font(TextRole.NOTE))
         names.setFontCapitalization(QFont.Capitalization.AllUppercase)
         names.setForeground(self.palette().color(QPalette.ColorRole.PlaceholderText))
         self.setHeaderTextFormat(names)

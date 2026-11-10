@@ -2,6 +2,11 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.5.0
+
+- Todos los textos se leen bien sobre su fondo, en tema claro y oscuro: los verdes, rojos y amarillos de los montos y avisos son un poco más profundos, y el violeta del tema oscuro, un poco más claro. Los puntos de colores muy claros, como el amarillo, llevan un borde fino de su mismo tono para que se distingan.
+- Los rótulos más chicos (títulos de las tarjetas, «CUENTAS» en la barra lateral, encabezados de las tablas) son un poco más grandes y fáciles de leer.
+
 ## 1.4.0 — 2026-11-10
 
 - Compras en cuotas: al anotar un gasto, elige en cuántas cuotas se paga y si el monto es el total o lo que vale cada una. Nodus anota todas las cuotas, cada una se descuenta de la cuenta el día que le toca y las que faltan se ven más tenues, con «3/6» junto al nombre. Recurrentes muestra las compras en curso y cuánto se llevan las cuotas por mes, y cada tarjeta dice cuánto queda por pagar.

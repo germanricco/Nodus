@@ -34,7 +34,7 @@ class TextRole(Enum):
     STRONG = (11, SEMIBOLD)  # amounts in rows, empty states, the way back
     BODY = (10, REGULAR)  # everything else
     NOTE = (9, REGULAR)  # hints under a field, badges, small buttons, chart axes
-    LABEL = (8, SEMIBOLD)  # card titles, sidebar sections, table headers
+    LABEL = (9, SEMIBOLD)  # card titles, sidebar sections, table headers
 
     @property
     def size(self) -> int:
