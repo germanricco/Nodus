@@ -6,13 +6,14 @@ from datetime import date
 
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QIntValidator
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QWidget
 
 from nodus.models.installment_plan import MAX_INSTALLMENTS, MIN_INSTALLMENTS, InstallmentPlan
 from nodus.models.money import Money
 from nodus.services.errors import ValidationError
 from nodus.ui.formatting import format_date
 from nodus.ui.theme.design import Space
+from nodus.ui.widgets.combo_box import ComboBox
 from nodus.ui.widgets.segmented import SegmentedControl
 
 TOTAL, PER_INSTALLMENT = range(2)
@@ -36,7 +37,7 @@ class InstallmentFields(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.count_input = QComboBox()
+        self.count_input = ComboBox()
         self.count_input.setAccessibleName("Cuotas")
         self.count_input.setToolTip("En cuántas cuotas se paga")
         for count in COMMON_COUNTS:

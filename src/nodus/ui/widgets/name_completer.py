@@ -7,6 +7,8 @@ from collections.abc import Callable
 from PySide6.QtCore import QObject, QStringListModel, Qt
 from PySide6.QtWidgets import QCompleter, QLineEdit
 
+from nodus.ui.widgets.combo_box import style_as_list_popup
+
 
 class NameCompleter(QObject):
     """Shows under ``line_edit`` the names ``matches`` returns for what is typed.
@@ -23,6 +25,7 @@ class NameCompleter(QObject):
         self.completer = QCompleter(self.suggestions, self)
         self.completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
         self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        style_as_list_popup(self.completer.popup())
         line_edit.setCompleter(self.completer)
         line_edit.textEdited.connect(self.suggest)
         self.activated = self.completer.activated

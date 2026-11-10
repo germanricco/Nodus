@@ -11,8 +11,6 @@ from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QSize, Qt, Signal
 from PySide6.QtGui import QFont, QPainter, QPalette
 from PySide6.QtWidgets import (
     QApplication,
-    QComboBox,
-    QStyledItemDelegate,
     QStyleOptionViewItem,
     QWidget,
 )
@@ -21,8 +19,9 @@ from nodus.models.account import Account
 from nodus.models.payee import Payee
 from nodus.models.tag import Tag
 from nodus.services.category_service import CategoryNode
-from nodus.ui.theme.design import TextRole, role_font
+from nodus.ui.theme.design import Popup, TextRole, role_font
 from nodus.ui.widgets.color import color_icon
+from nodus.ui.widgets.combo_box import ComboBox, ListPopupDelegate, paint_divider
 
 # Item data: a section heading ("Gastos") instead of a choice, and how deep a choice is.
 HEADING_ROLE = Qt.ItemDataRole.UserRole + 1
@@ -34,14 +33,21 @@ MANAGE_LABEL = "Editar"
 _Index = QModelIndex | QPersistentModelIndex
 
 
-class _SectionDelegate(QStyledItemDelegate):
+class _SectionDelegate(ListPopupDelegate):
     """Draws the list of a selector: headings as small gray titles followed by a line, and
     subcategories shifted in with their color dot, so the tree reads at a glance. The
-    «Editar» row goes under a line, in the accent color, so it reads as an action."""
+    «Editar» row goes under a line, in the accent color, so it reads as an action.
+
+    Headings and «Editar» start where the options' text does: at the list's item padding
+    (``Popup.LIST_ITEM_PADDING``), which the stylesheet gives the options.
+    """
 
     INDENT = 18
-    HEADING_GAP = 8  # space above every heading but the first row
-    MANAGE_GAP = 9  # space above the «Editar» row, with the line in its middle
+    SIDE = Popup.LIST_ITEM_PADDING[1]
+    # Above every heading but the first row, and above «Editar» with the line in its
+    # middle: the room a separator takes, so every break in a list is the same.
+    HEADING_GAP = Popup.DIVIDER_HEIGHT
+    MANAGE_GAP = Popup.DIVIDER_HEIGHT
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: _Index) -> None:
         if index.data(HEADING_ROLE):
@@ -72,7 +78,8 @@ class _SectionDelegate(QStyledItemDelegate):
         painter.setFont(font)
         color = option.palette.color(QPalette.ColorRole.PlaceholderText)
         painter.setPen(color)
-        rect = option.rect.adjusted(8, self.HEADING_GAP if index.row() > 0 else 0, -8, 0)
+        top = self.HEADING_GAP if index.row() > 0 else 0
+        rect = option.rect.adjusted(self.SIDE, top, -self.SIDE, 0)
         text = index.data(Qt.ItemDataRole.DisplayRole)
         painter.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, text)
         line_start = rect.left() + painter.fontMetrics().horizontalAdvance(text) + 8
@@ -83,24 +90,20 @@ class _SectionDelegate(QStyledItemDelegate):
         painter.restore()
 
     def _paint_manage(self, painter: QPainter, option: QStyleOptionViewItem, index: _Index) -> None:
+        paint_divider(painter, option, option.rect.top() + self.MANAGE_GAP // 2)
         painter.save()
-        line = option.palette.color(QPalette.ColorRole.PlaceholderText)
-        line.setAlpha(90)
-        painter.setPen(line)
-        middle = option.rect.top() + self.MANAGE_GAP // 2
-        painter.drawLine(option.rect.left() + 8, middle, option.rect.right() - 8, middle)
         font = QFont(option.font)
         font.setWeight(QFont.Weight.DemiBold)
         painter.setFont(font)
         # The application palette: the list's own Highlight is the soft selection color.
         painter.setPen(QApplication.palette().color(QPalette.ColorRole.Highlight))
-        rect = option.rect.adjusted(8, self.MANAGE_GAP, -8, 0)
+        rect = option.rect.adjusted(self.SIDE, self.MANAGE_GAP, -self.SIDE, 0)
         text = index.data(Qt.ItemDataRole.DisplayRole)
         painter.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, text)
         painter.restore()
 
 
-class _SelectorComboBox(QComboBox):
+class _SelectorComboBox(ComboBox):
     """A combo box whose items carry an id, with an optional first item meaning "any".
 
     With ``enable_manage_item``, the list ends with an «Editar» row. Clicking it closes the
@@ -113,7 +116,7 @@ class _SelectorComboBox(QComboBox):
         super().__init__(parent)
         self._has_manage_item = False
         self.setMinimumContentsLength(14)
-        self.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.setSizeAdjustPolicy(ComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.setItemDelegate(_SectionDelegate(self))
         self.view().pressed.connect(self._on_item_pressed)
 
@@ -122,9 +125,11 @@ class _SelectorComboBox(QComboBox):
         self._has_manage_item = True
 
     def showPopup(self) -> None:  # noqa: N802
-        """Opens the list as wide as its longest name, so no name is cut off."""
+        """Opens the list as wide as its longest name, so no name is cut off: the name
+        with its padding, the deepest indent, the frame's padding and the scroll bar."""
         view = self.view()
-        view.setMinimumWidth(view.sizeHintForColumn(0) + _SectionDelegate.INDENT + 24)
+        frame = 2 * Popup.PADDING + view.verticalScrollBar().sizeHint().width()
+        view.setMinimumWidth(view.sizeHintForColumn(0) + _SectionDelegate.INDENT + frame)
         super().showPopup()
 
     def current_id(self) -> int | None:

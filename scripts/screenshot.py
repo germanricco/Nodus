@@ -46,6 +46,7 @@ from nodus.ui.pages.accounts_page import AccountRow  # noqa: E402
 from nodus.ui.theme.theme import ThemeMode  # noqa: E402
 from nodus.ui.theme.theme_manager import ThemeManager  # noqa: E402
 from nodus.ui.widgets import chart_base  # noqa: E402
+from nodus.ui.widgets.row_actions import build_menu  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).parent))
 from demo_data import load_demo_data  # noqa: E402
@@ -164,6 +165,7 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
             app.processEvents()
             save(dialog, args.out / f"{name}-{mode.value}.png")
             dialog.close()
+        capture_popups(app, services, event_bus, window, args.out, mode)
         # The color wheel, opened from the category dialog's «+» swatch.
         dialog = CategoryDialog(services, event_bus, parent=window)
         dialog.show()
@@ -292,6 +294,47 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         save(update, args.out / f"update-dialog-{mode.value}.png")
         update.close()
     window.close()
+
+
+def capture_popups(
+    app: QApplication,
+    services: Services,
+    event_bus: EventBus,
+    window: QWidget,
+    out: Path,
+    mode: ThemeMode,
+) -> None:
+    """The lists and menus that open over a page, open: «Cuotas» and «Categoría» of the
+    transaction form, the type and category filters of Transacciones and a row's «⋯»
+    menu. They are the windows offscreen captures miss otherwise, and they share the
+    Popup spacing."""
+    dialog = TransactionDialog(services, event_bus, window.theme_manager, parent=window)
+    dialog.show()
+    app.processEvents()
+    for name, combo in (
+        ("popup-installments", dialog.installment_fields.count_input),
+        ("popup-category", dialog.category_input),
+    ):
+        combo.showPopup()
+        app.processEvents()
+        save(combo.view().window(), out / f"{name}-{mode.value}.png")
+        combo.hidePopup()
+    dialog.close()
+    window.show_page(PageId.TRANSACTIONS)
+    page = window.page(PageId.TRANSACTIONS)
+    for name, combo in (
+        ("popup-filter", page.type_filter),
+        ("popup-category-filter", page.category_filter),
+    ):
+        combo.showPopup()
+        app.processEvents()
+        save(combo.view().window(), out / f"{name}-{mode.value}.png")
+        combo.hidePopup()
+    menu = build_menu(window, page.list_view.row_actions(0))
+    menu.popup(window.mapToGlobal(window.rect().center()))
+    app.processEvents()
+    save(menu, out / f"popup-menu-{mode.value}.png")
+    menu.close()
 
 
 def save(widget: QWidget, path: Path) -> None:

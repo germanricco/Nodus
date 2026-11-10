@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtWidgets import QComboBox, QLabel, QWidget
+from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.labels import movements_text
+from nodus.ui.widgets.combo_box import ComboBox
 
 
 @dataclass(frozen=True)
@@ -47,7 +48,7 @@ class MergeDialog(FormDialog):
         super().__init__(title, parent, "Unir")
         self._sources = sources
 
-        self.target_input = QComboBox()
+        self.target_input = ComboBox()
         candidates = others if single else [(s.name, s.id) for s in sources]
         for name, item_id in candidates:
             self.target_input.addItem(name, item_id)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QComboBox, QLineEdit, QWidget
+from PySide6.QtWidgets import QLineEdit, QWidget
 
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
@@ -11,6 +11,7 @@ from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS, CURRENCY_LABELS
 from nodus.ui.widgets.amount_input import AmountInput
+from nodus.ui.widgets.combo_box import ComboBox
 
 
 class AccountDialog(FormDialog):
@@ -38,10 +39,10 @@ class AccountDialog(FormDialog):
 
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText("Ej.: Banco, Efectivo, Dólares")
-        self.type_input = QComboBox()
+        self.type_input = ComboBox()
         for account_type, label in ACCOUNT_TYPE_LABELS.items():
             self.type_input.addItem(label, account_type)
-        self.currency_input = QComboBox()
+        self.currency_input = ComboBox()
         for currency, label in CURRENCY_LABELS.items():
             self.currency_input.addItem(label, currency)
         self.balance_input = AmountInput(Currency.ARS)

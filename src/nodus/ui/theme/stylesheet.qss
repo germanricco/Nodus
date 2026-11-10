@@ -374,15 +374,31 @@ QComboBox[filter="active"] {
     border: 1px solid $accent;
 }
 
-QComboBox[filter] QAbstractItemView {
+QComboBox[filter] QAbstractItemView#ListPopup {
     color: $text;
 }
 
-QComboBox QAbstractItemView {
+/* Every list that opens over a page (a combo box's, the suggestions under a field) is a
+   ListPopup (widgets/combo_box.py), spaced by the Popup steps of design.py like the
+   menus, so the first and last options never touch the frame. */
+QAbstractItemView#ListPopup {
     background: $surface;
     border: 1px solid $border;
+    padding: $popup_padding;
+    outline: none;
     selection-background-color: $accent_soft;
-    selection-color: $text;
+    selection-color: $accent;
+}
+
+QAbstractItemView#ListPopup::item {
+    padding: $list_item_padding;
+    border-radius: $popup_item_radius;
+}
+
+QAbstractItemView#ListPopup::item:selected,
+QAbstractItemView#ListPopup::item:hover {
+    background: $accent_soft;
+    color: $accent;
 }
 
 /* Check boxes: a box with the theme border, filled with the accent when checked. */
@@ -517,13 +533,14 @@ QPushButton#PeriodButton::menu-indicator {
 QMenu {
     background: $surface;
     border: 1px solid $border;
-    border-radius: $radius_l;
-    padding: $space_xs;
+    border-radius: $popup_radius;
+    padding: $popup_padding;
 }
 
 QMenu::item {
-    padding: $space_s $space_xxl $space_s $space_m;
-    border-radius: $radius_m;
+    padding: $menu_item_padding;
+    padding-right: $space_xxl;  /* room after the longest action */
+    border-radius: $popup_item_radius;
 }
 
 QMenu::item:selected {
@@ -543,7 +560,7 @@ QMenu::icon {
 QMenu::separator {
     height: 1px;
     background: $border;
-    margin: $space_xs $space_xs;
+    margin: $popup_divider_margin;
 }
 
 /* Tables */

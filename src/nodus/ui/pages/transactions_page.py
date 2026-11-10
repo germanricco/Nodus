@@ -6,7 +6,6 @@ from functools import partial
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
-    QComboBox,
     QHBoxLayout,
     QLineEdit,
     QPushButton,
@@ -23,6 +22,7 @@ from nodus.ui.pages.page import Page
 from nodus.ui.pages.transaction_list_view import TransactionListView
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.combo_box import ComboBox
 from nodus.ui.widgets.period_selector import PeriodSelector
 from nodus.ui.widgets.selectors import (
     AccountComboBox,
@@ -85,7 +85,7 @@ class TransactionsPage(Page):
         ):
             combo.enable_manage_item()
             combo.manage_requested.connect(partial(self.navigate_requested.emit, page_id))
-        self.type_filter = QComboBox()
+        self.type_filter = ComboBox()
         self.type_filter.addItems(list(TYPE_FILTERS))
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Buscar…")
@@ -192,7 +192,7 @@ class TransactionsPage(Page):
                 combo.select(item_id)
                 combo.blockSignals(False)
 
-    def _filter_combos(self) -> tuple[QComboBox, ...]:
+    def _filter_combos(self) -> tuple[ComboBox, ...]:
         return (
             self.account_filter,
             self.category_filter,

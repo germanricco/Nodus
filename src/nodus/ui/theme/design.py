@@ -68,6 +68,24 @@ class Radius(IntEnum):
     XL = 12  # cards and panels
 
 
+class Popup:
+    """The spacing of what opens over a page: the lists of a combo box or of suggestions,
+    and the menus. Every one takes these steps, so changing one here changes them all."""
+
+    PADDING = Space.XS  # between the frame and its first and last option
+    RADIUS = Radius.L  # the frame
+    ITEM_RADIUS = Radius.M  # the option under the mouse or chosen
+    # (top and bottom, sides). A list is denser than a menu: it may hold many choices.
+    LIST_ITEM_PADDING = (Space.XS, Space.M)
+    MENU_ITEM_PADDING = (Space.S, Space.M)
+    DIVIDER_MARGIN = Space.XS  # above and below the line between groups of options
+    DIVIDER_HEIGHT = 2 * DIVIDER_MARGIN + 1
+
+
+def _padding(steps: tuple[int, int]) -> str:
+    return " ".join(f"{step}px" for step in steps)
+
+
 def role_font(role: TextRole) -> QFont:
     """The font of ``role``, for widgets that paint their own text (charts, delegates)."""
     font = QFont(FONT_FAMILY)
@@ -78,7 +96,8 @@ def role_font(role: TextRole) -> QFont:
 
 def design_tokens() -> dict[str, str]:
     """The scale as stylesheet tokens: ``font_family``, ``<role>_size`` and
-    ``<role>_weight`` for each text role, ``space_<step>`` and ``radius_<step>``."""
+    ``<role>_weight`` for each text role, ``space_<step>``, ``radius_<step>`` and the
+    ``Popup`` steps (``popup_padding``, ``list_item_padding``…)."""
     tokens = {"font_family": f'"{FONT_FAMILY}"'}
     for role in TextRole:
         name = role.name.lower()
@@ -86,4 +105,12 @@ def design_tokens() -> dict[str, str]:
         tokens[f"{name}_weight"] = str(role.weight)
     tokens.update({f"space_{step.name.lower()}": f"{step}px" for step in Space})
     tokens.update({f"radius_{step.name.lower()}": f"{step}px" for step in Radius})
+    tokens.update(
+        popup_padding=f"{Popup.PADDING}px",
+        popup_radius=f"{Popup.RADIUS}px",
+        popup_item_radius=f"{Popup.ITEM_RADIUS}px",
+        list_item_padding=_padding(Popup.LIST_ITEM_PADDING),
+        menu_item_padding=_padding(Popup.MENU_ITEM_PADDING),
+        popup_divider_margin=f"{Popup.DIVIDER_MARGIN}px",
+    )
     return tokens

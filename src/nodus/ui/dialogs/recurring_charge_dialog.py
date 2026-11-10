@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QCheckBox, QLabel, QLineEdit, QWidget
 
 from nodus.models.currency import Currency
 from nodus.models.money import Money
@@ -19,6 +19,7 @@ from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import FREQUENCY_LABELS
 from nodus.ui.widgets.amount_input import AmountInput
+from nodus.ui.widgets.combo_box import ComboBox
 from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
 
@@ -69,7 +70,7 @@ class RecurringChargeDialog(FormDialog):
         self.category_input.set_categories(
             [(None, services.categories.category_tree(TransactionType.EXPENSE))]
         )
-        self.frequency_input = QComboBox()
+        self.frequency_input = ComboBox()
         for frequency, label in FREQUENCY_LABELS.items():
             self.frequency_input.addItem(label, frequency)
         self.frequency_input.setCurrentIndex(self.frequency_input.findData(Frequency.MONTHLY))

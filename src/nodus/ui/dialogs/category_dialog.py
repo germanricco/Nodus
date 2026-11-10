@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QComboBox, QLineEdit, QWidget
+from PySide6.QtWidgets import QLineEdit, QWidget
 
 from nodus.models.category import Category
 from nodus.models.transaction import TransactionType
@@ -11,6 +11,7 @@ from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import TRANSACTION_TYPE_LABELS
 from nodus.ui.widgets.color import ColorPicker
+from nodus.ui.widgets.combo_box import ComboBox
 
 NO_PARENT_LABEL = "Ninguna (categoría principal)"
 
@@ -42,10 +43,10 @@ class CategoryDialog(FormDialog):
 
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText("Ej.: Mascotas, Gimnasio, Alquiler")
-        self.kind_input = QComboBox()
+        self.kind_input = ComboBox()
         for transaction_type, label in TRANSACTION_TYPE_LABELS.items():
             self.kind_input.addItem(label, transaction_type)
-        self.parent_input = QComboBox()
+        self.parent_input = ComboBox()
         self.color_input = ColorPicker()
 
         self.form.addRow("Nombre", self.name_input)
