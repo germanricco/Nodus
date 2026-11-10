@@ -151,6 +151,10 @@ FULL_DASHBOARD_HEIGHT = 1180
 FULL_SETTINGS_HEIGHT = 1500
 
 
+# Turns of the event loop before each capture, so the layout has settled.
+SETTLE_PASSES = 5
+
+
 # File names of the analysis tabs, in their order.
 ANALYSIS_TABS = ("trends", "cash-flow", "net-worth")
 
@@ -363,6 +367,11 @@ def capture_popups(
 
 
 def save(widget: QWidget, path: Path) -> None:
+    # A page laid out again (another width, another height, another tab) settles over a
+    # few turns of the event loop; a single one can catch it halfway, with its lists
+    # crushed. The running app never stops between turns, so only a capture can.
+    for _ in range(SETTLE_PASSES):
+        QApplication.processEvents()
     widget.grab().save(str(path))
     print(path)
 
