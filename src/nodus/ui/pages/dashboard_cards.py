@@ -28,7 +28,7 @@ from nodus.services.dashboard_service import CategoryTotal, Comparison, MonthFlo
 from nodus.services.recurring_charge_service import UPCOMING_DAYS
 from nodus.ui.formatting import format_date
 from nodus.ui.labels import days_left_text, due_label, estimate_text, unconverted_note
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import (
@@ -57,7 +57,6 @@ LATEST_COUNT_BELOW_UPCOMING = 4
 LEGEND_COUNT = 6
 REST_LABEL = "Resto"
 # Narrowest legend that shows names, shares and amounts without cutting them much.
-LEGEND_MIN_WIDTH = 300
 COMPARISON_COUNT = 6
 # Upcoming charges listed on the dashboard; the page has them all.
 UPCOMING_COUNT = 3
@@ -606,7 +605,9 @@ class ExpensesCard(Card):
         """Whether a card ``width`` wide can show the legend beside the ring uncut."""
         margins = self.body.contentsMargins()
         room = width - margins.left() - margins.right()
-        return room >= self.donut.minimumWidth() + self._chart_area.spacing() + LEGEND_MIN_WIDTH
+        return (
+            room >= self.donut.minimumWidth() + self._chart_area.spacing() + Layout.LEGEND_MIN_WIDTH
+        )
 
     def set_legend_beside(self, beside: bool) -> None:
         """The legend to the right of the ring, or below it in narrow cards."""
@@ -620,7 +621,7 @@ class ExpensesCard(Card):
             Qt.AlignmentFlag.AlignVCenter if beside else Qt.AlignmentFlag(0),
         )
         # Beside the ring, the legend keeps room for whole names.
-        self.legend_panel.setMinimumWidth(LEGEND_MIN_WIDTH if beside else 0)
+        self.legend_panel.setMinimumWidth(Layout.LEGEND_MIN_WIDTH if beside else 0)
         self._chart_area.setStretchFactor(self.legend_panel, 1 if beside else 0)
 
     def _legend_items(
@@ -679,7 +680,7 @@ class ComparisonCard(Card):
             row.add(badge)
             badge.set_change(change.change)
             badge.setToolTip(f"Período anterior: {change.previous.format()}")
-            badge.setMinimumWidth(64)
+            badge.setMinimumWidth(Layout.CHANGE_BADGE_MIN_WIDTH)
             badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
             row.clicked.connect(lambda c=change.category.id: self.category_clicked.emit(c))
             row.hovered.connect(lambda on, r=row: r.set_highlighted(on))

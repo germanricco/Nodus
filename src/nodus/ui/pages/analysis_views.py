@@ -32,7 +32,7 @@ from nodus.ui.pages.dashboard_cards import (
     muted_label,
     percent,
 )
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.bar_chart import BarChart
@@ -403,7 +403,7 @@ class CashFlowView(AnalysisView):
         layout.addLayout(tiles)
 
         self.chart = BarChart(theme_manager.theme)
-        self.chart.setMinimumHeight(StackedBarChart.MIN_HEIGHT)
+        self.chart.setMinimumHeight(Chart.STACKED_MIN_HEIGHT)
         self.chart.clicked.connect(lambda index: self._open_month(self._report.months[index]))
         card, self.empty_label, self.unconverted_label = chart_card("Mes a mes", self.chart)
         layout.addWidget(card)
@@ -573,7 +573,7 @@ class NetWorthView(AnalysisView):
         layout.setSpacing(Space.L)
 
         self.card = NetWorthCard(services, theme_manager)
-        self.card.chart.setMinimumHeight(StackedBarChart.MIN_HEIGHT)
+        self.card.chart.setMinimumHeight(Chart.STACKED_MIN_HEIGHT)
         self.card.rate_requested.connect(self.rate_requested)
         self.card.currency_input.changed.connect(lambda _index: self._fill_table())
         layout.addWidget(self.card)

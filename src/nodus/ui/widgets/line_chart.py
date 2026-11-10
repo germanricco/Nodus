@@ -17,7 +17,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QWidget
 
-from nodus.ui.theme.design import Space, TextRole, role_font
+from nodus.ui.theme.design import Chart, Space, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -30,7 +30,6 @@ from nodus.ui.widgets.chart_base import (
 # Up/down dots are drawn only while they stay readable.
 MAX_CHANGE_DOTS = 31
 # Minimum room between two day labels under the chart, in pixels.
-AXIS_LABEL_GAP = 16
 
 
 @dataclass(frozen=True)
@@ -111,10 +110,10 @@ class LineChart(ColumnHoverChart):
         # Where each point begins the transition; None the first time, when the line
         # draws itself from left to right instead.
         self._start: list[float | None] | None = None
-        self.setMinimumHeight(180)
+        self.setMinimumHeight(Chart.LINE_MIN_HEIGHT)
 
     def sizeHint(self) -> QSize:  # noqa: N802
-        return QSize(480, 220)
+        return QSize(*Chart.LINE_SIZE)
 
     def set_points(self, points: list[LinePoint]) -> None:
         """Shows ``points``, moving from what was shown before."""
@@ -242,7 +241,7 @@ class LineChart(ColumnHoverChart):
             return []
         metrics = painter.fontMetrics()
         widest = max(metrics.horizontalAdvance(self._format_day(p.day)) for p in self._points)
-        return axis_indexes(len(self._points), int(plot.width() // (widest + AXIS_LABEL_GAP)) + 1)
+        return axis_indexes(len(self._points), int(plot.width() // (widest + Space.L)) + 1)
 
     @staticmethod
     def _runs(positions: list[QPointF | None]) -> list[list[QPointF]]:

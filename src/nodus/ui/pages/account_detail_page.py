@@ -22,7 +22,7 @@ from nodus.ui.pages.accounts_page import account_delete_warning, delete_account
 from nodus.ui.pages.dashboard_cards import FigureTile
 from nodus.ui.pages.detail_page import DetailPage, danger_zone
 from nodus.ui.pages.transaction_list_view import TransactionListView
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.chart_base import format_compact
@@ -33,7 +33,6 @@ from nodus.ui.widgets.row_actions import MoreButton, RowAction
 from nodus.ui.widgets.transaction_table import ACCOUNT
 
 # Tall enough to read the trend, short enough to leave the movements most of the page.
-CHART_HEIGHT = 200
 
 
 class AccountDetailPage(DetailPage):
@@ -92,7 +91,7 @@ class AccountDetailPage(DetailPage):
         self.chart = LineChart(
             theme_manager.theme, self._format_value, self._format_axis, self._format_day
         )
-        self.chart.setFixedHeight(CHART_HEIGHT)
+        self.chart.setFixedHeight(Chart.ACCOUNT_HEIGHT)
         chart_card.body.addWidget(self.chart)
         theme_manager.theme_changed.connect(self.chart.set_theme)
         self.content_layout.addWidget(chart_card)

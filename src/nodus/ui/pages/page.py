@@ -2,7 +2,7 @@
 
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.segmented import TabBar
 from nodus.ui.widgets.style import set_style_property
 
@@ -13,7 +13,7 @@ class Page(QWidget):
     ``refresh`` runs every time the page is shown, so it always reflects current data.
     """
 
-    HEADER_HEIGHT = 44
+    HEADER_HEIGHT = Layout.HEADER_HEIGHT
 
     def __init__(self, title: str) -> None:
         super().__init__()

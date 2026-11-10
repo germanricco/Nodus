@@ -9,7 +9,9 @@ from PySide6.QtCore import QByteArray, Qt
 from PySide6.QtGui import QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 
-_ICON_SIZE = 20
+from nodus.ui.theme.design import IconSize
+
+_ICON_SIZE = IconSize.XL
 _RENDER_SCALE = 2  # Rendered at 2x so icons stay sharp on high-DPI screens.
 _LOGO = "logo"
 # Sizes Windows picks from for the title bar, taskbar and Alt+Tab.

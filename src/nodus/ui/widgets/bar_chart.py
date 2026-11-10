@@ -9,7 +9,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
-from nodus.ui.theme.design import Radius, TextRole, role_font
+from nodus.ui.theme.design import Chart, Radius, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -52,20 +52,18 @@ class BarChart(ColumnHoverChart):
 
     clicked = Signal(int)
 
-    BOTTOM, TOP = 22.0, 8.0
-    GROUP_GAP_RATIO = 0.3
-    PAIR_GAP = 3.0
-    MAX_BAR_WIDTH = 22.0
+    BOTTOM, TOP = 22.0, 8.0  # geometry: room for the axis labels
+    GROUP_GAP_RATIO = 0.3  # geometry
 
     def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
         super().__init__(theme, parent)
         self._groups: list[BarGroup] = []
         # Where each bar begins the transition, in the order of ``_groups``.
         self._previous: list[tuple[float, float]] = []
-        self.setMinimumHeight(120)
+        self.setMinimumHeight(Chart.BAR_MIN_HEIGHT)
 
     def sizeHint(self) -> QSize:  # noqa: N802
-        return QSize(320, 150)
+        return QSize(*Chart.BAR_SIZE)
 
     def set_groups(self, groups: list[BarGroup]) -> None:
         if groups == self._groups:
@@ -109,11 +107,11 @@ class BarChart(ColumnHoverChart):
         ):
             faded = self.hover_index is not None and index != self.hover_index
             inner = slot.width() * (1 - self.GROUP_GAP_RATIO)
-            bar_width = min((inner - self.PAIR_GAP) / 2, self.MAX_BAR_WIDTH)
-            left = slot.center().x() - bar_width - self.PAIR_GAP / 2
+            bar_width = min((inner - Chart.BAR_PAIR_GAP) / 2, Chart.BAR_MAX_WIDTH)
+            left = slot.center().x() - bar_width - Chart.BAR_PAIR_GAP / 2
             for offset, value, color in (
                 (0.0, pair[0], self._theme.income),
-                (bar_width + self.PAIR_GAP, pair[1], self._theme.expense),
+                (bar_width + Chart.BAR_PAIR_GAP, pair[1], self._theme.expense),
             ):
                 if value <= 0:
                     continue

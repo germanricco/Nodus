@@ -1,12 +1,13 @@
-"""Nodus's design scale: the typeface, text sizes, spacing and corners every screen
-picks from.
+"""Nodus's design scale: the typeface, text sizes, spacing, corners and every other
+measure of the interface: icons, controls, lines, windows and charts.
 
-Each text plays a named role and each gap or corner takes a named step instead of a
-number of its own, so every page looks alike and the whole look changes from here:
-another typeface, roomier cards, rounder corners. The stylesheet refers to the scale as
-tokens (``$title_size``, ``$space_m``, ``$radius_l``); Python code uses ``Space``,
-``Radius`` and ``role_font``. Light and dark themes share this scale; only colors differ
-between them (``theme.py``).
+Each text plays a named role and each measure takes a named step instead of a number of
+its own, so every page looks alike and the whole look changes from here: another
+typeface, roomier cards, rounder corners, larger icons. The stylesheet refers to the
+scale as tokens (``$title_size``, ``$space_m``, ``$icon_s``, ``$field_height``); Python
+code uses the classes below and ``role_font``. Only the geometry of a single drawing (the
+proportions of a chart, the dots of a grip) stays in its widget, marked ``# geometry``.
+Light and dark themes share this scale; only colors differ between them (``theme.py``).
 """
 
 from __future__ import annotations
@@ -68,6 +69,100 @@ class Radius(IntEnum):
     XL = 12  # cards and panels
 
 
+class IconSize(IntEnum):
+    """Icons, and indicators drawn as one (arrows, check boxes), as squares in pixels:
+    the larger the control, the larger its icon."""
+
+    XS = 12  # the arrow of the calendar's month
+    S = 14  # the arrow of a list or of the period button
+    M = 16  # check boxes
+    L = 18  # an icon in a small button or beside a label: «+», «⋯», pay, collapse
+    XL = 20  # the icons of the sidebar and the top bar, and the way back
+
+
+class ControlSize:
+    """Controls in pixels: fields, buttons and the parts of lists, bars and sliders.
+    Round and square controls give one side."""
+
+    FIELD_HEIGHT = 24  # a field's text line, inside its padding
+    DROP_DOWN_WIDTH = 24  # the arrow's box at the right end of a list
+    AMOUNT_SYMBOL_WIDTH = 28  # «$» or «US$» before an amount
+    SMALL_BUTTON = 28  # a row's «⋯» and pay buttons
+    COLLAPSE_BUTTON = 34  # the sidebar's
+    BACK_BUTTON = 36  # the way back of a detail page
+    TOP_BAR_BUTTON = 38
+    BADGE = 32  # an account's initials
+    NOTIFICATION_COUNT = 18  # the count over the bell
+    LOGO = 28
+    PERIOD_BUTTON_MIN_WIDTH = 130  # so the arrows around it stay put between months
+    COLOR_SWATCH = 26
+    COLOR_PREVIEW = 28  # the chosen color beside the wheel
+    COLOR_WHEEL = 180
+    TOGGLE_WIDTH = 40
+    TOGGLE_HEIGHT = 22
+    PROGRESS_HEIGHT = 8  # a progress bar: an update's download, a budget
+    SCROLL_BAR_WIDTH = 10
+    SCROLL_HANDLE_MIN_LENGTH = 24
+    SLIDER_GROOVE = 6
+    SLIDER_HANDLE = 16
+
+
+class Line:
+    """Lines in pixels, and how strong the soft ones are."""
+
+    THIN = 1  # dividers and borders
+    THICK = 2  # the chosen tab's mark, where a dragged row lands
+    SOFT_ALPHA = 90  # opacity (of 255) of a divider inside a list, softer than a border
+
+
+class Layout:
+    """Windows, panels and the widths given by hand, in pixels."""
+
+    WINDOW_MIN_SIZE = (1100, 700)
+    WINDOW_SIZE = (1280, 800)  # on first opening
+    NARROW_WIDTH = 900  # below it, the Dashboard stacks its cards
+    SIDEBAR_WIDTH = 260
+    SIDEBAR_COLLAPSED_WIDTH = 64
+    HEADER_HEIGHT = 44  # a page's title row
+    DIALOG_MIN_WIDTH = 460  # a form
+    MESSAGE_MIN_WIDTH = 420  # a dialog of text and buttons, such as an update's
+    NEWS_SIZE = (560, 520)
+    PICKER_MIN_SIZE = (780, 520)  # a dialog built around a table, such as the refund's
+    NOTIFICATION_PANEL_WIDTH = 340
+    SEARCH_WIDTH = 200
+    SEARCH_MIN_WIDTH = 140  # beside the filters of Transacciones
+    NUMBER_FIELD_WIDTH = 200  # a rate
+    HEX_FIELD_WIDTH = 100
+    DAY_FIELD_MIN_WIDTH = 90
+    LEGEND_MIN_WIDTH = 300  # a chart's legend beside it; with less room it goes below
+    CHANGE_BADGE_MIN_WIDTH = 64
+    LIST_MIN_CHARACTERS = 14  # how wide a selector is, in characters of its names
+    LIST_INDENT = 18  # a subcategory in a list
+    TREE_INDENT = 28  # a subcategory in Categorías, which has room for more
+    CHECK_COLUMN = 34  # a table's check boxes
+    MORE_COLUMN = 32  # a table's «⋯»
+
+
+class Chart:
+    """Charts in pixels: the size each asks for, and the measures of its marks."""
+
+    BAR_SIZE = (320, 150)
+    BAR_MIN_HEIGHT = 120
+    BAR_MAX_WIDTH = 22
+    BAR_PAIR_GAP = 3  # between the income and expense bars of a month
+    STACKED_SIZE = (480, 260)
+    STACKED_MIN_HEIGHT = 220
+    STACKED_BAR_MAX_WIDTH = 34
+    LINE_SIZE = (480, 220)
+    LINE_MIN_HEIGHT = 180
+    ACCOUNT_HEIGHT = 200  # an account's balance over time
+    DONUT_SIZE = 240
+    DONUT_MIN_SIZE = 200
+    DONUT_THICKNESS = 26
+    DONUT_POP = 8  # how far the slice under the mouse grows
+    PROPORTION_HEIGHT = 10  # the bar split between income and expenses
+
+
 class Popup:
     """The spacing of what opens over a page: the lists of a combo box or of suggestions,
     and the menus. Every one takes these steps, so changing one here changes them all."""
@@ -79,10 +174,18 @@ class Popup:
     LIST_ITEM_PADDING = (Space.XS, Space.M)
     MENU_ITEM_PADDING = (Space.S, Space.M)
     DIVIDER_MARGIN = Space.XS  # above and below the line between groups of options
-    DIVIDER_HEIGHT = 2 * DIVIDER_MARGIN + 1
+    DIVIDER_HEIGHT = 2 * DIVIDER_MARGIN + Line.THIN
     # A calendar's day: a square big enough to click, and the room around the chosen one.
     CALENDAR_CELL = Space.XXXL
     CALENDAR_CELL_GAP = Space.XXS
+    # Between a field and what opens under it: a panel, or a menu that reads as its own.
+    PANEL_OFFSET = 6
+    MENU_OFFSET = Space.XXS
+
+
+def _measures(scale: type) -> list[tuple[str, int]]:
+    """The named measures of a class of the scale."""
+    return [(name, value) for name, value in vars(scale).items() if name.isupper()]
 
 
 def _padding(steps: tuple[int, int]) -> str:
@@ -99,8 +202,9 @@ def role_font(role: TextRole) -> QFont:
 
 def design_tokens() -> dict[str, str]:
     """The scale as stylesheet tokens: ``font_family``, ``<role>_size`` and
-    ``<role>_weight`` for each text role, ``space_<step>``, ``radius_<step>`` and the
-    ``Popup`` steps (``popup_padding``, ``list_item_padding``…)."""
+    ``<role>_weight`` for each text role, ``space_<step>``, ``radius_<step>``,
+    ``icon_<step>``, each ``ControlSize`` in lowercase (``field_height``…),
+    ``line_thin`` and ``line_thick``, and the ``Popup`` steps (``popup_padding``…)."""
     tokens = {"font_family": f'"{FONT_FAMILY}"'}
     for role in TextRole:
         name = role.name.lower()
@@ -108,6 +212,9 @@ def design_tokens() -> dict[str, str]:
         tokens[f"{name}_weight"] = str(role.weight)
     tokens.update({f"space_{step.name.lower()}": f"{step}px" for step in Space})
     tokens.update({f"radius_{step.name.lower()}": f"{step}px" for step in Radius})
+    tokens.update({f"icon_{step.name.lower()}": f"{step}px" for step in IconSize})
+    tokens.update({name.lower(): f"{value}px" for name, value in _measures(ControlSize)})
+    tokens.update(line_thin=f"{Line.THIN}px", line_thick=f"{Line.THICK}px")
     tokens.update(
         popup_padding=f"{Popup.PADDING}px",
         popup_radius=f"{Popup.RADIUS}px",

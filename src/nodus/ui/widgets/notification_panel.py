@@ -6,7 +6,7 @@ from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from nodus.services.notification_service import Notice, NoticeKind
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Layout, Line, Popup, Space
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 ACTION_LABELS = {
@@ -16,7 +16,6 @@ ACTION_LABELS = {
     NoticeKind.CHARGES_DUE: "Ver cargos",
     NoticeKind.BUDGET_OVER: "Ver presupuestos",
 }
-WIDTH = 340
 
 
 class NoticeRow(QWidget):
@@ -69,7 +68,7 @@ class NotificationPanel(QFrame):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent, Qt.WindowType.Popup)
         self.setObjectName("NotificationPanel")
-        self.setFixedWidth(WIDTH)
+        self.setFixedWidth(Layout.NOTIFICATION_PANEL_WIDTH)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(Space.L, Space.M, Space.L, Space.M)
         layout.setSpacing(0)
@@ -93,7 +92,7 @@ class NotificationPanel(QFrame):
             if index:
                 separator = QFrame()
                 separator.setObjectName("Separator")
-                separator.setFixedHeight(1)
+                separator.setFixedHeight(Line.THIN)
                 self._rows.addWidget(separator)
             row = NoticeRow(notice)
             row.action_button.clicked.connect(lambda _=False, n=notice: self._act(n))
@@ -110,7 +109,7 @@ class NotificationPanel(QFrame):
     def open_below(self, anchor: QWidget) -> None:
         """Shows the panel under ``anchor``, its right edge aligned with the anchor's."""
         self.adjustSize()
-        corner = anchor.mapToGlobal(QPoint(anchor.width(), anchor.height() + 6))
+        corner = anchor.mapToGlobal(QPoint(anchor.width(), anchor.height() + Popup.PANEL_OFFSET))
         self.move(corner.x() - self.width(), corner.y())
         self.show()
 

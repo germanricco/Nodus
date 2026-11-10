@@ -10,13 +10,10 @@ from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout
 
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.page import Page
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import ControlSize, IconSize, Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
-
-BACK_BUTTON_SIZE = 36
-BACK_ICON_SIZE = 20
 
 
 class DetailPage(Page):
@@ -35,8 +32,8 @@ class DetailPage(Page):
         self.item_id: int | None = None
         self.back_button = QPushButton()
         self.back_button.setObjectName("BackButton")
-        self.back_button.setFixedSize(BACK_BUTTON_SIZE, BACK_BUTTON_SIZE)
-        self.back_button.setIconSize(QSize(BACK_ICON_SIZE, BACK_ICON_SIZE))
+        self.back_button.setFixedSize(ControlSize.BACK_BUTTON, ControlSize.BACK_BUTTON)
+        self.back_button.setIconSize(QSize(IconSize.XL, IconSize.XL))
         self.back_button.setCursor(Qt.CursorShape.PointingHandCursor)
         label = detail_id.list_page.label
         self.back_button.setToolTip(f"Volver a {label} (Esc)")

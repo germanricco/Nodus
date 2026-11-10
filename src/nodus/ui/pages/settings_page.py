@@ -39,7 +39,7 @@ from nodus.ui.formatting import format_date
 from nodus.ui.labels import rate_text
 from nodus.ui.pages.page import Page
 from nodus.ui.rate_updater import RateUpdater
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Layout, Line, Space
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
@@ -92,7 +92,7 @@ class RateRow(QWidget):
         layout.setContentsMargins(Space.S, Space.XXS, Space.S, Space.XXS)
         day = QLabel(format_date(rate.rate_date))
         set_style_property(day, "muted", True)
-        day.setMinimumWidth(90)
+        day.setMinimumWidth(Layout.DAY_FIELD_MIN_WIDTH)
         layout.addWidget(day)
         layout.addWidget(QLabel(format_rate(rate)), stretch=1)
         self.more_button = MoreButton(self.actions)
@@ -222,7 +222,7 @@ class SettingsPage(Page):
 
         self.rate_date_input = DateInput()
         self.rate_value_input = AmountInput(Currency.ARS)
-        self.rate_value_input.setFixedWidth(200)
+        self.rate_value_input.setFixedWidth(Layout.NUMBER_FIELD_WIDTH)
         self.save_rate_button = QPushButton("Guardar cotización")
         self.save_rate_button.setObjectName("PrimaryButton")
         self.save_rate_button.setToolTip("Si ya hay una cotización para esa fecha, se reemplaza.")
@@ -371,7 +371,7 @@ class SettingsPage(Page):
         # Apart from the everyday actions, since it replaces all the data.
         separator = QFrame()
         separator.setObjectName("Separator")
-        separator.setFixedHeight(1)
+        separator.setFixedHeight(Line.THIN)
         card.body.addSpacing(Space.XS)
         card.body.addWidget(separator)
         restore_row = SettingRow(

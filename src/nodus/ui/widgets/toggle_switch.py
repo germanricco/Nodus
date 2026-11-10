@@ -6,6 +6,7 @@ from PySide6.QtCore import QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QAbstractButton, QWidget
 
+from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme_manager import active_theme
 
 
@@ -14,9 +15,9 @@ class ToggleSwitch(QAbstractButton):
     settings. It goes at the right of a ``SettingRow``, where the title says what it turns
     on; a checkbox would put the control on the left, away from the other controls."""
 
-    WIDTH = 40
-    HEIGHT = 22
-    KNOB_MARGIN = 4
+    WIDTH = ControlSize.TOGGLE_WIDTH
+    HEIGHT = ControlSize.TOGGLE_HEIGHT
+    KNOB_MARGIN = 4  # geometry: the knob inside its track
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)

@@ -16,7 +16,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QVBoxLayout, QWidget
 
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Line, Space
 
 # What a dragged row carries: "<list id>:<row index>", so a list only accepts its own rows.
 ROW_MIME_TYPE = "application/x-nodus-row"
@@ -26,12 +26,12 @@ class DragHandle(QWidget):
     """Six dots that show a row can be dragged; the drag starts here, not on the row, so
     the row's buttons keep working with ordinary clicks."""
 
-    DOT = 3
-    GAP = 3
+    DOT = 3  # geometry
+    GAP = 3  # geometry
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setFixedWidth(2 * self.DOT + self.GAP + 8)
+        self.setFixedWidth(2 * self.DOT + self.GAP + Space.S)
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.setToolTip("Arrastrar para ordenar")
         self._press: QPoint | None = None
@@ -112,7 +112,7 @@ class ReorderableList(QWidget):
         # A line across the gap where the dragged row would land.
         self._indicator = QFrame(self)
         self._indicator.setObjectName("DropIndicator")
-        self._indicator.setFixedHeight(2)
+        self._indicator.setFixedHeight(Line.THICK)
         self._indicator.hide()
 
     def add_row(self, key: Hashable, widget: QWidget) -> None:

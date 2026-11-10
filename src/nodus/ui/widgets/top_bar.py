@@ -3,7 +3,7 @@
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import ControlSize, IconSize, Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -28,7 +28,7 @@ class TopBar(QFrame):
 
         self._add_button = QPushButton("Agregar transacción")
         self._add_button.setObjectName("PrimaryButton")
-        self._add_button.setIconSize(QSize(18, 18))
+        self._add_button.setIconSize(QSize(IconSize.L, IconSize.L))
         self._add_button.clicked.connect(self.add_transaction_requested)
         layout.addWidget(self._add_button)
         layout.addStretch()
@@ -40,8 +40,10 @@ class TopBar(QFrame):
         self.notification_count = QLabel(self.notifications_button)
         self.notification_count.setObjectName("NotificationCount")
         self.notification_count.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.notification_count.setFixedSize(18, 18)
-        self.notification_count.move(22, -2)
+        self.notification_count.setFixedSize(
+            ControlSize.NOTIFICATION_COUNT, ControlSize.NOTIFICATION_COUNT
+        )
+        self.notification_count.move(22, -2)  # geometry: over the corner of the bell
         self.notification_count.hide()
         self.hide_amounts_button = self._icon_button("")
         self.hide_amounts_button.clicked.connect(self.hide_amounts_toggled)
@@ -68,8 +70,8 @@ class TopBar(QFrame):
         button = QPushButton()
         button.setObjectName("IconButton")
         button.setToolTip(tooltip)
-        button.setIconSize(QSize(20, 20))
-        button.setFixedSize(38, 38)
+        button.setIconSize(QSize(IconSize.XL, IconSize.XL))
+        button.setFixedSize(ControlSize.TOP_BAR_BUTTON, ControlSize.TOP_BAR_BUTTON)
         button.setCursor(Qt.CursorShape.PointingHandCursor)
         return button
 

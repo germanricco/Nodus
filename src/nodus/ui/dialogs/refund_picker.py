@@ -13,6 +13,7 @@ from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import FormDialog
+from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder
 from nodus.ui.widgets.input_error import InputError
@@ -48,7 +49,7 @@ class RefundPickerDialog(FormDialog):
         super().__init__("Elegir el gasto que se reembolsa", parent, "Vincular")
         # A list, not a form: it opens large and the user can resize it.
         self.layout().setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
-        self.setMinimumSize(780, 520)
+        self.setMinimumSize(*Layout.PICKER_MIN_SIZE)
         self._services = services
         self._linked_id = linked_id
         self._builder = TransactionListBuilder(services)

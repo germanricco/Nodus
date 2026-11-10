@@ -20,7 +20,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.page import Page
 from nodus.ui.pages.transaction_list_view import TransactionListView
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.combo_box import ComboBox
 from nodus.ui.widgets.period_selector import PeriodSelector
@@ -92,7 +92,7 @@ class TransactionsPage(Page):
         self.search_input.setToolTip(
             "Busca en la nota y en los nombres del beneficiario y las etiquetas"
         )
-        self.search_input.setMinimumWidth(140)
+        self.search_input.setMinimumWidth(Layout.SEARCH_MIN_WIDTH)
         self.search_input.setClearButtonEnabled(True)
         self.clear_filters_button = QPushButton("Limpiar filtros")
         self.clear_filters_button.setObjectName("SecondaryButton")

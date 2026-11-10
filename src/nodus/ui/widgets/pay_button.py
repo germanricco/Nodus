@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import QEvent, QSize, Qt
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget
 
+from nodus.ui.theme.design import IconSize
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme_manager import active_theme
 from nodus.ui.widgets.row_actions import MoreButton
@@ -27,7 +28,7 @@ class PayButton(QPushButton):
         self.setToolTip(PAY_TIP)
         self.setAccessibleName(PAY_TIP)
         self.setFixedSize(MoreButton.SIZE, MoreButton.SIZE)
-        self.setIconSize(QSize(18, 18))
+        self.setIconSize(QSize(IconSize.L, IconSize.L))
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         policy = self.sizePolicy()
         policy.setRetainSizeWhenHidden(True)

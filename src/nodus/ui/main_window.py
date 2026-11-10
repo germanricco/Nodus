@@ -44,6 +44,7 @@ from nodus.ui.pages.tag_detail_page import TagDetailPage
 from nodus.ui.pages.tags_page import TagsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.rate_updater import RateUpdater
+from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.notification_panel import NotificationPanel
 from nodus.ui.widgets.sidebar import Sidebar
@@ -60,8 +61,8 @@ class MainWindow(QMainWindow):
         self._services = services
         self._event_bus = event_bus
         self.setWindowTitle("Nodus")
-        self.setMinimumSize(1100, 700)
-        self.resize(1280, 800)
+        self.setMinimumSize(*Layout.WINDOW_MIN_SIZE)
+        self.resize(*Layout.WINDOW_SIZE)
 
         self.theme_manager = theme_manager
         self.sidebar = Sidebar(services, event_bus, theme_manager)

@@ -22,7 +22,7 @@ from nodus.services.sorting import name_sort_key
 from nodus.ui.labels import unconverted_note
 from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.page import Page
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
@@ -173,7 +173,7 @@ class SummaryPage(Page, Generic[S]):
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText(f"Buscar {noun}…")
         self.search_input.setClearButtonEnabled(True)
-        self.search_input.setMinimumWidth(200)
+        self.search_input.setMinimumWidth(Layout.SEARCH_WIDTH)
         self.add_header_widget(self.search_input)
         self.create_button = self.add_header_button(f"Agregar {noun}", primary=True)
         self.selection_bar = SelectionBar(chosen_word)

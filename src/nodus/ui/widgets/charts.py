@@ -10,7 +10,7 @@ from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.money import Money
-from nodus.ui.theme.design import TextRole, role_font
+from nodus.ui.theme.design import Chart, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import AnimatedChart, lerp, starting_values, with_alpha
 
@@ -69,9 +69,9 @@ class DonutChart(AnimatedChart):
     shows that slice's name, amount and share; clicking emits ``segment_clicked``.
     """
 
-    THICKNESS = 26
-    POP = 8
-    GAP_DEGREES = 1.5
+    THICKNESS = Chart.DONUT_THICKNESS
+    POP = Chart.DONUT_POP
+    GAP_DEGREES = 1.5  # geometry: between slices
 
     segment_hovered = Signal(int)  # index, or -1 when none
     segment_clicked = Signal(int)
@@ -92,10 +92,10 @@ class DonutChart(AnimatedChart):
         self._pop_animation.setEndValue(1.0)
         self._pop_animation.setEasingCurve(QEasingCurve.Type.OutBack)
         self._pop_animation.valueChanged.connect(self._set_pop)
-        self.setMinimumSize(200, 200)
+        self.setMinimumSize(Chart.DONUT_MIN_SIZE, Chart.DONUT_MIN_SIZE)
 
     def sizeHint(self) -> QSize:  # noqa: N802
-        return QSize(240, 240)
+        return QSize(Chart.DONUT_SIZE, Chart.DONUT_SIZE)
 
     def set_data(
         self, segments: list[Segment], caption: str, total: Money | None, empty_text: str = ""
@@ -291,7 +291,7 @@ class ProportionBar(AnimatedChart):
     Its parts slide to their new widths when the figures change.
     """
 
-    HEIGHT = 10
+    HEIGHT = Chart.PROPORTION_HEIGHT
 
     def __init__(
         self, theme: Theme, segments: list[Segment] | None = None, parent: QWidget | None = None

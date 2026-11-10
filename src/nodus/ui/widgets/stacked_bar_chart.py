@@ -9,7 +9,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
-from nodus.ui.theme.design import Radius, TextRole, role_font
+from nodus.ui.theme.design import Chart, Radius, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import (
     ColumnHoverChart,
@@ -61,10 +61,8 @@ class StackedBarChart(ColumnHoverChart):
 
     clicked = Signal(int, object)  # bar index, segment key or None
 
-    BOTTOM, TOP = 22.0, 18.0
-    GAP_RATIO = 0.35
-    MIN_HEIGHT = 220
-    MAX_BAR_WIDTH = 34.0
+    BOTTOM, TOP = 22.0, 18.0  # geometry: room for the axis labels and the totals
+    GAP_RATIO = 0.35  # geometry
 
     def __init__(
         self,
@@ -77,10 +75,10 @@ class StackedBarChart(ColumnHoverChart):
         self._bars: list[StackedBar] = []
         self._previous: list[dict[int | None, float]] = []
         self.average: float | None = None
-        self.setMinimumHeight(self.MIN_HEIGHT)
+        self.setMinimumHeight(Chart.STACKED_MIN_HEIGHT)
 
     def sizeHint(self) -> QSize:  # noqa: N802
-        return QSize(480, 260)
+        return QSize(*Chart.STACKED_SIZE)
 
     def set_bars(self, bars: list[StackedBar], average: float | None = None) -> None:
         if bars == self._bars and average == self.average:
@@ -131,7 +129,7 @@ class StackedBarChart(ColumnHoverChart):
         """Where each piece of bar ``index`` is drawn: positives stack up from the
         baseline, negatives down from it."""
         slot = self._slots()[index]
-        width = min(slot.width() * (1 - self.GAP_RATIO), self.MAX_BAR_WIDTH)
+        width = min(slot.width() * (1 - self.GAP_RATIO), Chart.STACKED_BAR_MAX_WIDTH)
         left = slot.center().x() - width / 2
         up = down = baseline
         pieces = []

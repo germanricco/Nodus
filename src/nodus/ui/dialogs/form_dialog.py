@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.services.errors import ValidationError
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.input_error import InputError
 from nodus.ui.widgets.style import set_style_property
 
@@ -74,7 +74,7 @@ class FormDialog(QDialog):
     are shown or hidden instead of keeping the blank space of a larger mode.
     """
 
-    MIN_WIDTH = 460
+    MIN_WIDTH = Layout.DIALOG_MIN_WIDTH
     MARGIN = Space.XXL
 
     def __init__(

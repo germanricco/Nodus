@@ -16,7 +16,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
 
 from nodus.models.palette import PALETTE
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.widgets.color_wheel import ColorWheelPopup, hue_ring_gradient
 
 
@@ -86,7 +86,7 @@ class ColorPicker(QWidget):
     own swatch, so editing never silently changes a category's color.
     """
 
-    SWATCH_SIZE = 26
+    SWATCH_SIZE = ControlSize.COLOR_SWATCH
     COLUMNS = 6
 
     def __init__(self, parent: QWidget | None = None) -> None:

@@ -20,7 +20,7 @@ from nodus.models.money import Money
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import ControlSize, IconSize, Layout, Space
 from nodus.ui.theme.icons import icon, logo_pixmap
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -62,9 +62,9 @@ class Sidebar(QFrame):
     page_requested = Signal(object)  # PageId
     account_requested = Signal(int)  # account id
 
-    WIDTH = 260
-    COLLAPSED_WIDTH = 64
-    LOGO_SIZE = 28
+    WIDTH = Layout.SIDEBAR_WIDTH
+    COLLAPSED_WIDTH = Layout.SIDEBAR_COLLAPSED_WIDTH
+    LOGO_SIZE = ControlSize.LOGO
 
     def __init__(self, services: Services, event_bus: EventBus, theme_manager: ThemeManager):
         super().__init__()
@@ -188,8 +188,8 @@ class Sidebar(QFrame):
         row.addWidget(self._footer, stretch=1)
         self.collapse_button = QPushButton()
         self.collapse_button.setObjectName("IconButton")
-        self.collapse_button.setIconSize(QSize(18, 18))
-        self.collapse_button.setFixedSize(34, 34)
+        self.collapse_button.setIconSize(QSize(IconSize.L, IconSize.L))
+        self.collapse_button.setFixedSize(ControlSize.COLLAPSE_BUTTON, ControlSize.COLLAPSE_BUTTON)
         self.collapse_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.collapse_button.clicked.connect(self.toggle_collapsed)
         row.addWidget(self.collapse_button)
@@ -202,7 +202,7 @@ class Sidebar(QFrame):
             button = QPushButton(page_id.label)
             button.setObjectName("NavButton")
             button.setCheckable(True)
-            button.setIconSize(QSize(20, 20))
+            button.setIconSize(QSize(IconSize.XL, IconSize.XL))
             button.clicked.connect(lambda _checked, p=page_id: self.page_requested.emit(p))
             group.addButton(button)
             if page_id is not PageId.SETTINGS:  # placed at the foot

@@ -36,14 +36,13 @@ from nodus.ui.pages.dashboard_cards import (
 from nodus.ui.pages.page import Page
 from nodus.ui.pages.recurring_page import skip_charge
 from nodus.ui.pages.transaction_list_view import delete_transactions, edit_transaction
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.net_worth_card import NetWorthCard
 from nodus.ui.widgets.period_selector import PeriodSelector
 
 # Below this page width, the cards go one per row.
-NARROW_WIDTH = 900
 
 
 class DashboardPage(Page):
@@ -201,7 +200,7 @@ class DashboardPage(Page):
         window everything goes one card per row, except the top's side cards.
         The page scrolls instead of squeezing the cards.
         """
-        narrow = self.width() < NARROW_WIDTH
+        narrow = self.width() < Layout.NARROW_WIDTH
         upcoming = self.upcoming_card.isVisibleTo(self)
         budgets = self.budgets_card.isVisibleTo(self)
         # Expenses take the full width when narrow, four of the six columns otherwise.

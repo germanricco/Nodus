@@ -7,6 +7,7 @@ from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
 
 from nodus.models.budget import Budget, BudgetState, used_percent_label
+from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.chart_base import AnimatedChart, format_compact, lerp, with_alpha
 from nodus.ui.widgets.style import set_style_property
@@ -66,8 +67,8 @@ class BudgetBar(AnimatedChart):
     thin mark shows how far spending should have got by today.
     """
 
-    HEIGHT = 8
-    MARK_OVERHANG = 3
+    HEIGHT = ControlSize.PROGRESS_HEIGHT
+    MARK_OVERHANG = 3  # geometry: the mark of today, above and below the bar
 
     def __init__(self, theme: Theme, budget: Budget, parent: QWidget | None = None) -> None:
         super().__init__(theme, parent)

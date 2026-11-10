@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.ui.theme.design import Popup
+from nodus.ui.theme.design import Line, Popup
 
 LIST_POPUP = "ListPopup"
 # What QComboBox.insertSeparator marks its separators with.
@@ -25,7 +25,7 @@ def paint_divider(painter: QPainter, option: QStyleOptionViewItem, y: int) -> No
     """A soft line across a list at height ``y``, inset like the options' text."""
     painter.save()
     color = option.palette.color(QPalette.ColorRole.PlaceholderText)
-    color.setAlpha(90)
+    color.setAlpha(Line.SOFT_ALPHA)
     painter.setPen(color)
     side = Popup.LIST_ITEM_PADDING[1]
     painter.drawLine(option.rect.left() + side, y, option.rect.right() - side, y)

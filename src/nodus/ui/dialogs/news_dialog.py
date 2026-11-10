@@ -16,9 +16,7 @@ from PySide6.QtWidgets import (
 from nodus.services.changelog import ChangelogEntry
 from nodus.services.update_service import Release
 from nodus.ui.formatting import format_date
-from nodus.ui.theme.design import Space
-
-HEADING_SPACE = 20
+from nodus.ui.theme.design import Layout, Space
 
 
 def entries_markdown(entries: list[ChangelogEntry]) -> str:
@@ -42,7 +40,7 @@ def _space_out_headings(text: QTextBrowser) -> None:
         if block.blockFormat().headingLevel():
             cursor = QTextCursor(block)
             block_format = block.blockFormat()
-            block_format.setTopMargin(HEADING_SPACE)
+            block_format.setTopMargin(Space.XL)
             cursor.setBlockFormat(block_format)
         block = block.next()
 
@@ -63,7 +61,7 @@ class NewsDialog(QDialog):
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.resize(560, 520)
+        self.resize(*Layout.NEWS_SIZE)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(Space.XXL, Space.XL, Space.XXL, Space.XL)
         layout.setSpacing(Space.M)

@@ -19,7 +19,7 @@ from nodus.models.account import Account
 from nodus.models.payee import Payee
 from nodus.models.tag import Tag
 from nodus.services.category_service import CategoryNode
-from nodus.ui.theme.design import Popup, TextRole, role_font
+from nodus.ui.theme.design import Layout, Line, Popup, TextRole, role_font
 from nodus.ui.widgets.color import color_icon
 from nodus.ui.widgets.combo_box import ComboBox, ListPopupDelegate, paint_divider
 from nodus.ui.widgets.style import set_style_property
@@ -43,7 +43,7 @@ class _SectionDelegate(ListPopupDelegate):
     (``Popup.LIST_ITEM_PADDING``), which the stylesheet gives the options.
     """
 
-    INDENT = 18
+    INDENT = Layout.LIST_INDENT
     SIDE = Popup.LIST_ITEM_PADDING[1]
     # Above every heading but the first row, and above «Editar» with the line in its
     # middle: the room a separator takes, so every break in a list is the same.
@@ -84,7 +84,7 @@ class _SectionDelegate(ListPopupDelegate):
         text = index.data(Qt.ItemDataRole.DisplayRole)
         painter.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, text)
         line_start = rect.left() + painter.fontMetrics().horizontalAdvance(text) + 8
-        color.setAlpha(90)
+        color.setAlpha(Line.SOFT_ALPHA)
         painter.setPen(color)
         middle = rect.center().y()
         painter.drawLine(line_start, middle, rect.right(), middle)
@@ -117,7 +117,7 @@ class _SelectorComboBox(ComboBox):
         super().__init__(parent)
         self._has_manage_item = False
         self._starts_empty = False
-        self.setMinimumContentsLength(14)
+        self.setMinimumContentsLength(Layout.LIST_MIN_CHARACTERS)
         self.setSizeAdjustPolicy(ComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.setItemDelegate(_SectionDelegate(self))
         self.view().pressed.connect(self._on_item_pressed)

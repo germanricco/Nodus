@@ -13,7 +13,7 @@ from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import history_focus
 from nodus.ui.pages.page import Page
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color import ColorDot
 from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
@@ -34,7 +34,7 @@ class CategoryRow(QWidget):
     delete_requested = Signal(object)  # Category
     add_subcategory_requested = Signal(object)  # Category
 
-    INDENT = 28
+    INDENT = Layout.TREE_INDENT
 
     def __init__(self, category: Category, has_movements: bool = True) -> None:
         super().__init__()

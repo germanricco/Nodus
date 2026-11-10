@@ -18,6 +18,7 @@ from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
 from PySide6.QtGui import QCursor, QIcon
 from PySide6.QtWidgets import QMenu, QPushButton, QWidget
 
+from nodus.ui.theme.design import ControlSize, IconSize, Popup
 from nodus.ui.theme.icons import icon as tinted_icon
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
@@ -154,7 +155,7 @@ class MoreButton(QPushButton):
     """The «⋯» at the end of a row. A click opens the menu of ``actions_for()`` under it,
     aligned to its right edge so it never covers the row's text."""
 
-    SIZE = 28
+    SIZE = ControlSize.SMALL_BUTTON
 
     def __init__(self, actions_for: ActionsFor, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -164,7 +165,7 @@ class MoreButton(QPushButton):
         self.setToolTip(MORE_ACTIONS)
         self.setAccessibleName(MORE_ACTIONS)
         self.setFixedSize(self.SIZE, self.SIZE)
-        self.setIconSize(QSize(18, 18))
+        self.setIconSize(QSize(IconSize.L, IconSize.L))
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.clicked.connect(self.open_menu)
         self._tint()
@@ -175,7 +176,9 @@ class MoreButton(QPushButton):
     def open_menu(self) -> None:
         self.menu = build_menu(self, self._actions_for())
         corner = self.mapToGlobal(self.rect().bottomRight())
-        self.menu.popup(QPoint(corner.x() - self.menu.sizeHint().width(), corner.y() + 2))
+        self.menu.popup(
+            QPoint(corner.x() - self.menu.sizeHint().width(), corner.y() + Popup.MENU_OFFSET)
+        )
         self.menu.aboutToHide.connect(self._release_row)
 
     def _release_row(self) -> None:

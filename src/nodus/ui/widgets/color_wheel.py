@@ -27,11 +27,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import ControlSize, Layout, Popup, Space
 
 # Positions of the brightness slider; enough steps for every value of a hex digit pair.
 VALUE_STEPS = 1000
-PREVIEW_SIZE = 28
+PREVIEW_SIZE = ControlSize.COLOR_PREVIEW
 HEX_PATTERN = QRegularExpression("#?[0-9a-fA-F]{0,6}")
 
 
@@ -53,7 +53,7 @@ class HueSaturationWheel(QWidget):
     """
 
     changed = Signal()
-    SIZE = 180
+    SIZE = ControlSize.COLOR_WHEEL
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -154,7 +154,7 @@ class ColorWheelPopup(QFrame):
         self.preview.setFixedSize(PREVIEW_SIZE, PREVIEW_SIZE)
         self.hex_input = QLineEdit()
         self.hex_input.setValidator(QRegularExpressionValidator(HEX_PATTERN, self.hex_input))
-        self.hex_input.setFixedWidth(100)
+        self.hex_input.setFixedWidth(Layout.HEX_FIELD_WIDTH)
         self.hex_input.textEdited.connect(self._on_hex_edited)
         code = QHBoxLayout()
         code.setSpacing(Space.S)
@@ -196,7 +196,7 @@ class ColorWheelPopup(QFrame):
     def open_below(self, anchor: QWidget) -> None:
         """Shows the popup under ``anchor``, its left edge aligned with the anchor's."""
         self.adjustSize()
-        self.move(anchor.mapToGlobal(QPoint(0, anchor.height() + 6)))
+        self.move(anchor.mapToGlobal(QPoint(0, anchor.height() + Popup.PANEL_OFFSET)))
         self.show()
         self.hex_input.setFocus()
 

@@ -43,16 +43,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.ui.theme.design import Radius
+from nodus.ui.theme.design import IconSize, Layout, Radius
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
 from nodus.ui.widgets.row_actions import RowAction, run_default, show_menu
 from nodus.ui.widgets.table import configure_record_table
 
 # Room for the check box at the start of a row and for the «⋯» at its end, in pixels.
-CHECK_GUTTER = 34
-MORE_GUTTER = 32
-_BOX = 16
+CHECK_GUTTER = Layout.CHECK_COLUMN
+MORE_GUTTER = Layout.MORE_COLUMN
+_BOX = IconSize.M  # as the check boxes of the stylesheet
 
 RowActionsFor = Callable[[int], Sequence[RowAction]]
 

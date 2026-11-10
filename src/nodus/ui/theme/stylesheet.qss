@@ -133,10 +133,10 @@ QMainWindow, #ContentArea, #PageStack {
     background: $accent_soft;
     color: $accent;
     border-radius: 16px; /* geometry: half its height */
-    min-width: 32px;
-    max-width: 32px;
-    min-height: 32px;
-    max-height: 32px;
+    min-width: $badge;
+    max-width: $badge;
+    min-height: $badge;
+    max-height: $badge;
     font-size: $label_size;
     font-weight: $label_weight;
     qproperty-alignment: AlignCenter;
@@ -336,7 +336,7 @@ QTextBrowser#NewsText {
 #AmountSymbol {
     color: $text_muted;
     font-weight: $strong_weight;
-    min-width: 28px;
+    min-width: $amount_symbol_width;
 }
 
 QLineEdit, QComboBox, QDateEdit {
@@ -344,7 +344,7 @@ QLineEdit, QComboBox, QDateEdit {
     border: 1px solid $border;
     border-radius: $radius_m;
     padding: $space_xs $space_s;
-    min-height: 24px;
+    min-height: $field_height;
 }
 
 QLineEdit:focus, QComboBox:focus, QDateEdit:focus {
@@ -363,13 +363,13 @@ QLineEdit:disabled, QComboBox:disabled {
 
 QComboBox::drop-down, QDateEdit::drop-down {
     border: none;
-    width: 24px;
+    width: $drop_down_width;
 }
 
 QComboBox::down-arrow, QDateEdit::down-arrow {
     image: url($icons/chevron-down.svg);
-    width: 14px;
-    height: 14px;
+    width: $icon_s;
+    height: $icon_s;
 }
 
 /* A plain list below the box: Fusion would otherwise open it over the box, aligned to
@@ -435,8 +435,8 @@ QCheckBox:disabled {
 }
 
 QCheckBox::indicator {
-    width: 16px;
-    height: 16px;
+    width: $icon_m;
+    height: $icon_m;
     border: 1px solid $text_muted;
     border-radius: $radius_s;
     background: $background;
@@ -462,7 +462,7 @@ QProgressBar {
     border: none;
     border-radius: $radius_s;
     background: $hover;
-    max-height: 8px;
+    max-height: $progress_height;
 }
 
 QProgressBar::chunk {
@@ -512,7 +512,7 @@ QFrame#TabBar {
 QPushButton#Tab {
     background: transparent;
     border: none;
-    border-bottom: 2px solid transparent;
+    border-bottom: $line_thick solid transparent;
     border-radius: 0;
     padding: $space_s $space_xxs;
     color: $text_muted;
@@ -525,7 +525,7 @@ QPushButton#Tab:hover {
 QPushButton#Tab:checked {
     color: $accent;
     font-weight: $strong_weight;
-    border-bottom: 2px solid $accent;
+    border-bottom: $line_thick solid $accent;
 }
 
 /* Period selector: "‹ Noviembre 2026 ▾ ›" */
@@ -536,7 +536,7 @@ QPushButton#PeriodButton {
     border-radius: $radius_l;
     padding: $space_xs $space_xxl $space_xs $space_m;
     font-weight: $strong_weight;
-    min-width: 130px;
+    min-width: $period_button_min_width;
 }
 
 QPushButton#PeriodButton:hover {
@@ -548,9 +548,9 @@ QPushButton#PeriodButton::menu-indicator {
     image: url($icons/chevron-down.svg);
     subcontrol-origin: padding;
     subcontrol-position: center right;
-    right: 6px;
-    width: 14px;
-    height: 14px;
+    right: 6px; /* geometry: the arrow centered in the right padding */
+    width: $icon_s;
+    height: $icon_s;
 }
 
 QMenu {
@@ -581,7 +581,7 @@ QMenu::icon {
 }
 
 QMenu::separator {
-    height: 1px;
+    height: $line_thin;
     background: $border;
     margin: $popup_divider_margin;
 }
@@ -668,9 +668,9 @@ QCalendarWidget QToolButton::menu-indicator {
     image: url($icons/chevron-down.svg);
     subcontrol-origin: padding;
     subcontrol-position: right center;
-    right: 4px;
-    width: 12px;
-    height: 12px;
+    right: $space_xs;
+    width: $icon_xs;
+    height: $icon_xs;
 }
 
 /* Amounts: MoneyLabel sets the "tone" property */
@@ -696,14 +696,14 @@ QScrollArea {
 
 QScrollBar:vertical {
     background: transparent;
-    width: 10px;
+    width: $scroll_bar_width;
     margin: $space_xxs;
 }
 
 QScrollBar::handle:vertical {
     background: $border;
-    border-radius: 3px; /* geometry: half its height */
-    min-height: 24px;
+    border-radius: 3px; /* geometry: half its width */
+    min-height: $scroll_handle_min_length;
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
@@ -800,13 +800,13 @@ QToolButton#TagChip:hover {
 }
 
 QSlider::groove:horizontal {
-    height: 6px;
+    height: $slider_groove;
     background: $border;
     border-radius: 3px; /* geometry: half its height */
 }
 
 QSlider::handle:horizontal {
-    width: 16px;
+    width: $slider_handle;
     margin: -5px 0; /* geometry: centers the handle on the groove */
     background: $accent;
     border-radius: 8px; /* geometry: half its height */
