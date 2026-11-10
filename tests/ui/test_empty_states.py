@@ -6,6 +6,7 @@ from nodus.models.period import Month, Period
 from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.payees_page import PayeesPage
 from nodus.ui.pages.transactions_page import TransactionsPage
+from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
 
 
 def test_no_accounts_offers_to_add_one(qtbot, services, event_bus, theme_manager, monkeypatch):
@@ -79,3 +80,22 @@ class TestPayees:
 
         assert page.search_input.text() == ""
         assert page.model.rowCount() == 1
+
+
+def test_a_page_with_nothing_yet_says_what_goes_there(qtbot):
+    card, state = empty_page_card("Todavía no hay cuentas", "Una por cada lugar.", "Agregar", str)
+    qtbot.addWidget(card)
+
+    assert state.title.text() == "Todavía no hay cuentas"
+    assert not state.title.isHidden()
+    assert state.text() == "Una por cada lugar."
+    assert state.action_button.objectName() == "PrimaryButton"
+
+
+def test_a_compact_empty_state_keeps_to_its_message(qtbot):
+    state = EmptyState("Sin cotizaciones.", compact=True)
+    qtbot.addWidget(state)
+
+    assert state.text() == "Sin cotizaciones."
+    assert state.title.isHidden() and state.action_button.isHidden()
+    assert state.label.property("compact") is True

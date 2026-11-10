@@ -153,7 +153,8 @@ class Sidebar(QFrame):
         clear_layout(self._accounts_layout)
         accounts = self._services.accounts.list_accounts()
         if not accounts:
-            empty = QLabel("Todavía no hay cuentas")
+            # An item of the list, styled as one, rather than an EmptyState.
+            empty = QLabel("Todavía no hay cuentas")  # list-item
             empty.setObjectName("SidebarItem")
             set_style_property(empty, "muted", True)
             self._accounts_layout.addWidget(empty)
