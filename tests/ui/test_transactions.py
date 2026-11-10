@@ -6,6 +6,8 @@ from menus import run_action, texts
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextDocumentFragment
 
+from nodus.models.account import AccountType
+from nodus.models.currency import Currency
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
@@ -23,6 +25,7 @@ from nodus.ui.navigation import PageId
 from nodus.ui.pages import transaction_list_view
 from nodus.ui.pages.accounts_page import AccountRow
 from nodus.ui.pages.transactions_page import TransactionsPage
+from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme import LIGHT
 from nodus.ui.widgets.selectors import HEADING_ROLE, MANAGE_ROLE
 from nodus.ui.widgets.transaction_table import ACCOUNT, AMOUNT, CATEGORY, PAYEE
@@ -608,3 +611,32 @@ def test_payee_opens_its_whole_history(qtbot, services, window, pesos):
     assert transactions.period_selector.period().start == date(2026, 3, 1)
     assert transactions.payee_filter.current_id() == services.payees.find("Coto").id
     assert column(transactions, AMOUNT) == ["-$ 10,00"]
+
+
+def test_filters_fit_the_narrowest_window(qtbot, window):
+    """At the window's minimum size, with the sidebar open, every filter keeps its label
+    and «Limpiar filtros» stays clear of the search box."""
+    window.show_page(PageId.TRANSACTIONS)
+    window.resize(*Layout.WINDOW_MIN_SIZE)
+    page = window.findChild(TransactionsPage)
+    qtbot.waitUntil(lambda: page.search_input.width() > 0)
+
+    for combo in page._filter_combos():
+        assert combo.width() >= combo.minimumSizeHint().width()
+    assert page.search_input.geometry().right() < page.clear_filters_button.x()
+    assert page.clear_filters_button.width() >= page.clear_filters_button.sizeHint().width()
+
+
+def test_a_narrowed_filter_opens_its_list_as_wide_as_its_longest_name(qtbot, services, window):
+    long_name = "Caja de ahorro en dólares del Banco Nación"
+    services.accounts.create(long_name, AccountType.CASH, Currency.ARS, ars("0"))
+    window.show_page(PageId.TRANSACTIONS)
+    combo = window.findChild(TransactionsPage).account_filter
+    row = combo.findText(long_name)
+
+    combo.showPopup()
+
+    view = combo.view()
+    assert view.width() >= view.sizeHintForIndex(view.model().index(row, 0)).width()
+    assert view.width() > combo.width()
+    combo.hidePopup()

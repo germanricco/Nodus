@@ -7,6 +7,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Todos los textos se leen bien sobre su fondo, en tema claro y oscuro: los verdes, rojos y amarillos de los montos y avisos son un poco más profundos, y el violeta del tema oscuro, un poco más claro. Los puntos de colores muy claros, como el amarillo, llevan un borde fino de su mismo tono para que se distingan.
 - Los rótulos más chicos (títulos de las tarjetas, «CUENTAS» en la barra lateral, encabezados de las tablas) son un poco más grandes y fáciles de leer.
 - Ajustes → General suma «Reducir animaciones»: los gráficos y las cifras cambian de una vez, sin moverse. Si Windows tiene las animaciones apagadas, Nodus arranca igual.
+- Arreglo: en una ventana angosta, los filtros de Transacciones se achican hasta su rótulo y el buscador ya no tapa «Limpiar filtros». Al abrirse, cada lista desplegable toma el ancho de su nombre más largo, así ninguno se corta.
 - Arreglo: al pasar a un mes con el patrimonio quieto, la línea se aplana poco a poco hasta la recta; antes conservaba la forma del mes anterior y saltaba al final. Al cambiar entre pesos y dólares, la línea se queda en su lugar y solo cambian los valores del eje. Y al pasar a un mes sin gastos, el anillo se vacía de a poco en lugar de quedarse lleno y vaciarse de golpe.
 
 ## 1.4.0 — 2026-11-10

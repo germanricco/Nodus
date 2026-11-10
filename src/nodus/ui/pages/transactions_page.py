@@ -99,8 +99,9 @@ class TransactionsPage(Page):
         self.clear_filters_button.clicked.connect(self.clear_filters)
         filters = QHBoxLayout()
         filters.setSpacing(Space.S)
-        for widget in self._filter_combos():
-            filters.addWidget(widget)
+        for combo in self._filter_combos():
+            combo.narrow_to_label()
+            filters.addWidget(combo)
         filters.addWidget(self.search_input, stretch=1)
         filters.addWidget(self.clear_filters_button)
         self.content_layout.addLayout(filters)

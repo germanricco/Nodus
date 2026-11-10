@@ -65,6 +65,7 @@ class _SectionDelegate(ListPopupDelegate):
 
     def sizeHint(self, option: QStyleOptionViewItem, index: _Index) -> QSize:  # noqa: N802
         size = super().sizeHint(option, index)
+        size.setWidth(size.width() + (index.data(DEPTH_ROLE) or 0) * self.INDENT)
         if index.data(HEADING_ROLE) and index.row() > 0:
             size.setHeight(size.height() + self.HEADING_GAP)
         elif index.data(MANAGE_ROLE):

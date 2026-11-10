@@ -7,12 +7,14 @@ from PySide6.QtGui import QPainter, QPalette
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QStyle,
     QStyledItemDelegate,
+    QStyleOptionComboBox,
     QStyleOptionViewItem,
     QWidget,
 )
 
-from nodus.ui.theme.design import Line, Popup
+from nodus.ui.theme.design import ControlSize, Line, Popup
 
 LIST_POPUP = "ListPopup"
 # What QComboBox.insertSeparator marks its separators with.
@@ -80,4 +82,31 @@ class ComboBox(QComboBox):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self._narrows_to_label = False
         style_as_list_popup(self.view())
+
+    def narrow_to_label(self) -> None:
+        """Lets a filter narrow down to its first item, the label it shows when nothing
+        is chosen («Cuenta», «Beneficiario»), so a row of filters fits a narrow window.
+        Its list still opens as wide as its longest option."""
+        self._narrows_to_label = True
+        self.updateGeometry()
+
+    def showPopup(self) -> None:  # noqa: N802
+        """Opens the list at least as wide as its longest option, so every name reads
+        whole there even when the box itself is narrower."""
+        view = self.view()
+        frame = 2 * (Popup.PADDING + Line.THIN)
+        longest = view.sizeHintForColumn(0) + frame + ControlSize.SCROLL_BAR_WIDTH
+        view.setMinimumWidth(max(longest, super().minimumSizeHint().width()))
+        super().showPopup()
+
+    def minimumSizeHint(self) -> QSize:  # noqa: N802
+        hint = super().minimumSizeHint()
+        if not self._narrows_to_label or self.count() == 0:
+            return hint
+        option = QStyleOptionComboBox()
+        self.initStyleOption(option)
+        label = QSize(self.fontMetrics().horizontalAdvance(self.itemText(0)), hint.height())
+        size = self.style().sizeFromContents(QStyle.ContentsType.CT_ComboBox, option, label, self)
+        return QSize(min(hint.width(), size.width()), hint.height())
