@@ -1,12 +1,16 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
-from factories import ars, category_id, eur, expense_draft, income_draft, usd
+from factories import TODAY, ars, category_id, eur, expense_draft, income_draft, usd
 
+from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import NotFoundError, ValidationError
+from nodus.services.payee_service import PayeeService
+
+EXPENSE, INCOME = TransactionType.EXPENSE, TransactionType.INCOME
 
 
 def payee_names(services) -> list[str]:
@@ -291,3 +295,89 @@ class TestSummaries:
     def test_summary_of_a_missing_payee(self, services):
         with pytest.raises(NotFoundError):
             services.payees.summary(999)
+
+
+class TestSuggestionsByUse:
+    """The payees used most come first, so a usual purchase takes a couple of clicks."""
+
+    @staticmethod
+    def spend(services, account, payee, days_ago=0, times=1, **overrides):
+        for _ in range(times):
+            services.transactions.create(
+                expense_draft(
+                    services, account.id, ars("100"), TODAY - timedelta(days=days_ago),
+                    payee_name=payee, **overrides,
+                )
+            )  # fmt: skip
+
+    def names(self, payees):
+        return [p.name for p in payees]
+
+    def test_the_most_used_and_latest_come_first(self, services, pesos):
+        services.payees.create("Cabify")  # never used: alphabetical, at the end
+        self.spend(services, pesos, "Carrefour", days_ago=1)
+        self.spend(services, pesos, "Coto", days_ago=30, times=2)
+        self.spend(services, pesos, "Chango", days_ago=200)
+
+        found = services.payees.matches("c", EXPENSE, today=TODAY)
+
+        assert self.names(found) == ["Coto", "Carrefour", "Chango", "Cabify"]
+
+    def test_names_starting_with_the_text_still_come_first(self, services, pesos):
+        self.spend(services, pesos, "Supermercado Día", times=3)
+        services.payees.create("Día")
+
+        found = services.payees.matches("dia", EXPENSE, today=TODAY)
+
+        assert self.names(found) == ["Día", "Supermercado Día"]
+
+    def test_the_chosen_category_comes_first(self, services, pesos):
+        leisure = category_id(services, "Ocio", EXPENSE)
+        self.spend(services, pesos, "Coto", times=3)
+        self.spend(services, pesos, "Cine", category_id=leisure)
+
+        assert self.names(services.payees.matches("c", EXPENSE, leisure, TODAY)) == [
+            "Cine", "Coto",
+        ]  # fmt: skip
+        assert self.names(services.payees.frequent(EXPENSE, leisure, TODAY)) == ["Cine", "Coto"]
+
+    def test_a_purchase_in_installments_counts_once(self, services, pesos):
+        services.installments.create(
+            expense_draft(
+                services, pesos.id, ars("1200"), TODAY - timedelta(days=330),
+                payee_name="Frávega",
+            ),
+            InstallmentPlan(None, 12, ars("1200"), TODAY - timedelta(days=330)),
+        )  # fmt: skip
+        self.spend(services, pesos, "Farmacia", times=2)
+
+        assert self.names(services.payees.matches("f", EXPENSE, today=TODAY)) == [
+            "Farmacia", "Frávega",
+        ]  # fmt: skip
+
+    def test_incomes_do_not_order_an_expense(self, services, pesos):
+        for _ in range(3):
+            services.transactions.create(
+                income_draft(services, pesos.id, ars("100"), TODAY, payee_name="Acme")
+            )
+        self.spend(services, pesos, "Almacén")
+
+        assert self.names(services.payees.matches("a", EXPENSE, today=TODAY)) == [
+            "Almacén", "Acme",
+        ]  # fmt: skip
+        assert self.names(services.payees.frequent(INCOME, today=TODAY)) == ["Acme"]
+
+    def test_frequent_shows_only_recent_use_and_a_few(self, services, pesos):
+        services.payees.create("Nunca")
+        self.spend(services, pesos, "Antes", days_ago=PayeeService.FREQUENT_DAYS + 1)
+        for number in range(PayeeService.FREQUENT_COUNT + 1):
+            self.spend(services, pesos, f"Tienda {number}", days_ago=number)
+
+        found = self.names(services.payees.frequent(EXPENSE, today=TODAY))
+
+        assert found == [f"Tienda {n}" for n in range(PayeeService.FREQUENT_COUNT)]
+
+    def test_nothing_used_suggests_nothing_before_typing(self, services):
+        services.payees.create("Coto")
+
+        assert services.payees.frequent(EXPENSE, today=TODAY) == []

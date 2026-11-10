@@ -155,6 +155,21 @@ def test_payee_suggestions_are_spaced(qtbot, services, event_bus, pesos, theme):
     assert_options_padded(popup)
 
 
+def test_suggestions_that_fit_need_no_scroll_bar(qtbot, services, event_bus, pesos, theme):
+    """QCompleter sizes its list without the ListPopup padding; NameCompleter makes up
+    for it, or a list of six would scroll."""
+    for number in range(6):
+        services.payees.create(f"Comercio {number}")
+    dialog = make_dialog(qtbot, services, event_bus, theme)
+
+    qtbot.keyClicks(dialog.payee_input.line_edit, "comercio")
+    popup = dialog.payee_input.names.completer.popup()
+    qtbot.waitUntil(popup.isVisible)
+
+    qtbot.waitUntil(lambda: not popup.verticalScrollBar().isVisible(), timeout=1000)
+    assert_spaced(popup)
+
+
 def test_menu_actions_take_the_menu_padding(qtbot, window):
     menu = build_menu(window, [RowAction("Editar", lambda: None), RowAction("Ver", lambda: None)])
     menu.popup(window.mapToGlobal(window.rect().center()))

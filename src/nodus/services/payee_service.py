@@ -5,14 +5,14 @@ from __future__ import annotations
 import dataclasses
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 
 from nodus.database.database import Database
 from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.models.category import Category
 from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.models.payee import Payee, normalize_name
+from nodus.models.payee import Payee, PayeeUsage, normalize_name
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.category_service import CategoryService
@@ -44,6 +44,11 @@ class PayeeSummary:
 
 class PayeeService:
     CURRENCY = Currency.ARS
+    # How far back use orders the suggestions while typing, and before typing anything:
+    # the latter shows only what is used now, a few of them.
+    MATCHES_DAYS = 365
+    FREQUENT_DAYS = 90
+    FREQUENT_COUNT = 6
 
     def __init__(
         self,
@@ -71,9 +76,37 @@ class PayeeService:
         normalized = normalize_name(name)
         return self._payees.find_by_normalized(normalized) if normalized else None
 
-    def matches(self, text: str) -> list[Payee]:
-        """Payees whose name contains ``text``, those starting with it first."""
-        return rank_matches(self._payees.list(), text)
+    def matches(
+        self,
+        text: str,
+        kind: TransactionType | None = None,
+        category_id: int | None = None,
+        today: date | None = None,
+    ) -> list[Payee]:
+        """Payees whose name contains ``text``, those starting with it first. For a
+        ``kind`` of transaction, the ones used with ``category_id`` come next, then the
+        most used and latest in that kind over the last year, then the rest
+        alphabetically."""
+        if kind is None:
+            return rank_matches(self._payees.list(), text)
+        usage = self._usage(kind, self.MATCHES_DAYS, today)
+        return rank_matches(
+            self._payees.list(), text, then=lambda p: _by_use(usage.get(p.id), category_id)
+        )
+
+    def frequent(
+        self, kind: TransactionType, category_id: int | None = None, today: date | None = None
+    ) -> list[Payee]:
+        """What to suggest before anything is typed: the payees most used in ``kind``
+        transactions lately, those used with ``category_id`` first. None if nothing was."""
+        usage = self._usage(kind, self.FREQUENT_DAYS, today)
+        used = [payee for payee in self._payees.list() if payee.id in usage]
+        used.sort(key=lambda p: (_by_use(usage[p.id], category_id), name_sort_key(p.name)))
+        return used[: self.FREQUENT_COUNT]
+
+    def _usage(self, kind: TransactionType, days: int, today: date | None) -> dict[int, PayeeUsage]:
+        until = today or date.today()
+        return self._payees.usage(kind, until - timedelta(days=days), until)
 
     def create(self, name: str, default_category_id: int | None = None) -> Payee:
         payee = self._checked(Payee(None, clean_name(name), default_category_id))
@@ -194,3 +227,10 @@ class PayeeService:
             hint = "; para juntarlos usa «Unir con…»" if payee.id is not None else ""
             raise ValidationError(f"Ya existe «{existing.name}»{hint}.", field="name")
         return payee
+
+
+def _by_use(usage: PayeeUsage | None, category_id: int | None) -> tuple[int, int, int]:
+    """Sort key: used with ``category_id`` most, then used most, then latest first."""
+    if usage is None:
+        return (0, 0, 0)
+    return (-usage.uses_with(category_id), -usage.uses, -usage.last_used.toordinal())

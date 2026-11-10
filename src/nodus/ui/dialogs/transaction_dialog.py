@@ -96,7 +96,7 @@ class TransactionDialog(FormDialog):
         self.installments_hint.hide()
         self.rate_hint = QLabel()
         self.rate_hint.setObjectName("FieldHint")
-        self.payee_input = PayeeInput(services.payees)
+        self.payee_input = PayeeInput(services.payees, self._payee_context)
         self.category_input = CategoryComboBox()
         self.category_input.set_placeholder(CATEGORY_PLACEHOLDER)
         self.date_input = DateInput()
@@ -181,6 +181,12 @@ class TransactionDialog(FormDialog):
         # The amount is what is always typed, so it is ready for the keyboard.
         self.amount_input.line_edit.setFocus()
         self.amount_input.line_edit.selectAll()
+
+    def _payee_context(self) -> tuple[TransactionType | None, int | None]:
+        """The kind and category the payee suggestions follow; none for a transfer."""
+        if self.is_transfer_mode:
+            return None, None
+        return _MODE_TYPES[self.mode_input.index()], self.category_input.current_id()
 
     @property
     def is_transfer_mode(self) -> bool:

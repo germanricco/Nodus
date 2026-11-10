@@ -12,6 +12,8 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Al anotar una transacción, la categoría y la cuenta de destino arrancan sin elegir, en lugar de la primera de la lista, así nunca se guarda una que no elegiste. El beneficiario sigue completando su categoría, la cuenta es la última que usaste (o la única que tienes) y el cursor ya está en el monto.
 - «Vincular a un gasto» aparece solo al elegir la categoría «Reembolsos».
 - Si falta un dato o hay un error, el aviso aparece en rojo debajo del campo que lo causa, todos a la vez, y se borra apenas lo corriges. Vale para todos los formularios.
+- Beneficiario sugiere primero los que más usas, y los de la categoría que ya elegiste; un clic en el campo vacío muestra los que usaste últimamente. Una compra en cuotas cuenta como una sola vez.
+- Arreglo: una lista corta de sugerencias ya no muestra una barra de desplazamiento.
 - Arreglo: los días anteriores a la primera cotización ya no quedan «sin cotización»: usan la primera. Antes, el patrimonio, el Dashboard, Análisis y Presupuestos sumaban distinto en pesos y en dólares los movimientos de esos días.
 - Arreglo: un gasto con fecha futura ya no baja el saldo de hoy; se descuenta el día que le toca. Últimas transacciones tampoco lo muestra antes de tiempo.
 - Arreglo: el promedio mensual de Análisis cuenta solo los meses desde tu primer movimiento hasta hoy. Antes, quien usaba Nodus hacía un mes veía su gasto repartido entre los 12 meses del período. La sugerencia de un presupuesto sigue la misma regla y dice cuántos meses promedia.

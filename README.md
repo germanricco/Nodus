@@ -59,7 +59,7 @@ One form covers expenses, income and transfers, and it starts on the account you
 </picture>
 
 ### Know who your money goes to
-Each expense or income can say who you paid or who paid you: the supermarket, the power company, your employer. Type a few letters to pick one, or a new name to add it, and Nodus fills in the category you usually use with it. The Payees page shows how many transactions and how much money went to or came from each one, so a question like "how much do I spend at the supermarket?" takes one click, and a double click opens its own page with every one of its transactions. Duplicates such as "Coto" and "Coto Online" can be merged into one.
+Each expense or income can say who you paid or who paid you: the supermarket, the power company, your employer. Click the field to see the ones you use most lately, or type a few letters to pick one or a new name to add it: the suggestions put first the payees you use most, and those of the category you already chose. Nodus then fills in the category you usually use with it. The Payees page shows how many transactions and how much money went to or came from each one, so a question like "how much do I spend at the supermarket?" takes one click, and a double click opens its own page with every one of its transactions. Duplicates such as "Coto" and "Coto Online" can be merged into one.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/payees-dark.png">

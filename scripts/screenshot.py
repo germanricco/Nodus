@@ -314,10 +314,10 @@ def capture_popups(
     out: Path,
     mode: ThemeMode,
 ) -> None:
-    """The lists and menus that open over a page, open: «Cuotas», «Categoría» and the
-    calendar of the transaction form, the type and category filters of Transacciones and
-    a row's «⋯» menu. They are the windows offscreen captures miss otherwise, and they
-    share the Popup spacing."""
+    """The lists and menus that open over a page, open: «Cuotas», «Categoría», the
+    payee suggestions and the calendar of the transaction form, the type and category
+    filters of Transacciones and a row's «⋯» menu. They are the windows offscreen
+    captures miss otherwise, and they share the Popup spacing."""
     dialog = TransactionDialog(services, event_bus, window.theme_manager, parent=window)
     dialog.show()
     app.processEvents()
@@ -329,6 +329,14 @@ def capture_popups(
         app.processEvents()
         save(combo.view().window(), out / f"{name}-{mode.value}.png")
         combo.hidePopup()
+    # What an empty «Beneficiario» offers when clicked: the payees used most lately.
+    payee = dialog.payee_input
+    payee.names.suggest("")
+    app.processEvents()
+    popup = payee.completer.popup()
+    if popup.isVisible():
+        save(popup, out / f"popup-payee-{mode.value}.png")
+        popup.hide()
     field = dialog.date_input
     field.open_calendar()
     app.processEvents()

@@ -1,7 +1,8 @@
 """Alphabetical ordering and searching of Spanish names."""
 
 import unicodedata
-from typing import Protocol, TypeVar
+from collections.abc import Callable
+from typing import Any, Protocol, TypeVar
 
 from nodus.models.payee import normalize_name
 
@@ -25,14 +26,19 @@ class Named(Protocol):
 N = TypeVar("N", bound=Named)
 
 
-def rank_matches(items: list[N], text: str) -> list[N]:
+def rank_matches(items: list[N], text: str, then: Callable[[N], Any] | None = None) -> list[N]:
     """The ``items`` whose name contains ``text``, ignoring case, accents and signs, those
-    starting with it first and then alphabetically. Nothing for an empty ``text``."""
+    starting with it first, then by ``then`` if given (such as how much each is used) and
+    then alphabetically. Nothing for an empty ``text``."""
     wanted = normalize_name(text)
     if not wanted:
         return []
     found = [item for item in items if wanted in item.normalized_name]
     return sorted(
         found,
-        key=lambda item: (not item.normalized_name.startswith(wanted), name_sort_key(item.name)),
+        key=lambda item: (
+            not item.normalized_name.startswith(wanted),
+            then(item) if then else 0,
+            name_sort_key(item.name),
+        ),
     )

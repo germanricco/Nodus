@@ -57,7 +57,7 @@ Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la �
 </picture>
 
 ### Saber a quién va tu dinero
-Cada gasto o ingreso puede decir a quién le pagaste o quién te pagó: el supermercado, la empresa de luz, tu empleador. Escribes unas letras para elegirlo, o un nombre nuevo para sumarlo, y Nodus completa la categoría que sueles usar con él. La página Beneficiarios muestra cuántos movimientos y cuánto dinero fue o vino de cada uno, así que una pregunta como «¿cuánto gasto en el supermercado?» se responde con un clic; un doble clic abre la página de cada uno, con todos sus movimientos. Los repetidos, como «Coto» y «Coto Online», se pueden unir en uno.
+Cada gasto o ingreso puede decir a quién le pagaste o quién te pagó: el supermercado, la empresa de luz, tu empleador. Un clic en el campo muestra los que más usas últimamente, y unas letras bastan para elegir uno o escribir un nombre nuevo para sumarlo: las sugerencias ponen primero los que más usas y los de la categoría que ya elegiste. Después, Nodus completa la categoría que sueles usar con él. La página Beneficiarios muestra cuántos movimientos y cuánto dinero fue o vino de cada uno, así que una pregunta como «¿cuánto gasto en el supermercado?» se responde con un clic; un doble clic abre la página de cada uno, con todos sus movimientos. Los repetidos, como «Coto» y «Coto Online», se pueden unir en uno.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/payees-dark.png">
