@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from nodus.config.paths import visible_path
+from nodus.config.system import windows_animations_on
 from nodus.database.database import Database
 from nodus.database.repositories.settings_repository import SettingsRepository
 from nodus.models.currency import TOTAL_CURRENCIES, Currency
@@ -27,6 +28,7 @@ class SettingsService:
     SIDEBAR_COLLAPSED_KEY = "sidebar_collapsed"
     ACCOUNTS_FOLDED_KEY = "accounts_folded"
     AMOUNTS_HIDDEN_KEY = "amounts_hidden"
+    REDUCE_MOTION_KEY = "reduce_motion"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -72,6 +74,14 @@ class SettingsService:
 
     def set_amounts_hidden(self, hidden: bool) -> None:
         self._set_flag(self.AMOUNTS_HIDDEN_KEY, hidden)
+
+    def reduce_motion(self) -> bool:
+        """Whether charts and figures jump to new data instead of moving to it. Until the
+        user chooses, it follows Windows's «Show animations» setting."""
+        return self._flag(self.REDUCE_MOTION_KEY, default=not windows_animations_on())
+
+    def set_reduce_motion(self, reduced: bool) -> None:
+        self._set_flag(self.REDUCE_MOTION_KEY, reduced)
 
     def last_account_id(self) -> int | None:
         """The account of the last movement recorded, offered first in the next one."""

@@ -13,6 +13,7 @@ from nodus.services.startup_service import StartupService
 from nodus.ui.dialogs import export
 from nodus.ui.pages import settings_page
 from nodus.ui.pages.settings_page import THEME_MODES, RateRow, SettingsPage
+from nodus.ui.theme.design import Motion, motion_ms, set_reduced_motion
 from nodus.ui.theme.theme import ThemeMode
 
 
@@ -206,3 +207,20 @@ class TestStartWithWindows:
         assert registry.value == r'"C:\Nodus\Nodus.exe"'
         settings.startup_input.click()
         assert registry.value is None
+
+
+def test_reduce_motion_is_saved_and_applied_at_once(services, page):
+    services.settings.set_reduce_motion(False)
+    set_reduced_motion(False)
+    page.refresh()
+    assert not page.reduce_motion_input.isChecked()
+
+    page.reduce_motion_input.click()
+
+    assert services.settings.reduce_motion()
+    assert motion_ms(Motion.SLOW) == 0
+
+    page.reduce_motion_input.click()
+
+    assert not services.settings.reduce_motion()
+    assert motion_ms(Motion.SLOW) == Motion.SLOW

@@ -1,3 +1,8 @@
+import pytest
+
+from nodus.services import settings_service
+
+
 def test_theme_preference_is_saved_and_replaced(services):
     assert services.settings.theme_preference() is None
 
@@ -27,3 +32,13 @@ def test_last_account_is_remembered(services):
     services.settings.set_last_account_id(7)
 
     assert services.settings.last_account_id() == 7
+
+
+@pytest.mark.parametrize("windows_animates", [True, False])
+def test_reduce_motion_follows_windows_until_chosen(services, monkeypatch, windows_animates):
+    monkeypatch.setattr(settings_service, "windows_animations_on", lambda: windows_animates)
+    assert services.settings.reduce_motion() is not windows_animates
+
+    services.settings.set_reduce_motion(windows_animates)
+
+    assert services.settings.reduce_motion() is windows_animates

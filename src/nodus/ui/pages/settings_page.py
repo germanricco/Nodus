@@ -39,7 +39,7 @@ from nodus.ui.formatting import format_date
 from nodus.ui.labels import rate_text
 from nodus.ui.pages.page import Page
 from nodus.ui.rate_updater import RateUpdater
-from nodus.ui.theme.design import Layout, Line, Space
+from nodus.ui.theme.design import Layout, Line, Space, set_reduced_motion
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
@@ -145,6 +145,7 @@ class SettingsPage(Page):
         self._refresh_backup_status()
         self.check_updates_input.setChecked(self._services.settings.check_updates())
         self.startup_input.setChecked(self._services.startup.is_enabled())
+        self.reduce_motion_input.setChecked(self._services.settings.reduce_motion())
 
     # General
 
@@ -170,7 +171,19 @@ class SettingsPage(Page):
             self.startup_input.setToolTip("Disponible en la versión instalada")
         self.startup_input.clicked.connect(startup.set_enabled)
         card.body.addWidget(startup_row)
+
+        motion_row = SettingRow(
+            "Reducir animaciones",
+            "Los gráficos y las cifras cambian de una vez, sin moverse.",
+        )
+        self.reduce_motion_input = motion_row.add(ToggleSwitch())
+        self.reduce_motion_input.clicked.connect(self._set_reduce_motion)
+        card.body.addWidget(motion_row)
         return card
+
+    def _set_reduce_motion(self, reduced: bool) -> None:
+        self._services.settings.set_reduce_motion(reduced)
+        set_reduced_motion(reduced)
 
     def _set_theme(self, index: int) -> None:
         mode = THEME_MODES[index]

@@ -13,6 +13,7 @@ from nodus.database.database import Database, DatabaseError
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
 from nodus.ui.main_window import MainWindow
+from nodus.ui.theme.design import set_reduced_motion
 from nodus.ui.theme.icons import app_icon
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -46,6 +47,7 @@ class NodusApp:
             services.backups.create_if_due(date.today())
             services.startup.repair()
             services.updates.clean()
+            set_reduced_motion(services.settings.reduce_motion())
             theme_mode = ThemeMode.from_setting(services.settings.theme_preference())
             theme_manager = ThemeManager(self._qt_app, theme_mode)
             window = MainWindow(services, EventBus(), theme_manager)
