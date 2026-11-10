@@ -80,6 +80,9 @@ class Popup:
     MENU_ITEM_PADDING = (Space.S, Space.M)
     DIVIDER_MARGIN = Space.XS  # above and below the line between groups of options
     DIVIDER_HEIGHT = 2 * DIVIDER_MARGIN + 1
+    # A calendar's day: a square big enough to click, and the room around the chosen one.
+    CALENDAR_CELL = Space.XXXL
+    CALENDAR_CELL_GAP = Space.XXS
 
 
 def _padding(steps: tuple[int, int]) -> str:

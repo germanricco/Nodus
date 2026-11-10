@@ -304,10 +304,10 @@ def capture_popups(
     out: Path,
     mode: ThemeMode,
 ) -> None:
-    """The lists and menus that open over a page, open: «Cuotas» and «Categoría» of the
-    transaction form, the type and category filters of Transacciones and a row's «⋯»
-    menu. They are the windows offscreen captures miss otherwise, and they share the
-    Popup spacing."""
+    """The lists and menus that open over a page, open: «Cuotas», «Categoría» and the
+    calendar of the transaction form, the type and category filters of Transacciones and
+    a row's «⋯» menu. They are the windows offscreen captures miss otherwise, and they
+    share the Popup spacing."""
     dialog = TransactionDialog(services, event_bus, window.theme_manager, parent=window)
     dialog.show()
     app.processEvents()
@@ -319,6 +319,13 @@ def capture_popups(
         app.processEvents()
         save(combo.view().window(), out / f"{name}-{mode.value}.png")
         combo.hidePopup()
+    field = dialog.date_input
+    field.open_calendar()
+    app.processEvents()
+    calendar = field.calendarWidget()
+    if calendar.isVisible():
+        save(calendar.window(), out / f"popup-calendar-{mode.value}.png")
+        calendar.window().hide()
     dialog.close()
     window.show_page(PageId.TRANSACTIONS)
     page = window.page(PageId.TRANSACTIONS)

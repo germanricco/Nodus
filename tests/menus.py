@@ -1,9 +1,11 @@
-"""Helpers to use row menus in tests without opening them, and to double-click rows."""
+"""Helpers to use row menus in tests without opening them, to double-click rows, and to
+click where a user would."""
 
 from collections.abc import Sequence
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
 from PySide6.QtGui import QMouseEvent
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QTableView, QWidget
 
 from nodus.ui.widgets.row_actions import RowAction
@@ -48,3 +50,12 @@ def double_click(widget: QWidget, pos: QPoint | None = None) -> None:
 def double_click_row(table: QTableView, row: int, column: int = 2) -> None:
     """A double click on a cell of ``row``, away from the check box and the «⋯»."""
     double_click(table.viewport(), table.visualRect(table.model().index(row, column)).center())
+
+
+def click_at(widget: QWidget, pos: QPoint | None = None) -> None:
+    """Clicks ``pos`` of ``widget`` (its center by default) as a user does: the click
+    lands on the child under that point, not on ``widget`` itself. A field's text, for
+    instance, is a line edit of its own, and a click sent to the field skips it."""
+    pos = widget.rect().center() if pos is None else pos
+    target = widget.childAt(pos) or widget
+    QTest.mouseClick(target, Qt.MouseButton.LeftButton, pos=target.mapFrom(widget, pos))

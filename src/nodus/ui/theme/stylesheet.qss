@@ -605,6 +605,18 @@ QCalendarWidget QTableView::item {
     border: none;
 }
 
+/* A date field's calendar opens over the page like a list (widgets/date_input.py): the
+   same frame, and the chosen day in the colors of a list's chosen option. */
+QCalendarWidget {
+    border: 1px solid $border;
+}
+
+QCalendarWidget QTableView {
+    outline: none;
+    selection-background-color: $accent_soft;
+    selection-color: $accent;
+}
+
 QCalendarWidget QToolButton {
     background: transparent;
     border: none;
