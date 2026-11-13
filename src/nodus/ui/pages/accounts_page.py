@@ -22,6 +22,7 @@ from nodus.services.container import Services
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.account_group_dialogs import GroupDialog, MoveToGroupDialog
 from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS
@@ -88,6 +89,7 @@ class AccountRow(QWidget):
     transactions_requested = Signal(object)  # Account
     value_update_requested = Signal(object)  # Account
     move_requested = Signal(object)  # Account
+    goal_requested = Signal(object)  # Account
     archive_toggled = Signal(object)  # Account
     delete_requested = Signal(object)  # Account
 
@@ -168,6 +170,10 @@ class AccountRow(QWidget):
                 RowAction(
                     "Actualizar valor", lambda: self.value_update_requested.emit(account), "trend"
                 )
+            )
+        if self.can_update_value:  # what a savings goal is filled with
+            result.append(
+                RowAction("Usar en una meta…", lambda: self.goal_requested.emit(account), "goal")
             )
         result.append(RowAction("Editar", lambda: self.edit_requested.emit(account), "pencil"))
         if not account.is_archived:  # archived accounts show apart from every group
@@ -286,6 +292,10 @@ class AccountsPage(Page):
 
     def open_move_dialog(self, account: Account) -> None:
         MoveToGroupDialog(self._services, self._event_bus, account, parent=self.window()).exec()
+
+    def open_goal_dialog(self, account: Account) -> None:
+        """A new goal with ``account`` ticked, from the account's menu."""
+        GoalDialog(self._services, self._event_bus, account=account, parent=self.window()).exec()
 
     def open_value_dialog(self, account: Account) -> None:
         ValueAdjustmentDialog(self._services, self._event_bus, account, parent=self.window()).exec()
@@ -413,6 +423,7 @@ class AccountsPage(Page):
             row.edit_requested.connect(self.open_account_dialog)
             row.value_update_requested.connect(self.open_value_dialog)
             row.move_requested.connect(self.open_move_dialog)
+            row.goal_requested.connect(self.open_goal_dialog)
             row.archive_toggled.connect(self._toggle_archived)
             row.delete_requested.connect(self.delete_account)
             if rows is None:

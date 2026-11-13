@@ -36,6 +36,7 @@ from nodus.ui.pages.budgets_page import BudgetsPage
 from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.dashboard_page import DashboardPage
 from nodus.ui.pages.detail_page import DetailPage
+from nodus.ui.pages.goals_page import GoalsPage
 from nodus.ui.pages.page import Page
 from nodus.ui.pages.payee_detail_page import PayeeDetailPage
 from nodus.ui.pages.payees_page import PayeesPage
@@ -86,6 +87,8 @@ class MainWindow(QMainWindow):
         budgets = BudgetsPage(services, event_bus, theme_manager)
         budgets.transactions_requested.connect(self.show_transactions)
         dashboard.budgets_requested.connect(self.show_budgets)
+        goals = GoalsPage(services, event_bus, theme_manager)
+        goals.navigate_requested.connect(self.show_page)
         analysis = AnalysisPage(services, event_bus, theme_manager)
         analysis.transactions_requested.connect(self.show_transactions)
         analysis.navigate_requested.connect(self.show_page)
@@ -109,6 +112,7 @@ class MainWindow(QMainWindow):
             PageId.TRANSACTIONS: transactions,
             PageId.RECURRING: RecurringPage(services, event_bus, theme_manager),
             PageId.BUDGETS: budgets,
+            PageId.GOALS: goals,
             PageId.ANALYSIS: analysis,
             PageId.CATEGORIES: categories,
             PageId.PAYEES: payees,

@@ -59,6 +59,22 @@ def budget_pill(budget: Budget) -> QLabel:
     return pill
 
 
+def paint_progress(
+    painter: QPainter, track: QRectF, fraction: float, color: str, track_color: str
+) -> None:
+    """A rounded track with its first ``fraction`` (0 to 1) filled in ``color``; any fill
+    is at least a dot, so a start shows."""
+    radius = track.height() / 2
+    painter.setBrush(QColor(track_color))
+    painter.drawRoundedRect(track, radius, radius)
+    if fraction > 0:
+        width = max(track.width() * fraction, track.height())
+        painter.setBrush(QColor(color))
+        painter.drawRoundedRect(
+            QRectF(track.left(), track.top(), width, track.height()), radius, radius
+        )
+
+
 class BudgetBar(AnimatedChart):
     """The spent part of the limit fills the bar in the budget's state color.
 
@@ -101,14 +117,7 @@ class BudgetBar(AnimatedChart):
                 QRectF(track.right() - excess, track.top(), excess, track.height()), radius, radius
             )
         else:
-            painter.setBrush(QColor(self._theme.border))
-            painter.drawRoundedRect(track, radius, radius)
-            if used > 0:
-                width = max(track.width() * used, self.HEIGHT)
-                painter.setBrush(QColor(color))
-                painter.drawRoundedRect(
-                    QRectF(track.left(), track.top(), width, track.height()), radius, radius
-                )
+            paint_progress(painter, track, used, color, self._theme.border)
         if self.shows_pace:
             x = track.left() + track.width() * self.budget.elapsed
             painter.setPen(QPen(QColor(self._theme.text_muted), Line.THICK))

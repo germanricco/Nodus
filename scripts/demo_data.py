@@ -6,12 +6,14 @@ from decimal import Decimal
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.models.goal import GoalShare
 from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.money import Money
 from nodus.models.period import Month
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
+from nodus.services.goal_service import GoalDraft
 from nodus.services.recurring_charge_service import RecurringChargeDraft
 from nodus.services.transaction_service import TransactionDraft, TransferDraft
 
@@ -181,6 +183,20 @@ def load_demo_data(services: Services, today: date) -> None:
         group = services.account_groups.create(name)
         for account in members:
             services.account_groups.move_account(account.id, group.id)
+
+    # Goals in three states: the dollar savings fill a trip on time and have already
+    # paid for a laptop; the investments alone fall behind an emergency fund.
+    for name, target, months, shares in (
+        ("Vacaciones en Brasil", usd("2000"), 14, ((ahorro, 70),)),
+        ("Fondo de emergencia", ars("1500000"), 10, ((inversiones, 100),)),
+        ("Notebook nueva", usd("300"), None, ((ahorro, 30),)),
+    ):
+        target_date = current.shifted(months).end if months else None
+        services.goals.create(
+            GoalDraft(name, target, target_date, tuple(GoalShare(a.id, p) for a, p in shares)),
+            today,
+        )
+    services.goals.check_reached(today)
 
     # Budgets in every state: on track, ahead of the month, over the limit, and a limit
     # raised this month, so earlier months show the previous one.

@@ -19,6 +19,7 @@ class PageId(Enum):
     TRANSACTIONS = ("Transacciones", "transactions")
     RECURRING = ("Recurrentes", "repeat")
     BUDGETS = ("Presupuestos", "budget")
+    GOALS = ("Metas", "goal")
     ANALYSIS = ("Análisis", "analysis")
     CATEGORIES = ("Categorías", "categories")
     PAYEES = ("Beneficiarios", "payee")

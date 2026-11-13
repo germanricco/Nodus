@@ -35,6 +35,7 @@ from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
 from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
+from nodus.ui.dialogs.goal_dialog import GoalDialog  # noqa: E402
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
 from nodus.ui.dialogs.update_dialog import UpdateDialog  # noqa: E402
@@ -71,6 +72,7 @@ DIALOGS = {
     "transfer-dialog": lambda services, event_bus, window: transfer_dialog(
         services, event_bus, window
     ),
+    "goal-dialog": lambda services, event_bus, window: goal_dialog(services, event_bus, window),
     "budget-dialog": lambda services, event_bus, window: BudgetDialog(
         services, event_bus, Month.of(date.today()), parent=window
     ),
@@ -133,6 +135,12 @@ def errors_dialog(services: Services, event_bus: EventBus, window: QWidget) -> Q
     dialog = TransactionDialog(services, event_bus, window.theme_manager, parent=window)
     dialog.save_button.click()
     return dialog
+
+
+def goal_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
+    """The demo trip open for editing: its account, what it adds and what it takes."""
+    goal = services.goals.list_goals()[0]
+    return GoalDialog(services, event_bus, goal, parent=window)
 
 
 def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:

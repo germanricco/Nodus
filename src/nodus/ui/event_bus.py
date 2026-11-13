@@ -18,6 +18,7 @@ class EventBus(QObject):
     budgets_changed = Signal()
     payees_changed = Signal()
     tags_changed = Signal()
+    goals_changed = Signal()
     backups_changed = Signal()
     amounts_hidden_changed = Signal(bool)
     # The currency totals are converted to (the net worth's) changed.
@@ -33,4 +34,5 @@ class EventBus(QObject):
         self.budgets_changed.emit()
         self.payees_changed.emit()
         self.tags_changed.emit()
+        self.goals_changed.emit()
         self.backups_changed.emit()
