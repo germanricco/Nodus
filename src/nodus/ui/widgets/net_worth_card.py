@@ -87,6 +87,9 @@ class NetWorthCard(Card):
     """
 
     rate_requested = Signal()
+    # The user chose another currency for the total, which every total that converts
+    # currencies follows (EventBus.net_worth_currency_changed).
+    currency_changed = Signal()
 
     def __init__(
         self, services: Services, theme_manager: ThemeManager, compact: bool = False
@@ -363,6 +366,7 @@ class NetWorthCard(Card):
         self._services.settings.set_net_worth_currency(CURRENCIES[index])
         if self._shown:
             self.show_day(*self._shown)
+        self.currency_changed.emit()
 
     def _colors(self) -> dict[Currency, str]:
         return dict(zip(SERIES_ORDER, self._theme.series(), strict=True))

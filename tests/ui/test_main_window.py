@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from demo_data import load_demo_data
 from factories import ars, expense_draft
@@ -178,3 +179,50 @@ def test_settings_sits_at_the_foot_of_the_sidebar(window):
     # Below the other pages and the accounts, and no longer in the top bar.
     assert settings > layout.indexOf(window.sidebar.nav_button(PageId.TAGS)) + 1
     assert not hasattr(window.top_bar, "settings_button")
+
+
+class TestSidebarGroups:
+    """Accounts by group in the sidebar; Qt shows rebuilt rows on the next loop pass."""
+
+    def test_accounts_show_under_their_group_and_loose_ones_last(
+        self, window, qtbot, services, event_bus, pesos, dollars
+    ):
+        bancos = services.account_groups.create("Bancos")
+        services.account_groups.create("Vacío")
+        services.account_groups.move_account(pesos.id, bancos.id)
+        event_bus.accounts_changed.emit()
+
+        qtbot.waitUntil(lambda: "▾  Bancos" in sidebar_texts(window))
+        texts = sidebar_texts(window)
+        assert texts.index("▾  Bancos") < texts.index("Banco") < texts.index("Ahorro")
+        assert "▾  Vacío" not in texts  # a group with no accounts is left out
+
+    def test_a_folded_group_shows_its_subtotal_and_is_remembered(
+        self, window, qtbot, services, event_bus, pesos
+    ):
+        bancos = services.account_groups.create("Bancos")
+        services.account_groups.move_account(pesos.id, bancos.id)
+        event_bus.accounts_changed.emit()
+
+        qtbot.mouseClick(window.sidebar.group_rows[bancos.id], Qt.MouseButton.LeftButton)
+
+        qtbot.waitUntil(lambda: "▸  Bancos" in sidebar_texts(window))
+        texts = sidebar_texts(window)
+        assert "$ 100.000,00" in texts
+        assert "Banco" not in texts
+        assert services.settings.folded_groups() == {bancos.id}
+
+    def test_a_mixed_group_follows_the_net_worth_currency(
+        self, window, qtbot, services, event_bus, pesos, dollars
+    ):
+        services.exchange_rates.set_rate(date.today(), Decimal("1000"))
+        todo = services.account_groups.create("Todo")
+        for account in (pesos, dollars):
+            services.account_groups.move_account(account.id, todo.id)
+        services.settings.set_folded_groups({todo.id})
+        event_bus.accounts_changed.emit()
+        qtbot.waitUntil(lambda: "≈ $ 600.000,00" in sidebar_texts(window))
+
+        window.page(PageId.DASHBOARD).net_worth_card.currency_input.buttons[1].click()
+
+        qtbot.waitUntil(lambda: "≈ US$ 600,00" in sidebar_texts(window))

@@ -31,6 +31,7 @@ class AnalysisPage(Page):
     ) -> None:
         super().__init__("Análisis")
         net_worth = NetWorthView(services, theme_manager)
+        net_worth.card.currency_changed.connect(event_bus.net_worth_currency_changed)
         net_worth.rate_requested.connect(lambda: self.navigate_requested.emit(PageId.SETTINGS))
         self.views: list[AnalysisView] = [
             TrendsView(services, theme_manager),

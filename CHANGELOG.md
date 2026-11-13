@@ -4,7 +4,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 
 ## 1.6.0
 
-- Grupos de cuentas: junta tus cuentas en Bancos, Billeteras, Ahorro e inversiones o lo que quieras. Elige el grupo al crear o editar una cuenta (también puedes crear uno nuevo ahí mismo) o con «Mover a grupo…» en su menú. En Cuentas, cada grupo tiene su tarjeta con lo que suma, y desde su «⋯» se renombra, se ordena o se elimina; eliminar un grupo nunca borra sus cuentas. Si un grupo mezcla monedas, el total se convierte con la cotización del día y lleva «≈».
+- Grupos de cuentas: junta tus cuentas en Bancos, Billeteras, Ahorro e inversiones o lo que quieras. Elige el grupo al crear o editar una cuenta (también puedes crear uno nuevo ahí mismo) o con «Mover a grupo…» en su menú. En Cuentas, cada grupo tiene su tarjeta con lo que suma, y desde su «⋯» se renombra, se ordena o se elimina; eliminar un grupo nunca borra sus cuentas. Si un grupo mezcla monedas, el total se convierte con la cotización del día y lleva «≈». En la barra lateral, las cuentas aparecen bajo su grupo, y un clic en el nombre del grupo lo pliega y muestra solo su total.
 - Guarda una copia fuera de la computadora: Ajustes → Tus datos suma «Guardar copia en…», para dejarla en un pendrive, un disco externo o una carpeta de Drive u OneDrive, y dice cuándo fue la última. La próxima vez propone la misma carpeta, así que con el pendrive puesto es un clic. Las copias diarias quedan en el mismo disco que tus datos; esta los salva aunque la PC se pierda o se rompa.
 - A fin de mes, si ese mes no guardaste una copia fuera de la PC, la campana te lo recuerda, con «Guardar copia…» a mano y «Ahora no» para dejarlo hasta el mes siguiente. Se apaga desde Ajustes con «Recordarme a fin de mes».
 

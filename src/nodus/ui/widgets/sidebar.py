@@ -1,6 +1,8 @@
-"""Left sidebar: navigation and the list of accounts with their balances."""
+"""Left sidebar: navigation and the list of accounts with their balances, by group."""
 
 from __future__ import annotations
+
+from datetime import date
 
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QMouseEvent
@@ -16,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus import __version__
+from nodus.models.account import Account
 from nodus.models.money import Money
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
@@ -24,7 +27,7 @@ from nodus.ui.theme.design import ControlSize, IconSize, Layout, Space
 from nodus.ui.theme.icons import icon, logo_pixmap
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.money_label import MoneyLabel
+from nodus.ui.widgets.money_label import MoneyLabel, total_text
 from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
 
 
@@ -33,11 +36,11 @@ class SidebarAccountRow(QWidget):
 
     clicked = Signal()
 
-    def __init__(self, name: str, balance: Money, hidden: bool) -> None:
+    def __init__(self, name: str, balance: Money, hidden: bool, indent: int = 0) -> None:
         super().__init__()
         layout = QHBoxLayout(self)
         make_hoverable(self)
-        layout.setContentsMargins(Space.S, Space.XXS, Space.S, Space.XXS)
+        layout.setContentsMargins(Space.S + indent, Space.XXS, Space.S, Space.XXS)
         label = QLabel(name)
         layout.addWidget(label, stretch=1)
         amount = MoneyLabel()
@@ -45,6 +48,35 @@ class SidebarAccountRow(QWidget):
         amount.set_money(balance)
         layout.addWidget(amount)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+
+
+class SidebarGroupRow(QWidget):
+    """A group's name in the sidebar, which folds its accounts under it; folded, it shows
+    what they add up to, so the list stays short without losing the totals."""
+
+    clicked = Signal()
+
+    def __init__(self, name: str, folded: bool, total: str, tooltip: str) -> None:
+        super().__init__()
+        self.setObjectName("SidebarGroup")
+        layout = QHBoxLayout(self)
+        make_hoverable(self)
+        layout.setContentsMargins(Space.S, Space.XXS, Space.S, Space.XXS)
+        self.name_label = QLabel(f"{'▸' if folded else '▾'}  {name}")
+        self.name_label.setObjectName("SidebarGroupName")
+        layout.addWidget(self.name_label, stretch=1)
+        self.total_label = QLabel(total)
+        self.total_label.setObjectName("SidebarGroupName")
+        self.total_label.setToolTip(tooltip)
+        self.total_label.setVisible(folded)
+        layout.addWidget(self.total_label)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip("Mostrar sus cuentas" if folded else "Plegar el grupo")
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         super().mouseReleaseEvent(event)
@@ -101,6 +133,8 @@ class Sidebar(QFrame):
         theme_manager.theme_changed.connect(self._apply_theme)
         event_bus.accounts_changed.connect(self.refresh_accounts)
         event_bus.transactions_changed.connect(self.refresh_accounts)
+        event_bus.exchange_rates_changed.connect(self.refresh_accounts)
+        event_bus.net_worth_currency_changed.connect(self.refresh_accounts)
         event_bus.amounts_hidden_changed.connect(lambda _hidden: self.refresh_accounts())
         self.refresh_accounts()
 
@@ -149,8 +183,10 @@ class Sidebar(QFrame):
         return self._nav_buttons[page_id]
 
     def refresh_accounts(self) -> None:
-        """Rebuilds the account list from the database."""
+        """Rebuilds the account list from the database: by group once there are groups,
+        with the accounts in none at the end."""
         clear_layout(self._accounts_layout)
+        self.group_rows: dict[int, SidebarGroupRow] = {}
         accounts = self._services.accounts.list_accounts()
         if not accounts:
             # An item of the list, styled as one, rather than an EmptyState.
@@ -159,12 +195,42 @@ class Sidebar(QFrame):
             set_style_property(empty, "muted", True)
             self._accounts_layout.addWidget(empty)
         balances = self._services.accounts.balances()
+        groups = self._services.account_groups
+        folded = self._services.settings.folded_groups()
+        for index, section in enumerate(groups.sections(accounts)):
+            if index:  # a little air between groups, and before the loose accounts
+                self._accounts_layout.addSpacing(Space.XS)
+            if section.group is None:
+                self._add_account_rows(section.accounts, balances)
+                continue
+            if not section.accounts:  # nothing to see in the sidebar
+                continue
+            group = section.group
+            total = groups.total(section.accounts, balances, date.today())
+            text, tooltip = total_text(total, self._services.settings.amounts_hidden())
+            row = SidebarGroupRow(group.name, group.id in folded, text, tooltip)
+            row.clicked.connect(lambda g=group.id: self.toggle_group(g))
+            self.group_rows[group.id] = row
+            self._accounts_layout.addWidget(row)
+            if group.id not in folded:
+                self._add_account_rows(section.accounts, balances, indent=Space.M)
+        self._accounts_layout.addStretch()
+
+    def toggle_group(self, group_id: int) -> None:
+        """Folds a group under its name, or unfolds it; the choice is saved."""
+        folded = self._services.settings.folded_groups()
+        folded ^= {group_id}
+        self._services.settings.set_folded_groups(folded)
+        self.refresh_accounts()
+
+    def _add_account_rows(
+        self, accounts: list[Account], balances: dict[int, Money], indent: int = 0
+    ) -> None:
         hidden = self._services.settings.amounts_hidden()
         for account in accounts:
-            row = SidebarAccountRow(account.name, balances[account.id], hidden)
+            row = SidebarAccountRow(account.name, balances[account.id], hidden, indent)
             row.clicked.connect(lambda a=account.id: self.account_requested.emit(a))
             self._accounts_layout.addWidget(row)
-        self._accounts_layout.addStretch()
 
     def _build_logo(self) -> QWidget:
         logo = QWidget()

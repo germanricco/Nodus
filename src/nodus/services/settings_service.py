@@ -28,6 +28,7 @@ class SettingsService:
     LAST_SEEN_VERSION_KEY = "last_seen_version"
     SIDEBAR_COLLAPSED_KEY = "sidebar_collapsed"
     ACCOUNTS_FOLDED_KEY = "accounts_folded"
+    FOLDED_GROUPS_KEY = "folded_account_groups"
     AMOUNTS_HIDDEN_KEY = "amounts_hidden"
     REDUCE_MOTION_KEY = "reduce_motion"
     EXTERNAL_BACKUP_KEY = "last_external_backup"
@@ -72,6 +73,15 @@ class SettingsService:
 
     def set_accounts_folded(self, folded: bool) -> None:
         self._set_flag(self.ACCOUNTS_FOLDED_KEY, folded)
+
+    def folded_groups(self) -> set[int]:
+        """The account groups the sidebar keeps folded, showing only their subtotal."""
+        value = self._settings.get(self.FOLDED_GROUPS_KEY) or ""
+        return {int(part) for part in value.split(",") if part.isdigit()}
+
+    def set_folded_groups(self, group_ids: set[int]) -> None:
+        with self._database.transaction():
+            self._settings.set(self.FOLDED_GROUPS_KEY, ",".join(map(str, sorted(group_ids))))
 
     def amounts_hidden(self) -> bool:
         """Whether balances and the net worth show as "$ ••••", for privacy."""

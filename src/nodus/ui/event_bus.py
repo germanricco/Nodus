@@ -20,6 +20,8 @@ class EventBus(QObject):
     tags_changed = Signal()
     backups_changed = Signal()
     amounts_hidden_changed = Signal(bool)
+    # The currency totals are converted to (the net worth's) changed.
+    net_worth_currency_changed = Signal()
 
     def emit_all(self) -> None:
         """Announces that everything may have changed, as after restoring a backup."""

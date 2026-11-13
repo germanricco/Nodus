@@ -71,6 +71,7 @@ class DashboardPage(Page):
         self.net_worth_card = NetWorthCard(services, theme_manager)
         self.net_worth_card.set_amounts_hidden(services.settings.amounts_hidden())
         event_bus.amounts_hidden_changed.connect(self.net_worth_card.set_amounts_hidden)
+        self.net_worth_card.currency_changed.connect(event_bus.net_worth_currency_changed)
         self.net_worth_card.rate_requested.connect(
             lambda: self.navigate_requested.emit(PageId.SETTINGS)
         )

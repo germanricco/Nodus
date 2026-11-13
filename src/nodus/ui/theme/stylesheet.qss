@@ -74,6 +74,11 @@ QMainWindow, #ContentArea, #PageStack {
     background: transparent;
 }
 
+/* A group of accounts in the sidebar: a quieter heading over its accounts. */
+#SidebarGroupName {
+    color: $text_muted;
+}
+
 #SidebarItem {
     padding-left: $space_s;
 }
