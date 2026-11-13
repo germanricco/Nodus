@@ -108,9 +108,10 @@ class Services:
         budgets = BudgetService(
             database, BudgetRepository(database), categories, dashboard, transactions
         )
+        goals = GoalService(database, GoalRepository(database), accounts, exchange_rates)
         return cls(
             accounts=accounts,
-            goals=GoalService(database, GoalRepository(database), accounts, exchange_rates),
+            goals=goals,
             account_groups=AccountGroupService(
                 database,
                 AccountGroupRepository(database),
@@ -132,7 +133,7 @@ class Services:
                 exchange_rates, settings, accounts, downloader(f"Nodus/{__version__}")
             ),
             notifications=NotificationService(
-                settings, accounts, exchange_rates, backups, recurring, budgets
+                settings, accounts, exchange_rates, backups, recurring, budgets, goals
             ),
             recurring=recurring,
             installments=InstallmentService(

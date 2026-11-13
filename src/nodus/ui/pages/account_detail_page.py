@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtWidgets import QHBoxLayout, QLabel
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 
 from nodus.models.account import Account
 from nodus.models.currency import HOME_CURRENCY, Currency
@@ -19,7 +20,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.accounts_page import account_delete_warning, delete_account
-from nodus.ui.pages.dashboard_cards import FigureTile
+from nodus.ui.pages.dashboard_cards import FigureTile, muted_label
 from nodus.ui.pages.detail_page import DetailPage, danger_zone
 from nodus.ui.pages.transaction_list_view import TransactionListView
 from nodus.ui.theme.design import Chart, Space
@@ -30,6 +31,7 @@ from nodus.ui.widgets.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.money_label import MoneyLabel, masked
 from nodus.ui.widgets.net_worth_card import signed
 from nodus.ui.widgets.row_actions import MoreButton, RowAction
+from nodus.ui.widgets.style import clear_layout
 from nodus.ui.widgets.transaction_table import ACCOUNT
 
 # Tall enough to read the trend, short enough to leave the movements most of the page.
@@ -41,8 +43,11 @@ class AccountDetailPage(DetailPage):
     menus and selection as Transacciones.
 
     The everyday actions are in the header; deleting, which takes the movements with it,
-    is in the «Zona de peligro» at the foot.
+    is in the «Zona de peligro» at the foot. An account that fills savings goals names
+    them under its figures, so spending from it is not a surprise to the goal.
     """
+
+    goal_requested = Signal(int)  # goal id
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -87,6 +92,11 @@ class AccountDetailPage(DetailPage):
         for tile in tiles:
             figures.addWidget(tile, stretch=1)
         self.content_layout.addLayout(figures)
+        self.goals_line = QWidget()
+        self._goals_layout = QHBoxLayout(self.goals_line)
+        self._goals_layout.setContentsMargins(0, 0, 0, 0)
+        self._goals_layout.setSpacing(Space.S)
+        self.content_layout.addWidget(self.goals_line)
         chart_card = Card("Saldo en el tiempo")
         self.chart = LineChart(
             theme_manager.theme, self._format_value, self._format_axis, self._format_day
@@ -113,6 +123,7 @@ class AccountDetailPage(DetailPage):
             event_bus.categories_changed,
             event_bus.payees_changed,
             event_bus.tags_changed,
+            event_bus.goals_changed,
         ):
             signal.connect(self._data_changed)
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
@@ -151,6 +162,7 @@ class AccountDetailPage(DetailPage):
         self._daily = len(history) < 2 or (history[1][0] - history[0][0]).days == 1
         self.chart.set_points([LinePoint(day, money.cents) for day, money in history])
 
+        self._show_goals(account)
         self.list_view.show_matching(TransactionFilter(account_id=account.id))
         self._danger_text.setText(account_delete_warning(self._services, account))
 
@@ -181,6 +193,24 @@ class AccountDetailPage(DetailPage):
     def delete(self) -> None:
         if delete_account(self.window(), self._services, self._event_bus, self.account):
             self.back_requested.emit()
+
+    def _show_goals(self, account: Account) -> None:
+        """ "Aporta a: Vacaciones (100 %)", each goal a link to its page; nothing when
+        the account fills no goal."""
+        clear_layout(self._goals_layout)
+        goals = self._services.goals.goals_for_account(account.id)
+        self.goals_line.setVisible(bool(goals))
+        if not goals:
+            return
+        self._goals_layout.addWidget(muted_label("Aporta a:"))
+        for goal, percent in goals:
+            link = QPushButton(f"{goal.name} ({percent} %)")
+            link.setObjectName("LinkButton")
+            link.setCursor(Qt.CursorShape.PointingHandCursor)
+            link.setToolTip("Abrir la meta")
+            link.clicked.connect(lambda _=False, i=goal.id: self.goal_requested.emit(i))
+            self._goals_layout.addWidget(link)
+        self._goals_layout.addStretch()
 
     def _show_converted(self, balance: Money, today: date) -> None:
         """A foreign balance also in pesos, at today's rate, as the net worth counts it."""

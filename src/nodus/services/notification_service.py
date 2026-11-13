@@ -11,6 +11,7 @@ from nodus.services.account_service import AccountService
 from nodus.services.backup_service import BackupService
 from nodus.services.budget_service import BudgetService
 from nodus.services.exchange_rate_service import ExchangeRateService
+from nodus.services.goal_service import GoalService
 from nodus.services.recurring_charge_service import RecurringChargeService
 from nodus.services.settings_service import SettingsService
 from nodus.services.update_service import Release
@@ -36,18 +37,20 @@ class NoticeKind(Enum):
     BACKUP_REMINDER = "backup_reminder"
     CHARGES_DUE = "charges_due"
     BUDGET_OVER = "budget_over"
+    GOAL_REACHED = "goal_reached"
 
 
 @dataclass(frozen=True)
 class Notice:
     """One notification: a short title, a detail line and, for a new version, its page
-    and release notes."""
+    and release notes; ``item_id`` names what it is about, such as a goal."""
 
     kind: NoticeKind
     title: str
     detail: str
     url: str = ""
     notes: str = ""
+    item_id: int | None = None
 
 
 class NotificationService:
@@ -62,6 +65,7 @@ class NotificationService:
         backups: BackupService,
         recurring: RecurringChargeService,
         budgets: BudgetService,
+        goals: GoalService,
     ) -> None:
         self._settings = settings
         self._accounts = accounts
@@ -69,6 +73,7 @@ class NotificationService:
         self._backups = backups
         self._recurring = recurring
         self._budgets = budgets
+        self._goals = goals
 
     def notices(self, today: date, release: Release | None) -> list[Notice]:
         notices = []
@@ -82,6 +87,7 @@ class NotificationService:
                     release.notes,
                 )
             )
+        notices.extend(self._goal_notices(today))
         notices.extend(self._rate_notices(today))
         for notice in (self._charges_notice(today), self._budgets_notice(today)):
             if notice:
@@ -94,6 +100,20 @@ class NotificationService:
         if reminder:
             notices.append(reminder)
         return notices
+
+    def _goal_notices(self, today: date) -> list[Notice]:
+        """Each goal reached, once: until the user opens it or puts the notice away.
+        Reaching is checked here, as the bell refreshes whenever balances may change."""
+        self._goals.check_reached(today)
+        return [
+            Notice(
+                NoticeKind.GOAL_REACHED,
+                f"Alcanzaste «{goal.name}»",
+                "Archívala para usar sus cuentas en otra meta, o súbele el objetivo.",
+                item_id=goal.id,
+            )
+            for goal in self._goals.unseen_reached()
+        ]
 
     def dismiss(self, release: Release) -> None:
         """Stops announcing ``release``; a later version is announced again."""

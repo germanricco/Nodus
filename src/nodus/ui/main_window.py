@@ -36,6 +36,7 @@ from nodus.ui.pages.budgets_page import BudgetsPage
 from nodus.ui.pages.categories_page import CategoriesPage
 from nodus.ui.pages.dashboard_page import DashboardPage
 from nodus.ui.pages.detail_page import DetailPage
+from nodus.ui.pages.goal_detail_page import GoalDetailPage
 from nodus.ui.pages.goals_page import GoalsPage
 from nodus.ui.pages.page import Page
 from nodus.ui.pages.payee_detail_page import PayeeDetailPage
@@ -89,6 +90,7 @@ class MainWindow(QMainWindow):
         dashboard.budgets_requested.connect(self.show_budgets)
         goals = GoalsPage(services, event_bus, theme_manager)
         goals.navigate_requested.connect(self.show_page)
+        goals.detail_requested.connect(lambda i: self.show_detail(DetailId.GOAL, i))
         analysis = AnalysisPage(services, event_bus, theme_manager)
         analysis.transactions_requested.connect(self.show_transactions)
         analysis.navigate_requested.connect(self.show_page)
@@ -105,7 +107,14 @@ class MainWindow(QMainWindow):
             DetailId.ACCOUNT: AccountDetailPage(services, event_bus, theme_manager),
             DetailId.PAYEE: PayeeDetailPage(services, event_bus, theme_manager),
             DetailId.TAG: TagDetailPage(services, event_bus, theme_manager),
+            DetailId.GOAL: GoalDetailPage(services, event_bus, theme_manager),
         }
+        self._details[DetailId.GOAL].account_requested.connect(
+            lambda i: self.show_detail(DetailId.ACCOUNT, i)
+        )
+        self._details[DetailId.ACCOUNT].goal_requested.connect(
+            lambda i: self.show_detail(DetailId.GOAL, i)
+        )
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
@@ -156,6 +165,7 @@ class MainWindow(QMainWindow):
             event_bus.budgets_changed,
             event_bus.categories_changed,
             event_bus.backups_changed,
+            event_bus.goals_changed,
         ):
             signal.connect(self.refresh_notifications)
         self.show_page(PageId.DASHBOARD)
@@ -223,6 +233,10 @@ class MainWindow(QMainWindow):
             self.show_budgets(Month.of(date.today()))
         elif notice.kind is NoticeKind.BACKUP_REMINDER:
             save_copy_outside(self, self._services, self._event_bus)
+        elif notice.kind is NoticeKind.GOAL_REACHED and notice.item_id is not None:
+            self._services.goals.mark_seen(notice.item_id)
+            self.refresh_notifications()
+            self.show_detail(DetailId.GOAL, notice.item_id)
         else:
             self.show_page(PageId.SETTINGS)
 
@@ -248,6 +262,8 @@ class MainWindow(QMainWindow):
     def _dismiss_notice(self, notice: Notice) -> None:
         if notice.kind is NoticeKind.BACKUP_REMINDER:
             self._services.backups.put_off_reminder(date.today())
+        elif notice.kind is NoticeKind.GOAL_REACHED and notice.item_id is not None:
+            self._services.goals.mark_seen(notice.item_id)
         elif self._release is not None:
             self._services.notifications.dismiss(self._release)
         self.refresh_notifications()

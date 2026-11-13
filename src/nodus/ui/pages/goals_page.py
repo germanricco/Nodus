@@ -41,6 +41,15 @@ EMPTY_TEXT = (
 DELETE_TEXT = "Se elimina la meta «{name}». Las cuentas y sus movimientos no se tocan."
 
 
+def delete_goal(parent: QWidget, services: Services, event_bus: EventBus, goal: Goal) -> bool:
+    """Deletes ``goal`` once the user confirms; True if it was deleted."""
+    if not confirm(parent, "Eliminar meta", DELETE_TEXT.format(name=goal.name)):
+        return False
+    services.goals.delete(goal.id)
+    event_bus.goals_changed.emit()
+    return True
+
+
 def accounts_text(services: Services, goal: Goal) -> str:
     """ "Ahorro USD (100 %)" for one account, "2 cuentas" for more."""
     if len(goal.shares) > 1:
@@ -53,6 +62,7 @@ class GoalRow(QWidget):
     """One goal: its name and accounts, how much it has, its state, its bar and the
     sentence that says how it goes."""
 
+    detail_requested = Signal(object)  # Goal
     edit_requested = Signal(object)  # Goal
     archive_toggled = Signal(object)  # Goal
     delete_requested = Signal(object)  # Goal
@@ -104,19 +114,20 @@ class GoalRow(QWidget):
 
         install_row_actions(self, self.actions)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip("Editar la meta")
+        self.setToolTip("Abrir la meta")
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         super().mouseReleaseEvent(event)
         if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(
             event.position().toPoint()
         ):
-            self.edit_requested.emit(self.goal)
+            self.detail_requested.emit(self.goal)
 
     def actions(self) -> list[RowAction]:
         goal = self.goal
         return [
-            RowAction("Editar", lambda: self.edit_requested.emit(goal), "pencil", default=True),
+            RowAction("Abrir", lambda: self.detail_requested.emit(goal), default=True),
+            RowAction("Editar", lambda: self.edit_requested.emit(goal), "pencil"),
             RowAction(
                 "Desarchivar" if goal.is_archived else "Archivar",
                 lambda: self.archive_toggled.emit(goal),
@@ -133,6 +144,7 @@ class GoalsPage(Page):
     looks at the balances of its accounts."""
 
     navigate_requested = Signal(object)  # PageId
+    detail_requested = Signal(int)  # goal id
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -205,10 +217,7 @@ class GoalsPage(Page):
         self._event_bus.goals_changed.emit()
 
     def delete_goal(self, goal: Goal) -> None:
-        if not confirm(self.window(), "Eliminar meta", DELETE_TEXT.format(name=goal.name)):
-            return
-        self._services.goals.delete(goal.id)
-        self._event_bus.goals_changed.emit()
+        delete_goal(self.window(), self._services, self._event_bus, goal)
 
     # Building
 
@@ -223,6 +232,7 @@ class GoalsPage(Page):
             row = GoalRow(
                 goal, progress[goal.id], accounts_text(self._services, goal), theme, hidden
             )
+            row.detail_requested.connect(lambda goal: self.detail_requested.emit(goal.id))
             row.edit_requested.connect(self.open_goal_dialog)
             row.archive_toggled.connect(self.toggle_archived)
             row.delete_requested.connect(self.delete_goal)

@@ -96,6 +96,7 @@ class LineChart(ColumnHoverChart):
     The first time it draws itself from left to right; later it morphs from the previous
     line into the new one. Under the mouse, a vertical guide follows the cursor and a box
     shows the day and the value. Points where the value rose or fell get a green or red dot.
+    A reference value (a goal's target) can be drawn across as a dashed line.
     """
 
     LEFT, BOTTOM, TOP, RIGHT = 64.0, 24.0, 10.0, 10.0
@@ -119,10 +120,16 @@ class LineChart(ColumnHoverChart):
         # The vertical span on screen when the transition began, so the axis moves with
         # the line instead of stretching each frame's values to fill the height.
         self._start_range: tuple[float, float] | None = None
+        self._reference: float | None = None
         self.setMinimumHeight(Chart.LINE_MIN_HEIGHT)
 
     def sizeHint(self) -> QSize:  # noqa: N802
         return QSize(*Chart.LINE_SIZE)
+
+    def set_reference(self, value: float | None) -> None:
+        """A value to mark across the chart, always in view; None takes it away."""
+        self._reference = value
+        self.update()
 
     def set_points(self, points: list[LinePoint]) -> None:
         """Shows ``points``, moving from what was shown before."""
@@ -179,7 +186,10 @@ class LineChart(ColumnHoverChart):
         return values
 
     def _target_range(self) -> tuple[float, float]:
-        return value_range([p.value for p in self._points if p.value is not None])
+        values = [p.value for p in self._points if p.value is not None]
+        if values and self._reference is not None:
+            values.append(self._reference)
+        return value_range(values)
 
     def _range_at(self, progress: float) -> tuple[float, float]:
         """The vertical span on screen at ``progress``, from the one shown when the
@@ -232,6 +242,8 @@ class LineChart(ColumnHoverChart):
             painter.end()
             return
         positions = self._positions(values, plot, span_range)
+        if self._reference is not None:
+            self._paint_reference(painter, plot, span_range)
         if self._start is None and self.progress < 1:
             # First appearance: reveal from left to right.
             painter.setClipRect(
@@ -244,6 +256,14 @@ class LineChart(ColumnHoverChart):
         if self.hover_index is not None and positions[self.hover_index] is not None:
             self._paint_hover(painter, positions[self.hover_index], plot)
         painter.end()
+
+    def _paint_reference(
+        self, painter: QPainter, plot: QRectF, span_range: tuple[float, float]
+    ) -> None:
+        low, high = span_range
+        y = plot.bottom() - plot.height() * (self._reference - low) / (high - low)
+        painter.setPen(QPen(QColor(self._theme.income), Line.THICK, Qt.PenStyle.DashLine))
+        painter.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y))
 
     def _paint_grid(
         self, painter: QPainter, plot: QRectF, span_range: tuple[float, float] | None

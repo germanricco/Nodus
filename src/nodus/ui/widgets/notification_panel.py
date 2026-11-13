@@ -14,6 +14,7 @@ from nodus.ui.widgets.style import clear_layout, set_style_property
 DISMISS_LABELS = {
     NoticeKind.UPDATE: ("Descartar", "No volver a avisar de esta versión"),
     NoticeKind.BACKUP_REMINDER: ("Ahora no", "Volver a avisar a fin del mes que viene"),
+    NoticeKind.GOAL_REACHED: ("Listo", "Quitar el aviso"),
 }
 
 ACTION_LABELS = {
@@ -23,6 +24,7 @@ ACTION_LABELS = {
     NoticeKind.BACKUP_REMINDER: "Guardar copia…",
     NoticeKind.CHARGES_DUE: "Ver cargos",
     NoticeKind.BUDGET_OVER: "Ver presupuestos",
+    NoticeKind.GOAL_REACHED: "Ver meta",
 }
 
 
@@ -31,6 +33,7 @@ class NoticeRow(QWidget):
 
     def __init__(self, notice: Notice) -> None:
         super().__init__()
+        self.notice = notice
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, Space.S, 0, Space.S)
         layout.setSpacing(Space.XXS)

@@ -36,13 +36,14 @@ class PageId(Enum):
 
 
 class DetailId(Enum):
-    """A page about one item (an account, a payee, a tag), reached from its list and not
+    """A page about one item (an account, a payee, a tag, a goal), reached from its list and not
     from the sidebar. Each value is the list page it belongs to, which the sidebar keeps
     selected and «‹ Volver» goes back to."""
 
     ACCOUNT = PageId.ACCOUNTS
     PAYEE = PageId.PAYEES
     TAG = PageId.TAGS
+    GOAL = PageId.GOALS
 
     @property
     def list_page(self) -> PageId:

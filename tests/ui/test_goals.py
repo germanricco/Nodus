@@ -10,9 +10,12 @@ from nodus.models.currency import Currency
 from nodus.models.goal import Goal, GoalProgress, GoalShare, GoalState
 from nodus.models.period import Month
 from nodus.services.goal_service import GoalDraft
+from nodus.services.notification_service import NoticeKind
 from nodus.ui.dialogs.goal_dialog import GoalDialog
+from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.pages import accounts_page, goals_page
 from nodus.ui.pages.accounts_page import AccountsPage
+from nodus.ui.pages.goal_detail_page import month_change_text
 from nodus.ui.pages.goals_page import GoalsPage
 from nodus.ui.widgets.goal_bar import goal_sentence, saved_of_target
 
@@ -297,3 +300,121 @@ def test_spending_lowers_it(services, savings):
     services.transactions.create(expense_draft(services, savings.id, usd("100"), on=TODAY))
 
     assert services.goals.progress(goal, TODAY).saved == usd("400")
+
+
+def notice_kinds(services, day) -> list[NoticeKind]:
+    return [n.kind for n in services.notifications.notices(day, None)]
+
+
+class TestDetail:
+    @pytest.fixture
+    def detail(self, window, services, savings):
+        goal = make_goal(services, savings, 60, on=date(2030, 12, 31))
+        page = window.detail(DetailId.GOAL)
+        window.show_detail(DetailId.GOAL, goal.id)
+        return page
+
+    def test_a_click_on_the_row_opens_it(self, qtbot, window, services, savings):
+        goal = make_goal(services, savings)
+        window.show_page(PageId.GOALS)
+        [row] = window.page(PageId.GOALS).rows
+
+        qtbot.mouseClick(row, Qt.MouseButton.LeftButton)
+
+        detail = window.detail(DetailId.GOAL)
+        assert window.current_page is detail
+        assert detail.title_label.text() == "Viaje"
+        assert detail.goal.id == goal.id
+        assert window.sidebar.nav_button(PageId.GOALS).isChecked()
+
+    def test_figures_and_accounts(self, detail):
+        assert detail.saved_label.text() == "US$ 300,00"
+        assert detail.remaining_label.text() == "US$ 1.700,00"
+        assert detail.target_note.text() == "para diciembre de 2030"
+        [row] = detail.account_rows
+        assert row.counted_label.text() == "US$ 300,00"
+
+    def test_the_chart_marks_the_target(self, detail):
+        assert detail.chart._reference == usd("2000").cents
+        assert detail.chart.points()[-1].value == usd("300").cents
+
+    def test_an_account_opens_its_page(self, window, detail, savings):
+        detail.account_rows[0].clicked.emit()
+
+        assert window.current_page is window.detail(DetailId.ACCOUNT)
+        assert window.detail(DetailId.ACCOUNT).account.id == savings.id
+
+    def test_deleting_goes_back_to_the_list(self, monkeypatch, window, services, detail):
+        monkeypatch.setattr(goals_page, "confirm", lambda *_args: True)
+
+        detail.delete()
+
+        assert services.goals.list_goals() == []
+        assert window.current_page is window.page(PageId.GOALS)
+
+    @pytest.mark.parametrize(
+        ("change", "text"),
+        [
+            (usd("50"), "Este mes subió US$ 50,00"),
+            (usd("-150"), "Este mes bajó US$ 150,00"),
+            (usd("0"), "Este mes, sin cambios"),
+        ],
+    )
+    def test_this_months_change(self, change, text):
+        assert month_change_text(change, hidden=False) == text
+
+
+class TestAccountGoals:
+    def test_an_account_names_the_goals_it_fills(self, window, services, savings):
+        goal = make_goal(services, savings, 60)
+        account_page = window.detail(DetailId.ACCOUNT)
+        window.show_detail(DetailId.ACCOUNT, savings.id)
+
+        assert account_page.goals_line.isVisible()
+        [link] = [
+            b for b in account_page.goals_line.findChildren(goals_page.QPushButton) if b.isVisible()
+        ]
+        assert link.text() == "Viaje (60 %)"
+        link.click()
+        assert window.current_page is window.detail(DetailId.GOAL)
+        assert window.detail(DetailId.GOAL).goal.id == goal.id
+
+    def test_not_when_it_fills_none(self, window, savings):
+        window.show_detail(DetailId.ACCOUNT, savings.id)
+
+        assert not window.detail(DetailId.ACCOUNT).goals_line.isVisible()
+
+
+class TestReachedNotice:
+    def test_announced_once_until_seen(self, services, savings):
+        today = date.today()
+        goal = services.goals.create(
+            GoalDraft("Viaje", usd("400"), None, (GoalShare(savings.id, 100),)), today
+        )
+
+        assert NoticeKind.GOAL_REACHED in notice_kinds(services, today)
+        [notice] = [
+            n
+            for n in services.notifications.notices(today, None)
+            if n.kind is NoticeKind.GOAL_REACHED
+        ]
+        assert notice.title == "Alcanzaste «Viaje»"
+        services.goals.mark_seen(goal.id)
+        assert NoticeKind.GOAL_REACHED not in notice_kinds(services, today)
+
+    def test_ver_meta_opens_it_and_clears_the_bell(self, window, services, event_bus, savings):
+        goal = services.goals.create(
+            GoalDraft("Viaje", usd("400"), None, (GoalShare(savings.id, 100),)), date.today()
+        )
+        event_bus.goals_changed.emit()
+        window.open_notifications()
+        [row] = [
+            r for r in window.notification_panel.rows if r.notice.kind is NoticeKind.GOAL_REACHED
+        ]
+        assert (row.action_button.text(), row.dismiss_button.text()) == ("Ver meta", "Listo")
+
+        row.action_button.click()
+
+        assert window.current_page is window.detail(DetailId.GOAL)
+        assert services.goals.get(goal.id).reached_seen
+        assert services.goals.get(goal.id).reached_on == date.today()

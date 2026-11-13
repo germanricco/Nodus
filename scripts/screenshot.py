@@ -214,6 +214,10 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.show_detail(DetailId.ACCOUNT, investment.id)
         app.processEvents()
         save(window, args.out / f"account-detail-{mode.value}.png")
+        # The page of one goal: the trip, filled by the dollar savings, on track.
+        window.show_detail(DetailId.GOAL, services.goals.list_goals()[0].id)
+        app.processEvents()
+        save(window, args.out / f"goal-detail-{mode.value}.png")
         # The card with the purchase in installments: what is still to pay.
         card = next(a for a in services.accounts.list_accounts() if a.name == "Visa")
         window.show_detail(DetailId.ACCOUNT, card.id)
