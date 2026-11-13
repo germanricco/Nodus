@@ -42,6 +42,8 @@ class Account:
     is_archived: bool = False
     # Place in the user's own order; ties, as after the upgrade that added it, go by name.
     position: int = 0
+    # The group it is shown in (Bancos, Inversiones…), or None.
+    group_id: int | None = None
 
     def __post_init__(self) -> None:
         if self.initial_balance.currency is not self.currency:

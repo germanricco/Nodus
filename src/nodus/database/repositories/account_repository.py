@@ -34,8 +34,8 @@ class AccountRepository(Repository):
     def add(self, account: Account) -> Account:
         account_id = self._insert(
             "INSERT INTO accounts"
-            " (name, type, currency, initial_balance_cents, is_archived, position)"
-            " VALUES (?, ?, ?, ?, ?, ?)",
+            " (name, type, currency, initial_balance_cents, is_archived, position, group_id)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
                 account.name,
                 account.type.value,
@@ -43,6 +43,7 @@ class AccountRepository(Repository):
                 account.initial_balance.cents,
                 account.is_archived,
                 account.position,
+                account.group_id,
             ),
         )
         return dataclasses.replace(account, id=account_id)
@@ -50,13 +51,15 @@ class AccountRepository(Repository):
     def update(self, account: Account) -> None:
         self._execute(
             "UPDATE accounts SET name = ?, type = ?, currency = ?, initial_balance_cents = ?,"
-            " is_archived = ? WHERE id = ?",
+            " is_archived = ?, position = ?, group_id = ? WHERE id = ?",
             (
                 account.name,
                 account.type.value,
                 account.currency.value,
                 account.initial_balance.cents,
                 account.is_archived,
+                account.position,
+                account.group_id,
                 account.id,
             ),
         )
@@ -126,4 +129,5 @@ class AccountRepository(Repository):
             initial_balance=Money(row["initial_balance_cents"], currency),
             is_archived=bool(row["is_archived"]),
             position=row["position"],
+            group_id=row["group_id"],
         )

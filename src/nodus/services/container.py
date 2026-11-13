@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from nodus import __version__
 from nodus.database.database import Database
+from nodus.database.repositories.account_group_repository import AccountGroupRepository
 from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.budget_repository import BudgetRepository
 from nodus.database.repositories.category_repository import CategoryRepository
@@ -17,6 +18,7 @@ from nodus.database.repositories.settings_repository import SettingsRepository
 from nodus.database.repositories.tag_repository import TagRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
 from nodus.database.repositories.value_adjustment_repository import ValueAdjustmentRepository
+from nodus.services.account_group_service import AccountGroupService
 from nodus.services.account_service import AccountService
 from nodus.services.analysis_service import AnalysisService
 from nodus.services.backup_service import BackupService
@@ -49,6 +51,7 @@ class Services:
     """
 
     accounts: AccountService
+    account_groups: AccountGroupService
     categories: CategoryService
     transactions: TransactionService
     exchange_rates: ExchangeRateService
@@ -104,6 +107,14 @@ class Services:
         )
         return cls(
             accounts=accounts,
+            account_groups=AccountGroupService(
+                database,
+                AccountGroupRepository(database),
+                account_repository,
+                accounts,
+                exchange_rates,
+                settings,
+            ),
             categories=categories,
             transactions=transactions,
             exchange_rates=exchange_rates,

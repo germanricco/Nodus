@@ -142,11 +142,11 @@ def test_corrupt_file_raises_database_error(db_path):
         Database.open(db_path)
 
 
-@pytest.mark.parametrize("released", [1, 2, 3, 4, 5, 6, 7])
+@pytest.mark.parametrize("released", [1, 2, 3, 4, 5, 6, 7, 8, 9])
 def test_migrations_keep_existing_data(db_path, released):
     """A database from an earlier release (schema 1 is v0.4, 2 is v0.5, 3 is v0.6, 4 is
-    v0.7 and v0.8, 5 is v0.9, 6 is v0.9.1, 7 is v1.0) with data gets the new tables and
-    keeps its rows."""
+    v0.7 and v0.8, 5 is v0.9, 6 is v0.9.1, 7 is v1.0, 8 is v1.1, 9 is v1.4) with data gets
+    the new tables and keeps its rows."""
     migrations = [m for m in load_packaged_migrations() if m.version <= released]
     database = Database.open(db_path, migrations)
     with database.transaction():
@@ -166,6 +166,7 @@ def test_migrations_keep_existing_data(db_path, released):
         "tags",
         "transaction_tags",
         "value_adjustments",
+        "account_groups",
     } <= table_names(database)
     row = database.connection.execute("SELECT name, initial_balance_cents FROM accounts").fetchone()
     assert tuple(row) == ("Banco", 500)
@@ -324,7 +325,7 @@ class TestInstallmentsMigration:
 
         database = Database.open(db_path)
 
-        assert database.schema_version == 9
+        assert database.schema_version == latest_schema_version()
         row = database.connection.execute(
             "SELECT installment_plan_id, installment_number FROM transactions"
         ).fetchone()
@@ -349,4 +350,47 @@ class TestInstallmentsMigration:
                 " VALUES (?, ?, ?, ?)",
                 (count, total, first, settled),
             )
+        database.close()
+
+
+class TestAccountGroupsMigration:
+    """010 adds account groups to databases whose accounts already hold movements."""
+
+    def test_accounts_keep_everything_and_start_in_no_group(self, db_path):
+        old = Database.open(db_path, [m for m in load_packaged_migrations() if m.version <= 9])
+        with old.transaction():
+            old.connection.execute(
+                "INSERT INTO accounts (name, type, currency, initial_balance_cents, position)"
+                " VALUES ('Banco', 'bank', 'ARS', 500, 3)"
+            )
+        old.close()
+
+        database = Database.open(db_path)
+
+        row = database.connection.execute(
+            "SELECT name, initial_balance_cents, position, group_id FROM accounts"
+        ).fetchone()
+        assert tuple(row) == ("Banco", 500, 3, None)
+        assert database.connection.execute("PRAGMA foreign_key_check").fetchall() == []
+        database.close()
+
+    def test_deleting_a_group_leaves_its_accounts_without_one(self, db_path):
+        database = Database.open(db_path)
+        connection = database.connection
+        with database.transaction():
+            connection.execute(
+                "INSERT INTO account_groups (id, name, normalized_name)"
+                " VALUES (1, 'Bancos', 'bancos')"
+            )
+            connection.execute(
+                "INSERT INTO accounts (name, type, currency, group_id)"
+                " VALUES ('B', 'bank', 'ARS', 1)"
+            )
+        with database.transaction():
+            connection.execute("DELETE FROM account_groups WHERE id = 1")
+
+        assert connection.execute("SELECT name, group_id FROM accounts").fetchall()[0][:] == (
+            "B",
+            None,
+        )
         database.close()
