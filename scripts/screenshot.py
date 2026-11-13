@@ -214,6 +214,13 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.show_detail(DetailId.ACCOUNT, investment.id)
         app.processEvents()
         save(window, args.out / f"account-detail-{mode.value}.png")
+        # The sidebar with a group folded down to its total, on the page of groups.
+        banks = services.account_groups.list_groups()[0]
+        window.sidebar.toggle_group(banks.id)
+        window.show_page(PageId.ACCOUNTS)
+        app.processEvents()
+        save(window, args.out / f"accounts-groups-{mode.value}.png")
+        window.sidebar.toggle_group(banks.id)
         # The page of one goal: the trip, filled by the dollar savings, on track.
         window.show_detail(DetailId.GOAL, services.goals.list_goals()[0].id)
         app.processEvents()

@@ -43,7 +43,7 @@ The dashboard answers the usual questions: how much you have, how the month is g
 </picture>
 
 ### Keep accounts in pesos and dollars
-Add every place where you keep money, from your bank, cash and virtual wallets like Mercado Pago to dollar savings or a credit card, and balances are always computed from your transactions. Drag them into the order you like, and the sidebar follows it. When you buy dollars, Nodus stores both amounts and shows the rate you actually got. Euros and Chilean pesos are welcome too, for travel money or savings abroad, and they add up to your net worth like everything else. Today's exchange rates can be fetched automatically, your choice of dollar plus the official euro and Chilean peso, or entered by hand. Savings and investments grow on their own, with interest or prices: write down what one is worth today, as its app shows it, and Nodus records the difference as a return that moves your balance and net worth without counting as income. Click an account to open its page, with its balance over time and every one of its transactions.
+Add every place where you keep money, from your bank, cash and virtual wallets like Mercado Pago to dollar savings or a credit card, and balances are always computed from your transactions. Drag them into the order you like, and the sidebar follows it. To keep many accounts tidy, gather them in groups such as Banks, Wallets or Savings and investments: each group shows what it adds up to, and in the sidebar it folds down to that one total. When you buy dollars, Nodus stores both amounts and shows the rate you actually got. Euros and Chilean pesos are welcome too, for travel money or savings abroad, and they add up to your net worth like everything else. Today's exchange rates can be fetched automatically, your choice of dollar plus the official euro and Chilean peso, or entered by hand. Savings and investments grow on their own, with interest or prices: write down what one is worth today, as its app shows it, and Nodus records the difference as a return that moves your balance and net worth without counting as income. Click an account to open its page, with its balance over time and every one of its transactions.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">
@@ -98,6 +98,14 @@ Set a monthly budget for the categories you want to watch and see how much you h
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/budgets-dark.png">
   <img src="docs/images/budgets-light.png" alt="Monthly budgets with how much has been spent and how much is left">
+</picture>
+
+### Save toward a goal
+A trip, an emergency fund, a new laptop: a goal points the balance of your savings accounts toward an amount, with a date if you want one. You choose which accounts count and how much of each, so one savings account can serve several goals, and before saving the form tells you what each account adds today and how much to put aside every month. Each goal then says in one sentence whether your pace gets you there in time and, if not, how much a month it takes. Goals never move money: they grow by themselves when you move money into their accounts, and each one has its own page with how it grew month by month. When you get there, the bell tells you.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/goals-dark.png">
+  <img src="docs/images/goals-light.png" alt="Savings goals with their progress and whether the pace arrives in time">
 </picture>
 
 ### Look back over the year

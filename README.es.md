@@ -41,7 +41,7 @@ El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y e
 </picture>
 
 ### Llevar tus cuentas en pesos y en dólares
-Registras cada lugar donde tienes dinero, sea el banco, el efectivo, una billetera virtual como Mercado Pago, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Las ordenas arrastrándolas, y el panel lateral sigue ese orden. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. También puedes tener euros y pesos chilenos, para un viaje o unos ahorros afuera, y se suman a tu patrimonio neto como todo lo demás. Las cotizaciones del día pueden llegar solas, el dólar que elijas y el euro y el peso chileno oficiales, o las cargas a mano. Los ahorros y las inversiones crecen solos, con intereses o precios: anotas cuánto vale hoy una, como lo muestra su app, y Nodus guarda la diferencia como rendimiento, que mueve tu saldo y tu patrimonio neto sin contar como ingreso. Un clic en una cuenta abre su página, con la línea de su saldo en el tiempo y todos sus movimientos.
+Registras cada lugar donde tienes dinero, sea el banco, el efectivo, una billetera virtual como Mercado Pago, los ahorros en dólares o una tarjeta, y los saldos se calculan siempre a partir de los movimientos. Las ordenas arrastrándolas, y el panel lateral sigue ese orden. Para que muchas cuentas no se vuelvan un lío, las juntas en grupos como Bancos, Billeteras o Ahorro e inversiones: cada grupo muestra cuánto suma, y en el panel lateral se pliega hasta quedar en ese total. Cuando compras dólares, Nodus guarda los dos montos y te muestra la cotización que realmente obtuviste. También puedes tener euros y pesos chilenos, para un viaje o unos ahorros afuera, y se suman a tu patrimonio neto como todo lo demás. Las cotizaciones del día pueden llegar solas, el dólar que elijas y el euro y el peso chileno oficiales, o las cargas a mano. Los ahorros y las inversiones crecen solos, con intereses o precios: anotas cuánto vale hoy una, como lo muestra su app, y Nodus guarda la diferencia como rendimiento, que mueve tu saldo y tu patrimonio neto sin contar como ingreso. Un clic en una cuenta abre su página, con la línea de su saldo en el tiempo y todos sus movimientos.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">
@@ -96,6 +96,14 @@ Defines un presupuesto mensual para las categorías que quieres cuidar y ves cu�
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/budgets-dark.png">
   <img src="docs/images/budgets-light.png" alt="Presupuestos mensuales con lo gastado y lo que queda">
+</picture>
+
+### Ahorrar para algo
+Un viaje, un fondo de emergencia, una notebook nueva: una meta apunta el saldo de tus cuentas de ahorro hacia un monto, con fecha si quieres. Eliges qué cuentas cuentan y qué parte de cada una, así una misma cuenta de ahorro sirve a varias metas, y antes de guardar el formulario te dice cuánto aporta cada cuenta hoy y cuánto apartar por mes. Después, cada meta te dice en una oración si a tu ritmo llegas a tiempo y, si no, cuánto hace falta por mes. Las metas nunca mueven dinero: crecen solas cuando pasas plata a sus cuentas, y cada una tiene su página con cómo creció mes a mes. Cuando llegas, la campana te avisa.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/goals-dark.png">
+  <img src="docs/images/goals-light.png" alt="Metas de ahorro con su avance y si el ritmo llega a tiempo">
 </picture>
 
 ### Mirar el año completo
