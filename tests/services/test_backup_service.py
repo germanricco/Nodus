@@ -7,7 +7,7 @@ from factories import ars
 from nodus.database.database import Database, Migration, latest_schema_version
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
-from nodus.services.backup_service import BackupService
+from nodus.services.backup_service import BackupService, reminder_start
 from nodus.services.errors import BackupError, ValidationError
 
 TODAY = date(2026, 11, 6)
@@ -136,3 +136,53 @@ def test_restored_older_copy_is_migrated(tmp_path):
     columns = [row[1] for row in current.connection.execute("PRAGMA table_info(notes)")]
     assert columns == ["text", "day"]
     current.close()
+
+
+class TestCopyOutside:
+    def test_is_saved_in_the_folder_and_remembered(self, services, tmp_path):
+        copy = services.backups.export_to(tmp_path, TODAY)
+
+        assert copy == tmp_path / "nodus-2026-11-06.db"
+        assert copy.is_file()
+        assert services.backups.last_external_backup() == TODAY
+        assert services.backups.external_folder() == tmp_path
+
+    def test_can_be_restored(self, services, tmp_path):
+        add_account(services, "Banco")
+        copy = services.backups.export_to(tmp_path, TODAY)
+        add_account(services, "Efectivo")
+
+        services.backups.restore(copy, NOW)
+
+        assert account_names(services) == ["Banco"]
+
+    def test_to_a_missing_folder_fails_and_remembers_nothing(self, services, tmp_path):
+        with pytest.raises(BackupError):
+            services.backups.export_to(tmp_path / "pendrive-sacado", TODAY)
+
+        assert services.backups.last_external_backup() is None
+
+    def test_the_last_folder_is_offered_only_while_it_is_there(self, services, tmp_path):
+        pen_drive = tmp_path / "E"
+        pen_drive.mkdir()
+        services.backups.export_to(pen_drive, TODAY)
+
+        pen_drive.joinpath("nodus-2026-11-06.db").unlink()
+        pen_drive.rmdir()
+
+        assert services.backups.external_folder() is None
+
+
+@pytest.mark.parametrize(
+    ("today", "start"),
+    [
+        (date(2026, 11, 28), date(2026, 11, 28)),  # 30 days: the last three are 28 to 30
+        (date(2026, 11, 30), date(2026, 11, 28)),
+        (date(2026, 11, 27), date(2026, 10, 29)),  # before it, the month before's
+        (date(2026, 12, 3), date(2026, 11, 28)),
+        (date(2027, 2, 26), date(2027, 2, 26)),  # 28 days
+        (date(2027, 1, 15), date(2026, 12, 29)),  # across the year
+    ],
+)
+def test_reminder_starts_three_days_before_the_month_ends(today, start):
+    assert reminder_start(today) == start

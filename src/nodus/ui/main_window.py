@@ -23,6 +23,7 @@ from nodus.services.notification_service import Notice, NoticeKind
 from nodus.services.update_service import Release
 from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
+from nodus.ui.dialogs.external_backup import save_copy_outside
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.dialogs.update_dialog import UpdateDialog
@@ -150,6 +151,7 @@ class MainWindow(QMainWindow):
             event_bus.transactions_changed,
             event_bus.budgets_changed,
             event_bus.categories_changed,
+            event_bus.backups_changed,
         ):
             signal.connect(self.refresh_notifications)
         self.show_page(PageId.DASHBOARD)
@@ -215,6 +217,8 @@ class MainWindow(QMainWindow):
             self.show_page(PageId.RECURRING)
         elif notice.kind is NoticeKind.BUDGET_OVER:
             self.show_budgets(Month.of(date.today()))
+        elif notice.kind is NoticeKind.BACKUP_REMINDER:
+            save_copy_outside(self, self._services, self._event_bus)
         else:
             self.show_page(PageId.SETTINGS)
 
@@ -237,8 +241,10 @@ class MainWindow(QMainWindow):
         if dialog.installing:
             QApplication.quit()
 
-    def _dismiss_notice(self, _notice: Notice) -> None:
-        if self._release is not None:
+    def _dismiss_notice(self, notice: Notice) -> None:
+        if notice.kind is NoticeKind.BACKUP_REMINDER:
+            self._services.backups.put_off_reminder(date.today())
+        elif self._release is not None:
             self._services.notifications.dismiss(self._release)
         self.refresh_notifications()
 

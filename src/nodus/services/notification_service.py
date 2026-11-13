@@ -33,6 +33,7 @@ class NoticeKind(Enum):
     UPDATE = "update"
     STALE_RATE = "stale_rate"
     BACKUP_FAILED = "backup_failed"
+    BACKUP_REMINDER = "backup_reminder"
     CHARGES_DUE = "charges_due"
     BUDGET_OVER = "budget_over"
 
@@ -89,11 +90,27 @@ class NotificationService:
             notices.append(
                 Notice(NoticeKind.BACKUP_FAILED, "La copia de hoy falló", self._backups.last_error)
             )
+        reminder = self._backup_reminder(today)
+        if reminder:
+            notices.append(reminder)
         return notices
 
     def dismiss(self, release: Release) -> None:
         """Stops announcing ``release``; a later version is announced again."""
         self._settings.set_dismissed_version(release.version)
+
+    def _backup_reminder(self, today: date) -> Notice | None:
+        """At the end of the month, to save a copy outside the computer."""
+        if not self._backups.reminder_due(today, self._accounts.first_created_on()):
+            return None
+        last = self._backups.last_external_backup()
+        since = f"La última es del {last:%d/%m/%Y}." if last else "Todavía no guardaste ninguna."
+        return Notice(
+            NoticeKind.BACKUP_REMINDER,
+            "Guarda una copia fuera de esta computadora",
+            f"{since} En un pendrive o en Drive, tus datos se salvan aunque la PC se pierda"
+            " o se rompa.",
+        )
 
     def _rate_notices(self, today: date) -> list[Notice]:
         """One per foreign currency an account holds, since its rate is needed to add it

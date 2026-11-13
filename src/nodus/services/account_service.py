@@ -78,6 +78,10 @@ class AccountService:
             key=lambda a: (a.position, name_sort_key(a.name)),
         )
 
+    def first_created_on(self) -> date | None:
+        """The day the first account was created, or None if there is none."""
+        return self._accounts.first_created_on()
+
     def reorder(self, account_ids: list[int]) -> None:
         """Puts the accounts of ``account_ids`` first, in that order; the rest (the
         archived ones, when the active list is reordered) keep their order after them."""

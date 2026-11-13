@@ -10,7 +10,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import FOREIGN_CURRENCIES, Currency
 from nodus.services.errors import BackupError
 from nodus.services.startup_service import StartupService
-from nodus.ui.dialogs import export
+from nodus.ui.dialogs import export, external_backup
 from nodus.ui.pages import settings_page
 from nodus.ui.pages.settings_page import THEME_MODES, RateRow, SettingsPage
 from nodus.ui.theme.design import Motion, motion_ms, set_reduced_motion
@@ -224,3 +224,52 @@ def test_reduce_motion_is_saved_and_applied_at_once(services, page):
 
     assert not services.settings.reduce_motion()
     assert motion_ms(Motion.SLOW) == Motion.SLOW
+
+
+class TestCopyOutside:
+    def test_says_there_is_none_yet(self, page):
+        assert page.outside_row.detail.text().startswith("Nunca.")
+        assert page.backup_reminder_input.isChecked()
+
+    def test_saves_in_the_chosen_folder(self, monkeypatch, tmp_path, services, page):
+        monkeypatch.setattr(
+            external_backup.QFileDialog, "getExistingDirectory", lambda *_a: str(tmp_path)
+        )
+        told = []
+        monkeypatch.setattr(
+            external_backup.QMessageBox, "information", lambda *a: told.append(a[2])
+        )
+
+        page.save_outside_button.click()
+
+        assert (tmp_path / f"nodus-{date.today()}.db").is_file()
+        assert told == [f"Se guardó «nodus-{date.today()}.db» en {tmp_path}."]
+        assert page.outside_row.detail.text() == f"Última: {date.today():%d/%m/%Y}"
+
+    def test_offers_the_folder_of_the_last_time(self, monkeypatch, tmp_path, services, page):
+        services.backups.export_to(tmp_path, date(2026, 10, 31))
+        asked = []
+        monkeypatch.setattr(
+            external_backup.QFileDialog,
+            "getExistingDirectory",
+            lambda *a: asked.append(a) or "",
+        )
+        monkeypatch.setattr(external_backup.QMessageBox, "exec", lambda _box: 0)
+        monkeypatch.setattr(
+            external_backup.QMessageBox, "clickedButton", lambda box: box.defaultButton()
+        )
+
+        assert external_backup.choose_folder(page, services) == tmp_path
+        assert asked == []
+
+    def test_cancelled_saves_nothing(self, monkeypatch, services, page):
+        monkeypatch.setattr(external_backup.QFileDialog, "getExistingDirectory", lambda *_a: "")
+
+        page.save_outside_button.click()
+
+        assert services.backups.last_external_backup() is None
+
+    def test_reminder_can_be_turned_off(self, services, page):
+        page.backup_reminder_input.click()
+
+        assert services.settings.backup_reminder() is False

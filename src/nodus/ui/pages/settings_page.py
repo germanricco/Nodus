@@ -33,6 +33,7 @@ from nodus.services.rate_feed_service import SOURCES
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import export_transactions
+from nodus.ui.dialogs.external_backup import save_copy_outside
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
@@ -134,6 +135,7 @@ class SettingsPage(Page):
         self.content_layout.addWidget(scroll)
 
         event_bus.exchange_rates_changed.connect(self.refresh)
+        event_bus.backups_changed.connect(self._refresh_backup_status)
         self._rate_updater = RateUpdater(services, event_bus, parent=self)
         self._rate_updater.updated.connect(self._on_rate_updated)
         self._rate_updater.failed.connect(self._on_rate_failed)
@@ -372,12 +374,27 @@ class SettingsPage(Page):
         )
         self.backup_row.add(secondary_button("Abrir carpeta", self._open_backups_folder))
 
+        self.outside_row = SettingRow("Copia fuera de la PC")
+        self.outside_row.setToolTip(
+            "Las copias diarias quedan en este disco. Una copia en un pendrive, un disco externo"
+            " o una carpeta de Drive u OneDrive salva tus datos si la PC se pierde o se rompe."
+        )
+        self.save_outside_button = self.outside_row.add(
+            secondary_button("Guardar copia en…", self.save_copy_outside)
+        )
+        reminder_row = SettingRow(
+            "Recordarme a fin de mes",
+            "Un aviso en la campana si en el mes no guardaste una copia fuera de la PC.",
+        )
+        self.backup_reminder_input = reminder_row.add(ToggleSwitch())
+        self.backup_reminder_input.clicked.connect(self._set_backup_reminder)
+
         export_row = SettingRow(
             "Exportar transacciones", "Todas, en un archivo CSV para abrir en una planilla."
         )
         self.export_all_button = export_row.add(secondary_button("Exportar CSV", self.export_all))
 
-        for row in (data_row, self.backup_row, export_row):
+        for row in (data_row, self.backup_row, self.outside_row, reminder_row, export_row):
             card.body.addWidget(row)
 
         # Apart from the everyday actions, since it replaces all the data.
@@ -404,6 +421,20 @@ class SettingsPage(Page):
             return
         last = backups.last_backup()
         self.backup_row.set_detail(f"Última: {format_date(last)}" if last else "Sin copias")
+        outside = backups.last_external_backup()
+        self.outside_row.set_detail(
+            f"Última: {format_date(outside)}"
+            if outside
+            else "Nunca. Guárdala en un pendrive, un disco externo o una carpeta de Drive."
+        )
+        self.backup_reminder_input.setChecked(self._services.settings.backup_reminder())
+
+    def save_copy_outside(self) -> None:
+        save_copy_outside(self.window(), self._services, self._event_bus)
+
+    def _set_backup_reminder(self, enabled: bool) -> None:
+        self._services.settings.set_backup_reminder(enabled)
+        self._event_bus.backups_changed.emit()
 
     def backup_now(self) -> None:
         try:

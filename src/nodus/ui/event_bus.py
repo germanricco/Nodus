@@ -18,6 +18,7 @@ class EventBus(QObject):
     budgets_changed = Signal()
     payees_changed = Signal()
     tags_changed = Signal()
+    backups_changed = Signal()
     amounts_hidden_changed = Signal(bool)
 
     def emit_all(self) -> None:
@@ -30,3 +31,4 @@ class EventBus(QObject):
         self.budgets_changed.emit()
         self.payees_changed.emit()
         self.tags_changed.emit()
+        self.backups_changed.emit()

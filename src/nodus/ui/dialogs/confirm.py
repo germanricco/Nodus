@@ -11,16 +11,16 @@ def confirm(parent: QWidget, title: str, text: str, action: str | None = None) -
     the default button, so pressing Enter by reflex never destroys data.
     """
     box = QMessageBox(QMessageBox.Icon.Warning, title, text, parent=parent)
-    accept_button = _styled_button(action or title, "DangerButton")
+    accept_button = styled_button(action or title, "DangerButton")
     box.addButton(accept_button, QMessageBox.ButtonRole.DestructiveRole)
-    cancel_button = _styled_button("Cancelar", "SecondaryButton")
+    cancel_button = styled_button("Cancelar", "SecondaryButton")
     box.addButton(cancel_button, QMessageBox.ButtonRole.RejectRole)
     box.setDefaultButton(cancel_button)
     box.exec()
     return box.clickedButton() is accept_button
 
 
-def _styled_button(text: str, style: str) -> QPushButton:
+def styled_button(text: str, style: str) -> QPushButton:
     """A button named for the stylesheet before it joins the box, which styles its
     buttons as they are added."""
     button = QPushButton(text)

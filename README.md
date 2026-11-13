@@ -109,7 +109,7 @@ The Analysis page takes the long view, the last twelve months by default. Trends
 </picture>
 
 ### Hear about what matters
-A bell gathers what needs your attention: a payment coming due, a budget passed, a stale exchange rate or a new version to install. Nodus also backs up your data every day, and you can restore any copy from Settings. Everything works in light or dark mode, and if movement on screen bothers you, «Reducir animaciones» in Settings makes charts and figures change at once (it starts off the way Windows has it).
+A bell gathers what needs your attention: a payment coming due, a budget passed, a stale exchange rate or a new version to install. Nodus also backs up your data every day, and you can restore any copy from Settings. Since those copies sit on the same disk, at the end of each month it reminds you to save one off your computer, on a pen drive or in Drive, so your data survives even if the PC is lost. Everything works in light or dark mode, and if movement on screen bothers you, «Reducir animaciones» in Settings makes charts and figures change at once (it starts off the way Windows has it).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/notifications-dark.png">

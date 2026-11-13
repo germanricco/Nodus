@@ -4,13 +4,14 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
-from factories import ars, category_id, charge_draft, expense_draft
+from factories import ars, category_id, charge_draft, data_since, expense_draft
 
 from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
 from nodus.services.notification_service import NoticeKind
 from nodus.services.update_service import UpdateService
 from nodus.ui import browser
+from nodus.ui.dialogs import external_backup
 from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
 
@@ -153,3 +154,34 @@ def test_budget_notice_appears_when_an_expense_passes_the_limit(
     offline_window.notification_panel.rows[0].action_button.click()
 
     assert offline_window.current_page is offline_window.page(PageId.BUDGETS)
+
+
+class TestBackupReminder:
+    @pytest.fixture
+    def reminded_window(self, database, pesos, offline_window, event_bus):
+        data_since(database, date(2000, 1, 1))
+        event_bus.backups_changed.emit()
+        assert count(offline_window) == "1"
+        offline_window.open_notifications()
+        row = offline_window.notification_panel.rows[0]
+        assert row.action_button.text() == "Guardar copia…"
+        return offline_window
+
+    def test_put_off_with_ahora_no(self, reminded_window):
+        row = reminded_window.notification_panel.rows[0]
+        assert row.dismiss_button.text() == "Ahora no"
+
+        row.dismiss_button.click()
+
+        assert count(reminded_window) == ""
+
+    def test_saving_the_copy_clears_it(self, monkeypatch, tmp_path, services, reminded_window):
+        monkeypatch.setattr(
+            external_backup.QFileDialog, "getExistingDirectory", lambda *_a: str(tmp_path)
+        )
+        monkeypatch.setattr(external_backup.QMessageBox, "information", lambda *_a: None)
+
+        reminded_window.notification_panel.rows[0].action_button.click()
+
+        assert services.backups.last_external_backup() == date.today()
+        assert count(reminded_window) == ""

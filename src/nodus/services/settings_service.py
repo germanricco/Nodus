@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 from nodus.config.paths import visible_path
@@ -29,6 +30,10 @@ class SettingsService:
     ACCOUNTS_FOLDED_KEY = "accounts_folded"
     AMOUNTS_HIDDEN_KEY = "amounts_hidden"
     REDUCE_MOTION_KEY = "reduce_motion"
+    EXTERNAL_BACKUP_KEY = "last_external_backup"
+    EXTERNAL_BACKUP_FOLDER_KEY = "external_backup_folder"
+    BACKUP_REMINDER_KEY = "backup_reminder"
+    BACKUP_REMINDER_DISMISSED_KEY = "backup_reminder_dismissed"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -82,6 +87,36 @@ class SettingsService:
 
     def set_reduce_motion(self, reduced: bool) -> None:
         self._set_flag(self.REDUCE_MOTION_KEY, reduced)
+
+    def last_external_backup(self) -> date | None:
+        """The day of the last copy saved outside this computer, or None if never."""
+        value = self._settings.get(self.EXTERNAL_BACKUP_KEY)
+        return date.fromisoformat(value) if value else None
+
+    def external_backup_folder(self) -> Path | None:
+        """Where the last copy outside this computer went, offered again the next time."""
+        value = self._settings.get(self.EXTERNAL_BACKUP_FOLDER_KEY)
+        return Path(value) if value else None
+
+    def set_external_backup(self, day: date, folder: Path) -> None:
+        with self._database.transaction():
+            self._settings.set(self.EXTERNAL_BACKUP_KEY, day.isoformat())
+            self._settings.set(self.EXTERNAL_BACKUP_FOLDER_KEY, str(folder))
+
+    def backup_reminder(self) -> bool:
+        """Whether to remind, at the end of the month, to save a copy outside the PC."""
+        return self._flag(self.BACKUP_REMINDER_KEY, default=True)
+
+    def set_backup_reminder(self, enabled: bool) -> None:
+        self._set_flag(self.BACKUP_REMINDER_KEY, enabled)
+
+    def backup_reminder_dismissed(self) -> str | None:
+        """The month ("2026-10") whose reminder the user put off with «Ahora no»."""
+        return self._settings.get(self.BACKUP_REMINDER_DISMISSED_KEY)
+
+    def set_backup_reminder_dismissed(self, month: str) -> None:
+        with self._database.transaction():
+            self._settings.set(self.BACKUP_REMINDER_DISMISSED_KEY, month)
 
     def last_account_id(self) -> int | None:
         """The account of the last movement recorded, offered first in the next one."""

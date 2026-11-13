@@ -2,6 +2,11 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.6.0
+
+- Guarda una copia fuera de la computadora: Ajustes → Tus datos suma «Guardar copia en…», para dejarla en un pendrive, un disco externo o una carpeta de Drive u OneDrive, y dice cuándo fue la última. La próxima vez propone la misma carpeta, así que con el pendrive puesto es un clic. Las copias diarias quedan en el mismo disco que tus datos; esta los salva aunque la PC se pierda o se rompa.
+- A fin de mes, si ese mes no guardaste una copia fuera de la PC, la campana te lo recuerda, con «Guardar copia…» a mano y «Ahora no» para dejarlo hasta el mes siguiente. Se apaga desde Ajustes con «Recordarme a fin de mes».
+
 ## 1.5.0 — 2026-11-10
 
 - Ajustes → General suma «Reducir animaciones»: los gráficos y las cifras cambian de una vez, sin moverse. Si Windows tiene las animaciones apagadas, Nodus arranca igual.

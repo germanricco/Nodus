@@ -77,6 +77,11 @@ class AccountRepository(Repository):
         row = self._fetch_one("SELECT COALESCE(MAX(position), -1) + 1 AS next FROM accounts")
         return row["next"]
 
+    def first_created_on(self) -> date | None:
+        """The day the oldest account was created: since when there are data to lose."""
+        row = self._fetch_one("SELECT MIN(created_at) AS first FROM accounts")
+        return date.fromisoformat(row["first"][:10]) if row["first"] else None
+
     def set_positions(self, positions: dict[int, int]) -> None:
         """Saves the position of each account id in ``positions``."""
         self._database.connection.executemany(

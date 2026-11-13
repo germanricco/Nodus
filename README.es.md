@@ -107,7 +107,7 @@ La página Análisis toma distancia: por defecto, los últimos doce meses. Tende
 </picture>
 
 ### Enterarte de lo importante
-Una campana junta lo que merece tu atención: un pago que vence, un presupuesto excedido, una cotización vieja o una versión nueva para instalar. Además, cada día Nodus guarda una copia de seguridad de tus datos, y puedes restaurar cualquiera desde Ajustes. Todo funciona en tema claro u oscuro, y si el movimiento en pantalla te molesta, «Reducir animaciones» en Ajustes hace que los gráficos y las cifras cambien de una vez (arranca como lo tengas en Windows).
+Una campana junta lo que merece tu atención: un pago que vence, un presupuesto excedido, una cotización vieja o una versión nueva para instalar. Además, cada día Nodus guarda una copia de seguridad de tus datos, y puedes restaurar cualquiera desde Ajustes. Como esas copias quedan en el mismo disco, a fin de mes te recuerda guardar una fuera de la computadora, en un pendrive o en Drive, para que tus datos sobrevivan aunque la PC se pierda. Todo funciona en tema claro u oscuro, y si el movimiento en pantalla te molesta, «Reducir animaciones» en Ajustes hace que los gráficos y las cifras cambien de una vez (arranca como lo tengas en Windows).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/notifications-dark.png">

@@ -10,10 +10,17 @@ from nodus.ui.theme.design import Layout, Line, Popup, Space
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
+# The notices the user can put off, with how the button says it.
+DISMISS_LABELS = {
+    NoticeKind.UPDATE: ("Descartar", "No volver a avisar de esta versión"),
+    NoticeKind.BACKUP_REMINDER: ("Ahora no", "Volver a avisar a fin del mes que viene"),
+}
+
 ACTION_LABELS = {
     NoticeKind.UPDATE: "Actualizar",
     NoticeKind.STALE_RATE: "Ir a Ajustes",
     NoticeKind.BACKUP_FAILED: "Ir a Ajustes",
+    NoticeKind.BACKUP_REMINDER: "Guardar copia…",
     NoticeKind.CHARGES_DUE: "Ver cargos",
     NoticeKind.BUDGET_OVER: "Ver presupuestos",
 }
@@ -46,10 +53,11 @@ class NoticeRow(QWidget):
         self.action_button.setObjectName("SmallButton")
         buttons.addWidget(self.action_button)
         self.dismiss_button: QPushButton | None = None
-        if notice.kind is NoticeKind.UPDATE:
-            self.dismiss_button = QPushButton("Descartar")
+        if notice.kind in DISMISS_LABELS:
+            text, tooltip = DISMISS_LABELS[notice.kind]
+            self.dismiss_button = QPushButton(text)
             self.dismiss_button.setObjectName("SmallButton")
-            self.dismiss_button.setToolTip("No volver a avisar de esta versión")
+            self.dismiss_button.setToolTip(tooltip)
             buttons.addWidget(self.dismiss_button)
         buttons.addStretch()
         layout.addSpacing(Space.XS)

@@ -97,7 +97,7 @@ class Services:
             exchange_rates,
         )
         settings = SettingsService(database, SettingsRepository(database))
-        backups = BackupService(database, database.path.parent / "backups")
+        backups = BackupService(database, database.path.parent / "backups", settings)
         dashboard = DashboardService(transactions, categories, exchange_rates)
         budgets = BudgetService(
             database, BudgetRepository(database), categories, dashboard, transactions

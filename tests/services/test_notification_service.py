@@ -1,7 +1,8 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
-from factories import TODAY, ars, category_id, charge_draft, eur, expense_draft
+import pytest
+from factories import TODAY, ars, category_id, charge_draft, data_since, eur, expense_draft
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
@@ -145,3 +146,62 @@ def test_each_foreign_currency_held_needs_its_rate(services, dollars):
 
     assert notice.title == "Sin cotización del euro"
     assert notice.detail == "Cárgala para sumar tus cuentas en euros al resto."
+
+
+class TestBackupReminder:
+    """Once a month, to save a copy outside the computer (November has 30 days)."""
+
+    @pytest.fixture(autouse=True)
+    def old_data(self, database, pesos):
+        data_since(database, date(2026, 1, 10))
+
+    @staticmethod
+    def reminded(services, day) -> bool:
+        return NoticeKind.BACKUP_REMINDER in [
+            n.kind for n in services.notifications.notices(day, None)
+        ]
+
+    def test_from_the_28th_without_a_copy_this_month(self, services, tmp_path):
+        services.backups.export_to(tmp_path, date(2026, 10, 10))
+
+        assert not self.reminded(services, date(2026, 11, 27))
+        assert self.reminded(services, date(2026, 11, 28))
+
+    def test_not_with_a_copy_this_month(self, services, tmp_path):
+        services.backups.export_to(tmp_path, date(2026, 11, 2))
+
+        assert not self.reminded(services, date(2026, 11, 29))
+
+    def test_goes_on_into_the_next_month_until_there_is_one(self, services, tmp_path):
+        assert self.reminded(services, date(2026, 12, 3))
+
+        services.backups.export_to(tmp_path, date(2026, 12, 3))
+
+        assert not self.reminded(services, date(2026, 12, 4))
+
+    def test_put_off_until_the_next_months_end(self, services):
+        services.backups.put_off_reminder(date(2026, 11, 29))
+
+        assert not self.reminded(services, date(2026, 12, 3))
+        assert self.reminded(services, date(2026, 12, 29))
+
+    def test_turned_off(self, services):
+        services.settings.set_backup_reminder(False)
+
+        assert not self.reminded(services, date(2026, 11, 29))
+
+    def test_new_data_waits_for_its_first_months_end(self, services, database):
+        data_since(database, date(2026, 11, 29))
+
+        assert not self.reminded(services, date(2026, 11, 30))
+        assert self.reminded(services, date(2026, 12, 29))
+
+    def test_says_when_the_last_copy_was(self, services, tmp_path):
+        notice = services.notifications.notices(date(2026, 11, 28), None)[-1]
+        assert notice.title == "Guarda una copia fuera de esta computadora"
+        assert notice.detail.startswith("Todavía no guardaste ninguna.")
+
+        services.backups.export_to(tmp_path, date(2026, 10, 10))
+
+        notice = services.notifications.notices(date(2026, 11, 28), None)[-1]
+        assert notice.detail.startswith("La última es del 10/10/2026.")

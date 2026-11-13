@@ -100,3 +100,9 @@ class FakeRegistry:
 
     def delete(self) -> None:
         self.value = None
+
+
+def data_since(database, day: date) -> None:
+    """Dates every account as created on ``day``: the user has had data since then."""
+    with database.transaction():
+        database.connection.execute("UPDATE accounts SET created_at = ?", (f"{day}T12:00:00",))
