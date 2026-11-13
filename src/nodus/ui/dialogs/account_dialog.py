@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QLineEdit, QWidget
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.services.container import Services
+from nodus.ui.dialogs.account_group_dialogs import GroupPicker
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS, CURRENCY_LABELS
@@ -55,6 +56,7 @@ class AccountDialog(FormDialog):
         self.form.addRow("Moneda", self.currency_input)
         self.form.addRow("Saldo inicial", self.balance_input)
         self.bind_field(self.name_input, "name")
+        self.group_picker = GroupPicker(self, services, account.group_id if account else None)
 
         if account:
             self._load(account)
@@ -67,16 +69,19 @@ class AccountDialog(FormDialog):
         self.balance_input.set_money(account.initial_balance)
 
     def missing(self) -> dict[QWidget, str]:
-        return self.required((self.name_input, TYPE_NAME))
+        return self.required((self.name_input, TYPE_NAME), self.group_picker.required())
 
     def save(self) -> None:
         name = self.name_input.text()
         account_type: AccountType = self.type_input.currentData()
         initial_balance = self.balance_input.money()
+        group_id = self.group_picker.group_id()
         if self._account:
-            self._services.accounts.update(self._account.id, name, account_type, initial_balance)
+            account_id = self._account.id
+            self._services.accounts.update(account_id, name, account_type, initial_balance)
         else:
-            self._services.accounts.create(
+            account_id = self._services.accounts.create(
                 name, account_type, self.currency_input.currentData(), initial_balance
-            )
+            ).id
+        self._services.account_groups.move_account(account_id, group_id)
         self._event_bus.accounts_changed.emit()

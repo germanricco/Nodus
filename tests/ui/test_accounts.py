@@ -309,3 +309,178 @@ def sidebar_accounts(window, services) -> list[str]:
     ]
     labels.sort(key=lambda label: label.mapTo(window, label.rect().topLeft()).y())
     return [label.text() for label in labels]
+
+
+class TestGroups:
+    """Groups in the account form and one card per group in Cuentas."""
+
+    def dialog(self, qtbot, services, event_bus, account=None) -> AccountDialog:
+        dialog = AccountDialog(services, event_bus, account)
+        qtbot.addWidget(dialog)
+        dialog.show()
+        return dialog
+
+    def choose(self, picker, text):
+        picker.input.setCurrentIndex(picker.input.findText(text))
+
+    def card_titles(self, page) -> list[str]:
+        return [
+            label.text()
+            for label in page.findChildren(QLabel)
+            if label.objectName() == "CardTitle" and label.isVisibleTo(page)
+        ]
+
+    def subtotals(self, page) -> list[str]:
+        return [
+            label.text()
+            for label in page.findChildren(QLabel)
+            if label.objectName() == "GroupTotal" and label.isVisibleTo(page)
+        ]
+
+    def test_the_form_puts_a_new_account_in_a_group(self, qtbot, services, event_bus):
+        bancos = services.account_groups.create("Bancos")
+        dialog = self.dialog(qtbot, services, event_bus)
+        assert dialog.group_picker.input.currentText() == "Sin grupo"
+        assert not dialog.group_picker.name_input.isVisibleTo(dialog)
+        dialog.name_input.setText("Galicia")
+        self.choose(dialog.group_picker, "Bancos")
+
+        qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+        [account] = services.accounts.list_accounts()
+        assert account.group_id == bancos.id
+
+    def test_a_new_group_is_made_from_the_form(self, qtbot, services, event_bus, pesos):
+        dialog = self.dialog(qtbot, services, event_bus, pesos)
+        self.choose(dialog.group_picker, "Nuevo grupo…")
+        assert dialog.group_picker.name_input.isVisibleTo(dialog)
+
+        qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+        assert dialog.field_error(dialog.group_picker.name_input) == "Escribe un nombre."
+
+        dialog.group_picker.name_input.setText("Bancos")
+        qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+        [group] = services.account_groups.list_groups()
+        assert group.name == "Bancos"
+        assert services.accounts.get(pesos.id).group_id == group.id
+
+    def test_a_repeated_group_name_is_shown_under_it(self, qtbot, services, event_bus, pesos):
+        services.account_groups.create("Bancos")
+        dialog = self.dialog(qtbot, services, event_bus, pesos)
+        self.choose(dialog.group_picker, "Nuevo grupo…")
+        dialog.group_picker.name_input.setText("bancos")
+
+        qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+        assert dialog.isVisible()
+        assert dialog.field_error(dialog.group_picker.name_input) == "Ya existe el grupo «Bancos»."
+
+    def test_without_groups_the_page_stays_as_it_was(self, page, pesos, dollars):
+        page.refresh()
+
+        assert self.card_titles(page)[-1] == "CUENTAS ACTIVAS"
+        assert self.subtotals(page) == []
+
+    def test_a_card_per_group_with_its_subtotal(self, services, page, pesos, dollars):
+        bancos = services.account_groups.create("Bancos")
+        services.account_groups.create("Inversiones")
+        services.account_groups.move_account(pesos.id, bancos.id)
+
+        page.refresh()
+
+        assert self.card_titles(page)[-3:] == ["BANCOS", "INVERSIONES", "SIN GRUPO"]
+        assert self.subtotals(page) == ["$ 100.000,00", "$ 0,00", "US$ 500,00"]
+        assert "Sin cuentas. Usa «Mover a grupo…» en una cuenta." in texts(page)
+
+    def test_a_mixed_group_is_approximate_and_hides_with_the_amounts(
+        self, services, page, pesos, dollars
+    ):
+        services.exchange_rates.set_rate(TODAY, Decimal("1000"))
+        todo = services.account_groups.create("Todo")
+        for account in (pesos, dollars):
+            services.account_groups.move_account(account.id, todo.id)
+
+        page.refresh()
+        assert self.subtotals(page) == ["≈ $ 600.000,00"]
+
+        services.settings.set_amounts_hidden(True)
+        page.refresh()
+        assert self.subtotals(page) == ["≈ $ ••••"]
+
+    def test_move_to_group_from_the_row(self, qtbot, monkeypatch, services, event_bus, page, pesos):
+        bancos = services.account_groups.create("Bancos")
+        page.refresh()
+        opened = []
+        monkeypatch.setattr(
+            accounts_page.MoveToGroupDialog, "exec", lambda dialog: opened.append(dialog)
+        )
+
+        run_action(rows(page)[0].actions(), "Mover a grupo…")
+        [dialog] = opened
+        self.choose(dialog.group_picker, "Bancos")
+        with qtbot.waitSignal(event_bus.accounts_changed):
+            dialog.save_button.click()
+
+        assert services.accounts.get(pesos.id).group_id == bancos.id
+        assert self.card_titles(page)[-1] == "BANCOS"
+
+    def test_groups_move_up_and_down(self, qtbot, services, event_bus, page, pesos):
+        services.account_groups.create("A")
+        b = services.account_groups.create("B")
+        page.refresh()
+        assert [a.enabled for a in page.group_actions(b) if a.text in ("Subir", "Bajar")] == [
+            True,
+            False,
+        ]
+
+        with qtbot.waitSignal(event_bus.accounts_changed):
+            run_action(page.group_actions(b), "Subir")
+
+        assert [g.name for g in services.account_groups.list_groups()] == ["B", "A"]
+
+    def test_deleting_a_group_keeps_its_accounts(
+        self, qtbot, monkeypatch, services, event_bus, page, pesos, dollars
+    ):
+        bancos = services.account_groups.create("Bancos")
+        services.account_groups.move_account(pesos.id, bancos.id)
+        page.refresh()
+        warnings = []
+        monkeypatch.setattr(
+            accounts_page, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+        )
+
+        with qtbot.waitSignal(event_bus.accounts_changed):
+            run_action(page.group_actions(bancos), "Eliminar grupo")
+
+        assert warnings == [
+            "Se va a eliminar el grupo «Bancos». Su cuenta queda sin grupo; no se elimina"
+            " ninguna cuenta ni movimiento."
+        ]
+        assert services.account_groups.list_groups() == []
+        assert len(services.accounts.list_accounts()) == 2
+        assert self.card_titles(page)[-1] == "CUENTAS ACTIVAS"
+
+    def test_accounts_are_reordered_within_their_group(
+        self, qtbot, services, event_bus, page, pesos, dollars
+    ):
+        bancos = services.account_groups.create("Bancos")
+        efectivo = services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("0"))
+        for account in (pesos, efectivo):
+            services.account_groups.move_account(account.id, bancos.id)
+        page.refresh()
+
+        with qtbot.waitSignal(event_bus.accounts_changed):
+            page.account_lists[bancos.id].move(1, 0)
+
+        sections = services.account_groups.sections(services.accounts.list_accounts())
+        assert [[a.name for a in s.accounts] for s in sections] == [
+            ["Efectivo", "Banco"],
+            ["Ahorro"],
+        ]
+
+    def test_archived_accounts_cannot_be_moved(self, services, page, pesos):
+        services.accounts.set_archived(pesos.id, True)
+        page.refresh()
+
+        assert "Mover a grupo…" not in [a.text for a in rows(page)[0].actions()]

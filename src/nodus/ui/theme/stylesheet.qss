@@ -108,6 +108,14 @@ QMainWindow, #ContentArea, #PageStack {
     font-weight: $label_weight;
 }
 
+/* A group's subtotal, beside its name in the card title. */
+#GroupTotal {
+    color: $text_muted;
+    font-size: $strong_size;
+    font-weight: $strong_weight;
+    padding-right: $space_s;
+}
+
 #StatValue {
     font-size: $figure_small_size;
     font-weight: $figure_small_weight;

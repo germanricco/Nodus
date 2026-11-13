@@ -54,11 +54,12 @@ def load_demo_data(services: Services, today: date) -> None:
 
     banco = services.accounts.create("Banco", AccountType.BANK, Currency.ARS, ars("420000"))
     efectivo = services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("60000"))
-    services.accounts.create("Mercado Pago", AccountType.WALLET, Currency.ARS, ars("45000"))
+    mercado_pago = services.accounts.create("Mercado Pago", AccountType.WALLET, Currency.ARS,
+                                            ars("45000"))  # fmt: skip
     ahorro = services.accounts.create("Ahorro en dólares", AccountType.SAVINGS, Currency.USD,
                                       usd("400"))  # fmt: skip
-    services.accounts.create("Euros del viaje", AccountType.CASH, Currency.EUR,
-                             Money.from_decimal("150", Currency.EUR))  # fmt: skip
+    euros = services.accounts.create("Euros del viaje", AccountType.CASH, Currency.EUR,
+                                     Money.from_decimal("150", Currency.EUR))  # fmt: skip
 
     current = Month.of(today)
     # An investment that grows a little each month, brought up to date at each month end.
@@ -172,6 +173,14 @@ def load_demo_data(services: Services, today: date) -> None:
                          categories[(expense, "Vivienda")], "Heladera", "Frávega"),
         InstallmentPlan(None, 6, ars("750000"), first_installment),
     )  # fmt: skip
+
+    # Groups as a user would make them: the banks with their card, the wallet apart, and
+    # what is put aside; cash stays in no group.
+    for name, members in (("Bancos", (banco, visa)), ("Billeteras", (mercado_pago,)),
+                          ("Ahorro e inversiones", (ahorro, inversiones, euros))):  # fmt: skip
+        group = services.account_groups.create(name)
+        for account in members:
+            services.account_groups.move_account(account.id, group.id)
 
     # Budgets in every state: on track, ahead of the month, over the limit, and a limit
     # raised this month, so earlier months show the previous one.

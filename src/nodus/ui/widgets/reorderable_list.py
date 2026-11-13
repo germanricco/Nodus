@@ -31,10 +31,14 @@ class DragHandle(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setFixedWidth(2 * self.DOT + self.GAP + Space.S)
+        self.setFixedWidth(self.width_for())
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.setToolTip("Arrastrar para ordenar")
         self._press: QPoint | None = None
+
+    @classmethod
+    def width_for(cls) -> int:
+        return 2 * cls.DOT + cls.GAP + Space.S
 
     def paintEvent(self, _event) -> None:  # noqa: N802
         painter = QPainter(self)
@@ -66,8 +70,16 @@ class DragHandle(QWidget):
         self._press = None
 
 
+def handle_indent() -> int:
+    """How far a list's handle pushes its rows to the right, so a row outside a list (the
+    only one of its group) lines up with those inside one."""
+    return DragHandle.width_for() + _ListRow.SPACING
+
+
 class _ListRow(QWidget):
     """A handle beside the caller's widget; knows its list to start a drag from it."""
+
+    SPACING = Space.XS
 
     def __init__(self, owner: ReorderableList, index: int, content: QWidget) -> None:
         super().__init__()
@@ -75,7 +87,7 @@ class _ListRow(QWidget):
         self.index = index
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(Space.XS)
+        layout.setSpacing(self.SPACING)
         self.handle = DragHandle()
         layout.addWidget(self.handle)
         layout.addWidget(content, stretch=1)

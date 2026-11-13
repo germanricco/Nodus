@@ -7,6 +7,7 @@ from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.models.money import Money
+from nodus.services.account_group_service import GroupTotal
 from nodus.ui.theme.design import Easing, Motion, motion_ms
 from nodus.ui.widgets import chart_base
 from nodus.ui.widgets.style import set_style_property
@@ -15,6 +16,17 @@ from nodus.ui.widgets.style import set_style_property
 def masked(money: Money) -> str:
     """ "$ ••••": only the currency of an amount the user chose to hide."""
     return f"{money.currency.symbol} ••••"
+
+
+def total_text(total: GroupTotal, hidden: bool) -> tuple[str, str]:
+    """A group's subtotal and its tooltip: "≈" when it converts currencies, "—" when a
+    rate is missing to add it up."""
+    if total.amount is None:
+        return "—", "Falta una cotización para sumar las cuentas de este grupo."
+    text = masked(total.amount) if hidden else total.amount.format()
+    if total.approximate:
+        return f"≈ {text}", "Convertido con la cotización del día."
+    return text, ""
 
 
 class MoneyLabel(QLabel):
