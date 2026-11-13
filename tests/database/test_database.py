@@ -167,6 +167,8 @@ def test_migrations_keep_existing_data(db_path, released):
         "transaction_tags",
         "value_adjustments",
         "account_groups",
+        "goals",
+        "goal_accounts",
     } <= table_names(database)
     row = database.connection.execute("SELECT name, initial_balance_cents FROM accounts").fetchone()
     assert tuple(row) == ("Banco", 500)
@@ -394,3 +396,33 @@ class TestAccountGroupsMigration:
             None,
         )
         database.close()
+
+
+def test_goals_migration_and_its_links(db_path):
+    """011 adds goals to a v1.5 database; an account deleted later leaves its goals."""
+    old = Database.open(db_path, [m for m in load_packaged_migrations() if m.version <= 10])
+    with old.transaction():
+        old.connection.execute(
+            "INSERT INTO accounts (id, name, type, currency) VALUES (1, 'Ahorro', 'savings', 'USD')"
+        )
+    old.close()
+
+    database = Database.open(db_path)
+    connection = database.connection
+    with database.transaction():
+        connection.execute(
+            "INSERT INTO goals (id, name, target_cents, currency) VALUES (1, 'Auto', 100, 'USD')"
+        )
+        connection.execute(
+            "INSERT INTO goal_accounts (goal_id, account_id, share_percent) VALUES (1, 1, 50)"
+        )
+    with pytest.raises(sqlite3.IntegrityError), database.transaction():
+        connection.execute(
+            "INSERT INTO goal_accounts (goal_id, account_id, share_percent) VALUES (1, 1, 101)"
+        )
+    with database.transaction():
+        connection.execute("DELETE FROM accounts WHERE id = 1")
+
+    assert connection.execute("SELECT COUNT(*) FROM goal_accounts").fetchone()[0] == 0
+    assert connection.execute("SELECT name FROM goals").fetchone()[0] == "Auto"
+    database.close()

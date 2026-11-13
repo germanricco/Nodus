@@ -82,6 +82,10 @@ class AccountService:
         """The day the first account was created, or None if there is none."""
         return self._accounts.first_created_on()
 
+    def data_since(self) -> dict[int, date]:
+        """The first day each account has data for: its creation or its first movement."""
+        return self._accounts.data_since()
+
     def reorder(self, account_ids: list[int]) -> None:
         """Puts the accounts of ``account_ids`` first, in that order; the rest (the
         archived ones, when the active list is reordered) keep their order after them."""

@@ -11,6 +11,7 @@ from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.budget_repository import BudgetRepository
 from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.database.repositories.exchange_rate_repository import ExchangeRateRepository
+from nodus.database.repositories.goal_repository import GoalRepository
 from nodus.database.repositories.installment_plan_repository import InstallmentPlanRepository
 from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.database.repositories.recurring_charge_repository import RecurringChargeRepository
@@ -27,6 +28,7 @@ from nodus.services.category_service import CategoryService
 from nodus.services.dashboard_service import DashboardService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.export_service import ExportService
+from nodus.services.goal_service import GoalService
 from nodus.services.http import downloader
 from nodus.services.installment_service import InstallmentService
 from nodus.services.net_worth_service import NetWorthService
@@ -52,6 +54,7 @@ class Services:
 
     accounts: AccountService
     account_groups: AccountGroupService
+    goals: GoalService
     categories: CategoryService
     transactions: TransactionService
     exchange_rates: ExchangeRateService
@@ -107,6 +110,7 @@ class Services:
         )
         return cls(
             accounts=accounts,
+            goals=GoalService(database, GoalRepository(database), accounts, exchange_rates),
             account_groups=AccountGroupService(
                 database,
                 AccountGroupRepository(database),

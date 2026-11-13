@@ -85,6 +85,18 @@ class AccountRepository(Repository):
         row = self._fetch_one("SELECT MIN(created_at) AS first FROM accounts")
         return date.fromisoformat(row["first"][:10]) if row["first"] else None
 
+    def data_since(self) -> dict[int, date]:
+        """The first day each account has data for: its creation or its first movement,
+        whichever is earlier (movements are often entered after the fact)."""
+        rows = self._fetch_all(
+            "SELECT a.id, MIN(substr(a.created_at, 1, 10),"
+            " COALESCE((SELECT MIN(occurred_on) FROM transactions t WHERE t.account_id = a.id),"
+            " '9999-12-31'),"
+            " COALESCE((SELECT MIN(occurred_on) FROM value_adjustments v"
+            " WHERE v.account_id = a.id), '9999-12-31')) AS since FROM accounts a"
+        )
+        return {row["id"]: date.fromisoformat(row["since"]) for row in rows}
+
     def set_positions(self, positions: dict[int, int]) -> None:
         """Saves the position of each account id in ``positions``."""
         self._database.connection.executemany(
