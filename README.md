@@ -21,7 +21,7 @@ No cloud, no accounts, no subscriptions.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-full-dark.png">
-  <img src="docs/images/dashboard-full-light.png" alt="The Nodus dashboard: net worth, upcoming payments, spending by category and budgets">
+  <img src="docs/images/dashboard-full-light.png" alt="Nodus Home: net worth, upcoming payments, spending by category and budgets">
 </picture>
 
 > The app's interface is in Spanish: Nodus was built for people in Argentina who keep their money in both pesos and US dollars.
@@ -35,11 +35,11 @@ It was born for people who manage money in pesos and dollars at the same time. E
 ## What you can do
 
 ### See where you stand at a glance
-The dashboard answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to see its transactions. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
+Home, the first page, answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to see its transactions. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
-  <img src="docs/images/dashboard-light.png" alt="The dashboard: net worth, upcoming payments and spending by category">
+  <img src="docs/images/dashboard-light.png" alt="Home: net worth, upcoming payments and spending by category">
 </picture>
 
 ### Keep accounts in pesos and dollars
@@ -75,7 +75,7 @@ A trip mixes flights, a hotel and meals; a side job brings income and the expens
 </picture>
 
 ### Count refunds for what they are
-When a store gives your money back or a friend pays you their share, link that income to the expense it pays back. Nodus then counts it as less spending, in the category of the original expense and in the month the money came back, instead of as income, so your budgets, the dashboard and Analysis show what you really spent. The list marks both sides, and editing the expense shows how much of it was refunded.
+When a store gives your money back or a friend pays you their share, link that income to the expense it pays back. Nodus then counts it as less spending, in the category of the original expense and in the month the money came back, instead of as income, so your budgets, Home and Analysis show what you really spent. The list marks both sides, and editing the expense shows how much of it was refunded.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/transaction-dialog-refund-dark.png">
@@ -140,7 +140,7 @@ To update, click «Actualizar» when Nodus announces a new version: it downloads
 
 ## Roadmap
 
-Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the dashboard, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. **v1.1** added euros and Chilean pesos, virtual wallets, accounts in your own order, any color for categories and tags, opening with Windows, sending feedback from the app and a summary of what's new after each update. **v1.3** brought one-click updates, a menu on every row, choosing several rows at once, a page for each account, payee and tag, and a tidier interface. **v1.4** added purchases paid in installments, the share of net worth's change that comes from the exchange rate, errors shown under the field that causes them, and payee suggestions that put first the ones you use. **v1.5** made the interface easier on the eyes: every text reads on its background in both themes, the smallest labels grew, empty lists all speak the same way, and «Reducir animaciones» stills charts and figures. **v1.6** added savings goals, account groups that fold in the sidebar, a fuller page for each account and a month-end reminder to keep a backup off your computer. Coming next:
+Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the home page, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. **v1.1** added euros and Chilean pesos, virtual wallets, accounts in your own order, any color for categories and tags, opening with Windows, sending feedback from the app and a summary of what's new after each update. **v1.3** brought one-click updates, a menu on every row, choosing several rows at once, a page for each account, payee and tag, and a tidier interface. **v1.4** added purchases paid in installments, the share of net worth's change that comes from the exchange rate, errors shown under the field that causes them, and payee suggestions that put first the ones you use. **v1.5** made the interface easier on the eyes: every text reads on its background in both themes, the smallest labels grew, empty lists all speak the same way, and «Reducir animaciones» stills charts and figures. **v1.6** added savings goals, account groups that fold in the sidebar, a fuller page for each account and a month-end reminder to keep a backup off your computer. Coming next:
 
 - **v1.7 — Getting started:** a checklist of first steps, a guided tour and help one key away.
 - **Later — Investments:** a section of its own to follow them.

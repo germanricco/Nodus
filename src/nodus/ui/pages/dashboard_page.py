@@ -1,4 +1,4 @@
-"""Dashboard: how much there is, how the period went and where the money went."""
+"""Inicio, the dashboard: how much there is, how the period went and where the money went."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ class DashboardPage(Page):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__("Dashboard")
+        super().__init__(PageId.DASHBOARD.label)
         self._services = services
         self._event_bus = event_bus
         self.period_selector = PeriodSelector()

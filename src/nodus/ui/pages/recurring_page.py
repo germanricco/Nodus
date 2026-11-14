@@ -22,7 +22,8 @@ from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import FREQUENCY_LABELS, charge_amount_text, due_label
-from nodus.ui.pages.dashboard_cards import FigureTile, due_status_label, status_pill
+from nodus.ui.navigation import PageId
+from nodus.ui.pages.dashboard_cards import FigureTile, due_status_label, muted_label, status_pill
 from nodus.ui.pages.page import Page
 from nodus.ui.pages.transaction_list_view import (
     delete_transactions,
@@ -168,13 +169,17 @@ class RecurringPage(Page):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__("Cargos recurrentes")
+        super().__init__(PageId.RECURRING.label)
         self._services = services
         self._event_bus = event_bus
         self._theme_manager = theme_manager
         self.create_button = self.add_header_button("Agregar cargo", primary=True)
         self.create_button.clicked.connect(lambda: self.open_charge_dialog())
 
+        # What the short name covers, said once under the title.
+        self.content_layout.addWidget(
+            muted_label("Pagos que se repiten: servicios, suscripciones, alquiler.")
+        )
         container = QWidget()
         self._sections = QVBoxLayout(container)
         self._sections.setContentsMargins(0, 0, 0, 0)

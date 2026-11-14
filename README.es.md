@@ -21,7 +21,7 @@ Sin nube, sin cuentas, sin suscripciones.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-full-dark.png">
-  <img src="docs/images/dashboard-full-light.png" alt="El dashboard de Nodus: patrimonio neto, próximos pagos, gastos por categoría y presupuestos">
+  <img src="docs/images/dashboard-full-light.png" alt="El Inicio de Nodus: patrimonio neto, próximos pagos, gastos por categoría y presupuestos">
 </picture>
 
 ## Por qué Nodus
@@ -33,11 +33,11 @@ Nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta tiene su
 ## Qué puedes hacer
 
 ### Ver tu situación de un vistazo
-El dashboard responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio neto, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría te lleva a sus movimientos. Si alguien mira tu pantalla, el ojo de la barra superior oculta tus saldos y tu patrimonio neto, y el panel lateral se contrae a sus íconos cuando quieres más espacio.
+El Inicio, la primera página, responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio neto, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría te lleva a sus movimientos. Si alguien mira tu pantalla, el ojo de la barra superior oculta tus saldos y tu patrimonio neto, y el panel lateral se contrae a sus íconos cuando quieres más espacio.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
-  <img src="docs/images/dashboard-light.png" alt="El dashboard: patrimonio neto, próximos pagos y gastos por categoría">
+  <img src="docs/images/dashboard-light.png" alt="El Inicio: patrimonio neto, próximos pagos y gastos por categoría">
 </picture>
 
 ### Llevar tus cuentas en pesos y en dólares
@@ -73,7 +73,7 @@ Un viaje mezcla pasajes, hotel y comidas; un trabajo aparte trae ingresos y los 
 </picture>
 
 ### Contar los reembolsos como lo que son
-Cuando un comercio te devuelve dinero o un amigo te paga su parte, vinculas ese ingreso con el gasto que devuelve. Nodus lo cuenta entonces como un gasto menor, en la categoría del gasto original y en el mes en que volvió el dinero, en lugar de como un ingreso, así que tus presupuestos, el dashboard y Análisis muestran lo que realmente gastaste. La lista marca los dos lados y, al editar el gasto, ves cuánto te devolvieron.
+Cuando un comercio te devuelve dinero o un amigo te paga su parte, vinculas ese ingreso con el gasto que devuelve. Nodus lo cuenta entonces como un gasto menor, en la categoría del gasto original y en el mes en que volvió el dinero, en lugar de como un ingreso, así que tus presupuestos, el Inicio y Análisis muestran lo que realmente gastaste. La lista marca los dos lados y, al editar el gasto, ves cuánto te devolvieron.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/transaction-dialog-refund-dark.png">
@@ -138,7 +138,7 @@ Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nue
 
 ## Hoja de ruta
 
-Nodus crece por versiones pequeñas y estables. La **v1.0**, la primera estable, incluye cuentas, transacciones, cotización del dólar, rendimiento de inversiones, dashboard, cargos recurrentes, presupuestos, beneficiarios, etiquetas, reembolsos, análisis, copias de seguridad y exportación. La **v1.1** sumó euros y pesos chilenos, billeteras virtuales, cuentas en el orden que quieras, cualquier color para categorías y etiquetas, abrir con Windows, enviar comentarios desde la aplicación y un resumen de las novedades después de cada actualización. La **v1.3** trajo actualizar con un clic, un menú en cada fila, selección de varias filas a la vez, una página para cada cuenta, beneficiario y etiqueta, y una interfaz más ordenada. La **v1.4** sumó compras en cuotas, cuánto de la variación del patrimonio se debe a la cotización, errores debajo del campo que los causa y sugerencias de beneficiario que ponen primero los que más usas. La **v1.5** hizo la interfaz más cómoda de leer: todo texto se lee sobre su fondo en los dos temas, los rótulos más chicos crecieron, las listas vacías hablan todas igual y «Reducir animaciones» deja quietos los gráficos y las cifras. La **v1.6** sumó metas de ahorro, grupos de cuentas que se pliegan en el panel lateral, una página más completa para cada cuenta y un recordatorio a fin de mes para guardar una copia fuera de la computadora. Lo que viene:
+Nodus crece por versiones pequeñas y estables. La **v1.0**, la primera estable, incluye cuentas, transacciones, cotización del dólar, rendimiento de inversiones, la página de inicio, cargos recurrentes, presupuestos, beneficiarios, etiquetas, reembolsos, análisis, copias de seguridad y exportación. La **v1.1** sumó euros y pesos chilenos, billeteras virtuales, cuentas en el orden que quieras, cualquier color para categorías y etiquetas, abrir con Windows, enviar comentarios desde la aplicación y un resumen de las novedades después de cada actualización. La **v1.3** trajo actualizar con un clic, un menú en cada fila, selección de varias filas a la vez, una página para cada cuenta, beneficiario y etiqueta, y una interfaz más ordenada. La **v1.4** sumó compras en cuotas, cuánto de la variación del patrimonio se debe a la cotización, errores debajo del campo que los causa y sugerencias de beneficiario que ponen primero los que más usas. La **v1.5** hizo la interfaz más cómoda de leer: todo texto se lee sobre su fondo en los dos temas, los rótulos más chicos crecieron, las listas vacías hablan todas igual y «Reducir animaciones» deja quietos los gráficos y las cifras. La **v1.6** sumó metas de ahorro, grupos de cuentas que se pliegan en el panel lateral, una página más completa para cada cuenta y un recordatorio a fin de mes para guardar una copia fuera de la computadora. Lo que viene:
 
 - **v1.7 — Primeros pasos:** una lista de primeros pasos, un recorrido guiado y ayuda a una tecla de distancia.
 - **Más adelante — Inversiones:** una sección propia para seguirlas.

@@ -14,7 +14,7 @@ from nodus.services.container import Services
 class PageId(Enum):
     """A section reachable from the sidebar. Each value is (label, icon name)."""
 
-    DASHBOARD = ("Dashboard", "dashboard")
+    DASHBOARD = ("Inicio", "dashboard")
     ACCOUNTS = ("Cuentas", "accounts")
     TRANSACTIONS = ("Transacciones", "transactions")
     RECURRING = ("Recurrentes", "repeat")

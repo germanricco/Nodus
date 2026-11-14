@@ -167,7 +167,7 @@ class NotificationService:
             return Notice(
                 NoticeKind.CHARGES_DUE,
                 f"{charge.name} {_due_phrase(charge.days_until(today))}",
-                f"{charge.amount.format()} · Regístralo desde Cargos recurrentes.",
+                f"{charge.amount.format()} · Regístralo desde Recurrentes.",
             )
         overdue = sum(1 for c in charges if c.days_until(today) < 0)
         title = f"{len(charges)} cargos por pagar"
