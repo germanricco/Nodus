@@ -4,6 +4,7 @@ accounts, whether the user's pace reaches it in time, and when it was reached.""
 from __future__ import annotations
 
 import dataclasses
+import math
 from dataclasses import dataclass
 from datetime import date
 
@@ -177,6 +178,31 @@ class GoalService:
             )
             for share, amount in zip(goal.shares, counted, strict=True)
         ]
+
+    def suggested_percent(self, goal: Goal, account_id: int, free: int, today: date) -> int:
+        """The part of an account to offer when the user ticks it for ``goal``: the
+        smallest that covers what the goal's other accounts leave missing, up to the
+        ``free`` part. All that is free when there is nothing to measure against: no
+        target yet, an empty account, a missing rate, or nothing missing."""
+        if free <= 0 or goal.target.cents <= 0:
+            return max(free, 1)
+        others = dataclasses.replace(
+            goal, shares=tuple(s for s in goal.shares if s.account_id != account_id)
+        )
+        balances = self._accounts.balances(today)
+        saved = Money.zero(goal.currency)
+        for counted in self._counted(others, balances, today):
+            if counted is None:
+                return free
+            saved += counted
+        missing = goal.target.cents - saved.cents
+        balance = balances[account_id]
+        whole = self._exchange_rates.convert(
+            Money(max(0, balance.cents), balance.currency), goal.currency, today
+        )
+        if missing <= 0 or whole is None or whole.cents <= 0:
+            return free
+        return max(1, min(free, math.ceil(missing * 100 / whole.cents)))
 
     # Reached
 

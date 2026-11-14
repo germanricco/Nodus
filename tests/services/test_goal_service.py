@@ -6,7 +6,7 @@ from factories import ars, data_since, expense_draft, income_draft, usd
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
-from nodus.models.goal import GoalShare, GoalState
+from nodus.models.goal import Goal, GoalShare, GoalState
 from nodus.services.errors import ValidationError
 from nodus.services.goal_service import GoalDraft
 
@@ -202,3 +202,43 @@ class TestReached:
         goals.update(goal.id, draft((savings, 100), target="500", name="Brasil"), TODAY)
 
         assert goals.get(goal.id).reached_on == TODAY
+
+
+class TestSuggestedPercent:
+    """The part offered when an account is ticked: what covers the missing amount."""
+
+    def preview(self, *shares, target="100"):
+        return Goal(None, "", usd(target), None, tuple(GoalShare(a.id, p) for a, p in shares))
+
+    def test_the_smallest_part_that_covers_the_target(self, goals, savings):
+        # US$ 100 of US$ 500 is 20 %; US$ 101 takes 21 %, rounding up so it is covered.
+        assert goals.suggested_percent(self.preview(), savings.id, 100, TODAY) == 20
+        assert goals.suggested_percent(self.preview(target="101"), savings.id, 100, TODAY) == 21
+
+    def test_what_the_other_accounts_add_counts(self, services, goals, savings):
+        cash = services.accounts.create("Caja", AccountType.CASH, Currency.USD, usd("60"))
+        preview = self.preview((cash, 100), (savings, 90))
+
+        # US$ 40 missing after the cash; the account's own current part is ignored.
+        assert goals.suggested_percent(preview, savings.id, 100, TODAY) == 8
+
+    def test_never_more_than_what_is_free(self, goals, savings):
+        preview = self.preview(target="2000")
+
+        assert goals.suggested_percent(preview, savings.id, 30, TODAY) == 30
+
+    @pytest.mark.parametrize("target", ["0", "1"])
+    def test_all_that_is_free_without_a_target_or_nothing_missing(
+        self, services, goals, savings, target
+    ):
+        cash = services.accounts.create("Caja", AccountType.CASH, Currency.USD, usd("60"))
+        preview = self.preview((cash, 100), target=target)
+
+        assert goals.suggested_percent(preview, savings.id, 70, TODAY) == 70
+
+    def test_all_that_is_free_for_an_empty_account_or_without_a_rate(self, services, goals):
+        empty = services.accounts.create("Vacía", AccountType.SAVINGS, Currency.USD, usd("0"))
+        pesos = services.accounts.create("Banco", AccountType.BANK, Currency.ARS, ars("100000"))
+
+        assert goals.suggested_percent(self.preview(), empty.id, 100, TODAY) == 100
+        assert goals.suggested_percent(self.preview(), pesos.id, 100, TODAY) == 100

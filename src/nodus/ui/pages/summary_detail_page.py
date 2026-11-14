@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Generic
 
-from PySide6.QtWidgets import QHBoxLayout, QLabel
+from PySide6.QtWidgets import QLabel
 
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
@@ -17,8 +17,8 @@ from nodus.ui.pages.dashboard_cards import FigureTile
 from nodus.ui.pages.detail_page import DetailPage, danger_zone
 from nodus.ui.pages.summary_page import S
 from nodus.ui.pages.transaction_list_view import TransactionListView
-from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.money_label import masked
 
 NO_MOVEMENTS = "—"
@@ -56,14 +56,13 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self.merge_button.setToolTip("Le pasa sus movimientos a otro y lo elimina")
         self.merge_button.clicked.connect(lambda: self.merge_item(self.summary))
 
-        figures = QHBoxLayout()
-        figures.setSpacing(Space.M)
+        self.figures = FigureRow()
         self.figure_labels: dict[str, QLabel] = {}
         for caption in ("Movimientos", "Total", "Último movimiento", *self.CAPTIONS):
             label = QLabel()
             self.figure_labels[caption] = label
-            figures.addWidget(FigureTile(caption, label, large=True), stretch=1)
-        self.content_layout.addLayout(figures)
+            self.figures.add_tile(FigureTile(caption, label, large=True))
+        self.content_layout.addWidget(self.figures)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
         self.list_view.empty_state.set_message("Todavía no tiene movimientos.")
@@ -138,6 +137,7 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         ]
         for label, value in zip(self.figure_labels.values(), values, strict=True):
             label.setText(value)
+        self.figures.relayout()
         self.list_view.show_matching(self.criteria(summary))
         self._danger_text.setText(self.delete_warning(summary))
 

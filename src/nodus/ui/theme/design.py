@@ -130,6 +130,7 @@ class Opacity:
     AREA = 0.32  # the top of the area under a line, which fades out downwards
     GUIDE = 0.7  # the line that follows the mouse across a chart
     DISABLED = 0.4  # a control that cannot be used
+    DRAGGED = 0.85  # a row on the move, so where it lands shows beneath it
 
 
 class Motion(IntEnum):

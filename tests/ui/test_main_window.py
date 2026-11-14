@@ -10,7 +10,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
-from nodus.ui.widgets.sidebar import Sidebar
+from nodus.ui.widgets.sidebar import Sidebar, SidebarAccountRow
 
 
 def sidebar_texts(window) -> list[str]:
@@ -211,6 +211,20 @@ class TestSidebarGroups:
         assert "$ 100.000,00" in texts
         assert "Banco" not in texts
         assert services.settings.folded_groups() == {bancos.id}
+
+    def test_a_long_name_gives_way_so_the_cents_show(self, window, qtbot, services, event_bus):
+        account = services.accounts.create(
+            "Caja de ahorro del banco de siempre", AccountType.BANK, Currency.ARS,
+            ars("12345678.90"),
+        )  # fmt: skip
+        bancos = services.account_groups.create("Bancos")
+        services.account_groups.move_account(account.id, bancos.id)
+        event_bus.accounts_changed.emit()
+        qtbot.waitUntil(lambda: "$ 12.345.678,90" in sidebar_texts(window))
+
+        row = window.sidebar.findChild(SidebarAccountRow)
+        assert row.amount_label.width() >= row.amount_label.sizeHint().width()
+        assert row.name_label.width() < row.name_label.sizeHint().width()
 
     def test_a_mixed_group_follows_the_net_worth_currency(
         self, window, qtbot, services, event_bus, pesos, dollars

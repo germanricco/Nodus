@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Hashable
 
-from PySide6.QtCore import QByteArray, QMimeData, QPoint, Qt, Signal
+from PySide6.QtCore import QByteArray, QMimeData, QPoint, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import (
     QDrag,
     QDragEnterEvent,
@@ -13,10 +13,19 @@ from PySide6.QtGui import (
     QMouseEvent,
     QPainter,
     QPalette,
+    QPen,
+    QPixmap,
 )
-from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QFrame,
+    QGraphicsOpacityEffect,
+    QHBoxLayout,
+    QVBoxLayout,
+    QWidget,
+)
 
-from nodus.ui.theme.design import Line, Space
+from nodus.ui.theme.design import Line, Opacity, Radius, Space
 
 # What a dragged row carries: "<list id>:<row index>", so a list only accepts its own rows.
 ROW_MIME_TYPE = "application/x-nodus-row"
@@ -70,6 +79,30 @@ class DragHandle(QWidget):
         self._press = None
 
 
+def drag_pixmap(row: QWidget) -> QPixmap:
+    """The picture that follows the mouse while a row is dragged: the row as it looks on
+    its card, background included, slightly see-through and outlined in the accent, so it
+    reads as picked up and the line where it lands shows beneath it."""
+    window = row.window()
+    shot = window.grab(QRect(row.mapTo(window, QPoint(0, 0)), row.size()))
+    ratio = shot.devicePixelRatio()
+    pixmap = QPixmap(shot.size())
+    pixmap.setDevicePixelRatio(ratio)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.save()
+    painter.setOpacity(Opacity.DRAGGED)
+    painter.drawPixmap(0, 0, shot)
+    painter.restore()
+    painter.setPen(QPen(row.palette().color(QPalette.ColorRole.Highlight), Line.THIN))
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    edge = QRectF(0, 0, row.width(), row.height()).adjusted(0.5, 0.5, -0.5, -0.5)
+    painter.drawRoundedRect(edge, Radius.M, Radius.M)
+    painter.end()
+    return pixmap
+
+
 def handle_indent() -> int:
     """How far a list's handle pushes its rows to the right, so a row outside a list (the
     only one of its group) lines up with those inside one."""
@@ -95,12 +128,19 @@ class _ListRow(QWidget):
     def start_drag(self) -> None:
         drag = QDrag(self)
         drag.setMimeData(self._owner.mime_data(self.index))
-        drag.setPixmap(self.grab())
+        drag.setPixmap(drag_pixmap(self))
         drag.setHotSpot(QPoint(self.handle.width() // 2, self.height() // 2))
         self.handle.setCursor(Qt.CursorShape.ClosedHandCursor)
-        drag.exec(Qt.DropAction.MoveAction)
-        self.handle.setCursor(Qt.CursorShape.OpenHandCursor)
-        self._owner.hide_indicator()
+        # The row stays where it was, faded, as the gap it leaves.
+        faded = QGraphicsOpacityEffect(self)
+        faded.setOpacity(Opacity.FADED)
+        self.setGraphicsEffect(faded)
+        try:
+            drag.exec(Qt.DropAction.MoveAction)
+        finally:
+            self.setGraphicsEffect(None)
+            self.handle.setCursor(Qt.CursorShape.OpenHandCursor)
+            self._owner.hide_indicator()
 
 
 class ReorderableList(QWidget):

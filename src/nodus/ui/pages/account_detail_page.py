@@ -27,6 +27,7 @@ from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.chart_base import format_compact
+from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.money_label import MoneyLabel, masked
 from nodus.ui.widgets.net_worth_card import signed
@@ -71,8 +72,7 @@ class AccountDetailPage(DetailPage):
 
         # The figures in a row, as on the pages of a payee or a tag; the ones that do not
         # apply to this account (pesos, return) hide.
-        figures = QHBoxLayout()
-        figures.setSpacing(Space.M)
+        self.figures = FigureRow()
         self.balance_label = MoneyLabel()
         self.converted_label = QLabel()
         self.gain_label = QLabel()
@@ -90,8 +90,8 @@ class AccountDetailPage(DetailPage):
             self.kind_tile,
         )  # fmt: skip
         for tile in tiles:
-            figures.addWidget(tile, stretch=1)
-        self.content_layout.addLayout(figures)
+            self.figures.add_tile(tile)
+        self.content_layout.addWidget(self.figures)
         self.goals_line = QWidget()
         self._goals_layout = QHBoxLayout(self.goals_line)
         self._goals_layout.setContentsMargins(0, 0, 0, 0)
@@ -157,6 +157,8 @@ class AccountDetailPage(DetailPage):
         self.pending_tile.setVisible(pending is not None)
         if pending is not None:
             self.pending_label.setText(masked(pending) if self._hidden else pending.format())
+
+        self.figures.relayout()
 
         history = self._services.net_worth.account_history(account.id, today)
         self._daily = len(history) < 2 or (history[1][0] - history[0][0]).days == 1

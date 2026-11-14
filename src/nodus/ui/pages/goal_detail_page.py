@@ -25,6 +25,7 @@ from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.chart_base import format_compact
+from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.goal_bar import amount_text, goal_pill, goal_sentence, month_phrase
 from nodus.ui.widgets.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.row_actions import MoreButton, RowAction
@@ -34,14 +35,15 @@ HISTORY_MONTHS = 12
 
 
 def month_change_text(change: Money | None, hidden: bool) -> str:
-    """ "Este mes subió US$ 50,00", "Este mes bajó…" or "Este mes, sin cambios"."""
+    """ "+US$ 50,00 este mes", "-US$ 50,00 este mes" or "Sin cambios este mes": short,
+    so five figures fit side by side."""
     if change is None:
         return ""
     if change.is_zero:
-        return "Este mes, sin cambios"
-    verb = "bajó" if change.is_negative else "subió"
+        return "Sin cambios este mes"
+    sign = "-" if change.is_negative else "+"
     size = -change if change.is_negative else change
-    return f"Este mes {verb} {amount_text(size, hidden)}"
+    return f"{sign}{amount_text(size, hidden)} este mes"
 
 
 class ContributionRow(QWidget):
@@ -103,8 +105,7 @@ class GoalDetailPage(DetailPage):
         self.more_button = MoreButton(self.more_actions)
         self.add_header_widget(self.more_button)
 
-        figures = QHBoxLayout()
-        figures.setSpacing(Space.M)
+        self.figures = FigureRow()
         self.target_label, self.target_note = QLabel(), muted_label("")
         self.saved_label, self.change_note = QLabel(), muted_label("")
         self.remaining_label = QLabel()
@@ -115,10 +116,10 @@ class GoalDetailPage(DetailPage):
             FigureTile("Ahorrado", self.saved_label, self.change_note, large=True),
             FigureTile("Falta", self.remaining_label, large=True),
             FigureTile("Por mes", self.needed_label, large=True),
-            FigureTile("Ritmo", self.pace_label, self.pace_note, large=True),
+            FigureTile("Ritmo por mes", self.pace_label, self.pace_note, large=True),
         ):
-            figures.addWidget(tile, stretch=1)
-        self.content_layout.addLayout(figures)
+            self.figures.add_tile(tile)
+        self.content_layout.addWidget(self.figures)
 
         self._status = QHBoxLayout()
         self._status.setSpacing(Space.S)
@@ -223,8 +224,8 @@ class GoalDetailPage(DetailPage):
             self.pace_note.setText("")
         else:
             self.pace_label.setText(f"≈ {shown(progress.pace_per_month)}")
-            arrives = f" · llega en {month_phrase(progress.eta)}" if progress.eta else ""
-            self.pace_note.setText(f"por mes{arrives}")
+            self.pace_note.setText(f"llega en {month_phrase(progress.eta)}" if progress.eta else "")
+        self.figures.relayout()
 
     def _show_status(self, goal: Goal, progress: GoalProgress) -> None:
         clear_layout(self._status)

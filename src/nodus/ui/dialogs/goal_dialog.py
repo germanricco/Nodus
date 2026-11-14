@@ -45,6 +45,8 @@ class ShareRow(QWidget):
         super().__init__()
         self.account = account
         self.free = free
+        # Once the user types a part, ticking the account again keeps it.
+        self.typed = False
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.S)
@@ -70,6 +72,7 @@ class ShareRow(QWidget):
         self.check.toggled.connect(self._follow_check)
         self.check.toggled.connect(self.changed)
         self.percent_input.textChanged.connect(self.changed)
+        self.percent_input.textEdited.connect(self._mark_typed)
         self._follow_check()
 
     @property
@@ -78,9 +81,16 @@ class ShareRow(QWidget):
         return int(text) if text.isdigit() else 0
 
     def set_share(self, percent: int) -> None:
+        """The part a saved goal already has, which counts as the user's choice."""
+        self.typed = True
         self.check.setEnabled(True)
         self.check.setChecked(True)
         self.percent_input.setText(str(percent))
+
+    def offer(self, percent: int) -> None:
+        """Puts a suggested part, unless the user already typed one."""
+        if not self.typed:
+            self.percent_input.setText(str(percent))
 
     def show_counted(self, counted: Money | None, hidden: bool) -> None:
         """What the share adds today when it counts; how much is free when it does not."""
@@ -93,6 +103,9 @@ class ShareRow(QWidget):
             self.hint.setText(f"quedan {self.free} % libres")
         else:
             self.hint.setText("")
+
+    def _mark_typed(self) -> None:
+        self.typed = True
 
     def _follow_check(self) -> None:
         """The percent shows only for an account that counts."""
@@ -196,6 +209,10 @@ class GoalDialog(FormDialog):
             row = self.shares_input.row_for(account.id) if account else None
             if row is not None and row.check.isEnabled():
                 row.check.setChecked(True)
+        for row in self.shares_input.rows:
+            row.check.toggled.connect(lambda ticked, r=row: ticked and self._suggest(r))
+        self.target_input.line_edit.textChanged.connect(self._suggest_again)
+        self.currency_input.currentIndexChanged.connect(self._suggest_again)
         for signal in (
             self.target_input.line_edit.textChanged,
             self.currency_input.currentIndexChanged,
@@ -233,15 +250,40 @@ class GoalDialog(FormDialog):
             if row is not None:
                 row.set_share(share.percent)
 
+    def _suggest(self, row: ShareRow, counted: list[ShareRow] | None = None) -> None:
+        """A ticked account comes with the part that covers what the goal still misses
+        with ``counted`` (every other ticked account, by default)."""
+        if counted is None:
+            counted = [r for r in self.shares_input.rows if r.check.isChecked() and r is not row]
+        shares = tuple(GoalShare(r.account.id, r.percent) for r in counted if 1 <= r.percent <= 100)
+        preview = Goal(None, "", self._target(), self._target_date(), shares)
+        row.offer(
+            self._services.goals.suggested_percent(preview, row.account.id, row.free, self._today)
+        )
+
+    def _suggest_again(self) -> None:
+        """A new target re-offers the parts the user did not type: those typed count
+        first, then the rest fill what is missing in their order."""
+        ticked = [row for row in self.shares_input.rows if row.check.isChecked()]
+        counted = [row for row in ticked if row.typed]
+        for row in ticked:
+            if not row.typed:
+                self._suggest(row, counted)
+                counted.append(row)
+
+    def _target(self) -> Money:
+        """The target as typed so far; zero while it is not a valid amount."""
+        try:
+            return self.target_input.money()
+        except ValueError:
+            return Money.zero(self.currency_input.currentData())
+
     def _target_date(self) -> date | None:
         return self.date_input.day() if self.dated_input.isChecked() else None
 
     def _update_preview(self) -> None:
         """Each ticked account's part today, and what the goal takes, as it stands."""
-        try:
-            target = self.target_input.money()
-        except ValueError:
-            target = Money.zero(self.currency_input.currentData())
+        target = self._target()
         shares = tuple(share for share in self.shares_input.shares() if 1 <= share.percent <= 100)
         counted: dict[int, Money | None] = {}
         if shares:

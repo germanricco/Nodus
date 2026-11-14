@@ -2,10 +2,10 @@
 
 import pytest
 from PySide6.QtCore import QMimeData, QPointF, Qt
-from PySide6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
+from PySide6.QtGui import QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent
 from PySide6.QtWidgets import QApplication, QFrame, QLabel
 
-from nodus.ui.widgets.reorderable_list import ROW_MIME_TYPE, ReorderableList
+from nodus.ui.widgets.reorderable_list import ROW_MIME_TYPE, ReorderableList, drag_pixmap
 
 KEYS = ["a", "b", "c"]
 
@@ -84,3 +84,26 @@ def test_rows_of_another_list_are_refused(qtbot, rows):
     foreign.setText("not a row")
     assert not send_drop(rows, foreign, 0)
     assert ROW_MIME_TYPE not in foreign.formats()
+
+
+def test_the_dragged_picture_keeps_the_background_of_the_row(rows):
+    """Not transparent, which Windows draws black and hides the line where it lands."""
+    rows.setStyleSheet("background: white;")
+    picture = drag_pixmap(rows.rows()[1]).toImage()
+
+    middle = picture.pixelColor(picture.width() // 2, picture.height() // 2)
+    assert middle.alpha() > 200
+    assert middle.lightness() > 200
+
+
+def test_the_row_fades_while_dragged_and_comes_back(rows, monkeypatch):
+    row = rows.rows()[0]
+    seen = []
+    monkeypatch.setattr(
+        QDrag, "exec", lambda _drag, _action: seen.append(row.graphicsEffect().opacity())
+    )
+
+    row.start_drag()
+
+    assert seen[0] < 1
+    assert row.graphicsEffect() is None

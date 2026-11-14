@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -27,8 +28,15 @@ from nodus.ui.theme.design import ControlSize, IconSize, Layout, Space
 from nodus.ui.theme.icons import icon, logo_pixmap
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.money_label import MoneyLabel, total_text
 from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
+
+
+def keep_whole(label: QLabel) -> None:
+    """An amount beside a name in the narrow sidebar never gives up width: the name is
+    the one shortened with "…", so the cents always show."""
+    label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
 
 
 class SidebarAccountRow(QWidget):
@@ -41,12 +49,13 @@ class SidebarAccountRow(QWidget):
         layout = QHBoxLayout(self)
         make_hoverable(self)
         layout.setContentsMargins(Space.S + indent, Space.XXS, Space.S, Space.XXS)
-        label = QLabel(name)
-        layout.addWidget(label, stretch=1)
-        amount = MoneyLabel()
-        amount.set_hidden(hidden)
-        amount.set_money(balance)
-        layout.addWidget(amount)
+        self.name_label = ElidedLabel(name)
+        layout.addWidget(self.name_label, stretch=1)
+        self.amount_label = MoneyLabel()
+        self.amount_label.set_hidden(hidden)
+        self.amount_label.set_money(balance)
+        keep_whole(self.amount_label)
+        layout.addWidget(self.amount_label)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
@@ -67,13 +76,14 @@ class SidebarGroupRow(QWidget):
         layout = QHBoxLayout(self)
         make_hoverable(self)
         layout.setContentsMargins(Space.S, Space.XXS, Space.S, Space.XXS)
-        self.name_label = QLabel(f"{'▸' if folded else '▾'}  {name}")
+        self.name_label = ElidedLabel(f"{'▸' if folded else '▾'}  {name}")
         self.name_label.setObjectName("SidebarGroupName")
         layout.addWidget(self.name_label, stretch=1)
         self.total_label = QLabel(total)
         self.total_label.setObjectName("SidebarGroupName")
         self.total_label.setToolTip(tooltip)
         self.total_label.setVisible(folded)
+        keep_whole(self.total_label)
         layout.addWidget(self.total_label)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("Mostrar sus cuentas" if folded else "Plegar el grupo")

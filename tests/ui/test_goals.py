@@ -217,6 +217,40 @@ class TestDialog:
         assert row.hint.text() == "quedan 40 % libres"
         assert row.percent_input.text() == "40"
 
+    def test_a_ticked_account_offers_the_part_that_covers_the_target(
+        self, qtbot, services, event_bus, savings
+    ):
+        dialog = self.dialog(qtbot, services, event_bus)
+        dialog.currency_input.setCurrentIndex(dialog.currency_input.findData(Currency.USD))
+        balance = services.accounts.balance(savings.id)
+        dialog.target_input.line_edit.setText(str(balance.cents // 400))  # a quarter
+        row = dialog.shares_input.row_for(savings.id)
+
+        row.check.setChecked(True)
+
+        assert row.percent_input.text() == "25"
+        assert dialog.summary_label.text() == "Ya está cubierta: tus cuentas ya suman el objetivo."
+
+    def test_a_new_target_offers_again_unless_the_user_typed_a_part(
+        self, qtbot, services, event_bus, savings
+    ):
+        dialog = self.dialog(qtbot, services, event_bus, account=savings)
+        dialog.currency_input.setCurrentIndex(dialog.currency_input.findData(Currency.USD))
+        balance = services.accounts.balance(savings.id)
+        row = dialog.shares_input.row_for(savings.id)
+        assert row.percent_input.text() == "100"  # no target yet
+
+        dialog.target_input.line_edit.setText(str(balance.cents // 200))  # a half
+        assert row.percent_input.text() == "50"
+
+        row.percent_input.clear()
+        qtbot.keyClicks(row.percent_input, "70")  # the user's own part
+        dialog.target_input.line_edit.setText(str(balance.cents // 400))
+        row.check.setChecked(False)
+        row.check.setChecked(True)
+
+        assert row.percent_input.text() == "70"
+
     def test_too_much_of_an_account_shows_under_the_accounts(
         self, qtbot, services, event_bus, savings
     ):
@@ -355,9 +389,9 @@ class TestDetail:
     @pytest.mark.parametrize(
         ("change", "text"),
         [
-            (usd("50"), "Este mes subió US$ 50,00"),
-            (usd("-150"), "Este mes bajó US$ 150,00"),
-            (usd("0"), "Este mes, sin cambios"),
+            (usd("50"), "+US$ 50,00 este mes"),
+            (usd("-150"), "-US$ 150,00 este mes"),
+            (usd("0"), "Sin cambios este mes"),
         ],
     )
     def test_this_months_change(self, change, text):
