@@ -25,6 +25,7 @@ from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
+from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import ACCOUNT_TYPE_LABELS, estimate_text
@@ -174,7 +175,6 @@ class AccountDetailPage(DetailPage):
         body.addWidget(chart_card)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
-        self.list_view.empty_state.set_message("Esta cuenta todavía no tiene movimientos.")
         # Every row would repeat the account.
         self.list_view.table.setColumnHidden(ACCOUNT, True)
         self.list_view.setMinimumHeight(Layout.DETAIL_LIST_MIN_HEIGHT)
@@ -214,7 +214,19 @@ class AccountDetailPage(DetailPage):
         self._show_payments(account, today)
         self._show_chart(account, today)
         self.list_view.show_matching(TransactionFilter(account_id=account.id))
+        self._set_empty_message(account)
         self._danger_text.setText(account_delete_warning(self._services, account))
+
+    def _set_empty_message(self, account: Account) -> None:
+        """An active account offers its first movement; an archived one takes none."""
+        text = "Esta cuenta todavía no tiene movimientos."
+        if account.is_archived:
+            self.list_view.empty_state.set_message(text)
+            return
+        start = TransactionStart(account_id=account.id)
+        self.list_view.empty_state.set_message(
+            text, "Agregar transacción", lambda: self.new_transaction_requested.emit(start)
+        )
 
     def more_actions(self) -> list[RowAction]:
         account = self.account

@@ -58,6 +58,7 @@ class TransactionsPage(Page):
     """
 
     navigate_requested = Signal(object)  # PageId
+    new_transaction_requested = Signal()
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -161,7 +162,11 @@ class TransactionsPage(Page):
                 "Sin transacciones con estos filtros.", "Limpiar filtros", self.clear_filters
             )
         else:
-            self.empty_state.set_message("Sin transacciones en este período.")
+            self.empty_state.set_message(
+                "Sin transacciones en este período.",
+                "Agregar transacción",
+                self.new_transaction_requested.emit,
+            )
         self.clear_filters_button.setEnabled(self._has_filters())
         for combo in self._filter_combos():
             set_style_property(combo, "filter", "active" if combo.currentIndex() > 0 else "idle")

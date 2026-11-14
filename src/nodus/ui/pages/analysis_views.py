@@ -63,7 +63,7 @@ NO_PAYEE_LABEL = "Sin beneficiario"
 TAGS_HINT = "Un movimiento con varias etiquetas suma en cada una."
 TOOLTIP_CATEGORIES = 3
 # Shown, without a pill, where there is no previous period to compare with.
-NO_PREVIOUS_TEXT = "—"
+NO_PREVIOUS_TEXT = "Período anterior: sin datos"
 
 MONTH, INCOME, EXPENSES, SAVINGS, RATE = range(5)
 FLOW_COLUMNS = ["Mes", "Ingresos", "Gastos", "Ahorro", "Tasa de ahorro"]
@@ -138,7 +138,8 @@ class TrendsView(AnalysisView):
         layout.addLayout(metric_row)
 
         self.total_label = AnimatedMoneyLabel()
-        self.change_badge = ChangeBadge(none_text=NO_PREVIOUS_TEXT)
+        # Without a previous period the badge steps aside: its tile already says so.
+        self.change_badge = ChangeBadge()
         self.change_badge.setToolTip("Frente al período anterior, del mismo largo")
         self.previous_label = QLabel()
         self.average_label = QLabel()
@@ -188,7 +189,9 @@ class TrendsView(AnalysisView):
         # More spending is bad news; more income or savings is good news.
         self.change_badge.set_higher_is_better(not expenses)
         self.change_badge.set_change(trends.change)
-        self.previous_label.setText(trends.previous_total.format())
+        self.previous_label.setText(
+            "Sin datos" if trends.change is None else trends.previous_total.format()
+        )
         self.average_label.setText(trends.average.format())
 
         has_data = any(not month.total.is_zero for month in trends.months)

@@ -25,7 +25,7 @@ from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.external_backup import save_copy_outside
 from nodus.ui.dialogs.news_dialog import NewsDialog
-from nodus.ui.dialogs.transaction_dialog import TransactionDialog
+from nodus.ui.dialogs.transaction_dialog import TransactionDialog, TransactionStart
 from nodus.ui.dialogs.update_dialog import UpdateDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId, PageId, TransactionFocus
@@ -102,6 +102,7 @@ class MainWindow(QMainWindow):
         tags.detail_requested.connect(lambda i: self.show_detail(DetailId.TAG, i))
         transactions = TransactionsPage(services, event_bus, theme_manager)
         transactions.navigate_requested.connect(self.show_page)
+        transactions.new_transaction_requested.connect(self.open_new_transaction)
         accounts.detail_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
         self._details: dict[DetailId, DetailPage] = {
             DetailId.ACCOUNT: AccountDetailPage(services, event_bus, theme_manager),
@@ -133,6 +134,7 @@ class MainWindow(QMainWindow):
         for detail in self._details.values():
             self._stack.addWidget(detail)
             detail.back_requested.connect(partial(self.show_page, detail.detail_id.list_page))
+            detail.new_transaction_requested.connect(self.open_new_transaction)
 
         content = QWidget()
         content.setObjectName("ContentArea")
@@ -302,8 +304,9 @@ class MainWindow(QMainWindow):
         self._pages[PageId.BUDGETS].show_month(month)
         self.show_page(PageId.BUDGETS)
 
-    def open_new_transaction(self) -> None:
-        """Opens the transaction dialog, or leads to Cuentas when there is nowhere to record it."""
+    def open_new_transaction(self, start: TransactionStart | None = None) -> None:
+        """Opens the transaction dialog, filled with what ``start`` knows, or leads to
+        Cuentas when there is nowhere to record it."""
         if not self._services.accounts.list_accounts():
             QMessageBox.information(
                 self,
@@ -313,4 +316,6 @@ class MainWindow(QMainWindow):
             )
             self.show_page(PageId.ACCOUNTS)
             return
-        TransactionDialog(self._services, self._event_bus, self.theme_manager, parent=self).exec()
+        TransactionDialog(
+            self._services, self._event_bus, self.theme_manager, parent=self, start=start
+        ).exec()

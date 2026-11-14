@@ -6,6 +6,7 @@ from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.payee_service import PayeeSummary
 from nodus.ui.dialogs.payee_dialogs import MergePayeeDialog, PayeeDialog
+from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.payees_page import delete_payees, payee_delete_warning
@@ -40,6 +41,9 @@ class PayeeDetailPage(SummaryDetailPage[PayeeSummary]):
     def extra_figures(self, summary: PayeeSummary) -> list[str]:
         category = summary.top_category
         return [category.name if category else NO_MOVEMENTS]
+
+    def transaction_start(self, summary: PayeeSummary) -> TransactionStart:
+        return TransactionStart(payee=summary.payee.name)
 
     def has_others(self) -> bool:
         return len(self._services.payees.list_payees()) > 1

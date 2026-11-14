@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QLabel
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
+from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.labels import unconverted_note
@@ -65,7 +66,6 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self.content_layout.addWidget(self.figures)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
-        self.list_view.empty_state.set_message("Todavía no tiene movimientos.")
         self.content_layout.addWidget(self.list_view, stretch=1)
 
         self.danger_card, self.delete_button = danger_zone("", delete_action, self._delete)
@@ -100,6 +100,10 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         """The values of ``CAPTIONS``, in their order."""
         return []
 
+    def transaction_start(self, summary: S) -> TransactionStart:
+        """A new movement with this item already in its field."""
+        raise NotImplementedError
+
     def has_others(self) -> bool:
         """Whether there is another item to merge this one with."""
         raise NotImplementedError
@@ -128,6 +132,12 @@ class SummaryDetailPage(DetailPage, Generic[S]):
             self.back_requested.emit()
             return
         self.title_label.setText(self.name(summary))
+        start = self.transaction_start(summary)
+        self.list_view.empty_state.set_message(
+            "Todavía no tiene movimientos.",
+            "Agregar transacción",
+            lambda: self.new_transaction_requested.emit(start),
+        )
         self.merge_button.setEnabled(self.has_others())
         values = [
             str(summary.count),

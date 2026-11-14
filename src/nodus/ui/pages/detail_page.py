@@ -25,6 +25,8 @@ class DetailPage(Page):
     """
 
     back_requested = Signal()
+    # A movement to add from the page's empty list, with the item already in it.
+    new_transaction_requested = Signal(object)  # TransactionStart
 
     def __init__(self, detail_id: DetailId, theme_manager: ThemeManager) -> None:
         super().__init__("")

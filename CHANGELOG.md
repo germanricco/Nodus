@@ -6,6 +6,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 
 - La primera página se llama ahora «Inicio» y la de pagos que se repiten, «Recurrentes», con una línea que cuenta qué va ahí: los nombres en español y uno solo por cosa.
 - Cuando algo falla, como guardar una copia en un pendrive que se desconectó, Nodus dice qué pasó y qué hacer. El mensaje técnico queda detrás de «Ver detalle», con un botón para copiarlo si quieres avisarnos.
+- Una lista vacía ya no te deja sin salida. La página de una cuenta, un beneficiario o una etiqueta sin movimientos ofrece «Agregar transacción» con esa cuenta, beneficiario o etiqueta ya puestos; Transacciones hace lo mismo con un período vacío, y Cotizaciones ofrece actualizarlas o cargarlas a mano. Análisis dice «Período anterior: sin datos» en lugar de un guion suelto.
 
 ## 1.6.0 — 2026-11-14
 

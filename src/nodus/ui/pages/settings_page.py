@@ -343,11 +343,22 @@ class SettingsPage(Page):
         clear_layout(self._history)
         history = self._services.exchange_rates.history(currency)
         if not history:
-            self._history.addWidget(EmptyState("Sin cotizaciones.", compact=True))
+            self._history.addWidget(self._no_rates_state())
         for rate in history:
             row = RateRow(rate)
             row.delete_requested.connect(self._delete_rate)
             self._history.addWidget(row)
+
+    def _no_rates_state(self) -> EmptyState:
+        """No rates yet: fetch them now with an automatic source, or type one in."""
+        state = EmptyState(compact=True)
+        if self._services.rate_feed.is_automatic():
+            state.set_message("Sin cotizaciones.", "Actualizar ahora", self.refresh_rate)
+        else:
+            state.set_message(
+                "Sin cotizaciones.", "Cargar a mano", self.rate_value_input.line_edit.setFocus
+            )
+        return state
 
     def _delete_rate(self, rate: ExchangeRate) -> None:
         text = f"Se va a eliminar la cotización del {format_date(rate.rate_date)}."

@@ -177,7 +177,7 @@ def test_cash_flow_totals_and_months(filled):
     assert view.expenses_label.money() == -ars("400")
     assert view.savings_label.money() == ars("600")
     assert view.rate_label.text() == "60 %"
-    assert view.rate_badge.text() == "—"
+    assert view.rate_badge.text() == "Período anterior: sin datos"
     assert [group.label for group in view.chart.groups()] == ["Sep", "Oct", "Nov"]
     assert view.model.rowCount() == 3
     assert table_row(view, 0) == [

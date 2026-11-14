@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
@@ -45,6 +47,16 @@ _MODE_TYPES = {EXPENSE_MODE: TransactionType.EXPENSE, INCOME_MODE: TransactionTy
 REFUNDS_CATEGORY = "Reembolsos"
 
 
+@dataclass(frozen=True)
+class TransactionStart:
+    """What a new movement starts with when it is added from a page about one account,
+    payee or tag: that item, already in its field."""
+
+    account_id: int | None = None
+    payee: str = ""
+    tag: str = ""
+
+
 class TransactionDialog(FormDialog):
     """Records a new movement, or edits ``transaction`` when given.
 
@@ -68,6 +80,7 @@ class TransactionDialog(FormDialog):
         theme_manager: ThemeManager,
         transaction: Transaction | None = None,
         parent: QWidget | None = None,
+        start: TransactionStart | None = None,
     ) -> None:
         super().__init__(
             "Editar transacción" if transaction else "Nueva transacción",
@@ -161,8 +174,7 @@ class TransactionDialog(FormDialog):
         if transaction:
             self._load(transaction)
         else:
-            # Most movements go to the same account as the previous one.
-            self.account_input.offer(services.settings.last_account_id())
+            self._start(start or TransactionStart())
         self._update_mode()
 
     def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
@@ -181,6 +193,18 @@ class TransactionDialog(FormDialog):
         # The amount is what is always typed, so it is ready for the keyboard.
         self.amount_input.line_edit.setFocus()
         self.amount_input.line_edit.selectAll()
+
+    def _start(self, start: TransactionStart) -> None:
+        """Fills what the page it was opened from already knows; otherwise the account is
+        the last one used, where most movements go."""
+        self.account_input.offer(start.account_id or self._services.settings.last_account_id())
+        if start.payee:
+            self.payee_input.set_text(start.payee)
+            payee = self._services.payees.find(start.payee)
+            if payee is not None:
+                self._suggest_category(payee)
+        if start.tag:
+            self.tag_input.set_names([start.tag])
 
     def _payee_context(self) -> tuple[TransactionType | None, int | None]:
         """The kind and category the payee suggestions follow; none for a transfer."""

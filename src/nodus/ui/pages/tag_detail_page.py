@@ -6,6 +6,7 @@ from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.tag_service import TagSummary
 from nodus.ui.dialogs.tag_dialogs import MergeTagDialog, TagDialog
+from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.navigation import DetailId
@@ -36,6 +37,9 @@ class TagDetailPage(SummaryDetailPage[TagSummary]):
 
     def extra_figures(self, summary: TagSummary) -> list[str]:
         return [format_date(summary.first_on) if summary.first_on else NO_MOVEMENTS]
+
+    def transaction_start(self, summary: TagSummary) -> TransactionStart:
+        return TransactionStart(tag=summary.tag.name)
 
     def has_others(self) -> bool:
         return len(self._services.tags.list_tags()) > 1
