@@ -14,6 +14,7 @@ ADD_TRANSACTION = "add-transaction"
 PERIOD = "period"
 HIDE_AMOUNTS = "hide-amounts"
 NOTIFICATIONS = "notifications"
+HELP = "help"
 
 TOUR_STEPS = [
     CoachStep(
@@ -46,5 +47,10 @@ TOUR_STEPS = [
         NOTIFICATIONS,
         "Avisos",
         "Pagos que vencen, presupuestos pasados, metas alcanzadas y versiones nuevas.",
+    ),
+    CoachStep(
+        HELP,
+        "Ayuda",
+        "Cómo se hace cada cosa y los atajos de teclado. También se abre con F1.",
     ),
 ]

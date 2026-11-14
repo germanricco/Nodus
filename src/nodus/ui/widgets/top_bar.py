@@ -4,6 +4,7 @@ from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
 from nodus.ui import tour
+from nodus.ui.shortcuts import HELP
 from nodus.ui.theme.design import ControlSize, IconSize, Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
@@ -13,13 +14,14 @@ from nodus.ui.widgets.coach_marks import mark_target
 
 class TopBar(QFrame):
     """ "Agregar transacción" on the left, always visible because it is the most frequent
-    action; on the right, the eye that hides amounts, sending comments and the
+    action; on the right, the eye that hides amounts, Ayuda, sending comments and the
     notifications bell with how many there are. Ajustes is at the foot of the sidebar."""
 
     add_transaction_requested = Signal()
     hide_amounts_toggled = Signal()
     feedback_requested = Signal()
     notifications_requested = Signal()
+    help_requested = Signal()
 
     def __init__(self, theme_manager: ThemeManager) -> None:
         super().__init__()
@@ -53,7 +55,12 @@ class TopBar(QFrame):
         self.hide_amounts_button.clicked.connect(self.hide_amounts_toggled)
         mark_target(self.hide_amounts_button, tour.HIDE_AMOUNTS)
         self._amounts_hidden = False
+        self.help_button = self._icon_button(f"Ayuda ({HELP.keys})")
+        self.help_button.setAccessibleName("Ayuda")
+        self.help_button.clicked.connect(self.help_requested)
+        mark_target(self.help_button, tour.HELP)
         layout.addWidget(self.hide_amounts_button)
+        layout.addWidget(self.help_button)
         layout.addWidget(self.feedback_button)
         layout.addWidget(self.notifications_button)
 
@@ -85,5 +92,6 @@ class TopBar(QFrame):
         self._add_button.setIcon(icon("plus", theme.on_accent))
         eye = "eye-off" if self._amounts_hidden else "eye"
         self.hide_amounts_button.setIcon(icon(eye, theme.text_muted))
+        self.help_button.setIcon(icon("help", theme.text_muted))
         self.feedback_button.setIcon(icon("message", theme.text_muted))
         self.notifications_button.setIcon(icon("bell", theme.text_muted))

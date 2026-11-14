@@ -36,6 +36,7 @@ from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
 from nodus.ui.dialogs.goal_dialog import GoalDialog  # noqa: E402
+from nodus.ui.dialogs.help_dialog import HelpDialog  # noqa: E402
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
 from nodus.ui.dialogs.update_dialog import UpdateDialog  # noqa: E402
@@ -199,6 +200,14 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         tour.next()
         save(window, args.out / f"tour-{mode.value}.png")
         tour.finish()
+        # Ayuda, on a topic that needs it, and its shortcuts.
+        help_dialog = HelpDialog(guide_hidden=True, parent=window)
+        help_dialog.topic_list.setCurrentRow(2)
+        help_dialog.show()
+        save(help_dialog, args.out / f"help-howto-{mode.value}.png")
+        help_dialog.tabs.set_index(1)
+        save(help_dialog, args.out / f"help-shortcuts-{mode.value}.png")
+        help_dialog.close()
         for name, build_dialog in DIALOGS.items():
             dialog = build_dialog(services, event_bus, window)
             dialog.show()

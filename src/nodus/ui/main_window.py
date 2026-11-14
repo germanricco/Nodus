@@ -6,6 +6,7 @@ from datetime import date
 from functools import partial
 
 from PySide6.QtCore import QTimer
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -26,6 +27,7 @@ from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.confirm import ask
 from nodus.ui.dialogs.external_backup import save_copy_outside
+from nodus.ui.dialogs.help_dialog import HelpDialog
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog, TransactionStart
 from nodus.ui.dialogs.update_dialog import UpdateDialog
@@ -49,6 +51,7 @@ from nodus.ui.pages.tag_detail_page import TagDetailPage
 from nodus.ui.pages.tags_page import TagsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.rate_updater import RateUpdater
+from nodus.ui.shortcuts import HELP
 from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.tour import TOUR_STEPS
@@ -123,6 +126,7 @@ class MainWindow(QMainWindow):
         )
         settings = SettingsPage(services, event_bus, theme_manager)
         settings.tour_requested.connect(self.start_tour)
+        settings.help_requested.connect(self.open_help)
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
@@ -162,6 +166,8 @@ class MainWindow(QMainWindow):
         self.sidebar.page_requested.connect(self.show_page)
         self.sidebar.account_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
+        self.top_bar.help_requested.connect(self.open_help)
+        QShortcut(QKeySequence(HELP.keys), self, self.open_help)
         self.top_bar.notifications_requested.connect(self.open_notifications)
         self.top_bar.feedback_requested.connect(lambda: open_url(feedback_url()))
         self.top_bar.set_amounts_hidden(services.settings.amounts_hidden())
@@ -207,6 +213,19 @@ class MainWindow(QMainWindow):
         if entries:
             NewsDialog.for_entries(entries, parent=self).exec()
         self.offer_tour()
+
+    def open_help(self) -> HelpDialog:
+        """Ayuda, from F1, the «?» of the top bar or Ajustes."""
+        dialog = HelpDialog(self._services.settings.guide_dismissed(), parent=self)
+        dialog.tour_requested.connect(self.start_tour)
+        dialog.guide_requested.connect(self.show_guide)
+        dialog.exec()
+        return dialog
+
+    def show_guide(self) -> None:
+        """Brings Primeros pasos back and shows it on Inicio."""
+        self._services.guide.restore()
+        self.show_page(PageId.DASHBOARD)
 
     def _offer_tour_soon(self) -> None:
         """After the first account, once the form that created it has closed."""

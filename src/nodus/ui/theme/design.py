@@ -191,6 +191,8 @@ class Layout:
     COACH_BUBBLE_WIDTH = 340  # the guided tour's bubble beside what it points at
     ERROR_DETAIL_HEIGHT = 120  # the unfolded technical text of an error; it scrolls
     NEWS_SIZE = (560, 520)
+    HELP_SIZE = (760, 540)
+    HELP_TOPICS_WIDTH = 240  # the list of «Cómo se hace»
     PICKER_MIN_SIZE = (780, 520)  # a dialog built around a table, such as the refund's
     NOTIFICATION_PANEL_WIDTH = 340
     SEARCH_WIDTH = 200

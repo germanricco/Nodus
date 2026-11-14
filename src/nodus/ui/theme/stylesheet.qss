@@ -346,6 +346,30 @@ QTextBrowser#NewsText {
     border: none;
 }
 
+/* Ayuda (dialogs/help_dialog.py): the topics, as a list of choices, and each shortcut's keys. */
+QListWidget#HelpTopics {
+    background: transparent;
+    border: none;
+}
+
+QListWidget#HelpTopics::item {
+    padding: $list_item_padding;
+    border-radius: $popup_item_radius;
+}
+
+QListWidget#HelpTopics::item:hover {
+    background: $hover;
+}
+
+QListWidget#HelpTopics::item:selected {
+    background: $accent_soft;
+    color: $accent_text;
+}
+
+#ShortcutKeys {
+    font-weight: $strong_weight;
+}
+
 #ErrorLabel {
     color: $expense;
 }
