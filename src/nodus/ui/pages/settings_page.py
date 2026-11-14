@@ -113,6 +113,8 @@ class RateRow(QWidget):
 class SettingsPage(Page):
     """Preferences grouped in cards: appearance, exchange rate and data file."""
 
+    tour_requested = Signal()
+
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
@@ -519,10 +521,12 @@ class SettingsPage(Page):
         self.check_updates_input.clicked.connect(self._services.settings.set_check_updates)
         news_row = SettingRow("Novedades", "Lo que trajo cada versión.")
         news_row.add(secondary_button("Ver novedades", self.show_news))
+        tour_row = SettingRow("Recorrido guiado", "Dónde está cada cosa, en un minuto.")
+        tour_row.add(secondary_button("Ver el recorrido", self.tour_requested.emit))
         feedback_row = SettingRow("Comentarios", "Una idea o un error, sin crear una cuenta.")
         feedback_row.add(secondary_button("Enviar comentarios", lambda: open_url(feedback_url())))
         donate_row = SettingRow("Apoyar el proyecto", "Nodus es gratis y lo va a seguir siendo.")
         donate_row.add(secondary_button("Invitar un cafecito", lambda: open_url(DONATE_URL)))
-        for row in (version_row, updates_row, news_row, feedback_row, donate_row):
+        for row in (version_row, updates_row, news_row, tour_row, feedback_row, donate_row):
             card.body.addWidget(row)
         return card

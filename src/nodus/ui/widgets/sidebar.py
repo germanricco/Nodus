@@ -22,12 +22,14 @@ from nodus import __version__
 from nodus.models.account import Account
 from nodus.models.money import Money
 from nodus.services.container import Services
+from nodus.ui import tour
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.theme.design import ControlSize, IconSize, Layout, Space
 from nodus.ui.theme.icons import icon, logo_pixmap
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.coach_marks import mark_target
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.money_label import MoneyLabel, total_text
 from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
@@ -129,6 +131,8 @@ class Sidebar(QFrame):
         self._accounts_folded = services.settings.accounts_folded()
         layout.addWidget(self._accounts_title)
         self._accounts_area = self._build_accounts_area()
+        mark_target(self._accounts_title, tour.ACCOUNTS)
+        mark_target(self._accounts_area, tour.ACCOUNTS)
         layout.addWidget(self._accounts_area, stretch=1)
         layout.addStretch()  # keeps the buttons on top while the accounts are hidden
         # At the foot, as in Windows apps: it is visited rarely, not every day.
@@ -284,6 +288,7 @@ class Sidebar(QFrame):
             group.addButton(button)
             if page_id is not PageId.SETTINGS:  # placed at the foot
                 layout.addWidget(button)
+                mark_target(button, tour.PAGES)
             buttons[page_id] = button
         return buttons
 

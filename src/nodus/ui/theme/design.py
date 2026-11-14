@@ -131,6 +131,16 @@ class Opacity:
     GUIDE = 0.7  # the line that follows the mouse across a chart
     DISABLED = 0.4  # a control that cannot be used
     DRAGGED = 0.85  # a row on the move, so where it lands shows beneath it
+    SCRIM = 0.55  # the page dimmed under the guided tour, around what it points at
+    SHADOW = 0.22  # the shadow of a raised surface (``Elevation``)
+
+
+class Elevation:
+    """A surface raised over the page, such as the guided tour's bubble: one soft shadow,
+    in pixels. ``elevate`` in ``widgets/style.py`` applies it."""
+
+    BLUR = 24
+    OFFSET = 4  # downwards, as light from above
 
 
 class Motion(IntEnum):
@@ -178,6 +188,7 @@ class Layout:
     HEADER_HEIGHT = 44  # a page's title row
     DIALOG_MIN_WIDTH = 460  # a form
     MESSAGE_MIN_WIDTH = 420  # a dialog of text and buttons, such as an update's
+    COACH_BUBBLE_WIDTH = 340  # the guided tour's bubble beside what it points at
     ERROR_DETAIL_HEIGHT = 120  # the unfolded technical text of an error; it scrolls
     NEWS_SIZE = (560, 520)
     PICKER_MIN_SIZE = (780, 520)  # a dialog built around a table, such as the refund's

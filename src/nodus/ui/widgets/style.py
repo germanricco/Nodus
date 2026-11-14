@@ -1,7 +1,11 @@
 """Small helpers shared by widgets."""
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLayout, QWidget
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QGraphicsDropShadowEffect, QLayout, QWidget
+
+from nodus.ui.theme.design import Elevation, Opacity
+from nodus.ui.theme.theme import Theme
 
 
 def set_style_property(widget: QWidget, name: str, value: object) -> None:
@@ -45,3 +49,14 @@ def clear_layout(layout: QLayout) -> None:
             item.widget().deleteLater()
         elif item.layout() is not None:
             clear_layout(item.layout())
+
+
+def elevate(widget: QWidget, theme: Theme) -> None:
+    """Raises ``widget`` over the page with the one soft shadow of ``Elevation``."""
+    color = QColor(theme.shadow)
+    color.setAlphaF(Opacity.SHADOW)
+    shadow = QGraphicsDropShadowEffect(widget)
+    shadow.setBlurRadius(Elevation.BLUR)
+    shadow.setOffset(0, Elevation.OFFSET)
+    shadow.setColor(color)
+    widget.setGraphicsEffect(shadow)

@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from functools import partial
 
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -23,6 +24,7 @@ from nodus.services.notification_service import Notice, NoticeKind
 from nodus.services.update_service import Release
 from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
+from nodus.ui.dialogs.confirm import ask
 from nodus.ui.dialogs.external_backup import save_copy_outside
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog, TransactionStart
@@ -49,6 +51,8 @@ from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.rate_updater import RateUpdater
 from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.tour import TOUR_STEPS
+from nodus.ui.widgets.coach_marks import CoachMarks
 from nodus.ui.widgets.notification_panel import NotificationPanel
 from nodus.ui.widgets.sidebar import Sidebar
 from nodus.ui.widgets.top_bar import TopBar
@@ -117,6 +121,8 @@ class MainWindow(QMainWindow):
         self._details[DetailId.ACCOUNT].goal_requested.connect(
             lambda i: self.show_detail(DetailId.GOAL, i)
         )
+        settings = SettingsPage(services, event_bus, theme_manager)
+        settings.tour_requested.connect(self.start_tour)
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
@@ -128,7 +134,7 @@ class MainWindow(QMainWindow):
             PageId.CATEGORIES: categories,
             PageId.PAYEES: payees,
             PageId.TAGS: tags,
-            PageId.SETTINGS: SettingsPage(services, event_bus, theme_manager),
+            PageId.SETTINGS: settings,
         }
         for page in self._pages.values():
             self._stack.addWidget(page)
@@ -171,6 +177,7 @@ class MainWindow(QMainWindow):
             event_bus.goals_changed,
         ):
             signal.connect(self.refresh_notifications)
+        event_bus.accounts_changed.connect(self._offer_tour_soon)
         self.show_page(PageId.DASHBOARD)
         self.refresh_notifications()
 
@@ -199,6 +206,34 @@ class MainWindow(QMainWindow):
         entries = self._services.news.take_unseen()
         if entries:
             NewsDialog.for_entries(entries, parent=self).exec()
+        self.offer_tour()
+
+    def _offer_tour_soon(self) -> None:
+        """After the first account, once the form that created it has closed."""
+        if self._services.guide.tour_due():
+            QTimer.singleShot(0, self, self.offer_tour)
+
+    def offer_tour(self) -> None:
+        """Offers the guided tour, once: see ``GuideService.tour_due``."""
+        guide = self._services.guide
+        if not guide.tour_due():
+            return
+        guide.mark_tour_offered()
+        if ask(
+            self,
+            "Recorrido guiado",
+            "¿Te muestro cómo se usa Nodus? Es un minuto.",
+            "Ver el recorrido",
+            "Ahora no",
+        ):
+            self.start_tour()
+
+    def start_tour(self) -> CoachMarks:
+        """Shows Inicio and walks over it; also opened from Ayuda and Ajustes."""
+        self.show_page(PageId.DASHBOARD)
+        self.tour = CoachMarks(self, TOUR_STEPS, self.theme_manager.theme)
+        self.tour.start()
+        return self.tour
 
     def _show_release(self, release: Release | None) -> None:
         self._release = release

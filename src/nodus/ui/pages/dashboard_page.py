@@ -20,6 +20,7 @@ from nodus.models.period import Month, Period
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
 from nodus.services.guide_service import GuideStepKind
+from nodus.ui import tour
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
 from nodus.ui.dialogs.confirm import ask
@@ -47,6 +48,7 @@ from nodus.ui.pages.transaction_list_view import delete_transactions, edit_trans
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.coach_marks import mark_target
 from nodus.ui.widgets.net_worth_card import NetWorthCard
 from nodus.ui.widgets.period_selector import PeriodSelector
 
@@ -76,6 +78,7 @@ class DashboardPage(Page):
         self._event_bus = event_bus
         self.period_selector = PeriodSelector()
         self.add_header_widget(self.period_selector)
+        mark_target(self.period_selector, tour.PERIOD)
 
         self.net_worth_card = NetWorthCard(services, theme_manager)
         self.net_worth_card.set_amounts_hidden(services.settings.amounts_hidden())

@@ -107,6 +107,13 @@ QMainWindow, #ContentArea, #PageStack {
     border-radius: $radius_xl;
 }
 
+/* The guided tour's bubble (widgets/coach_marks.py), a card raised over the page. */
+#CoachBubble {
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius_xl;
+}
+
 #CardTitle, #StatCaption {
     color: $text_muted;
     font-size: $label_size;

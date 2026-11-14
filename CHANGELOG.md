@@ -8,6 +8,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Cuando algo falla, como guardar una copia en un pendrive que se desconectó, Nodus dice qué pasó y qué hacer. El mensaje técnico queda detrás de «Ver detalle», con un botón para copiarlo si quieres avisarnos.
 - Una lista vacía ya no te deja sin salida. La página de una cuenta, un beneficiario o una etiqueta sin movimientos ofrece «Agregar transacción» con esa cuenta, beneficiario o etiqueta ya puestos; Transacciones hace lo mismo con un período vacío, y Cotizaciones ofrece actualizarlas o cargarlas a mano. Análisis dice «Período anterior: sin datos» en lugar de un guion suelto.
 - «Primeros pasos» en el Inicio: seis pasos para dejar Nodus andando (una cuenta, un gasto, un pago recurrente, un presupuesto, una meta y una copia fuera de la PC), cada uno con su botón y tachado solo cuando lo haces. Aparece mientras empiezas y se oculta cuando quieras.
+- Un recorrido guiado de un minuto señala cada parte de la ventana: las páginas, tus cuentas, «Agregar transacción», el período, el ojo y la campana. Nodus te lo ofrece una vez, al crear tu primera cuenta o al actualizar, y lo puedes volver a ver desde Ajustes. Se maneja con las flechas, Enter y Esc.
 
 ## 1.6.0 — 2026-11-14
 

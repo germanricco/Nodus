@@ -58,6 +58,7 @@ def test_first_month_with_nodus(qtbot, qapp, tmp_path):
     today = date.today()
     database = Database.open(tmp_path / "nodus.db")
     services, event_bus = Services.create(database), EventBus()
+    services.settings.set_tour_offered(True)  # its offer is a question of its own test
     theme_manager = ThemeManager(qapp, ThemeMode.LIGHT)
     window = MainWindow(services, event_bus, theme_manager)
     qtbot.addWidget(window)

@@ -173,6 +173,8 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         load_demo_data(services, args.today)
         # The demo stands for someone who knows their way around; «guide» shows the list.
         services.guide.dismiss()
+    # The tour's offer is a question that waits for an answer; «tour» captures the tour.
+    services.settings.set_tour_offered(True)
     theme_manager = ThemeManager(app, ThemeMode.LIGHT)
     event_bus = EventBus()
     window = MainWindow(services, event_bus, theme_manager)
@@ -191,6 +193,12 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         app.processEvents()
         save(window, args.out / f"guide-{mode.value}.png")
         services.settings.set_guide_dismissed(dismissed)
+        # The guided tour, on its third step.
+        tour = window.start_tour()
+        tour.next()
+        tour.next()
+        save(window, args.out / f"tour-{mode.value}.png")
+        tour.finish()
         for name, build_dialog in DIALOGS.items():
             dialog = build_dialog(services, event_bus, window)
             dialog.show()

@@ -21,6 +21,8 @@ def theme_manager(qapp: QApplication) -> ThemeManager:
 
 @pytest.fixture
 def window(qtbot, services, event_bus, theme_manager) -> MainWindow:
+    # The tour's offer is a modal question; tests/ui/test_tour.py asks for it.
+    services.settings.set_tour_offered(True)
     main_window = MainWindow(services, event_bus, theme_manager)
     qtbot.addWidget(main_window)
     main_window.show()

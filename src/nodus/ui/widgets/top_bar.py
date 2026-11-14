@@ -3,10 +3,12 @@
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
+from nodus.ui import tour
 from nodus.ui.theme.design import ControlSize, IconSize, Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.coach_marks import mark_target
 
 
 class TopBar(QFrame):
@@ -31,12 +33,14 @@ class TopBar(QFrame):
         self._add_button.setIconSize(QSize(IconSize.L, IconSize.L))
         self._add_button.clicked.connect(self.add_transaction_requested)
         layout.addWidget(self._add_button)
+        mark_target(self._add_button, tour.ADD_TRANSACTION)
         layout.addStretch()
 
         self.feedback_button = self._icon_button("Enviar comentarios")
         self.feedback_button.clicked.connect(self.feedback_requested)
         self.notifications_button = self._icon_button("Notificaciones")
         self.notifications_button.clicked.connect(self.notifications_requested)
+        mark_target(self.notifications_button, tour.NOTIFICATIONS)
         self.notification_count = QLabel(self.notifications_button)
         self.notification_count.setObjectName("NotificationCount")
         self.notification_count.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -47,6 +51,7 @@ class TopBar(QFrame):
         self.notification_count.hide()
         self.hide_amounts_button = self._icon_button("")
         self.hide_amounts_button.clicked.connect(self.hide_amounts_toggled)
+        mark_target(self.hide_amounts_button, tour.HIDE_AMOUNTS)
         self._amounts_hidden = False
         layout.addWidget(self.hide_amounts_button)
         layout.addWidget(self.feedback_button)

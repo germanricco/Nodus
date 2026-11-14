@@ -80,3 +80,13 @@ def test_seasoned_data_does_not_get_the_list(services, database, pesos):
 
     assert not services.guide.visible(TODAY)
     assert services.guide.visible(TODAY - timedelta(days=1))
+
+
+def test_the_tour_waits_for_an_account_and_is_offered_once(services):
+    assert not services.guide.tour_due()
+
+    services.accounts.create("Banco", AccountType.BANK, Currency.ARS, ars("0"))
+    assert services.guide.tour_due()
+
+    services.guide.mark_tour_offered()
+    assert not services.guide.tour_due()

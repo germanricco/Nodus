@@ -36,8 +36,9 @@ SHAPE_PAIRS = [
     ("expense", "surface"),
     *[(f"chart_{n}", "surface") for n in range(1, 5)],
 ]
-# Tokens that are only ever a background, or a border beside a stronger cue.
-NOT_MEASURED = {"name", "border"}
+# Tokens that are only ever a background, or a border beside a stronger cue; the shadow
+# only dims what is under it, at an opacity.
+NOT_MEASURED = {"name", "border", "shadow"}
 
 
 @pytest.mark.parametrize("theme", THEMES, ids=lambda theme: theme.name)

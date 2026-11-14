@@ -56,6 +56,9 @@ class Theme:
     chart_2: str
     chart_3: str
     chart_4: str
+    # What dims the page under the guided tour and casts a raised surface's shadow,
+    # always at an ``Opacity`` (never as a solid color).
+    shadow: str
 
     def series(self) -> tuple[str, str, str, str]:
         return (self.chart_1, self.chart_2, self.chart_3, self.chart_4)
@@ -100,6 +103,7 @@ LIGHT = Theme(
     chart_2="#1e8e4f",
     chart_3="#c47d0e",
     chart_4="#3498db",
+    shadow="#000000",
 )
 
 DARK = Theme(
@@ -127,4 +131,5 @@ DARK = Theme(
     chart_2="#3fbf74",
     chart_3="#e8a33d",
     chart_4="#3498db",
+    shadow="#000000",
 )

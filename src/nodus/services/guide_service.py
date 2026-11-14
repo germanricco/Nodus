@@ -1,4 +1,5 @@
-"""Primeros pasos: the short list that walks a new user through Nodus.
+"""Primeros pasos, the short list that walks a new user through Nodus, and when to offer
+the guided tour.
 
 Each step is worked out from the data, never stored, so the list can't fall out of
 step with what the user did: creating the first account ticks «Crea tu primera
@@ -97,6 +98,16 @@ class GuideService:
 
     def dismiss(self) -> None:
         self._settings.set_guide_dismissed(True)
+
+    def tour_due(self) -> bool:
+        """Whether to offer the guided tour now: once, to whoever has an account. A new
+        user gets it right after the first one; someone updating, the first time they
+        open this version (after its news)."""
+        has_accounts = bool(self._accounts.list_accounts(include_archived=True))
+        return has_accounts and not self._settings.tour_offered()
+
+    def mark_tour_offered(self) -> None:
+        self._settings.set_tour_offered(True)
 
     def restore(self) -> None:
         """Brings the list back, from Ayuda; it still waits for a new user's data."""
