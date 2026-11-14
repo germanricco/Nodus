@@ -138,6 +138,15 @@ class InstallmentService:
         pending = [s.remaining for s in self.summaries(today) if s.first.account_id == account_id]
         return sum(pending[1:], pending[0]) if pending else None
 
+    def installments_left(self, account_id: int, today: date) -> tuple[int, date] | None:
+        """How many installments are still to come off ``account_id`` and the day of the
+        last one; None when nothing is pending."""
+        summaries = [s for s in self.summaries(today) if s.first.account_id == account_id]
+        if not summaries:
+            return None
+        left = sum(len(s.installments) - s.paid for s in summaries)
+        return left, max(s.installments[-1].occurred_on for s in summaries)
+
     # Internals
 
     def _write(

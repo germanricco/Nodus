@@ -80,14 +80,17 @@ class NetWorthService:
         days = trend_days(period, today)
         return self._points(period, days) if days else []
 
-    def account_history(self, account_id: int, today: date) -> list[tuple[date, Money]]:
+    def account_history(
+        self, account_id: int, today: date, since: date | None = None
+    ) -> list[tuple[date, Money]]:
         """The balance of one account along its whole life, from its first movement or
         value update to ``today``, on the days ``trend_days`` picks; archived accounts
-        included."""
+        included. ``since`` cuts off what came before, for a shorter look."""
         span = self._transactions.date_range(TransactionFilter(account_id=account_id))
         adjustments = self._accounts.value_adjustments(account_id)
         starts = [today] + ([span[0]] if span else []) + [a.occurred_on for a in adjustments[:1]]
-        period = Period(min(starts), today)
+        start = min(starts) if since is None else max(min(starts), min(since, today))
+        period = Period(start, today)
         balance = self._accounts.balance(account_id, period.start - timedelta(days=1))
         changes = [
             (t.occurred_on, t.signed_amount)

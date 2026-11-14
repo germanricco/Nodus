@@ -230,6 +230,9 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.resize(window.minimumWidth(), wide.height())
         app.processEvents()
         save(window, args.out / f"goal-detail-narrow-{mode.value}.png")
+        window.show_detail(DetailId.ACCOUNT, services.goals.list_goals()[0].shares[0].account_id)
+        app.processEvents()
+        save(window, args.out / f"account-detail-narrow-{mode.value}.png")
         window.resize(wide)
         app.processEvents()
         # The card with the purchase in installments: what is still to pay.

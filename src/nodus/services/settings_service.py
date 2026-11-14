@@ -35,6 +35,7 @@ class SettingsService:
     EXTERNAL_BACKUP_FOLDER_KEY = "external_backup_folder"
     BACKUP_REMINDER_KEY = "backup_reminder"
     BACKUP_REMINDER_DISMISSED_KEY = "backup_reminder_dismissed"
+    ACCOUNT_CHART_MONTHS_KEY = "account_chart_months"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -89,6 +90,20 @@ class SettingsService:
 
     def set_amounts_hidden(self, hidden: bool) -> None:
         self._set_flag(self.AMOUNTS_HIDDEN_KEY, hidden)
+
+    def account_chart_months(self) -> int | None:
+        """How many months the balance chart of an account page shows; None is its whole
+        life. A year until chosen, so an old account does not flatten the last months."""
+        value = self._settings.get(self.ACCOUNT_CHART_MONTHS_KEY)
+        if value == "all":
+            return None
+        return int(value) if value and value.isdigit() else 12
+
+    def set_account_chart_months(self, months: int | None) -> None:
+        with self._database.transaction():
+            self._settings.set(
+                self.ACCOUNT_CHART_MONTHS_KEY, "all" if months is None else str(months)
+            )
 
     def reduce_motion(self) -> bool:
         """Whether charts and figures jump to new data instead of moving to it. Until the

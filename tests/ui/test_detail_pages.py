@@ -1,6 +1,6 @@
 """Pages about one item: how to get there and back, what they show, and deleting."""
 
-from factories import ars, expense_draft, usd
+from factories import TODAY, ars, charge_draft, expense_draft, income_draft, usd
 from menus import double_click_row, run_action
 from PySide6.QtCore import Qt
 
@@ -66,6 +66,46 @@ class TestAccountDetail:
         window.show_detail(DetailId.ACCOUNT, pesos.id)
         assert detail.converted_tile.isHidden()
         assert detail.gain_tile.isHidden()
+
+    def test_says_what_it_is_and_where_it_sits(self, services, window, pesos):
+        bancos = services.account_groups.create("Bancos")
+        services.account_groups.move_account(pesos.id, bancos.id)
+
+        window.show_detail(DetailId.ACCOUNT, pesos.id)
+
+        assert window.detail(DetailId.ACCOUNT).context_label.text() == (
+            "Cuenta bancaria · ARS · Bancos"
+        )
+
+    def test_this_months_money_in_and_out(self, services, window, pesos):
+        services.transactions.create(income_draft(services, pesos.id, ars("5000")))
+        services.transactions.create(expense_draft(services, pesos.id, ars("300")))
+        window.show_detail(DetailId.ACCOUNT, pesos.id)
+        detail = window.detail(DetailId.ACCOUNT)
+        detail.today = TODAY
+        detail.refresh()
+
+        assert detail.incoming_label.text() == "$ 5.000,00"
+        assert detail.outgoing_label.text() == "$ 300,00"
+        assert detail.balance_note.text() == "+$ 4.700,00 este mes"
+
+    def test_its_payments_show_with_their_pay_button(self, services, window, pesos, dollars):
+        services.recurring.create(charge_draft(services, pesos.id, ars("9000")))
+        window.show_detail(DetailId.ACCOUNT, pesos.id)
+        detail = window.detail(DetailId.ACCOUNT)
+
+        assert not detail.payments_card.isHidden()
+        assert [row.charge.name for row in detail.payment_rows] == ["Internet"]
+        window.show_detail(DetailId.ACCOUNT, dollars.id)
+        assert detail.payments_card.isHidden()
+
+    def test_the_chart_range_is_remembered(self, services, window, pesos):
+        window.show_detail(DetailId.ACCOUNT, pesos.id)
+        detail = window.detail(DetailId.ACCOUNT)
+
+        detail.range_input.buttons[0].click()
+
+        assert services.settings.account_chart_months() == 6
 
     def test_the_back_arrow_names_where_it_goes(self, window, pesos):
         window.show_detail(DetailId.ACCOUNT, pesos.id)

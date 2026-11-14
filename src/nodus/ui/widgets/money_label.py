@@ -18,6 +18,23 @@ def masked(money: Money) -> str:
     return f"{money.currency.symbol} ••••"
 
 
+def amount_text(money: Money, hidden: bool) -> str:
+    """The amount, or only its currency when the user hides amounts."""
+    return masked(money) if hidden else money.format()
+
+
+def month_change_text(change: Money | None, hidden: bool) -> str:
+    """ "+US$ 50,00 este mes", "-US$ 50,00 este mes" or "Sin cambios este mes": short,
+    so it fits under a figure in a tile."""
+    if change is None:
+        return ""
+    if change.is_zero:
+        return "Sin cambios este mes"
+    sign = "-" if change.is_negative else "+"
+    size = -change if change.is_negative else change
+    return f"{sign}{amount_text(size, hidden)} este mes"
+
+
 def total_text(total: GroupTotal, hidden: bool) -> tuple[str, str]:
     """A group's subtotal and its tooltip: "≈" when it converts currencies, "—" when a
     rate is missing to add it up."""

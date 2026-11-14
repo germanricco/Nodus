@@ -26,24 +26,13 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.chart_base import format_compact
 from nodus.ui.widgets.figure_row import FigureRow
-from nodus.ui.widgets.goal_bar import amount_text, goal_pill, goal_sentence, month_phrase
+from nodus.ui.widgets.goal_bar import goal_pill, goal_sentence, month_phrase
 from nodus.ui.widgets.line_chart import LineChart, LinePoint
+from nodus.ui.widgets.money_label import amount_text, month_change_text
 from nodus.ui.widgets.row_actions import MoreButton, RowAction
 from nodus.ui.widgets.style import clear_layout, make_hoverable
 
 HISTORY_MONTHS = 12
-
-
-def month_change_text(change: Money | None, hidden: bool) -> str:
-    """ "+US$ 50,00 este mes", "-US$ 50,00 este mes" or "Sin cambios este mes": short,
-    so five figures fit side by side."""
-    if change is None:
-        return ""
-    if change.is_zero:
-        return "Sin cambios este mes"
-    sign = "-" if change.is_negative else "+"
-    size = -change if change.is_negative else change
-    return f"{sign}{amount_text(size, hidden)} este mes"
 
 
 class ContributionRow(QWidget):

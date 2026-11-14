@@ -253,3 +253,30 @@ class TestTransfers:
             services.transactions.get_transfer(transfer.id)
         assert services.accounts.balance(pesos.id) == ars("100000")
         assert services.accounts.balance(dollars.id) == usd("500")
+
+
+class TestAccountActivity:
+    def test_money_in_and_out_with_the_transfers_apart(self, services, pesos, dollars):
+        services.transactions.create(income_draft(services, pesos.id, ars("5000")))
+        services.transactions.create(expense_draft(services, pesos.id, ars("300")))
+        services.transactions.create_transfer(
+            TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
+        )
+        earlier = TODAY.replace(day=1).replace(month=TODAY.month - 1)
+        services.transactions.create(expense_draft(services, pesos.id, ars("99"), on=earlier))
+
+        activity = services.transactions.account_activity(pesos, TODAY.replace(day=1), TODAY)
+
+        assert (activity.incoming, activity.outgoing) == (ars("5000"), ars("1500"))
+        assert (activity.transfers_in, activity.transfers_out) == (ars("0"), ars("1200"))
+
+    def test_in_the_account_currency(self, services, pesos, dollars):
+        services.transactions.create_transfer(
+            TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
+        )
+
+        activity = services.transactions.account_activity(dollars, TODAY.replace(day=1), TODAY)
+
+        assert (activity.incoming, activity.transfers_in, activity.outgoing) == (
+            usd("1"), usd("1"), usd("0"),
+        )  # fmt: skip

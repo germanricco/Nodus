@@ -14,7 +14,7 @@ from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.budget_bar import paint_progress
 from nodus.ui.widgets.chart_base import AnimatedChart, lerp
-from nodus.ui.widgets.money_label import masked
+from nodus.ui.widgets.money_label import amount_text
 from nodus.ui.widgets.style import set_style_property
 
 # The pill of each state, and its tone (the colors of ``ChangeBadge``).
@@ -28,10 +28,6 @@ STATE_LABELS = {
     GoalState.NO_RATE: ("Sin cotización", "neutral"),
 }
 NO_RATE_TEXT = "Falta la cotización para sumar las cuentas en otras monedas."
-
-
-def amount_text(money: Money, hidden: bool) -> str:
-    return masked(money) if hidden else money.format()
 
 
 def month_phrase(month: Month) -> str:

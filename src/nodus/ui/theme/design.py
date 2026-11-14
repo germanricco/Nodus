@@ -170,6 +170,7 @@ class Layout:
     """Windows, panels and the widths given by hand, in pixels."""
 
     WINDOW_MIN_SIZE = (1100, 700)
+    DETAIL_LIST_MIN_HEIGHT = 360  # the movements on an account's page; the page scrolls
     WINDOW_SIZE = (1280, 800)  # on first opening
     NARROW_WIDTH = 900  # below it, the Dashboard stacks its cards
     SIDEBAR_WIDTH = 260

@@ -42,3 +42,12 @@ def test_reduce_motion_follows_windows_until_chosen(services, monkeypatch, windo
     services.settings.set_reduce_motion(windows_animates)
 
     assert services.settings.reduce_motion() is windows_animates
+
+
+@pytest.mark.parametrize("months", [6, 12, None])
+def test_the_account_chart_range_is_remembered(services, months):
+    assert services.settings.account_chart_months() == 12  # a year until chosen
+
+    services.settings.set_account_chart_months(months)
+
+    assert services.settings.account_chart_months() == months

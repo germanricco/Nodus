@@ -49,6 +49,18 @@ class TransactionDraft:
 
 
 @dataclass(frozen=True)
+class AccountActivity:
+    """What came into and went out of one account in a stretch of days, in its currency.
+    Transfers count, since for the account they are money in or out like any other;
+    ``transfers_in`` and ``transfers_out`` say how much of it they were."""
+
+    incoming: Money
+    outgoing: Money
+    transfers_in: Money
+    transfers_out: Money
+
+
+@dataclass(frozen=True)
 class RefundSummary:
     """How much of an expense has been paid back. ``refunded`` adds the refunds in the
     expense's currency; refunds in another currency are listed but have no cap."""
@@ -222,6 +234,22 @@ class TransactionService:
 
     def list_transactions(self, criteria: TransactionFilter) -> list[Transaction]:
         return self._transactions.list(criteria)
+
+    def account_activity(self, account: Account, start: date, end: date) -> AccountActivity:
+        """What came into and went out of ``account`` from ``start`` to ``end``."""
+        zero = Money.zero(account.currency)
+        totals = {(kind, transfer): zero for kind in TransactionType for transfer in (False, True)}
+        criteria = TransactionFilter(account_id=account.id, start=start, end=end)
+        for transaction in self._transactions.list(criteria):
+            key = (transaction.type, transaction.is_transfer)
+            totals[key] += transaction.amount
+        income, expense = TransactionType.INCOME, TransactionType.EXPENSE
+        return AccountActivity(
+            totals[income, False] + totals[income, True],
+            totals[expense, False] + totals[expense, True],
+            totals[income, True],
+            totals[expense, True],
+        )
 
     def date_range(self, criteria: TransactionFilter) -> tuple[date, date] | None:
         """The first and last day of the transactions matching ``criteria``, if any."""

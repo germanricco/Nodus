@@ -15,9 +15,9 @@ from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.pages import accounts_page, goals_page
 from nodus.ui.pages.accounts_page import AccountsPage
-from nodus.ui.pages.goal_detail_page import month_change_text
 from nodus.ui.pages.goals_page import GoalsPage
 from nodus.ui.widgets.goal_bar import goal_sentence, saved_of_target
+from nodus.ui.widgets.money_label import month_change_text
 
 TODAY = date(2026, 11, 13)
 

@@ -602,6 +602,7 @@ class TestAccountDetail:
 
         assert not detail.pending_tile.isHidden()
         assert detail.pending_label.text() == "$ 62.500,00"
+        assert " cuotas · hasta " in detail.pending_note.text()
         assert detail.balance_label.text() == "$ 87.500,00"
         window.show_detail(DetailId.ACCOUNT, dollars.id)
         assert detail.pending_tile.isHidden()

@@ -206,3 +206,13 @@ def test_rate_effect_without_a_rate_is_none(services, pesos, dollars):
     end = services.net_worth.history(Period(TODAY, TODAY), TODAY)[-1]
 
     assert services.net_worth.rate_effect(end, TODAY, Currency.ARS) is None
+
+
+def test_an_account_history_can_start_later(services, pesos):
+    services.transactions.create(expense_draft(services, pesos.id, ars("10"), on=date(2025, 1, 9)))
+    since = date(2026, 6, 1)
+
+    history = services.net_worth.account_history(pesos.id, TODAY, since)
+
+    assert history[0][0] >= since
+    assert history[-1] == (TODAY, ars("99990"))

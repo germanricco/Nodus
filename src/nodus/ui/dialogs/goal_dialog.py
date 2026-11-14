@@ -30,7 +30,8 @@ from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.combo_box import ComboBox
 from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.goal_bar import NO_RATE_TEXT, amount_text, month_phrase
+from nodus.ui.widgets.goal_bar import NO_RATE_TEXT, month_phrase
+from nodus.ui.widgets.money_label import amount_text
 
 PERCENT_WIDTH = 48  # geometry: room for «100»
 DEFAULT_MONTHS = 12  # a new goal's date, when one is set: a year from now
