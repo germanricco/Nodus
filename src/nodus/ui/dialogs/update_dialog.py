@@ -19,6 +19,7 @@ from nodus.services.errors import UpdateError
 from nodus.services.update_service import Release, UpdateService
 from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
+from nodus.ui.dialogs.user_error import ErrorDetail
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.style import set_style_name
 
@@ -64,6 +65,8 @@ class UpdateDialog(QDialog):
         self.detail_label.setObjectName("FieldHint")
         self.detail_label.setWordWrap(True)
         layout.addWidget(self.detail_label)
+        self.error_detail = ErrorDetail()
+        layout.addWidget(self.error_detail)
 
         buttons = QHBoxLayout()
         buttons.addStretch()
@@ -139,6 +142,7 @@ class UpdateDialog(QDialog):
         self.status_label.setText("No se pudo actualizar")
         set_style_name(self.detail_label, "ErrorLabel")
         self.detail_label.setText(f"{error}\nTambién puedes descargarla desde GitHub.")
+        self.error_detail.set_detail(error.detail)
         self.progress_bar.hide()
         self.page_button.show()
         self.cancel_button.setText("Cerrar")

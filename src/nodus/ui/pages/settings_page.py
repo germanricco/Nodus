@@ -35,6 +35,7 @@ from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import export_transactions
 from nodus.ui.dialogs.external_backup import save_copy_outside
 from nodus.ui.dialogs.news_dialog import NewsDialog
+from nodus.ui.dialogs.user_error import user_error
 from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.labels import rate_text
@@ -440,7 +441,14 @@ class SettingsPage(Page):
         try:
             self._services.backups.create(date.today())
         except BackupError as error:
-            QMessageBox.warning(self.window(), "Copia de seguridad", f"No se pudo copiar: {error}")
+            user_error(
+                self.window(),
+                "Copia de seguridad",
+                "No se pudo hacer la copia.",
+                "Revisa que quede lugar en el disco y vuelve a intentarlo. Tus datos siguen"
+                " como estaban.",
+                str(error),
+            )
         self._refresh_backup_status()
 
     def export_all(self) -> None:

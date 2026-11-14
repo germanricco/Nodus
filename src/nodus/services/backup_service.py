@@ -70,8 +70,12 @@ class BackupService:
             return None
         try:
             backup = self.create(today)
-        except BackupError as error:
-            self.last_error = f"No se pudo hacer la copia del día: {error}"
+        except BackupError:
+            # The system's text stays out of a notice; «Hacer copia» shows it, if it fails again.
+            self.last_error = (
+                "No se pudo hacer la copia del día. Revisa que quede lugar en el disco y toca"
+                " «Hacer copia» en Ajustes."
+            )
             return None
         self.last_error = None
         return backup

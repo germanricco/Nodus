@@ -5,6 +5,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 ## 1.7.0
 
 - La primera página se llama ahora «Inicio» y la de pagos que se repiten, «Recurrentes», con una línea que cuenta qué va ahí: los nombres en español y uno solo por cosa.
+- Cuando algo falla, como guardar una copia en un pendrive que se desconectó, Nodus dice qué pasó y qué hacer. El mensaje técnico queda detrás de «Ver detalle», con un botón para copiarlo si quieres avisarnos.
 
 ## 1.6.0 — 2026-11-14
 

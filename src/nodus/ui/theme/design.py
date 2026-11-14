@@ -178,6 +178,7 @@ class Layout:
     HEADER_HEIGHT = 44  # a page's title row
     DIALOG_MIN_WIDTH = 460  # a form
     MESSAGE_MIN_WIDTH = 420  # a dialog of text and buttons, such as an update's
+    ERROR_DETAIL_HEIGHT = 120  # the unfolded technical text of an error; it scrolls
     NEWS_SIZE = (560, 520)
     PICKER_MIN_SIZE = (780, 520)  # a dialog built around a table, such as the refund's
     NOTIFICATION_PANEL_WIDTH = 340

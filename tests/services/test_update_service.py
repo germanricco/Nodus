@@ -156,8 +156,10 @@ def test_connection_lost_midway_is_an_update_error(tmp_path):
         yield INSTALLER_BYTES[:1000]
         raise OSError("se cortó la conexión")
 
-    with pytest.raises(UpdateError, match="se cortó la conexión"):
+    with pytest.raises(UpdateError, match="Revisa la conexión") as raised:
         updater(tmp_path, cut).download(release_with([installer_asset()]))
+
+    assert raised.value.detail == "se cortó la conexión"
 
     assert list((tmp_path / "updates").iterdir()) == []
 
@@ -193,8 +195,10 @@ def test_installer_that_cannot_start_is_an_update_error(tmp_path):
     def broken(_command):
         raise OSError("acceso denegado")
 
-    with pytest.raises(UpdateError, match="acceso denegado"):
+    with pytest.raises(UpdateError, match="No se pudo abrir el instalador") as raised:
         updater(tmp_path, launch=broken).install(tmp_path / "setup.exe")
+
+    assert raised.value.detail == "acceso denegado"
 
 
 def test_only_the_installed_program_installs_updates(tmp_path):

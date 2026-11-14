@@ -69,7 +69,7 @@ class AmountInput(QWidget):
         try:
             amount = parse_amount(text) if text.strip() else Decimal(0)
         except ValueError as error:
-            raise InputError(str(error), self) from error
+            raise InputError(str(error), self) from error  # user-text: parse_amount's own
         if not self._currency.decimals and amount != amount.to_integral_value():
             raise InputError("Los pesos chilenos no llevan centavos.", self)
         return Money.from_decimal(amount, self._currency)

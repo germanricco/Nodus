@@ -63,7 +63,8 @@ def test_failed_daily_backup_is_remembered_not_raised(services, monkeypatch):
     monkeypatch.setattr(services.backups, "_copy_to", broken)
 
     assert services.backups.create_if_due(TODAY) is None
-    assert "disco lleno" in services.backups.last_error
+    assert services.backups.last_error.startswith("No se pudo hacer la copia del día.")
+    assert "disco lleno" not in services.backups.last_error
 
 
 @pytest.mark.parametrize("failure", [OSError("disco lleno"), sqlite3.Error("base bloqueada")])

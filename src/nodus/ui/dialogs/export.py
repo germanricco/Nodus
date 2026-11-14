@@ -5,10 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import QStandardPaths
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
+from PySide6.QtWidgets import QFileDialog, QWidget
 
 from nodus.models.transaction import Transaction
 from nodus.services.container import Services
+from nodus.ui.dialogs.user_error import user_error
 
 TITLE = "Exportar transacciones"
 
@@ -30,6 +31,13 @@ def export_transactions(
     try:
         services.export.write_csv(transactions, path)
     except OSError as error:
-        QMessageBox.warning(parent, TITLE, f"No se pudo guardar el archivo.\n\n{error}")
+        user_error(
+            parent,
+            TITLE,
+            "No se pudo guardar el archivo.",
+            "Revisa que la carpeta exista, que puedas escribir en ella y que el archivo no"
+            " esté abierto en otro programa, como Excel. Después vuelve a intentarlo.",
+            str(error),
+        )
         return None
     return path

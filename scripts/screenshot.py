@@ -39,6 +39,7 @@ from nodus.ui.dialogs.goal_dialog import GoalDialog  # noqa: E402
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
 from nodus.ui.dialogs.update_dialog import UpdateDialog  # noqa: E402
+from nodus.ui.dialogs.user_error import UserErrorDialog  # noqa: E402
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
@@ -336,6 +337,20 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         app.processEvents()
         save(update, args.out / f"update-dialog-{mode.value}.png")
         update.close()
+        # An error that says what to do, with the system's text unfolded.
+        error = UserErrorDialog(
+            "Copia fuera de la PC",
+            "No se pudo guardar la copia.",
+            r"Revisa que la carpeta E:\Nodus exista y que el pendrive o el disco sigan"
+            " conectados y con lugar libre. Después vuelve a intentarlo.",
+            r"[Errno 28] No space left on device: 'E:\Nodus\nodus-2026-11-14.db'",
+            parent=window,
+        )
+        error.detail.toggle()
+        error.show()
+        app.processEvents()
+        save(error, args.out / f"user-error-{mode.value}.png")
+        error.close()
     window.close()
 
 

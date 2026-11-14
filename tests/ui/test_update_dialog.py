@@ -77,6 +77,20 @@ def test_damaged_download_offers_the_release_page(qtbot, tmp_path, launched, mon
     assert urls == ["https://example.com/v9"]
 
 
+def test_lost_connection_keeps_the_system_text_behind_ver_detalle(qtbot, tmp_path, launched):
+    def cut(_url):
+        yield b"part"
+        raise OSError("se cortó la conexión")
+
+    dialog = open_dialog(qtbot, updates_with(tmp_path, launched, cut))
+
+    qtbot.waitUntil(lambda: dialog.page_button.isVisible())
+
+    assert "Revisa la conexión" in dialog.detail_label.text()
+    assert "se cortó" not in dialog.detail_label.text()
+    assert dialog.error_detail.text.toPlainText() == "se cortó la conexión"
+
+
 def test_cancel_stops_the_download_and_installs_nothing(qtbot, tmp_path, launched):
     first_chunk_sent = threading.Event()
     go_on = threading.Event()

@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
 from nodus.services.container import Services
 from nodus.services.errors import BackupError
 from nodus.ui.dialogs.confirm import styled_button
+from nodus.ui.dialogs.user_error import user_error
 from nodus.ui.event_bus import EventBus
 
 TITLE = "Copia fuera de la PC"
@@ -27,11 +28,13 @@ def save_copy_outside(parent: QWidget, services: Services, event_bus: EventBus) 
     try:
         copy = services.backups.export_to(folder, date.today())
     except BackupError as error:
-        QMessageBox.warning(
+        user_error(
             parent,
             TITLE,
-            f"No se pudo guardar la copia en {folder}. Revisa que el pendrive o el disco"
-            f" sigan conectados y vuelve a intentarlo.\n\nDetalle: {error}",
+            "No se pudo guardar la copia.",
+            f"Revisa que la carpeta {folder} exista y que el pendrive o el disco sigan"
+            " conectados y con lugar libre. Después vuelve a intentarlo.",
+            str(error),
         )
         return False
     event_bus.backups_changed.emit()

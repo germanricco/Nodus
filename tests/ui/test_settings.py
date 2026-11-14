@@ -90,15 +90,17 @@ def test_failed_backup_now_warns_the_user(services, page, monkeypatch):
     def broken(_today):
         raise BackupError("disco lleno")
 
-    warnings = []
+    errors = []
     monkeypatch.setattr(services.backups, "create", broken)
     monkeypatch.setattr(
-        settings_page.QMessageBox, "warning", lambda _parent, _title, text: warnings.append(text)
+        settings_page,
+        "user_error",
+        lambda _parent, _title, what, how, detail: errors.append((what, detail)),
     )
 
     page.backup_now_button.click()
 
-    assert warnings == ["No se pudo copiar: disco lleno"]
+    assert errors == [("No se pudo hacer la copia.", "disco lleno")]
 
 
 def test_failed_daily_backup_is_shown(services, page):

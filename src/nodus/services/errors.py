@@ -36,7 +36,15 @@ class BackupError(Exception):
 
 
 class UpdateError(Exception):
-    """A new version could not be downloaded or started. The message explains why."""
+    """A new version could not be downloaded or started.
+
+    The message is written for the user; ``detail`` keeps the system's own text, for
+    whoever needs to report the problem.
+    """
+
+    def __init__(self, message: str, detail: str = "") -> None:
+        super().__init__(message)
+        self.detail = detail
 
 
 def require_found(value: T | None, message: str) -> T:

@@ -152,7 +152,11 @@ class UpdateService:
                     on_progress(received)
         except OSError as error:
             partial.unlink(missing_ok=True)
-            raise UpdateError(f"No se pudo descargar la actualización: {error}") from error
+            raise UpdateError(
+                "No se pudo descargar la actualización. Revisa la conexión a internet y"
+                " vuelve a intentarlo.",
+                str(error),
+            ) from error
         if cancelled():
             partial.unlink(missing_ok=True)
             return None
@@ -172,7 +176,10 @@ class UpdateService:
         try:
             self._launch([str(installer), *INSTALLER_ARGUMENTS])
         except OSError as error:
-            raise UpdateError(f"No se pudo abrir el instalador: {error}") from error
+            raise UpdateError(
+                "No se pudo abrir el instalador. Vuelve a intentarlo.",
+                str(error),
+            ) from error
 
     def clean(self) -> None:
         """Deletes downloaded installers; called on startup, once they have done their job."""
