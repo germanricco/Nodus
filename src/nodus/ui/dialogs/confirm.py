@@ -1,4 +1,4 @@
-"""Confirmation before destructive actions."""
+"""Questions before acting: confirming a destructive action, or asking before a harmless one."""
 
 from PySide6.QtWidgets import QMessageBox, QPushButton, QWidget
 
@@ -16,6 +16,21 @@ def confirm(parent: QWidget, title: str, text: str, action: str | None = None) -
     cancel_button = styled_button("Cancelar", "SecondaryButton")
     box.addButton(cancel_button, QMessageBox.ButtonRole.RejectRole)
     box.setDefaultButton(cancel_button)
+    box.exec()
+    return box.clickedButton() is accept_button
+
+
+def ask(parent: QWidget, title: str, text: str, action: str, cancel: str = "Cancelar") -> bool:
+    """Asks before something that loses nothing; True only if they press ``action``.
+
+    Unlike ``confirm``, the action is the primary button and the default one, since
+    taking it by reflex does no harm.
+    """
+    box = QMessageBox(QMessageBox.Icon.Question, title, text, parent=parent)
+    accept_button = styled_button(action, "PrimaryButton")
+    box.addButton(accept_button, QMessageBox.ButtonRole.AcceptRole)
+    box.addButton(styled_button(cancel, "SecondaryButton"), QMessageBox.ButtonRole.RejectRole)
+    box.setDefaultButton(accept_button)
     box.exec()
     return box.clickedButton() is accept_button
 

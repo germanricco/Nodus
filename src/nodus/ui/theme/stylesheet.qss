@@ -709,6 +709,12 @@ QLabel[muted="true"] {
     color: $text_muted;
 }
 
+/* A step of Primeros pasos already taken (pages/guide_card.py). */
+QLabel[done="true"] {
+    color: $text_muted;
+    text-decoration: line-through;
+}
+
 /* Scrollbars */
 
 QScrollArea {

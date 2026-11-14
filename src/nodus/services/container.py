@@ -29,6 +29,7 @@ from nodus.services.dashboard_service import DashboardService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.export_service import ExportService
 from nodus.services.goal_service import GoalService
+from nodus.services.guide_service import GuideService
 from nodus.services.http import downloader
 from nodus.services.installment_service import InstallmentService
 from nodus.services.net_worth_service import NetWorthService
@@ -74,6 +75,7 @@ class Services:
     tags: TagService
     startup: StartupService
     news: NewsService
+    guide: GuideService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -145,4 +147,5 @@ class Services:
             tags=TagService(database, tag_repository, transactions, exchange_rates),
             startup=StartupService.for_this_program(),
             news=NewsService(settings, __version__, first_start=database.created),
+            guide=GuideService(accounts, transactions, recurring, budgets, goals, settings),
         )

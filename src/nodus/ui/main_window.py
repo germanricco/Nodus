@@ -79,6 +79,7 @@ class MainWindow(QMainWindow):
         self._stack.setObjectName("PageStack")
         dashboard = DashboardPage(services, event_bus, theme_manager)
         dashboard.navigate_requested.connect(self.show_page)
+        dashboard.new_transaction_requested.connect(self.open_new_transaction)
         accounts = AccountsPage(services, event_bus, theme_manager)
         accounts.navigate_requested.connect(self.show_page)
         accounts.transactions_requested.connect(self.show_transactions)

@@ -171,6 +171,8 @@ ANALYSIS_TABS = ("trends", "cash-flow", "net-worth")
 def render_pages(app: QApplication, services: Services, args: argparse.Namespace) -> None:
     if args.demo:
         load_demo_data(services, args.today)
+        # The demo stands for someone who knows their way around; «guide» shows the list.
+        services.guide.dismiss()
     theme_manager = ThemeManager(app, ThemeMode.LIGHT)
     event_bus = EventBus()
     window = MainWindow(services, event_bus, theme_manager)
@@ -182,6 +184,13 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
             window.show_page(page_id)
             app.processEvents()
             save(window, args.out / f"{page_id.name.lower()}-{mode.value}.png")
+        # Primeros pasos on Inicio, part of the way through.
+        dismissed = services.settings.guide_dismissed()
+        services.guide.restore()
+        window.show_page(PageId.DASHBOARD)
+        app.processEvents()
+        save(window, args.out / f"guide-{mode.value}.png")
+        services.settings.set_guide_dismissed(dismissed)
         for name, build_dialog in DIALOGS.items():
             dialog = build_dialog(services, event_bus, window)
             dialog.show()

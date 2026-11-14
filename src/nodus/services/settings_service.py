@@ -36,6 +36,7 @@ class SettingsService:
     BACKUP_REMINDER_KEY = "backup_reminder"
     BACKUP_REMINDER_DISMISSED_KEY = "backup_reminder_dismissed"
     ACCOUNT_CHART_MONTHS_KEY = "account_chart_months"
+    GUIDE_DISMISSED_KEY = "guide_dismissed"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -134,6 +135,13 @@ class SettingsService:
 
     def set_backup_reminder(self, enabled: bool) -> None:
         self._set_flag(self.BACKUP_REMINDER_KEY, enabled)
+
+    def guide_dismissed(self) -> bool:
+        """Whether the user put away Primeros pasos on Inicio."""
+        return self._flag(self.GUIDE_DISMISSED_KEY, default=False)
+
+    def set_guide_dismissed(self, dismissed: bool) -> None:
+        self._set_flag(self.GUIDE_DISMISSED_KEY, dismissed)
 
     def backup_reminder_dismissed(self) -> str | None:
         """The month ("2026-10") whose reminder the user put off with «Ahora no»."""

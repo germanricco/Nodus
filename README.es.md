@@ -33,7 +33,7 @@ Nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta tiene su
 ## Qué puedes hacer
 
 ### Ver tu situación de un vistazo
-El Inicio, la primera página, responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio neto, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría te lleva a sus movimientos. Si alguien mira tu pantalla, el ojo de la barra superior oculta tus saldos y tu patrimonio neto, y el panel lateral se contrae a sus íconos cuando quieres más espacio.
+El Inicio, la primera página, responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio neto, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría te lleva a sus movimientos. Si alguien mira tu pantalla, el ojo de la barra superior oculta tus saldos y tu patrimonio neto, y el panel lateral se contrae a sus íconos cuando quieres más espacio. Mientras empiezas, la lista «Primeros pasos» de arriba te lleva a crear una cuenta, anotar un gasto, agregar un pago recurrente, un presupuesto y una meta, y guardar una copia fuera de la computadora; cada paso se tacha solo cuando lo haces.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
