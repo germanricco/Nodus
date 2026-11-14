@@ -35,11 +35,18 @@ It was born for people who manage money in pesos and dollars at the same time. E
 ## What you can do
 
 ### See where you stand at a glance
-Home, the first page, answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to see its transactions. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room. While you are starting out, a «Primeros pasos» (first steps) list at the top walks you through creating an account, recording an expense, adding a recurring payment, a budget and a goal, and saving a copy off your computer; each step crosses itself out as you do it. The first time, Nodus also offers a one-minute guided tour that points at each part of the window; you can take it again from Ajustes. For anything else, F1 or the «?» in the top bar opens Ayuda (help): short answers on how to record installments, refunds, goals and the rest, and every keyboard shortcut.
+Home, the first page, answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to see its transactions. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
   <img src="docs/images/dashboard-light.png" alt="Home: net worth, upcoming payments and spending by category">
+</picture>
+
+While you are starting out, a «Primeros pasos» (first steps) list at the top walks you through creating an account, recording an expense, adding a recurring payment, a budget and a goal, and saving a copy off your computer; each step crosses itself out as you do it. The first time, Nodus also offers a one-minute guided tour that points at each part of the window; you can take it again from Ajustes. For anything else, F1 or the «?» in the top bar opens Ayuda (help): short answers on how to record installments, refunds, goals and the rest, and every keyboard shortcut.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/tour-dark.png">
+  <img src="docs/images/tour-light.png" alt="The guided tour pointing at «Agregar transacción», with the rest of the window dimmed">
 </picture>
 
 ### Keep accounts in pesos and dollars
