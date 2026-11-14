@@ -2,7 +2,7 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
-## 1.6.0
+## 1.6.0 — 2026-11-14
 
 - Metas de ahorro: la nueva página «Metas» junta el saldo de tus cuentas de ahorro hacia un monto, con fecha si quieres. Eliges qué cuentas cuentan y qué parte de cada una (una misma cuenta puede repartirse entre varias metas), al marcar una cuenta el formulario propone la parte que alcanza para el objetivo, y te dice cuánto aporta cada cuenta hoy y cuánto hace falta apartar por mes antes de guardar. Cada meta muestra su barra y, en una oración, si a tu ritmo llegas a tiempo o cuánto te falta por mes para llegar. Una meta no mueve dinero: crece sola cuando pasas plata a sus cuentas. También puedes empezarla desde una cuenta de ahorro o inversión, con «Usar en una meta…».
 - Cada meta tiene su página: cuánto lleva, cuánto subió o bajó este mes, lo que falta, lo que hace falta por mes y tu ritmo, con un gráfico de lo ahorrado mes a mes frente al objetivo y lo que aporta cada cuenta. La página de una cuenta dice a qué metas aporta, así sabes que gastar de ahí les resta. Cuando una meta llega a su objetivo, la campana te avisa una vez; si después usas ese dinero, la meta sigue alcanzada.
