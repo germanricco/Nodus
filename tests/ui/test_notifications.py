@@ -179,7 +179,6 @@ class TestBackupReminder:
         monkeypatch.setattr(
             external_backup.QFileDialog, "getExistingDirectory", lambda *_a: str(tmp_path)
         )
-        monkeypatch.setattr(external_backup.QMessageBox, "information", lambda *_a: None)
 
         reminded_window.notification_panel.rows[0].action_button.click()
 

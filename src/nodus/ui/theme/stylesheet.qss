@@ -235,7 +235,8 @@ QLabel#NotificationCount {
 }
 
 QFrame#NotificationPanel,
-QFrame#ColorWheelPopup {
+QFrame#ColorWheelPopup,
+QFrame#Toast {
     background: $surface;
     border: 1px solid $border;
     border-radius: $radius_xl;

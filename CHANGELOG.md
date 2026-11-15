@@ -2,6 +2,11 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.8.0
+
+- Lo que haces se confirma con un aviso breve abajo a la derecha, que se va solo: «Copia guardada.», «Exportación lista: 120 transacciones.», «Cotización actualizada: US$ 1 = $ 1.215,50». Ya no queda una ventana que cerrar después de restaurar o guardar una copia, y la cotización que Nodus trae sola al abrir también se anuncia.
+- Arreglo: si la copia del día había fallado, «Hacer copia» seguía mostrando el error aunque la nueva saliera bien.
+
 ## 1.7.0 — 2026-11-14
 
 - La primera página se llama ahora «Inicio» y la de pagos que se repiten, «Recurrentes», con una línea que cuenta qué va ahí: los nombres en español y uno solo por cosa.

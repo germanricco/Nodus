@@ -210,6 +210,13 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         window.help_panel.show_shortcuts()
         save(window, args.out / f"help-shortcuts-{mode.value}.png")
         window.help_panel.close_panel()
+        # Toasts on Recurrentes: one that just tells, and one with «Deshacer».
+        window.show_page(PageId.RECURRING)
+        window.toast("Copia guardada.")
+        window.toast("Se omitió Internet.", "Deshacer", lambda: None)
+        save(window, args.out / f"toast-{mode.value}.png")
+        for toast in list(window.toasts.toasts):
+            toast.dismiss()
         for name, build_dialog in DIALOGS.items():
             dialog = build_dialog(services, event_bus, window)
             dialog.show()

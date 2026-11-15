@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from functools import partial
 
@@ -50,7 +51,7 @@ from nodus.ui.pages.settings_page import SettingsPage
 from nodus.ui.pages.tag_detail_page import TagDetailPage
 from nodus.ui.pages.tags_page import TagsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
-from nodus.ui.rate_updater import RateUpdater
+from nodus.ui.rate_updater import RateUpdater, updated_text
 from nodus.ui.shortcuts import HELP
 from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -59,6 +60,7 @@ from nodus.ui.widgets.coach_marks import CoachMarks
 from nodus.ui.widgets.help_panel import HelpPanel
 from nodus.ui.widgets.notification_panel import NotificationPanel
 from nodus.ui.widgets.sidebar import Sidebar
+from nodus.ui.widgets.toast import ToastStack
 from nodus.ui.widgets.top_bar import TopBar
 
 
@@ -155,6 +157,7 @@ class MainWindow(QMainWindow):
         content_layout.setSpacing(0)
         content_layout.addWidget(self.top_bar)
         content_layout.addWidget(self._stack, stretch=1)
+        self.toasts = ToastStack(content, theme_manager)
 
         central = QWidget()
         layout = QHBoxLayout(central)
@@ -195,6 +198,15 @@ class MainWindow(QMainWindow):
         self.show_page(PageId.DASHBOARD)
         self.refresh_notifications()
 
+    def toast(
+        self,
+        text: str,
+        action_text: str | None = None,
+        on_action: Callable[[], object] | None = None,
+    ) -> None:
+        """Tells what just happened at the bottom right of the page (``ToastStack``)."""
+        self.toasts.show_toast(text, action_text, on_action)
+
     def check_for_updates(self) -> None:
         """Looks for a new version in the background, unless the user turned it off.
 
@@ -211,6 +223,7 @@ class MainWindow(QMainWindow):
 
         Called by the app once the window is open, like ``check_for_updates``."""
         self._rate_updater = RateUpdater(self._services, self._event_bus, parent=self)
+        self._rate_updater.updated.connect(lambda rates: self.toast(updated_text(rates)))
         self._rate_updater.update()
 
     def show_unseen_news(self) -> None:
@@ -407,6 +420,8 @@ class MainWindow(QMainWindow):
             )
             self.show_page(PageId.ACCOUNTS)
             return
-        TransactionDialog(
+        dialog = TransactionDialog(
             self._services, self._event_bus, self.theme_manager, parent=self, start=start
-        ).exec()
+        )
+        if dialog.exec():
+            self.toast("Transacción guardada.")

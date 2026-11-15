@@ -40,7 +40,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.formatting import format_date
 from nodus.ui.labels import rate_text
 from nodus.ui.pages.page import Page
-from nodus.ui.rate_updater import RateUpdater
+from nodus.ui.rate_updater import RateUpdater, updated_text
 from nodus.ui.theme.design import Layout, Line, Space, set_reduced_motion
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -52,6 +52,7 @@ from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_acti
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.setting_row import SettingRow
 from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.toast import show_toast
 from nodus.ui.widgets.toggle_switch import ToggleSwitch
 
 # Segment order of the theme selector.
@@ -288,8 +289,9 @@ class SettingsPage(Page):
             self.rate_source_row.set_detail("Consultando…")
             self._rate_updater.update(force=True)
 
-    def _on_rate_updated(self, _rates: dict[Currency, Decimal]) -> None:
+    def _on_rate_updated(self, rates: dict[Currency, Decimal]) -> None:
         self.rate_source_row.set_detail("Actualizada hoy")
+        show_toast(self, updated_text(rates))
 
     def _on_rate_failed(self) -> None:
         self.rate_source_row.set_detail("Sin conexión", error=True)
@@ -315,6 +317,7 @@ class SettingsPage(Page):
             return
         self.rate_value_input.line_edit.clear()
         self._event_bus.exchange_rates_changed.emit()
+        show_toast(self, "Cotización guardada.")
 
     def rate_currency(self) -> Currency:
         """The currency whose rates the card shows: the dollar, unless the user picked
@@ -463,6 +466,9 @@ class SettingsPage(Page):
                 " como estaban.",
                 str(error),
             )
+        else:
+            show_toast(self, "Copia guardada.")
+        self._event_bus.backups_changed.emit()
         self._refresh_backup_status()
 
     def export_all(self) -> None:
@@ -503,7 +509,7 @@ class SettingsPage(Page):
         )
         self._event_bus.emit_all()
         self.refresh()
-        QMessageBox.information(self.window(), "Restaurar copia", "Se restauró la copia.")
+        show_toast(self, "Copia restaurada.")
 
     # About
 

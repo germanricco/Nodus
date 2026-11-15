@@ -11,13 +11,15 @@ from nodus.models.currency import Currency
 from nodus.services.container import Services
 from nodus.ui.background import BackgroundCall
 from nodus.ui.event_bus import EventBus
+from nodus.ui.labels import rate_text
 
 
 class RateUpdater(QObject):
     """Runs the DolarApi requests off the interface thread and saves the results on it.
 
     The database connection belongs to the interface thread, so only the download happens
-    in the background. ``updated`` carries the rates that came; ``failed`` means none did.
+    in the background. ``updated`` carries the rates that came and were saved; ``failed``
+    means none came.
     """
 
     updated = Signal(object)  # dict[Currency, Decimal]
@@ -56,4 +58,12 @@ class RateUpdater(QObject):
                 saved = True
         if saved:
             self._event_bus.exchange_rates_changed.emit()
-        self.updated.emit(rates)
+            self.updated.emit(rates)
+
+
+def updated_text(rates: dict[Currency, Decimal]) -> str:
+    """The toast once rates arrive: the dollar's, which is the one people look at."""
+    if Currency.USD in rates:
+        dollar = rate_text(Currency.USD, Currency.ARS, rates[Currency.USD])
+        return f"Cotización actualizada: {dollar}"
+    return "Cotizaciones actualizadas."

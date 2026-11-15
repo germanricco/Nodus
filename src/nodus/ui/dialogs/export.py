@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QFileDialog, QWidget
 from nodus.models.transaction import Transaction
 from nodus.services.container import Services
 from nodus.ui.dialogs.user_error import user_error
+from nodus.ui.widgets.toast import show_toast
 
 TITLE = "Exportar transacciones"
 
@@ -40,4 +41,6 @@ def export_transactions(
             str(error),
         )
         return None
+    count = len(transactions)
+    show_toast(parent, f"Exportación lista: {count} transacción{'' if count == 1 else 'es'}.")
     return path

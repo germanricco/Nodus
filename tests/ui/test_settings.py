@@ -79,10 +79,24 @@ def test_about_card_turns_update_check_off(services, page):
     assert not services.settings.check_updates()
 
 
-def test_backup_now_creates_a_copy_and_shows_it(services, page):
+def test_backup_now_creates_a_copy_and_shows_it(monkeypatch, services, page):
+    told = []
+    monkeypatch.setattr(settings_page, "show_toast", lambda _w, text: told.append(text))
+
     page.backup_now_button.click()
 
     assert services.backups.last_backup() == date.today()
+    assert page.backup_row.detail.text() == f"Última: {date.today():%d/%m/%Y}"
+    assert told == ["Copia guardada."]
+
+
+def test_backup_now_mends_the_failed_daily_backup(qtbot, services, event_bus, page):
+    services.backups.last_error = "No se pudo hacer la copia del día."
+
+    with qtbot.waitSignal(event_bus.backups_changed):
+        page.backup_now_button.click()
+
+    assert services.backups.last_error is None
     assert page.backup_row.detail.text() == f"Última: {date.today():%d/%m/%Y}"
 
 
@@ -118,12 +132,14 @@ def test_restore_replaces_data_and_announces_it(
     services.accounts.delete(pesos.id)
     monkeypatch.setattr(settings_page.QFileDialog, "getOpenFileName", lambda *_a: (str(backup), ""))
     monkeypatch.setattr(settings_page, "confirm", lambda *_a, **_k: True)
-    monkeypatch.setattr(settings_page.QMessageBox, "information", lambda *_a: None)
+    told = []
+    monkeypatch.setattr(settings_page, "show_toast", lambda _w, text: told.append(text))
 
     with qtbot.waitSignal(event_bus.accounts_changed):
         page.restore_button.click()
 
     assert [a.name for a in services.accounts.list_accounts()] == ["Banco"]
+    assert told == ["Copia restaurada."]
 
 
 def test_restore_of_an_invalid_file_warns_and_keeps_data(
@@ -238,14 +254,12 @@ class TestCopyOutside:
             external_backup.QFileDialog, "getExistingDirectory", lambda *_a: str(tmp_path)
         )
         told = []
-        monkeypatch.setattr(
-            external_backup.QMessageBox, "information", lambda *a: told.append(a[2])
-        )
+        monkeypatch.setattr(external_backup, "show_toast", lambda _w, text: told.append(text))
 
         page.save_outside_button.click()
 
         assert (tmp_path / f"nodus-{date.today()}.db").is_file()
-        assert told == [f"Se guardó «nodus-{date.today()}.db» en {tmp_path}."]
+        assert told == [f"Copia guardada en {tmp_path}."]
         assert page.outside_row.detail.text() == f"Última: {date.today():%d/%m/%Y}"
 
     def test_offers_the_folder_of_the_last_time(self, monkeypatch, tmp_path, services, page):

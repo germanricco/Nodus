@@ -58,6 +58,7 @@ class BackupService:
             self._prune()
         except (OSError, sqlite3.Error) as error:
             raise BackupError(str(error)) from error
+        self.last_error = None  # a copy made by hand mends the day's failed one
         return destination
 
     def create_if_due(self, today: date) -> Path | None:
@@ -77,7 +78,6 @@ class BackupService:
                 " «Hacer copia» en Ajustes."
             )
             return None
-        self.last_error = None
         return backup
 
     def last_backup(self) -> date | None:

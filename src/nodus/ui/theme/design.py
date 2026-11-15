@@ -152,6 +152,14 @@ class Motion(IntEnum):
     SLOW = 450  # charts and figures moving to new data
 
 
+class Dwell:
+    """How long a notice stays on screen, in milliseconds. Not a motion: «Reducir
+    animaciones» leaves it as it is, since it is time to read."""
+
+    TOAST = 6000
+    TOAST_ACTION = 8000  # with «Deshacer», time to read it and decide
+
+
 class Easing:
     """The curve of each kind of motion."""
 
@@ -194,6 +202,7 @@ class Layout:
     HELP_PANEL_WIDTH = 340  # Ayuda, at the right of the window
     PICKER_MIN_SIZE = (780, 520)  # a dialog built around a table, such as the refund's
     NOTIFICATION_PANEL_WIDTH = 340
+    TOAST_WIDTH = 360  # a notice at the bottom right of the page
     SEARCH_WIDTH = 200
     SEARCH_MIN_WIDTH = 140  # beside the filters of Transacciones
     NUMBER_FIELD_WIDTH = 200  # a rate

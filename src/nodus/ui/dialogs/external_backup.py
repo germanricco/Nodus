@@ -12,6 +12,7 @@ from nodus.services.errors import BackupError
 from nodus.ui.dialogs.confirm import styled_button
 from nodus.ui.dialogs.user_error import user_error
 from nodus.ui.event_bus import EventBus
+from nodus.ui.widgets.toast import show_toast
 
 TITLE = "Copia fuera de la PC"
 
@@ -26,7 +27,7 @@ def save_copy_outside(parent: QWidget, services: Services, event_bus: EventBus) 
     if folder is None:
         return False
     try:
-        copy = services.backups.export_to(folder, date.today())
+        services.backups.export_to(folder, date.today())
     except BackupError as error:
         user_error(
             parent,
@@ -38,7 +39,7 @@ def save_copy_outside(parent: QWidget, services: Services, event_bus: EventBus) 
         )
         return False
     event_bus.backups_changed.emit()
-    QMessageBox.information(parent, TITLE, f"Se guardó «{copy.name}» en {folder}.")
+    show_toast(parent, f"Copia guardada en {folder}.")
     return True
 
 
