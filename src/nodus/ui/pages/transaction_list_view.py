@@ -28,6 +28,7 @@ from nodus.ui.transaction_list import (
     delete_text,
     edit_text,
 )
+from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.row_actions import RowAction
@@ -166,7 +167,7 @@ class TransactionListView(Card):
         transaction = item.transaction
         return [
             RowAction(edit_text(transaction), lambda: self.edit(item), "pencil", default=True),
-            *pay_off_actions(self._services, self._event_bus, item),
+            *pay_off_actions(self, self._services, self._event_bus, item),
             RowAction(
                 delete_text(transaction), lambda: self.delete([item]), "trash", destructive=True
             ),
@@ -236,7 +237,7 @@ def delete_transactions(
 
 
 def pay_off_actions(
-    services: Services, event_bus: EventBus, item: TransactionListItem
+    widget: QWidget, services: Services, event_bus: EventBus, item: TransactionListItem
 ) -> list[RowAction]:
     """For an installment: pay off the rest of its purchase, or undo it. The installments
     still to come fall on today, or on the first one if it has not come yet."""
@@ -246,9 +247,11 @@ def pay_off_actions(
     installments = services.installments
     plan = installments.plan(installment.plan_id)
 
-    def run(change: Callable[[], None]) -> None:
+    def run(change: Callable[[], None], undoable: bool = False) -> None:
         change()
         event_bus.transactions_changed.emit()
+        if undoable:
+            offer_undo(widget, services, event_bus.transactions_changed)
 
     if plan.settled_on is not None:
         return [
@@ -260,7 +263,7 @@ def pay_off_actions(
     return [
         RowAction(
             "Adelantar las cuotas que faltan",
-            lambda: run(lambda: installments.settle(plan.id, day)),
+            lambda: run(lambda: installments.settle(plan.id, day), undoable=True),
             "skip",
             enabled=not plan.remaining(day).is_zero,
         )

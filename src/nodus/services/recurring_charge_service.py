@@ -19,6 +19,7 @@ from nodus.services.account_service import AccountService
 from nodus.services.errors import ValidationError, clean_name, require_found
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.transaction_service import TransactionDraft, TransactionService
+from nodus.services.undo_service import UndoService, changed_since
 
 # The dashboard and the notifications look this many days ahead.
 UPCOMING_DAYS = 14
@@ -75,6 +76,7 @@ class RecurringChargeService:
         transactions: TransactionService,
         accounts: AccountService,
         exchange_rates: ExchangeRateService,
+        undo: UndoService,
     ) -> None:
         self._database = database
         self._accounts = accounts
@@ -82,6 +84,7 @@ class RecurringChargeService:
         self._transaction_repository = transaction_repository
         self._transactions = transactions
         self._exchange_rates = exchange_rates
+        self._undo = undo
 
     def create(self, draft: RecurringChargeDraft) -> RecurringCharge:
         charge = self._build(None, draft, anchor_day=draft.next_due_on.day)
@@ -141,7 +144,7 @@ class RecurringChargeService:
         The next date follows the one that was due, not the payment day, so paying late
         doesn't shift the calendar. A dollar charge paid in pesos keeps the rate of this
         payment, for the next estimate, and its note says the dollars. Everything is saved
-        together or not at all.
+        together or not at all, and can be undone (``UndoService``).
         """
         charge = self._require_active(charge_id)
         note = charge.name
@@ -158,12 +161,32 @@ class RecurringChargeService:
         with self._database.transaction():
             saved = self._transaction_repository.add(transaction)
             self._charges.update(advanced)
+        self._undo.offer(f"Se pagó {charge.name}.", lambda: self._put_back(charge, advanced, saved))
         return saved
 
     def skip(self, charge_id: int) -> None:
-        """Moves the charge to its next date without recording anything."""
+        """Moves the charge to its next date without recording anything; it can be
+        undone."""
         charge = self._require_active(charge_id)
-        self._save(dataclasses.replace(charge, next_due_on=charge.following_due()))
+        advanced = dataclasses.replace(charge, next_due_on=charge.following_due())
+        self._save(advanced)
+        self._undo.offer(f"Se omitió {charge.name}.", lambda: self._put_back(charge, advanced))
+
+    def _put_back(
+        self,
+        before: RecurringCharge,
+        after: RecurringCharge,
+        payment: Transaction | None = None,
+    ) -> None:
+        """Undoes a skip or a payment: the charge as it was ``before``, and the payment's
+        expense gone, if both are still as the action left them."""
+        if self._charges.get(before.id) != after:
+            raise changed_since(f"«{before.name}»")
+        if payment is not None:
+            if self._transaction_repository.get(payment.id) != payment:
+                raise changed_since(f"El pago de «{before.name}»")
+            self._transaction_repository.delete(payment.id)
+        self._charges.update(before)
 
     def summary(self, today: date) -> RecurringSummary:
         monthly = Money.zero(self.CURRENCY)

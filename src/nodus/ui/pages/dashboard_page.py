@@ -102,7 +102,7 @@ class DashboardPage(Page):
         self.upcoming_card = UpcomingPaymentsCard(services)
         self.upcoming_card.pay_requested.connect(self.open_pay_dialog)
         self.upcoming_card.skip_requested.connect(
-            lambda charge: skip_charge(services, event_bus, charge)
+            lambda charge: skip_charge(self, services, event_bus, charge)
         )
         self.upcoming_card.see_all_requested.connect(
             lambda: self.navigate_requested.emit(PageId.RECURRING)

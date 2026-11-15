@@ -16,6 +16,7 @@ from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import ValidationError, require_found
 from nodus.services.transaction_service import TransactionDraft, TransactionService
+from nodus.services.undo_service import UndoService, changed_since
 
 
 @dataclass(frozen=True)
@@ -57,9 +58,11 @@ class InstallmentService:
         plans: InstallmentPlanRepository,
         transaction_repository: TransactionRepository,
         transactions: TransactionService,
+        undo: UndoService,
     ) -> None:
         self._database = database
         self._plans = plans
+        self._undo = undo
         self._transaction_repository = transaction_repository
         self._transactions = transactions
 
@@ -103,11 +106,20 @@ class InstallmentService:
 
     def settle(self, plan_id: int, day: date) -> None:
         """Pays off the rest of the purchase on ``day``: the installments due after it fall
-        on that day. ``unsettle`` undoes it."""
+        on that day. ``unsettle`` undoes it, and so does «Deshacer» (``UndoService``)."""
         plan = self._plan(plan_id)
         if day < plan.first_due_on:
             raise ValidationError("No se puede adelantar antes de la primera cuota.")
-        self._redate(dataclasses.replace(plan, settled_on=day))
+        settled = dataclasses.replace(plan, settled_on=day)
+        self._redate(settled)
+        self._undo.offer(
+            "Se adelantaron las cuotas que faltaban.", lambda: self._unsettle(plan, settled)
+        )
+
+    def _unsettle(self, before: InstallmentPlan, after: InstallmentPlan) -> None:
+        if self._plans.get(before.id) != after:
+            raise changed_since("La compra en cuotas")
+        self._move_installments(before)
 
     def unsettle(self, plan_id: int) -> None:
         """Brings back the calendar of the purchase as it was before paying it off."""
@@ -172,13 +184,15 @@ class InstallmentService:
 
     def _redate(self, plan: InstallmentPlan) -> None:
         """Saves ``plan`` and moves its installments to its days; nothing else changes."""
-        installments = self._installments(plan.id)
         with self._database.transaction():
-            self._plans.update(plan)
-            for transaction, day in zip(installments, plan.due_dates(), strict=True):
-                self._transaction_repository.update(
-                    dataclasses.replace(transaction, occurred_on=day)
-                )
+            self._move_installments(plan)
+
+    def _move_installments(self, plan: InstallmentPlan) -> None:
+        """``_redate`` inside a transaction already open, as an undo runs."""
+        self._plans.update(plan)
+        installments = self._installments(plan.id)
+        for transaction, day in zip(installments, plan.due_dates(), strict=True):
+            self._transaction_repository.update(dataclasses.replace(transaction, occurred_on=day))
 
     def _summary(self, plan: InstallmentPlan, today: date) -> InstallmentSummary:
         installments = self._installments(plan.id)

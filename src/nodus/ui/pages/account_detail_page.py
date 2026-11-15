@@ -362,7 +362,9 @@ class AccountDetailPage(DetailPage):
             estimate = recurring.estimated_payment(charge, today)
             row = UpcomingPaymentRow(charge, today, estimate_text(charge.amount, estimate))
             row.pay_requested.connect(self.pay)
-            row.skip_requested.connect(lambda c: skip_charge(self._services, self._event_bus, c))
+            row.skip_requested.connect(
+                lambda c: skip_charge(self, self._services, self._event_bus, c)
+            )
             self._payment_rows.addWidget(row)
             self.payment_rows.append(row)
 

@@ -106,3 +106,14 @@ def data_since(database, day: date) -> None:
     """Dates every account as created on ``day``: the user has had data since then."""
     with database.transaction():
         database.connection.execute("UPDATE accounts SET created_at = ?", (f"{day}T12:00:00",))
+
+
+def table_rows(database, *tables: str) -> dict[str, list[tuple]]:
+    """Every row of ``tables`` but the edit times, to tell an undone change from the
+    data as it was: undoing gives back the data, not when it was last touched."""
+    rows = {}
+    for table in tables:
+        cursor = database.connection.execute(f"SELECT * FROM {table} ORDER BY rowid")
+        kept = [i for i, column in enumerate(cursor.description) if column[0] != "updated_at"]
+        rows[table] = [tuple(row[i] for i in kept) for row in cursor.fetchall()]
+    return rows

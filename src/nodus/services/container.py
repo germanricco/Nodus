@@ -42,6 +42,7 @@ from nodus.services.settings_service import SettingsService
 from nodus.services.startup_service import StartupService
 from nodus.services.tag_service import TagService
 from nodus.services.transaction_service import TransactionService
+from nodus.services.undo_service import UndoService
 from nodus.services.update_service import UpdateService
 
 
@@ -76,6 +77,7 @@ class Services:
     startup: StartupService
     news: NewsService
     guide: GuideService
+    undo: UndoService
 
     @classmethod
     def create(cls, database: Database) -> Services:
@@ -96,6 +98,7 @@ class Services:
             tag_repository,
         )
         payees = PayeeService(database, payee_repository, transactions, categories, exchange_rates)
+        undo = UndoService(database)
         recurring = RecurringChargeService(
             database,
             RecurringChargeRepository(database),
@@ -103,6 +106,7 @@ class Services:
             transactions,
             accounts,
             exchange_rates,
+            undo,
         )
         settings = SettingsService(database, SettingsRepository(database))
         backups = BackupService(database, database.path.parent / "backups", settings)
@@ -139,7 +143,11 @@ class Services:
             ),
             recurring=recurring,
             installments=InstallmentService(
-                database, InstallmentPlanRepository(database), transaction_repository, transactions
+                database,
+                InstallmentPlanRepository(database),
+                transaction_repository,
+                transactions,
+                undo,
             ),
             budgets=budgets,
             payees=payees,
@@ -148,4 +156,5 @@ class Services:
             startup=StartupService.for_this_program(),
             news=NewsService(settings, __version__, first_start=database.created),
             guide=GuideService(accounts, transactions, recurring, budgets, goals, settings),
+            undo=undo,
         )

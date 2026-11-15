@@ -26,6 +26,7 @@ from nodus.ui.dialogs.form_dialog import (
 )
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import FREQUENCY_LABELS
+from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.combo_box import ComboBox
 from nodus.ui.widgets.date_input import DateInput
@@ -257,3 +258,5 @@ class PayChargeDialog(FormDialog):
         )
         self._event_bus.transactions_changed.emit()
         self._event_bus.recurring_changed.emit()
+        bus = self._event_bus
+        offer_undo(self, self._services, bus.transactions_changed, bus.recurring_changed)

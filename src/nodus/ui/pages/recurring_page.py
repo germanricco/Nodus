@@ -33,6 +33,7 @@ from nodus.ui.pages.transaction_list_view import (
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
+from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.pay_button import PayButton
@@ -277,7 +278,7 @@ class RecurringPage(Page):
                 "pencil",
                 default=True,
             ),
-            *pay_off_actions(services, event_bus, item),
+            *pay_off_actions(self, services, event_bus, item),
             RowAction(
                 "Eliminar compra",
                 lambda: delete_transactions(services, event_bus, [item], self.window()),
@@ -295,7 +296,7 @@ class RecurringPage(Page):
         PayChargeDialog(self._services, self._event_bus, charge, parent=self.window()).exec()
 
     def skip(self, charge: RecurringCharge) -> None:
-        skip_charge(self._services, self._event_bus, charge)
+        skip_charge(self, self._services, self._event_bus, charge)
 
     def toggle_pause(self, charge: RecurringCharge) -> None:
         self._services.recurring.set_active(charge.id, not charge.is_active)
@@ -347,7 +348,11 @@ class RecurringPage(Page):
         return card
 
 
-def skip_charge(services: Services, event_bus: EventBus, charge: RecurringCharge) -> None:
-    """Moves ``charge`` to its next due date without recording a payment."""
+def skip_charge(
+    widget: QWidget, services: Services, event_bus: EventBus, charge: RecurringCharge
+) -> None:
+    """Moves ``charge`` to its next due date without recording a payment, with
+    «Deshacer» in a toast."""
     services.recurring.skip(charge.id)
     event_bus.recurring_changed.emit()
+    offer_undo(widget, services, event_bus.recurring_changed)

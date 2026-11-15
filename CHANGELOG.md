@@ -5,6 +5,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 ## 1.8.0
 
 - Lo que haces se confirma con un aviso breve abajo a la derecha, que se va solo: «Copia guardada.», «Exportación lista: 120 transacciones.», «Cotización actualizada: US$ 1 = $ 1.215,50». Ya no queda una ventana que cerrar después de restaurar o guardar una copia, y la cotización que Nodus trae sola al abrir también se anuncia.
+- «Omitir» y «Pagar» un pago recurrente, y «Adelantar las cuotas que faltan», se avisan con «Deshacer»: un clic deja todo como estaba, también el gasto que registró el pago. Si después cambiaste algo de eso, Nodus te dice que ya no se puede deshacer en lugar de hacerlo a medias.
 - Los botones que tardan dicen que están trabajando mientras tanto: «Actualizando…» la cotización, «Guardando…» una copia, «Restaurando…» y «Exportando…». Un segundo clic ya no repite la consulta de la cotización.
 - Arreglo: si la copia del día había fallado, «Hacer copia» seguía mostrando el error aunque la nueva saliera bien.
 

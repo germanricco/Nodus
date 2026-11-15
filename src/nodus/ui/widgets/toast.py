@@ -171,8 +171,14 @@ def show_toast(
 ) -> None:
     """Shows ``text`` in the toasts of ``widget``'s window. A widget outside the main
     window, such as a dialog opened alone in a test, has none, and nothing shows."""
+    host = toast_host(widget)
+    if host is not None:
+        host.toast(text, action_text, on_action)
+
+
+def toast_host(widget: QWidget) -> QWidget | None:
+    """The window whose toasts ``widget`` uses: its own, or the one a dialog opened over."""
     for candidate in (widget.window(), widget.window().parentWidget()):
-        toast = getattr(candidate, "toast", None) if candidate is not None else None
-        if callable(toast):
-            toast(text, action_text, on_action)
-            return
+        if candidate is not None and callable(getattr(candidate, "toast", None)):
+            return candidate
+    return None
