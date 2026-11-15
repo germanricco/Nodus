@@ -8,7 +8,7 @@ the focus ring shows while moving with Tab and never stays behind a click.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QProxyStyle, QPushButton, QWidget
+from PySide6.QtWidgets import QApplication, QProxyStyle, QPushButton, QWidget
 
 
 class KeyboardFocusStyle(QProxyStyle):
@@ -20,3 +20,16 @@ class KeyboardFocusStyle(QProxyStyle):
         super().polish(widget)
         if isinstance(widget, QPushButton) and widget.focusPolicy() == Qt.FocusPolicy.StrongFocus:
             widget.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+
+
+_style: KeyboardFocusStyle | None = None
+
+
+def use_keyboard_focus_style(app: QApplication) -> None:
+    """Gives ``app`` the style once. Replacing it would delete the one in use, which
+    widgets still point to (with a stylesheet, ``app.style()`` is no longer it, so the
+    module remembers it instead)."""
+    global _style
+    if _style is None:
+        _style = KeyboardFocusStyle("Fusion")
+        app.setStyle(_style)

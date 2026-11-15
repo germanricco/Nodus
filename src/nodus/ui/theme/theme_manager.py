@@ -11,7 +11,7 @@ from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QApplication
 
 from nodus.ui.theme.design import design_tokens
-from nodus.ui.theme.focus import KeyboardFocusStyle
+from nodus.ui.theme.focus import use_keyboard_focus_style
 from nodus.ui.theme.theme import DARK, LIGHT, Theme, ThemeMode
 
 
@@ -34,8 +34,7 @@ class ThemeManager(QObject):
         # The stylesheet loads images by file path, e.g. the arrow of drop-down fields.
         self._icons_dir = Path(str(resources.files("nodus.ui.icons"))).as_posix()
         # Fusion renders stylesheets the same on every OS, unlike the native Windows style.
-        if not isinstance(app.style(), KeyboardFocusStyle):
-            app.setStyle(KeyboardFocusStyle("Fusion"))
+        use_keyboard_focus_style(app)
         app.styleHints().colorSchemeChanged.connect(self._on_system_scheme_changed)
         self._theme = self._resolve()
         self._apply()
