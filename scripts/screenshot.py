@@ -20,7 +20,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 if sys.platform == "win32":
     os.environ.setdefault("QT_QPA_FONTDIR", str(Path(os.environ["WINDIR"]) / "Fonts"))
 
-from PySide6.QtCore import Qt  # noqa: E402
+from PySide6.QtCore import Qt, QTimer  # noqa: E402
 from PySide6.QtWidgets import QApplication, QDialog, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
@@ -217,6 +217,8 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         save(window, args.out / f"toast-{mode.value}.png")
         for toast in list(window.toasts.toasts):
             toast.dismiss()
+        capture_undo(app, window, args.out, mode)
+        capture_discard(app, services, event_bus, window, args.out, mode)
         for name, build_dialog in DIALOGS.items():
             dialog = build_dialog(services, event_bus, window)
             dialog.show()
@@ -443,6 +445,40 @@ def capture_popups(
     app.processEvents()
     save(menu, out / f"popup-menu-{mode.value}.png")
     menu.close()
+
+
+def capture_undo(app: QApplication, window: MainWindow, out: Path, mode: ThemeMode) -> None:
+    """A real «Omitir» on Recurrentes and the notice that offers to undo it; undone
+    after, so the next captures show the demo data as it was."""
+    page = window.page(PageId.RECURRING)
+    skip = next(action for action in page.rows[0].actions() if action.text == "Omitir")
+    skip.callback()
+    app.processEvents()
+    save(window, out / f"toast-undo-{mode.value}.png")
+    window.undo_last()
+    for toast in list(window.toasts.toasts):
+        toast.dismiss()
+
+
+def capture_discard(
+    app: QApplication, services, event_bus: EventBus, window: MainWindow, out: Path, mode
+) -> None:
+    """«¿Descartar los cambios?» over a category form with a name typed. The question
+    waits for an answer, so a timer captures it and answers «Seguir editando»."""
+    dialog = CategoryDialog(services, event_bus, parent=window)
+    dialog.show()
+    app.processEvents()
+    dialog.name_input.setText("Mascotas")
+
+    def capture_question() -> None:
+        question = QApplication.activeModalWidget()
+        app.processEvents()
+        save(question, out / f"form-discard-{mode.value}.png")
+        question.reject()
+
+    QTimer.singleShot(0, capture_question)
+    dialog.reject()
+    discard(dialog)
 
 
 def discard(dialog: QDialog) -> None:

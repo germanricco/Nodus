@@ -6,14 +6,15 @@ from collections.abc import Callable
 from datetime import date
 from functools import partial
 
-from PySide6.QtCore import QTimer
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QKeySequence, QShortcut, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
+    QPushButton,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -159,6 +160,9 @@ class MainWindow(QMainWindow):
         content_layout.addWidget(self.top_bar)
         content_layout.addWidget(self._stack, stretch=1)
         self.toasts = ToastStack(content, theme_manager)
+        # A click on the page takes the focus off a button, and its ring with it.
+        content.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self._content = content
 
         central = QWidget()
         layout = QHBoxLayout(central)
@@ -208,6 +212,13 @@ class MainWindow(QMainWindow):
     ) -> None:
         """Tells what just happened at the bottom right of the page (``ToastStack``)."""
         self.toasts.show_toast(text, action_text, on_action)
+
+    def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
+        """Opens with the focus on the page, not on the first button of the sidebar,
+        whose focus ring is for the keyboard."""
+        super().showEvent(event)
+        if self.focusWidget() is None or isinstance(self.focusWidget(), QPushButton):
+            self._content.setFocus()
 
     def undo_last(self) -> None:
         """Ctrl+Z: undoes the last action that offered «Deshacer». A text field takes

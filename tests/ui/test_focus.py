@@ -60,3 +60,10 @@ def test_a_form_opens_in_its_first_field_not_on_its_button(qtbot, services, even
     qtbot.waitUntil(dialog.isActiveWindow)
 
     assert dialog.focusWidget() is dialog.name_input
+
+
+def test_the_window_opens_with_no_button_focused(qtbot, window):
+    window.activateWindow()
+    qtbot.waitUntil(window.isActiveWindow)
+
+    assert not isinstance(window.focusWidget(), QPushButton)

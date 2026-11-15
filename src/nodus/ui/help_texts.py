@@ -110,6 +110,9 @@ HELP_TOPICS = [
             "Para cambiar varias a la vez, márcalas con Ctrl + clic o Mayús + clic: la barra"
             " que aparece arriba les cambia la categoría, el beneficiario, la nota o las"
             " etiquetas de una vez, o las elimina juntas.",
+            "Si te equivocaste, el aviso que aparece abajo a la derecha tiene «Deshacer», y"
+            " Ctrl + Z hace lo mismo. Eliminar no se deshace: por eso Nodus pregunta antes. Y"
+            " si cierras un formulario con cambios, te pregunta si quieres descartarlos.",
         ),
         ("search", "transfers", "refunds"),
     ),
@@ -208,7 +211,8 @@ HELP_TOPICS = [
             " cuenta. Nodus te muestra cuánto suman por mes, qué vence pronto y qué está"
             " atrasado, y la campana te avisa.",
             "«Pagar» registra el gasto y pasa el cargo a su próxima fecha. Si un mes no se paga,"
-            " «Omitir» lo salta sin registrar nada.",
+            " «Omitir» lo salta sin registrar nada. Los dos se pueden deshacer desde el aviso"
+            " que aparece abajo, o con Ctrl + Z.",
             "Una suscripción en dólares puede pagarse desde una cuenta en pesos: Nodus estima"
             " los pesos con tu último pago, y tú anotas lo que realmente salió.",
         ),
@@ -277,7 +281,8 @@ HELP_TOPICS = [
             " pasan a «Otros» y no se pierden.",
             "Beneficiarios y Etiquetas muestran cuántos movimientos y cuánto dinero suma cada"
             " uno; un doble clic abre su página con todos sus movimientos. Si tienes"
-            " repetidos, como «Coto» y «Coto Online», «Unir con…» los junta en uno.",
+            " repetidos, como «Coto» y «Coto Online», «Unir con…» los junta en uno, y el"
+            " aviso que aparece abajo te deja deshacerlo.",
         ),
         ("transactions", "search"),
     ),
