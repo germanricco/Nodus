@@ -21,7 +21,7 @@ if sys.platform == "win32":
     os.environ.setdefault("QT_QPA_FONTDIR", str(Path(os.environ["WINDIR"]) / "Fonts"))
 
 from PySide6.QtCore import Qt  # noqa: E402
-from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
+from PySide6.QtWidgets import QApplication, QDialog, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
@@ -222,7 +222,7 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
             dialog.show()
             app.processEvents()
             save(dialog, args.out / f"{name}-{mode.value}.png")
-            dialog.close()
+            discard(dialog)
         capture_popups(app, services, event_bus, window, args.out, mode)
         # The color wheel, opened from the category dialog's «+» swatch.
         dialog = CategoryDialog(services, event_bus, parent=window)
@@ -231,7 +231,7 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         dialog.color_input.wheel_popup.set_color("#2a9d8f")
         app.processEvents()
         save(dialog.color_input.wheel_popup, args.out / f"color-wheel-{mode.value}.png")
-        dialog.close()
+        discard(dialog)
         # The whole dashboard, below the fold too.
         window.resize(window.width(), FULL_DASHBOARD_HEIGHT)
         window.show_page(PageId.DASHBOARD)
@@ -427,7 +427,7 @@ def capture_popups(
     if calendar.isVisible():
         save(calendar.window(), out / f"popup-calendar-{mode.value}.png")
         calendar.window().hide()
-    dialog.close()
+    discard(dialog)
     window.show_page(PageId.TRANSACTIONS)
     page = window.page(PageId.TRANSACTIONS)
     for name, combo in (
@@ -443,6 +443,12 @@ def capture_popups(
     app.processEvents()
     save(menu, out / f"popup-menu-{mode.value}.png")
     menu.close()
+
+
+def discard(dialog: QDialog) -> None:
+    """Closes a dialog the capture filled in, without its «¿Descartar los cambios?»,
+    which would wait for an answer: ``done`` skips ``reject``."""
+    dialog.done(QDialog.DialogCode.Rejected)
 
 
 def save(widget: QWidget, path: Path) -> None:

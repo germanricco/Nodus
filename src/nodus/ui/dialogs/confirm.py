@@ -3,7 +3,13 @@
 from PySide6.QtWidgets import QMessageBox, QPushButton, QWidget
 
 
-def confirm(parent: QWidget, title: str, text: str, action: str | None = None) -> bool:
+def confirm(
+    parent: QWidget,
+    title: str,
+    text: str,
+    action: str | None = None,
+    cancel_text: str = "Cancelar",
+) -> bool:
     """Asks the user to confirm; True only if they press ``action``, which is the title
     unless given ("Eliminar 3 transacciones").
 
@@ -13,7 +19,7 @@ def confirm(parent: QWidget, title: str, text: str, action: str | None = None) -
     box = QMessageBox(QMessageBox.Icon.Warning, title, text, parent=parent)
     accept_button = styled_button(action or title, "DangerButton")
     box.addButton(accept_button, QMessageBox.ButtonRole.DestructiveRole)
-    cancel_button = styled_button("Cancelar", "SecondaryButton")
+    cancel_button = styled_button(cancel_text, "SecondaryButton")
     box.addButton(cancel_button, QMessageBox.ButtonRole.RejectRole)
     box.setDefaultButton(cancel_button)
     box.exec()

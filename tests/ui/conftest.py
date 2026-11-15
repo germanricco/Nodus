@@ -3,10 +3,26 @@
 import pytest
 from PySide6.QtWidgets import QApplication
 
+from nodus.ui.dialogs import form_dialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.main_window import MainWindow
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
+
+
+@pytest.fixture(autouse=True)
+def discard_questions(monkeypatch) -> list[str]:
+    """Forms closed with changes discard them without the modal question, which would
+    wait forever: tests close every shown dialog when they end. The list holds the
+    questions asked, for the tests about it."""
+    asked: list[str] = []
+
+    def discard(_parent, title, *_args, **_kwargs) -> bool:
+        asked.append(title)
+        return True
+
+    monkeypatch.setattr(form_dialog, "confirm", discard)
+    return asked
 
 
 @pytest.fixture

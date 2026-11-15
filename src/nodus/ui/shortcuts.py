@@ -43,7 +43,7 @@ SHORTCUTS = [
     Shortcut(("Supr",), "Elimina las filas elegidas, después de preguntar.", LISTS),
     Shortcut(("Esc",), "Quita la selección.", LISTS),
     Shortcut(("Enter",), "Guarda.", FORMS),
-    Shortcut(("Esc",), "Cierra sin guardar.", FORMS),
+    Shortcut(("Esc",), "Cierra sin guardar; si cambiaste algo, pregunta antes.", FORMS),
     Shortcut(("Esc",), "Vuelve a la lista.", DETAILS),
     Shortcut(("→",), "Avanza; también con Enter.", TOUR),
     Shortcut(("←",), "Retrocede.", TOUR),

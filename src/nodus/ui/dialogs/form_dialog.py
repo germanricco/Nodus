@@ -8,7 +8,9 @@ from dataclasses import dataclass
 from PySide6.QtCore import SignalInstance
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
+    QAbstractButton,
     QAbstractItemView,
+    QCalendarWidget,
     QComboBox,
     QDateEdit,
     QDialog,
@@ -23,9 +25,11 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.services.errors import ValidationError
+from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.input_error import InputError
 from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.tag_input import TagInput
 
 # The main button of a dialog that edits something that already exists.
 SAVE_CHANGES = "Guardar cambios"
@@ -42,6 +46,8 @@ TYPE_AMOUNT = "Escribe un monto."
 # What a list shows while nothing likely enough stands chosen (``set_placeholder``).
 ACCOUNT_PLACEHOLDER = "Elegir cuenta"
 CATEGORY_PLACEHOLDER = "Elegir categoría"
+DISCARD_TITLE = "¿Descartar los cambios?"
+DISCARD_TEXT = "Lo que cambiaste en este formulario no se guarda."
 
 
 @dataclass
@@ -69,6 +75,10 @@ class FormDialog(QDialog):
       (``bind_field``), or at the foot of the dialog when it names none.
 
     A field's message goes away as soon as that field changes.
+
+    Closing with changes (Cancelar, Esc or the ✕) asks before discarding them. What the
+    dialog fills in by itself before it shows does not count, and neither does a field
+    changed and then put back.
 
     The dialog always takes the size of its content, so it grows and shrinks as fields
     are shown or hidden instead of keeping the blank space of a larger mode.
@@ -98,6 +108,7 @@ class FormDialog(QDialog):
         self.form.setSpacing(Space.M)
         layout.addLayout(self.form)
         self._fields: dict[str, QWidget] = {}
+        self._shown_state: list[object] | None = None
         self._field_errors: list[_FieldError] = []
 
         self.error_label = QLabel()
@@ -182,9 +193,41 @@ class FormDialog(QDialog):
         for error in list(self._field_errors):
             self._clear_field_error(error.widget)
 
+    def has_changes(self) -> bool:
+        """Whether a field differs from how it was when the dialog showed."""
+        return self._shown_state is not None and self._form_state() != self._shown_state
+
+    def reject(self) -> None:
+        """Closes without saving, after asking if something changed."""
+        if self.has_changes() and not confirm(
+            self, DISCARD_TITLE, DISCARD_TEXT, "Descartar", cancel_text="Seguir editando"
+        ):
+            return
+        super().reject()
+
     def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
         self._align_labels()
         super().showEvent(event)
+        if self._shown_state is None:
+            self._shown_state = self._form_state()
+
+    def _form_state(self) -> list[object]:
+        """What every field holds now, in the form's order, to tell later if any changed."""
+        state: list[object] = []
+        for widget in self.findChildren(QWidget):
+            if any(isinstance(p, QCalendarWidget) for p in _ancestors(widget)):
+                continue  # browsing the calendar's months changes no field
+            if isinstance(widget, TagInput):
+                state.append(widget.names())
+            elif isinstance(widget, QLineEdit):
+                state.append(widget.text())
+            elif isinstance(widget, QComboBox):
+                state.append(widget.currentText())
+            elif isinstance(widget, QDateEdit):
+                state.append(widget.date())
+            elif isinstance(widget, QAbstractButton) and widget.isCheckable():
+                state.append(widget.isChecked())
+        return state
 
     def _align_labels(self) -> None:
         """Gives every label the width of the longest one, hidden rows included.
@@ -249,6 +292,15 @@ class FormDialog(QDialog):
             _set_error(widget, False)
             self.form.removeRow(error.label)
             self._field_errors.remove(error)
+
+
+def _ancestors(widget: QWidget) -> list[QWidget]:
+    found = []
+    parent = widget.parentWidget()
+    while parent is not None:
+        found.append(parent)
+        parent = parent.parentWidget()
+    return found
 
 
 def _input(widget: QWidget) -> QWidget:
