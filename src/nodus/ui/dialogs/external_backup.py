@@ -5,19 +5,25 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QPushButton, QWidget
 
 from nodus.services.container import Services
 from nodus.services.errors import BackupError
 from nodus.ui.dialogs.confirm import styled_button
 from nodus.ui.dialogs.user_error import user_error
 from nodus.ui.event_bus import EventBus
+from nodus.ui.widgets.busy import busy
 from nodus.ui.widgets.toast import show_toast
 
 TITLE = "Copia fuera de la PC"
 
 
-def save_copy_outside(parent: QWidget, services: Services, event_bus: EventBus) -> bool:
+def save_copy_outside(
+    parent: QWidget,
+    services: Services,
+    event_bus: EventBus,
+    button: QPushButton | None = None,
+) -> bool:
     """Asks where to save the copy and saves it there; True once it is saved.
 
     The folder of the last time is offered first, when it is there (the pen drive is
@@ -27,7 +33,8 @@ def save_copy_outside(parent: QWidget, services: Services, event_bus: EventBus) 
     if folder is None:
         return False
     try:
-        services.backups.export_to(folder, date.today())
+        with busy(button, "Guardando…"):
+            services.backups.export_to(folder, date.today())
     except BackupError as error:
         user_error(
             parent,

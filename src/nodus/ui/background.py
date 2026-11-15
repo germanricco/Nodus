@@ -8,13 +8,17 @@ from PySide6.QtCore import QObject, QThreadPool, Signal
 
 
 class BackgroundCall(QObject):
-    """Calls ``function`` on a worker thread and delivers its result with ``done``.
+    """Calls ``function`` on a worker thread and delivers its result with ``done``, or
+    ``failed`` if it raised: one of the two always comes, so whatever waits for it (a
+    busy button) never waits forever. The error itself stays here, since no screen
+    shows a system's text.
 
-    ``done`` arrives on the interface thread, so its slots can touch widgets. Keeps a slow
+    Both arrive on the interface thread, so their slots can touch widgets. Keeps a slow
     or missing connection from ever delaying the window.
     """
 
     done = Signal(object)
+    failed = Signal()
 
     def __init__(self, function: Callable[[], object], parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -24,4 +28,9 @@ class BackgroundCall(QObject):
         QThreadPool.globalInstance().start(self._run)
 
     def _run(self) -> None:
-        self.done.emit(self._function())
+        try:
+            result = self._function()
+        except Exception:  # noqa: BLE001 - any failure must reach the interface
+            self.failed.emit()
+            return
+        self.done.emit(result)

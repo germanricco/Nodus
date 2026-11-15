@@ -291,6 +291,20 @@ QPushButton#SecondaryButton:hover, QPushButton#SmallButton:hover {
     background: $hover;
 }
 
+/* A button that cannot be used now, or is busy with what it started («Actualizando…»):
+   the same shape, quieter, and nothing lights up under the mouse. */
+QPushButton#PrimaryButton:disabled {
+    background: $accent_soft;
+    color: $accent_text;
+}
+
+QPushButton#SecondaryButton:disabled, QPushButton#SmallButton:disabled,
+QPushButton#DangerButton:disabled {
+    background: $surface;
+    color: $text_muted;
+    border-color: $border;
+}
+
 /* The bar that replaces a page's header while several rows are chosen */
 
 QFrame#SelectionBar {

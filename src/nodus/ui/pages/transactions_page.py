@@ -224,6 +224,7 @@ class TransactionsPage(Page):
             self._services,
             self._services.transactions.list_transactions(self.current_filter()),
             export_filename(self.period_selector.period()),
+            button=self.export_button,
         )
 
     def _has_filters(self) -> bool:

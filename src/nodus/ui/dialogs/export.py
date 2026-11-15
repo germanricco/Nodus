@@ -5,18 +5,23 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import QStandardPaths
-from PySide6.QtWidgets import QFileDialog, QWidget
+from PySide6.QtWidgets import QFileDialog, QPushButton, QWidget
 
 from nodus.models.transaction import Transaction
 from nodus.services.container import Services
 from nodus.ui.dialogs.user_error import user_error
+from nodus.ui.widgets.busy import busy
 from nodus.ui.widgets.toast import show_toast
 
 TITLE = "Exportar transacciones"
 
 
 def export_transactions(
-    parent: QWidget, services: Services, transactions: list[Transaction], filename: str
+    parent: QWidget,
+    services: Services,
+    transactions: list[Transaction],
+    filename: str,
+    button: QPushButton | None = None,
 ) -> Path | None:
     """Saves ``transactions`` to a CSV the user places, suggesting ``filename`` in Documents.
 
@@ -30,7 +35,8 @@ def export_transactions(
         return None
     path = Path(chosen)
     try:
-        services.export.write_csv(transactions, path)
+        with busy(button, "Exportando…"):
+            services.export.write_csv(transactions, path)
     except OSError as error:
         user_error(
             parent,

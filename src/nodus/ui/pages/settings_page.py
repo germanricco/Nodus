@@ -45,6 +45,7 @@ from nodus.ui.theme.design import Layout, Line, Space, set_reduced_motion
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.amount_input import AmountInput
+from nodus.ui.widgets.busy import busy, start_busy, stop_busy
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.empty_state import EmptyState
@@ -287,13 +288,18 @@ class SettingsPage(Page):
         """Replaces today's rate with the one the chosen source publishes now."""
         if self._services.rate_feed.is_automatic():
             self.rate_source_row.set_detail("Consultando…")
+            start_busy(self.refresh_rate_button, "Actualizando…")
             self._rate_updater.update(force=True)
+            if not self._rate_updater.running:  # nothing was asked for
+                stop_busy(self.refresh_rate_button)
 
     def _on_rate_updated(self, rates: dict[Currency, Decimal]) -> None:
+        stop_busy(self.refresh_rate_button)
         self.rate_source_row.set_detail("Actualizada hoy")
         show_toast(self, updated_text(rates))
 
     def _on_rate_failed(self) -> None:
+        stop_busy(self.refresh_rate_button)
         self.rate_source_row.set_detail("Sin conexión", error=True)
 
     def _refresh_rate_source(self) -> None:
@@ -448,7 +454,9 @@ class SettingsPage(Page):
         self.backup_reminder_input.setChecked(self._services.settings.backup_reminder())
 
     def save_copy_outside(self) -> None:
-        save_copy_outside(self.window(), self._services, self._event_bus)
+        save_copy_outside(
+            self.window(), self._services, self._event_bus, button=self.save_outside_button
+        )
 
     def _set_backup_reminder(self, enabled: bool) -> None:
         self._services.settings.set_backup_reminder(enabled)
@@ -456,7 +464,8 @@ class SettingsPage(Page):
 
     def backup_now(self) -> None:
         try:
-            self._services.backups.create(date.today())
+            with busy(self.backup_now_button, "Guardando…"):
+                self._services.backups.create(date.today())
         except BackupError as error:
             user_error(
                 self.window(),
@@ -478,6 +487,7 @@ class SettingsPage(Page):
             self._services,
             self._services.transactions.list_transactions(TransactionFilter()),
             f"nodus-transacciones-{date.today():%Y-%m-%d}.csv",
+            button=self.export_all_button,
         )
 
     def _open_backups_folder(self) -> None:
@@ -500,7 +510,8 @@ class SettingsPage(Page):
         if not confirm(self.window(), "Restaurar copia", text):
             return
         try:
-            self._services.backups.restore(Path(path), datetime.now())
+            with busy(self.restore_button, "Restaurando…"):
+                self._services.backups.restore(Path(path), datetime.now())
         except ValidationError as error:
             QMessageBox.warning(self.window(), "Restaurar copia", str(error))
             return

@@ -30,12 +30,13 @@ class RateUpdater(QObject):
         self._feed = services.rate_feed
         self._event_bus = event_bus
         self._call: BackgroundCall | None = None
+        self.running = False
 
     def update(self, force: bool = False) -> None:
         """Fetches today's rates if the source is automatic. Without ``force``, only the
         ones today has no rate for yet, so a rate typed by hand is never replaced on
-        startup."""
-        if not self._feed.is_automatic():
+        startup. While a request runs, another is not started."""
+        if self.running or not self._feed.is_automatic():
             return
         today = date.today()
         currencies = self._feed.currencies() if force else self._feed.due(today)
@@ -44,9 +45,12 @@ class RateUpdater(QObject):
         source = self._feed.source()
         self._call = BackgroundCall(lambda: self._feed.fetch_all(source, currencies), parent=self)
         self._call.done.connect(lambda rates: self._save(rates, today, force))
+        self._call.failed.connect(lambda: self._save({}, today, force))
+        self.running = True
         self._call.start()
 
     def _save(self, rates: dict[Currency, Decimal], today: date, force: bool) -> None:
+        self.running = False
         if not rates:
             self.failed.emit()
             return

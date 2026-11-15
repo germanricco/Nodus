@@ -11,6 +11,7 @@ from nodus.models.currency import Currency
 from nodus.services.rate_feed_service import SOURCES, RateFeedService
 from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
+from nodus.ui.rate_updater import RateUpdater
 
 QUOTES = json.dumps([{"casa": "blue", "venta": 1555}, {"casa": "bolsa", "venta": 1588.5}]).encode()
 
@@ -106,3 +107,51 @@ def test_startup_also_brings_the_official_euro(
     assert offline_services.exchange_rates.rate_on(date.today(), Currency.EUR).rate == Decimal(
         "1738"
     )
+
+
+def test_updating_says_so_on_the_button_until_it_ends(qtbot, offline_services, offline_window):
+    offline_services.rate_feed.set_source("blue")
+    offline_window.show_page(PageId.SETTINGS)
+    page = offline_window.page(PageId.SETTINGS)
+    button = page.refresh_rate_button
+
+    button.click()
+    assert not button.isEnabled()
+    assert button.text() == "Actualizando…"
+
+    qtbot.waitUntil(button.isEnabled)
+    assert button.text() == "Actualizar"
+    assert [t.text for t in offline_window.toasts.toasts] == [
+        "Cotización actualizada: US$ 1 = $ 1.555,00"
+    ]
+
+
+def test_a_failed_update_gives_the_button_back(qtbot, offline_services, answer, offline_window):
+    answer["body"] = OSError("sin conexión")
+    offline_services.rate_feed.set_source("blue")
+    offline_window.show_page(PageId.SETTINGS)
+    page = offline_window.page(PageId.SETTINGS)
+
+    page.refresh_rate_button.click()
+
+    qtbot.waitUntil(page.refresh_rate_button.isEnabled)
+    assert page.refresh_rate_button.text() == "Actualizar"
+
+
+def test_a_second_request_waits_for_the_first(qtbot, monkeypatch, offline_services, event_bus):
+    offline_services.rate_feed.set_source("blue")
+    asked = []
+    fetch_all = offline_services.rate_feed.fetch_all
+    monkeypatch.setattr(
+        offline_services.rate_feed,
+        "fetch_all",
+        lambda *args: asked.append(args) or fetch_all(*args),
+    )
+    updater = RateUpdater(offline_services, event_bus)
+
+    with qtbot.waitSignal(updater.updated):
+        updater.update(force=True)
+        updater.update(force=True)
+
+    assert len(asked) == 1
+    assert not updater.running
