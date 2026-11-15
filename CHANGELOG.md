@@ -2,7 +2,7 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
-## 1.8.0
+## 1.8.0 — 2026-11-15
 
 - Lo que haces se confirma con un aviso breve abajo a la derecha, que se va solo: «Copia guardada.», «Exportación lista: 120 transacciones.», «Cotización actualizada: US$ 1 = $ 1.215,50». Ya no queda una ventana que cerrar después de restaurar o guardar una copia, y la cotización que Nodus trae sola al abrir también se anuncia.
 - «Omitir» y «Pagar» un pago recurrente, y «Adelantar las cuotas que faltan», se avisan con «Deshacer»: un clic deja todo como estaba, también el gasto que registró el pago. Si después cambiaste algo de eso, Nodus te dice que ya no se puede deshacer en lugar de hacerlo a medias.
