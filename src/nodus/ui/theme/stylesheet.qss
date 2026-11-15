@@ -29,7 +29,7 @@ QMainWindow, #ContentArea, #PageStack {
 #NavButton {
     text-align: left;
     padding: $space_s $space_m;
-    border: none;
+    border: 1px solid transparent;
     border-radius: $radius_l;
     background: transparent;
 }
@@ -346,28 +346,61 @@ QTextBrowser#NewsText {
     border: none;
 }
 
-/* Ayuda (dialogs/help_dialog.py): the topics, as a list of choices, and each shortcut's keys. */
-QListWidget#HelpTopics {
+/* Ayuda (widgets/help_panel.py): a panel at the right of the window, its topics as rows
+   with their page's icon, and each shortcut's keys drawn as keys. */
+#HelpPanel {
+    background: $surface;
+    border-left: 1px solid $border;
+}
+
+/* Its scrolling bodies show the panel's surface, not the viewport's own color. */
+#HelpPanel QScrollArea > QWidget, #HelpBody {
+    background: transparent;
+}
+
+#HelpTitle {
+    font-size: $strong_size;
+    font-weight: $strong_weight;
+}
+
+/* Like a section label, but flush with the links under it. */
+#HelpRelated {
+    color: $text_muted;
+    font-size: $label_size;
+    font-weight: $label_weight;
+}
+
+QPushButton#PanelClose {
     background: transparent;
     border: none;
+    border-radius: $radius_l;
+    padding: $space_xs;
 }
 
-QListWidget#HelpTopics::item {
-    padding: $list_item_padding;
-    border-radius: $popup_item_radius;
-}
-
-QListWidget#HelpTopics::item:hover {
+QPushButton#PanelClose:hover, QPushButton#HelpTopic:hover {
     background: $hover;
 }
 
-QListWidget#HelpTopics::item:selected {
-    background: $accent_soft;
-    color: $accent_text;
+QPushButton#HelpTopic {
+    text-align: left;
+    padding: $space_s $space_m;
+    border: none;
+    border-radius: $radius_l;
+    background: transparent;
 }
 
-#ShortcutKeys {
+#KeyCap {
+    background: $background;
+    border: 1px solid $border;
+    border-bottom-width: $line_thick; /* a key stands up from the page */
+    border-radius: $radius_s;
+    padding: $space_xxs $space_s;
     font-weight: $strong_weight;
+}
+
+/* A page the open help topic talks about, lit up in the sidebar. */
+#NavButton[spotlight="true"] {
+    border: 1px solid $accent;
 }
 
 #ErrorLabel {

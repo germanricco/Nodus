@@ -193,6 +193,11 @@ class Sidebar(QFrame):
     def select(self, page_id: PageId) -> None:
         self._nav_buttons[page_id].setChecked(True)
 
+    def spotlight(self, pages: tuple[PageId, ...]) -> None:
+        """Lights up the pages an open help topic talks about; none puts them out."""
+        for page_id, button in self._nav_buttons.items():
+            set_style_property(button, "spotlight", page_id in pages)
+
     def nav_button(self, page_id: PageId) -> QPushButton:
         return self._nav_buttons[page_id]
 

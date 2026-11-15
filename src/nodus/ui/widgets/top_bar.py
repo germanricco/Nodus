@@ -55,7 +55,7 @@ class TopBar(QFrame):
         self.hide_amounts_button.clicked.connect(self.hide_amounts_toggled)
         mark_target(self.hide_amounts_button, tour.HIDE_AMOUNTS)
         self._amounts_hidden = False
-        self.help_button = self._icon_button(f"Ayuda ({HELP.keys})")
+        self.help_button = self._icon_button(f"Ayuda ({HELP.label})")
         self.help_button.setAccessibleName("Ayuda")
         self.help_button.clicked.connect(self.help_requested)
         mark_target(self.help_button, tour.HELP)

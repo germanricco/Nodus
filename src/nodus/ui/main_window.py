@@ -27,11 +27,11 @@ from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.confirm import ask
 from nodus.ui.dialogs.external_backup import save_copy_outside
-from nodus.ui.dialogs.help_dialog import HelpDialog
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog, TransactionStart
 from nodus.ui.dialogs.update_dialog import UpdateDialog
 from nodus.ui.event_bus import EventBus
+from nodus.ui.help_texts import HelpTopic, topic_for_page
 from nodus.ui.navigation import DetailId, PageId, TransactionFocus
 from nodus.ui.pages.account_detail_page import AccountDetailPage
 from nodus.ui.pages.accounts_page import AccountsPage
@@ -56,6 +56,7 @@ from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.tour import TOUR_STEPS
 from nodus.ui.widgets.coach_marks import CoachMarks
+from nodus.ui.widgets.help_panel import HelpPanel
 from nodus.ui.widgets.notification_panel import NotificationPanel
 from nodus.ui.widgets.sidebar import Sidebar
 from nodus.ui.widgets.top_bar import TopBar
@@ -126,7 +127,7 @@ class MainWindow(QMainWindow):
         )
         settings = SettingsPage(services, event_bus, theme_manager)
         settings.tour_requested.connect(self.start_tour)
-        settings.help_requested.connect(self.open_help)
+        settings.help_requested.connect(self.toggle_help)
         self._pages: dict[PageId, Page] = {
             PageId.DASHBOARD: dashboard,
             PageId.ACCOUNTS: accounts,
@@ -161,13 +162,20 @@ class MainWindow(QMainWindow):
         layout.setSpacing(0)
         layout.addWidget(self.sidebar)
         layout.addWidget(content, stretch=1)
+        self.help_panel = HelpPanel(theme_manager)
+        self.help_panel.hide()
+        layout.addWidget(self.help_panel)
         self.setCentralWidget(central)
 
         self.sidebar.page_requested.connect(self.show_page)
         self.sidebar.account_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
-        self.top_bar.help_requested.connect(self.open_help)
-        QShortcut(QKeySequence(HELP.keys), self, self.open_help)
+        self.top_bar.help_requested.connect(self.toggle_help)
+        QShortcut(QKeySequence(HELP.label), self, self.toggle_help)
+        self.help_panel.page_requested.connect(self.show_page)
+        self.help_panel.spotlight_changed.connect(self.sidebar.spotlight)
+        self.help_panel.tour_requested.connect(self._tour_from_help)
+        self.help_panel.guide_requested.connect(self.show_guide)
         self.top_bar.notifications_requested.connect(self.open_notifications)
         self.top_bar.feedback_requested.connect(lambda: open_url(feedback_url()))
         self.top_bar.set_amounts_hidden(services.settings.amounts_hidden())
@@ -214,17 +222,45 @@ class MainWindow(QMainWindow):
             NewsDialog.for_entries(entries, parent=self).exec()
         self.offer_tour()
 
-    def open_help(self) -> HelpDialog:
-        """Ayuda, from F1, the «?» of the top bar or Ajustes."""
-        dialog = HelpDialog(self._services.settings.guide_dismissed(), parent=self)
-        dialog.tour_requested.connect(self.start_tour)
-        dialog.guide_requested.connect(self.show_guide)
-        dialog.exec()
-        return dialog
+    def toggle_help(self) -> None:
+        """F1, the «?» of the top bar and Ajustes open Ayuda, or close it when open."""
+        if self.help_panel.isVisible():
+            self.help_panel.close_panel()
+        else:
+            self.show_help()
+
+    def show_help(self, topic: HelpTopic | None = None) -> None:
+        """Opens Ayuda on ``topic``, or on the topic of the page shown: the help about
+        where the user is, with that page lit up in the sidebar."""
+        panel = self.help_panel
+        panel.set_guide_hidden(self._services.settings.guide_dismissed())
+        panel.search_input.clear()
+        topic = topic or topic_for_page(self.current_page_id)
+        if topic is None:
+            panel.show_index()
+        else:
+            panel.show_topic(topic)
+        panel.show()
+        panel.setFocus()
+
+    @property
+    def current_page_id(self) -> PageId:
+        """The sidebar's page of what is shown; a detail counts as its list."""
+        shown = self._stack.currentWidget()
+        for page_id, page in self._pages.items():
+            if page is shown:
+                return page_id
+        return next(d.list_page for d, page in self._details.items() if page is shown)
+
+    def _tour_from_help(self) -> None:
+        """The tour points at the whole window, so the help makes way."""
+        self.help_panel.close_panel()
+        self.start_tour()
 
     def show_guide(self) -> None:
         """Brings Primeros pasos back and shows it on Inicio."""
         self._services.guide.restore()
+        self.help_panel.set_guide_hidden(False)
         self.show_page(PageId.DASHBOARD)
 
     def _offer_tour_soon(self) -> None:

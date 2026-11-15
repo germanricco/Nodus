@@ -51,6 +51,7 @@ TOUR_STEPS = [
     CoachStep(
         HELP,
         "Ayuda",
-        "Cómo se hace cada cosa y los atajos de teclado. También se abre con F1.",
+        "Se abre al costado, en el tema de la página donde estás, y te señala de qué habla."
+        " También con F1.",
     ),
 ]

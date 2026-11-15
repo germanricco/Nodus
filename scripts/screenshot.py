@@ -36,13 +36,13 @@ from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
 from nodus.ui.dialogs.goal_dialog import GoalDialog  # noqa: E402
-from nodus.ui.dialogs.help_dialog import HelpDialog  # noqa: E402
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
 from nodus.ui.dialogs.update_dialog import UpdateDialog  # noqa: E402
 from nodus.ui.dialogs.user_error import UserErrorDialog  # noqa: E402
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
+from nodus.ui.help_texts import TOPICS_BY_KEY  # noqa: E402
 from nodus.ui.main_window import MainWindow  # noqa: E402
 from nodus.ui.navigation import DetailId, PageId  # noqa: E402
 from nodus.ui.pages.accounts_page import AccountRow  # noqa: E402
@@ -200,14 +200,16 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         tour.next()
         save(window, args.out / f"tour-{mode.value}.png")
         tour.finish()
-        # Ayuda, on a topic that needs it, and its shortcuts.
-        help_dialog = HelpDialog(guide_hidden=True, parent=window)
-        help_dialog.topic_list.setCurrentRow(2)
-        help_dialog.show()
-        save(help_dialog, args.out / f"help-howto-{mode.value}.png")
-        help_dialog.tabs.set_index(1)
-        save(help_dialog, args.out / f"help-shortcuts-{mode.value}.png")
-        help_dialog.close()
+        # Ayuda at the side, on Metas from Inicio (Metas lit up in the sidebar), its
+        # topics and its shortcuts.
+        window.show_page(PageId.DASHBOARD)
+        window.show_help(TOPICS_BY_KEY["goals"])
+        save(window, args.out / f"help-{mode.value}.png")
+        window.help_panel.show_index()
+        save(window, args.out / f"help-topics-{mode.value}.png")
+        window.help_panel.show_shortcuts()
+        save(window, args.out / f"help-shortcuts-{mode.value}.png")
+        window.help_panel.close_panel()
         for name, build_dialog in DIALOGS.items():
             dialog = build_dialog(services, event_bus, window)
             dialog.show()

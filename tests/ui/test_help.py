@@ -1,90 +1,164 @@
-"""Ayuda opens from F1, the «?» and Ajustes; it lists every topic and every shortcut."""
+"""Ayuda opens at the side from F1, the «?» and Ajustes, on the topic of the page shown,
+and lights up in the sidebar the pages a topic talks about."""
 
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
-from nodus.ui import main_window
-from nodus.ui.dialogs.help_dialog import HelpDialog
-from nodus.ui.help_texts import HELP_TOPICS
-from nodus.ui.navigation import PageId
-from nodus.ui.shortcuts import SHORTCUTS
+from nodus.ui.help_texts import HELP_SECTIONS, HELP_TOPICS, TOPICS_BY_KEY
+from nodus.ui.navigation import DetailId, PageId
+from nodus.ui.shortcuts import SHORTCUT_GROUPS, SHORTCUTS
+from nodus.ui.widgets.help_panel import SHORTCUTS_VIEW, topic_html
 
 
-@pytest.fixture
-def opened(monkeypatch) -> list[HelpDialog]:
-    dialogs = []
-    monkeypatch.setattr(main_window.HelpDialog, "exec", lambda self: dialogs.append(self))
-    return dialogs
+def lit(window) -> set[PageId]:
+    return {
+        page_id
+        for page_id in PageId
+        if window.sidebar.nav_button(page_id).property("spotlight") is True
+    }
 
 
-def test_f1_opens_it(qtbot, window, opened):
+def test_f1_opens_and_closes_it(qtbot, window):
     window.activateWindow()
+
     qtbot.keyClick(window, Qt.Key.Key_F1)
+    assert window.help_panel.isVisible()
 
-    assert len(opened) == 1
+    qtbot.keyClick(window, Qt.Key.Key_F1)
+    assert not window.help_panel.isVisible()
 
 
-def test_the_question_mark_and_settings_open_it(window, opened):
+def test_the_question_mark_and_settings_open_it(window):
     window.top_bar.help_button.click()
+    assert window.help_panel.isVisible()
+    window.top_bar.help_button.click()
+
     window.page(PageId.SETTINGS).help_requested.emit()
 
-    assert len(opened) == 2
+    assert window.help_panel.isVisible()
     assert window.top_bar.help_button.toolTip() == "Ayuda (F1)"
 
 
-@pytest.mark.parametrize("topic", HELP_TOPICS, ids=lambda topic: topic.title)
-def test_every_topic_is_written_in_full_sentences(topic):
-    assert topic.title and topic.paragraphs
+def test_it_opens_on_the_topic_of_the_page_shown(window, pesos):
+    window.show_page(PageId.GOALS)
+    window.show_help()
+    assert window.help_panel.topic is TOPICS_BY_KEY["goals"]
+
+    window.show_detail(DetailId.ACCOUNT, pesos.id)
+    window.toggle_help()
+    window.toggle_help()
+    assert window.help_panel.topic is TOPICS_BY_KEY["accounts"]
+
+
+def test_a_topic_lights_up_its_pages_until_left(window):
+    panel = window.help_panel
+    window.show_help(TOPICS_BY_KEY["categories"])
+    assert lit(window) == {PageId.CATEGORIES, PageId.PAYEES, PageId.TAGS}
+
+    panel.show_index()
+    assert lit(window) == set()
+
+    window.show_help(TOPICS_BY_KEY["budgets"])
+    panel.close_button.click()
+    assert lit(window) == set()
+    assert not panel.isVisible()
+
+
+def test_esc_closes_it(qtbot, window):
+    window.show_help()
+
+    qtbot.keyClick(window.help_panel, Qt.Key.Key_Escape)
+
+    assert not window.help_panel.isVisible()
+
+
+def test_go_to_opens_the_page_and_keeps_the_help(window):
+    window.show_help(TOPICS_BY_KEY["budgets"])
+    assert window.help_panel.go_button.text() == "Ir a Presupuestos"
+
+    window.help_panel.go_button.click()
+
+    assert window.current_page is window.page(PageId.BUDGETS)
+    assert window.help_panel.isVisible()
+
+
+def test_related_topics_open_from_a_topic(window):
+    window.show_help(TOPICS_BY_KEY["goals"])
+
+    window.help_panel._related_buttons[0].click()
+
+    assert window.help_panel.topic is TOPICS_BY_KEY[TOPICS_BY_KEY["goals"].related[0]]
+
+
+def test_the_search_keeps_only_matching_topics(window):
+    panel = window.help_panel
+    window.show_help()
+    panel.show_index()
+
+    panel.search_input.setText("cuotas adelantar")
+    assert panel.visible_topics() == ["installments"]
+
+    panel.search_input.setText("xyzzy")
+    assert panel.visible_topics() == []
+    assert not panel.no_results.isHidden()
+
+    panel.search_input.clear()
+    assert len(panel.visible_topics()) == len(HELP_TOPICS)
+
+
+@pytest.mark.parametrize("topic", HELP_TOPICS, ids=lambda topic: topic.key)
+def test_every_topic_is_complete(topic):
+    assert topic.section in HELP_SECTIONS
+    assert topic.intro.endswith(".")
+    assert topic.paragraphs
     assert all(paragraph.endswith(".") for paragraph in topic.paragraphs)
+    assert all(key in TOPICS_BY_KEY and key != topic.key for key in topic.related)
 
 
-def test_choosing_a_topic_shows_its_text(qtbot):
-    dialog = HelpDialog(guide_hidden=False)
-    qtbot.addWidget(dialog)
+def test_screen_names_are_bold():
+    html = topic_html(TOPICS_BY_KEY["goals"])
 
-    dialog.topic_list.setCurrentRow(2)
-
-    assert HELP_TOPICS[2].title in dialog.topic_text.toPlainText()
-    assert HELP_TOPICS[2].paragraphs[0][:40] in dialog.topic_text.toPlainText()
+    assert "«<b>Agregar meta</b>»" in html
 
 
-def test_the_shortcuts_tab_lists_the_whole_table(qtbot):
-    dialog = HelpDialog(guide_hidden=False)
-    qtbot.addWidget(dialog)
-    dialog.tabs.set_index(1)
+def test_the_shortcuts_are_listed_by_group(window):
+    panel = window.help_panel
+    window.show_help()
 
-    keys = [label.text() for label in dialog.findChildren(QLabel, "ShortcutKeys")]
+    panel.shortcuts_button.click()
 
-    assert dialog.pages.currentIndex() == 1
-    assert keys == [shortcut.keys for shortcut in SHORTCUTS]
+    assert panel.views.currentIndex() == SHORTCUTS_VIEW
+    caps = [label.text() for label in panel.findChildren(QLabel, "KeyCap")]
+    assert caps == [
+        key for group in SHORTCUT_GROUPS for s in SHORTCUTS if s.group == group for key in s.keys
+    ]
+    assert {shortcut.group for shortcut in SHORTCUTS} == set(SHORTCUT_GROUPS)
+    assert len({(s.keys, s.group) for s in SHORTCUTS}) == len(SHORTCUTS)
 
 
-def test_primeros_pasos_comes_back_from_help(qtbot, window, services, pesos, monkeypatch):
+def test_primeros_pasos_comes_back_from_help(window, services, pesos):
     services.guide.dismiss()
-    dialog = HelpDialog(guide_hidden=True)
-    qtbot.addWidget(dialog)
-    dialog.guide_requested.connect(window.show_guide)
+    window.show_help()
+    assert not window.help_panel.guide_button.isHidden()
 
-    dialog.guide_button.click()
+    window.help_panel.guide_button.click()
 
     assert not services.settings.guide_dismissed()
     assert window.page(PageId.DASHBOARD).guide_card.isVisible()
+    assert window.help_panel.guide_button.isHidden()
 
 
-def test_primeros_pasos_is_offered_only_when_put_away(qtbot):
-    dialog = HelpDialog(guide_hidden=False)
-    qtbot.addWidget(dialog)
+def test_primeros_pasos_is_offered_only_when_put_away(window):
+    window.show_help()
 
-    assert dialog.guide_button.isHidden()
+    assert window.help_panel.guide_button.isHidden()
 
 
-def test_the_tour_starts_from_help(qtbot, window, pesos):
-    dialog = HelpDialog(guide_hidden=False)
-    qtbot.addWidget(dialog)
-    dialog.tour_requested.connect(window.start_tour)
+def test_the_tour_starts_from_help_and_the_help_makes_way(window, pesos):
+    window.show_help()
 
-    dialog.tour_button.click()
+    window.help_panel.tour_button.click()
 
+    assert not window.help_panel.isVisible()
     assert window.tour.isVisible()
-    assert window.tour.steps[-1].target == "help"
