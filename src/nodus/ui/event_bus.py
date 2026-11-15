@@ -1,6 +1,6 @@
 """Application-wide notifications about data changes."""
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, SignalInstance
 
 
 class EventBus(QObject):
@@ -24,15 +24,22 @@ class EventBus(QObject):
     # The currency totals are converted to (the net worth's) changed.
     net_worth_currency_changed = Signal()
 
+    def data_signals(self) -> list[SignalInstance]:
+        """Every signal about stored data, for a change that may touch any of it."""
+        return [
+            self.accounts_changed,
+            self.categories_changed,
+            self.transactions_changed,
+            self.exchange_rates_changed,
+            self.recurring_changed,
+            self.budgets_changed,
+            self.payees_changed,
+            self.tags_changed,
+            self.goals_changed,
+            self.backups_changed,
+        ]
+
     def emit_all(self) -> None:
         """Announces that everything may have changed, as after restoring a backup."""
-        self.accounts_changed.emit()
-        self.categories_changed.emit()
-        self.transactions_changed.emit()
-        self.exchange_rates_changed.emit()
-        self.recurring_changed.emit()
-        self.budgets_changed.emit()
-        self.payees_changed.emit()
-        self.tags_changed.emit()
-        self.goals_changed.emit()
-        self.backups_changed.emit()
+        for signal in self.data_signals():
+            signal.emit()

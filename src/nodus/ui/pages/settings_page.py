@@ -49,7 +49,7 @@ from nodus.ui.widgets.busy import busy, start_busy, stop_busy
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.setting_row import SettingRow
 from nodus.ui.widgets.style import clear_layout, set_style_property
@@ -107,7 +107,11 @@ class RateRow(QWidget):
     def actions(self) -> list[RowAction]:
         return [
             RowAction(
-                "Eliminar", lambda: self.delete_requested.emit(self.rate), "trash", destructive=True
+                "Eliminar",
+                lambda: self.delete_requested.emit(self.rate),
+                "trash",
+                destructive=True,
+                effect=Effect.CONFIRMED,
             )
         ]
 

@@ -16,7 +16,7 @@ from nodus.ui.pages.page import Page
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color_dot import ColorDot
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout
 
 SECTION_TITLES = {TransactionType.EXPENSE: "Gastos", TransactionType.INCOME: "Ingresos"}
@@ -71,12 +71,19 @@ class CategoryRow(QWidget):
                 enabled=self.has_movements,
                 # «Otros» cannot change, so its movements are what it opens.
                 default=category.is_system,
+                effect=Effect.OPEN,
             )
         ]
         if category.is_system:
             return result
         result.append(
-            RowAction("Editar", lambda: self.edit_requested.emit(category), "pencil", default=True)
+            RowAction(
+                "Editar",
+                lambda: self.edit_requested.emit(category),
+                "pencil",
+                default=True,
+                effect=Effect.OPEN,
+            )
         )
         if not category.is_subcategory:
             result.append(
@@ -84,11 +91,16 @@ class CategoryRow(QWidget):
                     "Agregar subcategoría",
                     lambda: self.add_subcategory_requested.emit(category),
                     "plus",
+                    effect=Effect.OPEN,
                 )
             )
         result.append(
             RowAction(
-                "Eliminar", lambda: self.delete_requested.emit(category), "trash", destructive=True
+                "Eliminar",
+                lambda: self.delete_requested.emit(category),
+                "trash",
+                destructive=True,
+                effect=Effect.CONFIRMED,
             )
         )
         return result

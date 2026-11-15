@@ -52,10 +52,11 @@ from nodus.ui.pages.tag_detail_page import TagDetailPage
 from nodus.ui.pages.tags_page import TagsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.rate_updater import RateUpdater, updated_text
-from nodus.ui.shortcuts import HELP
+from nodus.ui.shortcuts import HELP, UNDO
 from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.tour import TOUR_STEPS
+from nodus.ui.undo import undo
 from nodus.ui.widgets.coach_marks import CoachMarks
 from nodus.ui.widgets.help_panel import HelpPanel
 from nodus.ui.widgets.notification_panel import NotificationPanel
@@ -175,6 +176,7 @@ class MainWindow(QMainWindow):
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
         self.top_bar.help_requested.connect(self.toggle_help)
         QShortcut(QKeySequence(HELP.label), self, self.toggle_help)
+        QShortcut(QKeySequence(UNDO.label), self, self.undo_last)
         self.help_panel.page_requested.connect(self.show_page)
         self.help_panel.spotlight_changed.connect(self.sidebar.spotlight)
         self.help_panel.tour_requested.connect(self._tour_from_help)
@@ -206,6 +208,11 @@ class MainWindow(QMainWindow):
     ) -> None:
         """Tells what just happened at the bottom right of the page (``ToastStack``)."""
         self.toasts.show_toast(text, action_text, on_action)
+
+    def undo_last(self) -> None:
+        """Ctrl+Z: undoes the last action that offered «Deshacer». A text field takes
+        Ctrl+Z for its own text first. Every page refreshes, since it may be any action."""
+        undo(self, self._services, None, *self._event_bus.data_signals())
 
     def check_for_updates(self) -> None:
         """Looks for a new version in the background, unless the user turned it off.

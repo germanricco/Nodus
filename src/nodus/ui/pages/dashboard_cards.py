@@ -47,7 +47,7 @@ from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 from nodus.ui.widgets.pay_button import PayButton
-from nodus.ui.widgets.row_actions import RowAction, install_row_actions
+from nodus.ui.widgets.row_actions import Effect, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 LATEST_COUNT = 6
@@ -263,12 +263,14 @@ class LatestTransactionRow(QWidget):
                 lambda: self.edit_requested.emit(self.item),
                 "pencil",
                 default=True,
+                effect=Effect.OPEN,
             ),
             RowAction(
                 delete_text(self.item.transaction),
                 lambda: self.delete_requested.emit(self.item),
                 "trash",
                 destructive=True,
+                effect=Effect.CONFIRMED,
             ),
         ]
 
@@ -352,8 +354,16 @@ class UpcomingPaymentRow(QWidget):
         """Paying and skipping, as in Recurrentes; the rest is in that page."""
         charge = self.charge
         return [
-            RowAction("Pagar", lambda: self.pay_requested.emit(charge), "pay", default=True),
-            RowAction("Omitir", lambda: self.skip_requested.emit(charge), "skip"),
+            RowAction(
+                "Pagar",
+                lambda: self.pay_requested.emit(charge),
+                "pay",
+                default=True,
+                effect=Effect.OPEN,
+            ),
+            RowAction(
+                "Omitir", lambda: self.skip_requested.emit(charge), "skip", effect=Effect.UNDOABLE
+            ),
         ]
 
 

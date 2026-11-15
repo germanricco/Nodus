@@ -34,7 +34,7 @@ from nodus.ui.widgets.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.period_selector import PeriodSelector
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout
 
 EMPTY_TEXT = (
@@ -63,9 +63,17 @@ class BudgetPageRow(BudgetRow):
     def actions(self) -> list[RowAction]:
         """Its movements first, as a click on the row; then changing or removing it."""
         return [
-            RowAction("Ver movimientos", self.clicked.emit, "list", default=True),
-            RowAction("Cambiar límite", self.edit_requested.emit, "pencil"),
-            RowAction("Quitar presupuesto", self.remove_requested.emit, "trash", destructive=True),
+            RowAction(
+                "Ver movimientos", self.clicked.emit, "list", default=True, effect=Effect.OPEN
+            ),
+            RowAction("Cambiar límite", self.edit_requested.emit, "pencil", effect=Effect.OPEN),
+            RowAction(
+                "Quitar presupuesto",
+                self.remove_requested.emit,
+                "trash",
+                destructive=True,
+                effect=Effect.CONFIRMED,
+            ),
         ]
 
 

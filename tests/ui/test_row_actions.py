@@ -1,18 +1,33 @@
 """The «⋯» button and right-click menu shared by every list."""
 
+import pytest
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QMenu, QWidget
 
 from nodus.ui.theme.theme import DARK, LIGHT, ThemeMode
 from nodus.ui.theme.theme_manager import active_theme
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, build_menu, install_row_actions
+from nodus.ui.widgets.row_actions import (
+    Effect,
+    MoreButton,
+    RowAction,
+    build_menu,
+    install_row_actions,
+)
 
 
 def sample_actions(log: list[str]) -> list[RowAction]:
     return [
-        RowAction("Editar", lambda: log.append("edit"), "pencil"),
-        RowAction("Archivar", lambda: log.append("archive"), "archive", enabled=False),
-        RowAction("Eliminar", lambda: log.append("delete"), "trash", destructive=True),
+        RowAction("Editar", lambda: log.append("edit"), "pencil", effect=Effect.OPEN),
+        RowAction(
+            "Archivar", lambda: log.append("archive"), "archive", enabled=False, effect=Effect.OPEN
+        ),
+        RowAction(
+            "Eliminar",
+            lambda: log.append("delete"),
+            "trash",
+            destructive=True,
+            effect=Effect.CONFIRMED,
+        ),
     ]
 
 
@@ -37,7 +52,11 @@ def test_more_button_opens_the_menu_built_at_that_moment(qtbot):
     state = {"paused": False}
 
     def actions():
-        return [RowAction("Reanudar" if state["paused"] else "Pausar", lambda: None)]
+        return [
+            RowAction(
+                "Reanudar" if state["paused"] else "Pausar", lambda: None, effect=Effect.TOGGLE
+            )
+        ]
 
     button = MoreButton(actions)
     qtbot.addWidget(button)
@@ -76,3 +95,8 @@ def test_active_theme_follows_the_theme_manager(theme_manager):
     theme_manager.set_mode(ThemeMode.DARK)
     assert active_theme() is DARK
     theme_manager.set_mode(ThemeMode.LIGHT)
+
+
+def test_a_destructive_action_must_ask_first():
+    with pytest.raises(AssertionError, match="asks first"):
+        RowAction("Eliminar", lambda: None, destructive=True, effect=Effect.UNDOABLE)

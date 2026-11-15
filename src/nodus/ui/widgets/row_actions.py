@@ -7,12 +7,17 @@ current state (paused or active, archived or not).
 
 A row's main action (``RowAction.default``) is bold in its menu and runs on a double
 click, as in Windows, so the double click and the menu never disagree.
+
+Every action declares what a click does (``Effect``), so none changes data by surprise:
+what changes it at once can be undone or reversed from the same menu, and what destroys
+it asks first.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
 from PySide6.QtGui import QCursor, QIcon
@@ -27,6 +32,15 @@ from nodus.ui.widgets.style import make_hoverable
 MORE_ACTIONS = "Más acciones"
 
 
+class Effect(Enum):
+    """What a click on an action does to the data."""
+
+    OPEN = "open"  # goes to a page or opens a dialog: nothing changes yet
+    UNDOABLE = "undoable"  # changes it at once and offers «Deshacer»
+    TOGGLE = "toggle"  # changes it at once; the opposite is in the same menu (Archivar)
+    CONFIRMED = "confirmed"  # asks before changing it
+
+
 @dataclass(frozen=True)
 class RowAction:
     """One menu item: its text, what it does and an optional icon from ``ui/icons``.
@@ -34,6 +48,7 @@ class RowAction:
     Destructive actions (delete, remove) go last, apart from the rest and with a red icon.
     ``default`` marks the row's main action: bold in the menu and run by a double click
     (or by a click, on rows that lead somewhere). Never a destructive one.
+    ``effect`` is required: a destructive action always asks first.
     """
 
     text: str
@@ -42,6 +57,12 @@ class RowAction:
     destructive: bool = False
     enabled: bool = True
     default: bool = False
+    effect: Effect = field(kw_only=True)
+
+    def __post_init__(self) -> None:
+        assert not self.destructive or self.effect is Effect.CONFIRMED, (
+            f"«{self.text}» destroys data, so it asks first"
+        )
 
 
 ActionsFor = Callable[[], Sequence[RowAction]]
@@ -134,6 +155,9 @@ class _RowHandler(QObject):
         super().__init__(row)
         self._row = row
         self._actions_for = actions_for
+
+    def actions_list(self) -> Sequence[RowAction]:
+        return self._actions_for()
 
     def open_menu(self, position: QPoint) -> None:
         menu = show_menu(self._row, self._actions_for(), self._row.mapToGlobal(position))

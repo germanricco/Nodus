@@ -37,7 +37,7 @@ from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.pay_button import PayButton
-from nodus.ui.widgets.row_actions import RowAction
+from nodus.ui.widgets.row_actions import Effect, RowAction
 from nodus.ui.widgets.schedule_row import ScheduleRow
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
@@ -111,8 +111,19 @@ class RecurringChargeRow(ScheduleRow):
         result = []
         if charge.is_active:
             result += [
-                RowAction("Pagar", lambda: self.pay_requested.emit(charge), "pay", default=True),
-                RowAction("Omitir", lambda: self.skip_requested.emit(charge), "skip"),
+                RowAction(
+                    "Pagar",
+                    lambda: self.pay_requested.emit(charge),
+                    "pay",
+                    default=True,
+                    effect=Effect.OPEN,
+                ),
+                RowAction(
+                    "Omitir",
+                    lambda: self.skip_requested.emit(charge),
+                    "skip",
+                    effect=Effect.UNDOABLE,
+                ),
             ]
         return result + [
             # A paused charge cannot be paid; editing is what it opens.
@@ -121,14 +132,20 @@ class RecurringChargeRow(ScheduleRow):
                 lambda: self.edit_requested.emit(charge),
                 "pencil",
                 default=not charge.is_active,
+                effect=Effect.OPEN,
             ),
             RowAction(
                 "Pausar" if charge.is_active else "Reanudar",
                 lambda: self.pause_toggled.emit(charge),
                 "pause" if charge.is_active else "play",
+                effect=Effect.TOGGLE,
             ),
             RowAction(
-                "Eliminar", lambda: self.delete_requested.emit(charge), "trash", destructive=True
+                "Eliminar",
+                lambda: self.delete_requested.emit(charge),
+                "trash",
+                destructive=True,
+                effect=Effect.CONFIRMED,
             ),
         ]
 
@@ -277,6 +294,7 @@ class RecurringPage(Page):
                 ),
                 "pencil",
                 default=True,
+                effect=Effect.OPEN,
             ),
             *pay_off_actions(self, services, event_bus, item),
             RowAction(
@@ -284,6 +302,7 @@ class RecurringPage(Page):
                 lambda: delete_transactions(services, event_bus, [item], self.window()),
                 "trash",
                 destructive=True,
+                effect=Effect.CONFIRMED,
             ),
         ]
 

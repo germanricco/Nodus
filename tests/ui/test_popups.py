@@ -21,7 +21,7 @@ from nodus.ui.theme import design
 from nodus.ui.theme.design import Popup
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.row_actions import RowAction, build_menu
+from nodus.ui.widgets.row_actions import Effect, RowAction, build_menu
 from nodus.ui.widgets.selectors import PayeeComboBox
 
 BORDER = 1
@@ -171,7 +171,13 @@ def test_suggestions_that_fit_need_no_scroll_bar(qtbot, services, event_bus, pes
 
 
 def test_menu_actions_take_the_menu_padding(qtbot, window):
-    menu = build_menu(window, [RowAction("Editar", lambda: None), RowAction("Ver", lambda: None)])
+    menu = build_menu(
+        window,
+        [
+            RowAction("Editar", lambda: None, effect=Effect.OPEN),
+            RowAction("Ver", lambda: None, effect=Effect.OPEN),
+        ],
+    )
     menu.popup(window.mapToGlobal(window.rect().center()))
     qtbot.waitUntil(menu.isVisible)
 

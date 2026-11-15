@@ -27,7 +27,7 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.row_actions import RowAction
+from nodus.ui.widgets.row_actions import Effect, RowAction
 from nodus.ui.widgets.selectable_table import SelectableTable
 from nodus.ui.widgets.selection_bar import SelectionBar
 from nodus.ui.widgets.table import DELETE_KEY_HINT, bind_delete_key
@@ -245,21 +245,29 @@ class SummaryPage(Page, Generic[S]):
         """The menu of a row: its page, its movements, edit, merge and delete."""
         summary = self.summary_at(row)
         return [
-            RowAction("Abrir", lambda: self.open_detail(summary), default=True),
+            RowAction("Abrir", lambda: self.open_detail(summary), default=True, effect=Effect.OPEN),
             RowAction(
                 "Ver movimientos",
                 lambda: self.show_transactions(summary),
                 "list",
                 enabled=summary.count > 0,
+                effect=Effect.OPEN,
             ),
-            RowAction("Editar", lambda: self.edit_item(summary), "pencil"),
+            RowAction("Editar", lambda: self.edit_item(summary), "pencil", effect=Effect.OPEN),
             RowAction(
                 "Unir con…",
                 lambda: self.merge_items([summary]),
                 "merge",
                 enabled=len(self._summaries) > 1,
+                effect=Effect.OPEN,
             ),
-            RowAction("Eliminar", lambda: self.delete_items([summary]), "trash", destructive=True),
+            RowAction(
+                "Eliminar",
+                lambda: self.delete_items([summary]),
+                "trash",
+                destructive=True,
+                effect=Effect.CONFIRMED,
+            ),
         ]
 
     def open_detail(self, summary: S) -> None:

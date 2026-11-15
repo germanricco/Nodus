@@ -35,7 +35,7 @@ from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
 from nodus.ui.widgets.money_label import MoneyLabel, masked, total_text
 from nodus.ui.widgets.net_worth_card import NetWorthCard, signed
 from nodus.ui.widgets.reorderable_list import ReorderableList, handle_indent
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 
@@ -157,37 +157,65 @@ class AccountRow(QWidget):
         """Everything the account allows, for the «⋯» and the right click."""
         account = self.account
         result = [
-            RowAction("Abrir", lambda: self.detail_requested.emit(account), default=True),
+            RowAction(
+                "Abrir",
+                lambda: self.detail_requested.emit(account),
+                default=True,
+                effect=Effect.OPEN,
+            ),
             RowAction(
                 "Ver movimientos",
                 lambda: self.transactions_requested.emit(account),
                 "list",
                 enabled=self.has_movements,
+                effect=Effect.OPEN,
             ),
         ]
         if self.can_update_value:
             result.append(
                 RowAction(
-                    "Actualizar valor", lambda: self.value_update_requested.emit(account), "trend"
+                    "Actualizar valor",
+                    lambda: self.value_update_requested.emit(account),
+                    "trend",
+                    effect=Effect.OPEN,
                 )
             )
         if self.can_update_value:  # what a savings goal is filled with
             result.append(
-                RowAction("Usar en una meta…", lambda: self.goal_requested.emit(account), "goal")
+                RowAction(
+                    "Usar en una meta…",
+                    lambda: self.goal_requested.emit(account),
+                    "goal",
+                    effect=Effect.OPEN,
+                )
             )
-        result.append(RowAction("Editar", lambda: self.edit_requested.emit(account), "pencil"))
+        result.append(
+            RowAction(
+                "Editar", lambda: self.edit_requested.emit(account), "pencil", effect=Effect.OPEN
+            )
+        )
         if not account.is_archived:  # archived accounts show apart from every group
             result.append(
-                RowAction("Mover a grupo…", lambda: self.move_requested.emit(account), "folder")
+                RowAction(
+                    "Mover a grupo…",
+                    lambda: self.move_requested.emit(account),
+                    "folder",
+                    effect=Effect.OPEN,
+                )
             )
         return result + [
             RowAction(
                 "Desarchivar" if account.is_archived else "Archivar",
                 lambda: self.archive_toggled.emit(account),
                 "archive",
+                effect=Effect.TOGGLE,
             ),
             RowAction(
-                "Eliminar", lambda: self.delete_requested.emit(account), "trash", destructive=True
+                "Eliminar",
+                lambda: self.delete_requested.emit(account),
+                "trash",
+                destructive=True,
+                effect=Effect.CONFIRMED,
             ),
         ]
 
@@ -359,15 +387,27 @@ class AccountsPage(Page):
         group_ids = self._group_ids
         index = group_ids.index(group.id)
         return [
-            RowAction("Renombrar", lambda: self.open_group_dialog(group), "pencil"),
-            RowAction("Subir", lambda: self._move_group(group_ids, index, -1), enabled=index > 0),
+            RowAction(
+                "Renombrar", lambda: self.open_group_dialog(group), "pencil", effect=Effect.OPEN
+            ),
+            RowAction(
+                "Subir",
+                lambda: self._move_group(group_ids, index, -1),
+                enabled=index > 0,
+                effect=Effect.TOGGLE,
+            ),
             RowAction(
                 "Bajar",
                 lambda: self._move_group(group_ids, index, 1),
                 enabled=index < len(group_ids) - 1,
+                effect=Effect.TOGGLE,
             ),
             RowAction(
-                "Eliminar grupo", lambda: self.delete_group(group), "trash", destructive=True
+                "Eliminar grupo",
+                lambda: self.delete_group(group),
+                "trash",
+                destructive=True,
+                effect=Effect.CONFIRMED,
             ),
         ]
 

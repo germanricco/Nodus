@@ -5,6 +5,7 @@ from datetime import date
 import pytest
 from factories import ars, charge_draft, expense_draft
 from menus import run_action
+from PySide6.QtCore import Qt
 
 from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.period import Month, Period
@@ -143,3 +144,20 @@ def test_merging_tags_offers_to_undo_it(qtbot, services, window, pesos):
     click_undo(window)
 
     assert services.tags.transaction_count(paseo.id) == 1
+
+
+def test_ctrl_z_undoes_the_last_action(qtbot, services, window, internet):
+    skip_on_recurrentes(window)
+    window.activateWindow()
+    qtbot.waitUntil(window.isActiveWindow)
+
+    qtbot.keyClick(window, Qt.Key.Key_Z, Qt.KeyboardModifier.ControlModifier)
+
+    assert services.recurring.get(internet.id).next_due_on == date.today()
+    assert toast_texts(window)[-1] == "Se deshizo."
+
+
+def test_ctrl_z_with_nothing_to_undo_says_so(window):
+    window.undo_last()
+
+    assert toast_texts(window) == ["No hay nada para deshacer."]

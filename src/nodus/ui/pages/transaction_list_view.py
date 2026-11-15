@@ -31,7 +31,7 @@ from nodus.ui.transaction_list import (
 from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.row_actions import RowAction
+from nodus.ui.widgets.row_actions import Effect, RowAction
 from nodus.ui.widgets.selectable_table import SelectableTable
 from nodus.ui.widgets.selection_bar import SelectionBar
 from nodus.ui.widgets.table import DELETE_KEY_HINT, bind_delete_key
@@ -166,10 +166,20 @@ class TransactionListView(Card):
         item = self.model.item(row)
         transaction = item.transaction
         return [
-            RowAction(edit_text(transaction), lambda: self.edit(item), "pencil", default=True),
+            RowAction(
+                edit_text(transaction),
+                lambda: self.edit(item),
+                "pencil",
+                default=True,
+                effect=Effect.OPEN,
+            ),
             *pay_off_actions(self, self._services, self._event_bus, item),
             RowAction(
-                delete_text(transaction), lambda: self.delete([item]), "trash", destructive=True
+                delete_text(transaction),
+                lambda: self.delete([item]),
+                "trash",
+                destructive=True,
+                effect=Effect.CONFIRMED,
             ),
         ]
 
@@ -256,7 +266,10 @@ def pay_off_actions(
     if plan.settled_on is not None:
         return [
             RowAction(
-                "Deshacer adelanto", lambda: run(lambda: installments.unsettle(plan.id)), "repeat"
+                "Deshacer adelanto",
+                lambda: run(lambda: installments.unsettle(plan.id)),
+                "repeat",
+                effect=Effect.TOGGLE,
             )
         ]
     day = max(date.today(), plan.first_due_on)
@@ -266,6 +279,7 @@ def pay_off_actions(
             lambda: run(lambda: installments.settle(plan.id, day), undoable=True),
             "skip",
             enabled=not plan.remaining(day).is_zero,
+            effect=Effect.UNDOABLE,
         )
     ]
 

@@ -16,7 +16,7 @@ from nodus.ui.navigation import PageId
 from nodus.ui.pages.categories_page import CategoriesPage, CategoryRow
 from nodus.ui.pages.recurring_page import RecurringChargeRow
 from nodus.ui.pages.settings_page import RateRow
-from nodus.ui.widgets.row_actions import RowAction, build_menu, install_row_actions
+from nodus.ui.widgets.row_actions import Effect, RowAction, build_menu, install_row_actions
 
 FAR_AWAY = QPoint(5000, 5000)
 
@@ -33,9 +33,9 @@ def test_the_main_action_is_bold_in_the_menu(qtbot):
     parent = QWidget()
     qtbot.addWidget(parent)
     actions = [
-        RowAction("Abrir", lambda: None),
-        RowAction("Editar", lambda: None, default=True),
-        RowAction("Eliminar", lambda: None, destructive=True),
+        RowAction("Abrir", lambda: None, effect=Effect.OPEN),
+        RowAction("Editar", lambda: None, default=True, effect=Effect.OPEN),
+        RowAction("Eliminar", lambda: None, destructive=True, effect=Effect.CONFIRMED),
     ]
 
     menu = build_menu(parent, actions)
@@ -101,7 +101,9 @@ def test_a_double_click_on_a_transaction_edits_it(window, services, pesos, monke
 def test_a_row_turns_its_light_off_when_its_menu_closes_elsewhere(qtbot):
     row = QWidget()
     qtbot.addWidget(row)
-    install_row_actions(row, lambda: [RowAction("Editar", lambda: None, default=True)])
+    install_row_actions(
+        row, lambda: [RowAction("Editar", lambda: None, default=True, effect=Effect.OPEN)]
+    )
     row.resize(200, 40)
     row.show()
     row.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, True)

@@ -30,7 +30,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.goal_bar import GoalBar, goal_pill, goal_sentence, saved_of_target
-from nodus.ui.widgets.row_actions import MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
 EMPTY_TITLE = "Todavía no hay metas"
@@ -126,15 +126,24 @@ class GoalRow(QWidget):
     def actions(self) -> list[RowAction]:
         goal = self.goal
         return [
-            RowAction("Abrir", lambda: self.detail_requested.emit(goal), default=True),
-            RowAction("Editar", lambda: self.edit_requested.emit(goal), "pencil"),
+            RowAction(
+                "Abrir", lambda: self.detail_requested.emit(goal), default=True, effect=Effect.OPEN
+            ),
+            RowAction(
+                "Editar", lambda: self.edit_requested.emit(goal), "pencil", effect=Effect.OPEN
+            ),
             RowAction(
                 "Desarchivar" if goal.is_archived else "Archivar",
                 lambda: self.archive_toggled.emit(goal),
                 "archive",
+                effect=Effect.TOGGLE,
             ),
             RowAction(
-                "Eliminar", lambda: self.delete_requested.emit(goal), "trash", destructive=True
+                "Eliminar",
+                lambda: self.delete_requested.emit(goal),
+                "trash",
+                destructive=True,
+                effect=Effect.CONFIRMED,
             ),
         ]
 

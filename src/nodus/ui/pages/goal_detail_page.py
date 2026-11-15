@@ -29,7 +29,7 @@ from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.goal_bar import goal_pill, goal_sentence, month_phrase
 from nodus.ui.widgets.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.money_label import amount_text, month_change_text
-from nodus.ui.widgets.row_actions import MoreButton, RowAction
+from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction
 from nodus.ui.widgets.style import clear_layout, make_hoverable
 
 HISTORY_MONTHS = 12
@@ -174,9 +174,12 @@ class GoalDetailPage(DetailPage):
             return []
         return [
             RowAction(
-                "Desarchivar" if goal.is_archived else "Archivar", self.toggle_archived, "archive"
+                "Desarchivar" if goal.is_archived else "Archivar",
+                self.toggle_archived,
+                "archive",
+                effect=Effect.TOGGLE,
             ),
-            RowAction("Eliminar", self.delete, "trash", destructive=True),
+            RowAction("Eliminar", self.delete, "trash", destructive=True, effect=Effect.CONFIRMED),
         ]
 
     def edit(self) -> None:

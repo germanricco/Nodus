@@ -31,9 +31,11 @@ class Shortcut:
 
 
 HELP = Shortcut(("F1",), "Abre o cierra la Ayuda, en el tema de la página donde estás.", ANYWHERE)
+UNDO = Shortcut(("Ctrl", "Z"), "Deshace lo último que hiciste, si avisó «Deshacer».", ANYWHERE)
 
 SHORTCUTS = [
     HELP,
+    UNDO,
     Shortcut(("Doble clic",), "Hace lo principal de la fila: abrirla o editarla.", LISTS),
     Shortcut(("Clic derecho",), "Abre el menú de la fila, igual que «⋯».", LISTS),
     Shortcut(("Ctrl", "clic"), "Suma o quita una fila de la selección.", LISTS),

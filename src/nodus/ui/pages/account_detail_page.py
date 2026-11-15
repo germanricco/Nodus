@@ -50,7 +50,7 @@ from nodus.ui.widgets.goal_bar import month_phrase
 from nodus.ui.widgets.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.money_label import MoneyLabel, amount_text, masked, month_change_text
 from nodus.ui.widgets.net_worth_card import signed
-from nodus.ui.widgets.row_actions import MoreButton, RowAction
+from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction
 from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.style import clear_layout
 from nodus.ui.widgets.transaction_table import ACCOUNT
@@ -237,6 +237,7 @@ class AccountDetailPage(DetailPage):
                 "Desarchivar" if account.is_archived else "Archivar",
                 self.toggle_archived,
                 "archive",
+                effect=Effect.TOGGLE,
             )
         ]
 
