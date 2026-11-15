@@ -10,6 +10,7 @@ from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
+from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.selectors import CategoryComboBox
 
 NO_DEFAULT_CATEGORY = "Sin categoría predeterminada"
@@ -101,5 +102,7 @@ class MergePayeeDialog(MergeDialog):
 
     def merge(self, source_ids: list[int], target_id: int) -> None:
         self._services.payees.merge_many(source_ids, target_id)
-        self._event_bus.payees_changed.emit()
-        self._event_bus.transactions_changed.emit()
+        bus = self._event_bus
+        bus.payees_changed.emit()
+        bus.transactions_changed.emit()
+        offer_undo(self, self._services, bus.payees_changed, bus.transactions_changed)

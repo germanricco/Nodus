@@ -39,6 +39,32 @@ class TagRepository(Repository):
     def delete(self, tag_id: int) -> None:
         self._execute("DELETE FROM tags WHERE id = ?", (tag_id,))
 
+    def row(self, tag_id: int) -> dict | None:
+        """The tag as stored, for ``put_back`` (undoing a merge)."""
+        return self._row("tags", tag_id)
+
+    def put_back(self, row: dict) -> None:
+        self._put_back("tags", row)
+
+    def tagged(self, tag_id: int) -> set[int]:
+        """The transactions that carry ``tag_id``."""
+        rows = self._fetch_all(
+            "SELECT transaction_id FROM transaction_tags WHERE tag_id = ?", (tag_id,)
+        )
+        return {row["transaction_id"] for row in rows}
+
+    def link(self, transaction_ids: Iterable[int], tag_id: int) -> None:
+        self._database.connection.executemany(
+            "INSERT OR IGNORE INTO transaction_tags (transaction_id, tag_id) VALUES (?, ?)",
+            [(transaction_id, tag_id) for transaction_id in transaction_ids],
+        )
+
+    def unlink(self, transaction_ids: Iterable[int], tag_id: int) -> None:
+        self._database.connection.executemany(
+            "DELETE FROM transaction_tags WHERE transaction_id = ? AND tag_id = ?",
+            [(transaction_id, tag_id) for transaction_id in transaction_ids],
+        )
+
     def tags_for(self, transaction_ids: Iterable[int]) -> dict[int, list[Tag]]:
         """The tags of each of ``transaction_ids``, by name; ids without tags are left out."""
         ids = list(transaction_ids)

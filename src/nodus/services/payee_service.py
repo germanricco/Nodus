@@ -21,6 +21,7 @@ from nodus.services.errors import ValidationError, clean_name, require_found
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transaction_service import TransactionService
+from nodus.services.undo_service import UndoError, UndoService, changed_since
 
 
 @dataclass(frozen=True)
@@ -57,9 +58,11 @@ class PayeeService:
         transactions: TransactionService,
         categories: CategoryService,
         exchange_rates: ExchangeRateService,
+        undo: UndoService,
     ) -> None:
         self._database = database
         self._payees = payees
+        self._undo = undo
         self._transactions = transactions
         self._categories = categories
         self._exchange_rates = exchange_rates
@@ -153,6 +156,7 @@ class PayeeService:
         deletes the sources, all together.
 
         The target keeps its default category, or takes the first source's that has one.
+        It can be undone.
         """
         sources = [self.get(source_id) for source_id in source_ids if source_id != target_id]
         if not sources:
@@ -161,12 +165,39 @@ class PayeeService:
         inherited = next(
             (s.default_category_id for s in sources if s.default_category_id is not None), None
         )
+        rows = [self._payees.row(source.id) for source in sources]
+        moved = [self._payees.transaction_ids(source.id) for source in sources]
         with self._database.transaction():
             for source in sources:
                 self._payees.reassign(source.id, target_id)
                 self._payees.delete(source.id)
             if target.default_category_id is None and inherited is not None:
                 self._payees.update(dataclasses.replace(target, default_category_id=inherited))
+            merged = self._payees.get(target_id)
+        self._undo.offer(
+            f"Se unieron {len(sources) + 1} beneficiarios en {target.name}.",
+            lambda: self._unmerge(target, merged, rows, moved),
+        )
+
+    def _unmerge(
+        self, target: Payee, merged: Payee | None, rows: list[dict], moved: list[list[int]]
+    ) -> None:
+        """Undoes ``merge_many``: the merged payees back, with their own id and their
+        transactions, and the target's default category as it was."""
+        if self._payees.get(target.id) != merged:
+            raise changed_since(f"«{target.name}»")
+        kept = set(self._payees.transaction_ids(target.id))
+        for row, transaction_ids in zip(rows, moved, strict=True):
+            if self._payees.find_by_normalized(row["normalized_name"]) is not None:
+                raise UndoError(
+                    f"Ya hay otro beneficiario «{row['name']}», así que no se puede deshacer."
+                )
+            if not set(transaction_ids) <= kept:
+                raise changed_since(f"Algún movimiento de «{row['name']}»")
+        for row, transaction_ids in zip(rows, moved, strict=True):
+            self._payees.put_back(row)
+            self._payees.assign(transaction_ids, row["id"])
+        self._payees.update(target)
 
     def suggested_category(self, payee_id: int, kind: TransactionType) -> int | None:
         """The category for a new ``kind`` transaction with this payee: its default if it is

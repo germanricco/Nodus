@@ -10,6 +10,7 @@ from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import transactions_text
+from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.payee_input import PayeeInput
 from nodus.ui.widgets.selectors import CategoryComboBox
 from nodus.ui.widgets.tag_input import TagInput
@@ -106,3 +107,8 @@ class BulkEditDialog(FormDialog):
             self._event_bus.payees_changed.emit()
         if creates_tags:
             self._event_bus.tags_changed.emit()
+        bus = self._event_bus
+        # undoing may also delete the payee or tags it created, so every list refreshes
+        offer_undo(
+            self, self._services, bus.transactions_changed, bus.payees_changed, bus.tags_changed
+        )

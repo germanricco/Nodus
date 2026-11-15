@@ -10,6 +10,7 @@ from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
+from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.color import ColorPicker
 
 
@@ -89,3 +90,5 @@ class MergeTagDialog(MergeDialog):
     def merge(self, source_ids: list[int], target_id: int) -> None:
         self._services.tags.merge_many(source_ids, target_id)
         announce_tag_change(self._event_bus)
+        bus = self._event_bus
+        offer_undo(self, self._services, bus.tags_changed, bus.transactions_changed)

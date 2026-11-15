@@ -31,3 +31,14 @@ class Repository:
     def _insert(self, sql: str, params: Sequence[Any] = ()) -> int:
         """Runs an INSERT and returns the id of the new row."""
         return self._execute(sql, params).lastrowid
+
+    def _row(self, table: str, row_id: int) -> dict[str, Any] | None:
+        """Every column of one row, as it is stored, so it can be put back whole."""
+        row = self._fetch_one(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
+        return dict(row) if row else None
+
+    def _put_back(self, table: str, row: dict[str, Any]) -> None:
+        """Inserts ``row`` again with its own id and creation time: undoing a delete."""
+        columns = ", ".join(row)
+        marks = ", ".join("?" * len(row))
+        self._execute(f"INSERT INTO {table} ({columns}) VALUES ({marks})", tuple(row.values()))

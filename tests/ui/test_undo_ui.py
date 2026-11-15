@@ -9,7 +9,10 @@ from menus import run_action
 from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.period import Month, Period
 from nodus.models.transaction_filter import TransactionFilter
+from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog
+from nodus.ui.dialogs.payee_dialogs import MergePayeeDialog
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
+from nodus.ui.dialogs.tag_dialogs import MergeTagDialog
 from nodus.ui.navigation import PageId
 from nodus.ui.widgets.transaction_table import DESCRIPTION
 
@@ -92,3 +95,51 @@ def test_paying_off_installments_offers_to_undo_it(services, window, pesos):
     click_undo(window)
 
     assert services.installments.plan(purchase.id).settled_on is None
+
+
+def test_a_bulk_edit_offers_to_undo_it(qtbot, services, window, pesos):
+    expenses = [
+        services.transactions.create(expense_draft(services, pesos.id, ars(a), note=a))
+        for a in ("10", "20")
+    ]
+    dialog = BulkEditDialog(services, window._event_bus, expenses, parent=window)
+    qtbot.addWidget(dialog)
+    dialog.payee_input.line_edit.setText("Coto")
+    dialog.save_button.click()
+
+    assert toast_texts(window) == ["Se editaron 2 transacciones."]
+    click_undo(window)
+
+    assert {services.transactions.get(t.id).payee_id for t in expenses} == {None}
+    assert services.payees.find("Coto") is None
+
+
+def test_merging_payees_offers_to_undo_it(qtbot, services, window, pesos):
+    for name in ("Coto", "Coto online"):
+        services.transactions.create(expense_draft(services, pesos.id, ars("10"), payee_name=name))
+    online = services.payees.find("Coto online")
+    dialog = MergePayeeDialog(services, window._event_bus, [online], parent=window)
+    qtbot.addWidget(dialog)
+    dialog.target_input.setCurrentIndex(dialog.target_input.findText("Coto"))
+    dialog.save_button.click()
+
+    assert toast_texts(window) == ["Se unieron 2 beneficiarios en Coto."]
+    click_undo(window)
+
+    assert services.payees.transaction_count(online.id) == 1
+
+
+def test_merging_tags_offers_to_undo_it(qtbot, services, window, pesos):
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("10"), tag_names=("Viaje", "Paseo"))
+    )
+    paseo = services.tags.find("Paseo")
+    dialog = MergeTagDialog(services, window._event_bus, [paseo], parent=window)
+    qtbot.addWidget(dialog)
+    dialog.target_input.setCurrentIndex(dialog.target_input.findText("Viaje"))
+    dialog.save_button.click()
+
+    assert toast_texts(window) == ["Se unieron 2 etiquetas en Viaje."]
+    click_undo(window)
+
+    assert services.tags.transaction_count(paseo.id) == 1

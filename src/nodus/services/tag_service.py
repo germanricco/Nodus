@@ -20,6 +20,7 @@ from nodus.services.errors import ValidationError, clean_name, require_found
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transaction_service import TransactionService
+from nodus.services.undo_service import UndoError, UndoService, changed_since
 
 
 @dataclass(frozen=True)
@@ -44,9 +45,11 @@ class TagService:
         tags: TagRepository,
         transactions: TransactionService,
         exchange_rates: ExchangeRateService,
+        undo: UndoService,
     ) -> None:
         self._database = database
         self._tags = tags
+        self._undo = undo
         self._transactions = transactions
         self._exchange_rates = exchange_rates
 
@@ -109,15 +112,48 @@ class TagService:
 
     def merge_many(self, source_ids: list[int], target_id: int) -> None:
         """Gives ``target_id`` to the transactions tagged with any of ``source_ids`` and
-        deletes the sources, all together."""
+        deletes the sources, all together. It can be undone."""
         sources = [self.get(source_id) for source_id in source_ids if source_id != target_id]
         if not sources:
             raise ValidationError("Elige otra etiqueta para unir.")
-        self.get(target_id)
+        target = self.get(target_id)
+        rows = [self._tags.row(source.id) for source in sources]
+        tagged = [self._tags.tagged(source.id) for source in sources]
+        target_had = self._tags.tagged(target_id)
         with self._database.transaction():
             for source in sources:
                 self._tags.reassign(source.id, target_id)
                 self._tags.delete(source.id)
+        merged = self._tags.get(target_id)
+        self._undo.offer(
+            f"Se unieron {len(sources) + 1} etiquetas en {target.name}.",
+            lambda: self._unmerge(target, merged, rows, tagged, target_had),
+        )
+
+    def _unmerge(
+        self,
+        target: Tag,
+        merged: Tag | None,
+        rows: list[dict],
+        tagged: list[set[int]],
+        target_had: set[int],
+    ) -> None:
+        """Undoes ``merge_many``: the merged tags back, with their own id and their
+        transactions, and the target only where it was before."""
+        if self._tags.get(target.id) != merged:
+            raise changed_since(f"«{target.name}»")
+        carrying = self._tags.tagged(target.id)
+        for row, transaction_ids in zip(rows, tagged, strict=True):
+            if self._tags.find_by_normalized(row["normalized_name"]) is not None:
+                raise UndoError(
+                    f"Ya hay otra etiqueta «{row['name']}», así que no se puede deshacer."
+                )
+            if not transaction_ids <= carrying:
+                raise changed_since(f"Algún movimiento de «{row['name']}»")
+        for row, transaction_ids in zip(rows, tagged, strict=True):
+            self._tags.put_back(row)
+            self._tags.link(transaction_ids, row["id"])
+        self._tags.unlink(set().union(*tagged) - target_had, target.id)
 
     def summaries(self) -> list[TagSummary]:
         """Every tag with its totals, the most used first."""

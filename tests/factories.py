@@ -110,10 +110,11 @@ def data_since(database, day: date) -> None:
 
 def table_rows(database, *tables: str) -> dict[str, list[tuple]]:
     """Every row of ``tables`` but the edit times, to tell an undone change from the
-    data as it was: undoing gives back the data, not when it was last touched."""
+    data as it was: undoing gives back the data, not when it was last touched. Sorted, as
+    a link put back is the same link even in another place of the table."""
     rows = {}
     for table in tables:
-        cursor = database.connection.execute(f"SELECT * FROM {table} ORDER BY rowid")
+        cursor = database.connection.execute(f"SELECT * FROM {table}")
         kept = [i for i, column in enumerate(cursor.description) if column[0] != "updated_at"]
-        rows[table] = [tuple(row[i] for i in kept) for row in cursor.fetchall()]
+        rows[table] = sorted((tuple(row[i] for i in kept) for row in cursor.fetchall()), key=repr)
     return rows

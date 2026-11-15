@@ -89,6 +89,7 @@ class Services:
         transaction_repository = TransactionRepository(database)
         payee_repository = PayeeRepository(database)
         tag_repository = TagRepository(database)
+        undo = UndoService(database)
         transactions = TransactionService(
             database,
             transaction_repository,
@@ -96,9 +97,11 @@ class Services:
             category_repository,
             payee_repository,
             tag_repository,
+            undo,
         )
-        payees = PayeeService(database, payee_repository, transactions, categories, exchange_rates)
-        undo = UndoService(database)
+        payees = PayeeService(
+            database, payee_repository, transactions, categories, exchange_rates, undo
+        )
         recurring = RecurringChargeService(
             database,
             RecurringChargeRepository(database),
@@ -152,7 +155,7 @@ class Services:
             budgets=budgets,
             payees=payees,
             analysis=AnalysisService(transactions, categories, payees, exchange_rates),
-            tags=TagService(database, tag_repository, transactions, exchange_rates),
+            tags=TagService(database, tag_repository, transactions, exchange_rates, undo),
             startup=StartupService.for_this_program(),
             news=NewsService(settings, __version__, first_start=database.created),
             guide=GuideService(accounts, transactions, recurring, budgets, goals, settings),

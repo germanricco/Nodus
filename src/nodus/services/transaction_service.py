@@ -25,6 +25,7 @@ from nodus.models.period import Month, Period
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction, TransactionType, Transfer
 from nodus.services.errors import ValidationError, require_found
+from nodus.services.undo_service import UndoService, changed_since
 
 
 @dataclass(frozen=True)
@@ -100,8 +101,10 @@ class TransactionService:
         categories: CategoryRepository,
         payees: PayeeRepository,
         tags: TagRepository,
+        undo: UndoService,
     ) -> None:
         self._database = database
+        self._undo = undo
         self._transactions = transactions
         self._accounts = accounts
         self._categories = categories
@@ -172,7 +175,7 @@ class TransactionService:
         """Applies ``changes`` to every one of ``transaction_ids``, or to none if one fails.
 
         Transfers take only the note, on both legs: they have no category, payee or tags.
-        A new category must suit every expense or income chosen.
+        A new category must suit every expense or income chosen. It can be undone.
         """
         if changes.is_empty:
             raise ValidationError("Completa al menos un campo para cambiar.")
@@ -182,6 +185,15 @@ class TransactionService:
             self._require_category_for(changes.category_id, movements)
         note = changes.note.strip()
         transfer_ids = {t.transfer_id for t in transactions if t.is_transfer}
+        legs = [
+            leg
+            for transfer_id in (transfer_ids if note else ())
+            for leg in self._transactions.list_transfer_legs(transfer_id)
+        ]
+        before = movements + legs
+        tags_before = self._tag_ids_of(movements)
+        payees_before = {payee.id for payee in self._payees.list()}
+        tags_known = {tag.id for tag in self._tags.list()}
         with self._database.transaction():
             for transaction in movements:
                 edited = transaction
@@ -194,9 +206,49 @@ class TransactionService:
                 self._transactions.update(edited)
                 if changes.add_tags or changes.remove_tags:
                     self._change_tags(transaction.id, changes.add_tags, changes.remove_tags)
-            for transfer_id in transfer_ids if note else ():
-                for leg in self._transactions.list_transfer_legs(transfer_id):
-                    self._transactions.update(dataclasses.replace(leg, note=note))
+            for leg in legs:
+                self._transactions.update(dataclasses.replace(leg, note=note))
+            after = [self.get(t.id) for t in before]
+            tags_after = self._tag_ids_of(movements)
+        new_payees = {payee.id for payee in self._payees.list()} - payees_before
+        new_tags = {tag.id for tag in self._tags.list()} - tags_known
+        count = len(transactions)
+        self._undo.offer(
+            f"Se editó {count} transacción."
+            if count == 1
+            else f"Se editaron {count} transacciones.",
+            lambda: self._unedit(before, after, tags_before, tags_after, new_payees, new_tags),
+        )
+
+    def _tag_ids_of(self, transactions: list[Transaction]) -> dict[int, list[int]]:
+        found = self._tags.tags_for(t.id for t in transactions)
+        return {t.id: [tag.id for tag in found.get(t.id, [])] for t in transactions}
+
+    def _unedit(
+        self,
+        before: list[Transaction],
+        after: list[Transaction],
+        tags_before: dict[int, list[int]],
+        tags_after: dict[int, list[int]],
+        new_payees: set[int],
+        new_tags: set[int],
+    ) -> None:
+        """Undoes ``bulk_edit``: each transaction and its tags as they were, and the
+        payees and tags it created gone, unless something else uses them now."""
+        edited = [self._transactions.get(t.id) for t in after]
+        movements = [t for t in after if t.id in tags_after]
+        if edited != after or self._tag_ids_of(movements) != tags_after:
+            raise changed_since("Alguna de esas transacciones")
+        for transaction in before:
+            self._transactions.update(transaction)
+        for transaction_id, tag_ids in tags_before.items():
+            self._tags.set_for(transaction_id, tag_ids)
+        for payee_id in new_payees:
+            if self._payees.count_transactions(payee_id) == 0:
+                self._payees.delete(payee_id)
+        for tag_id in new_tags:
+            if self._tags.count_transactions(tag_id) == 0:
+                self._tags.delete(tag_id)
 
     def _require_category_for(self, category_id: int, movements: list[Transaction]) -> None:
         category = require_found(self._categories.get(category_id), "La categoría no existe.")

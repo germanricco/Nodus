@@ -76,6 +76,24 @@ class PayeeRepository(Repository):
     def delete(self, payee_id: int) -> None:
         self._execute("DELETE FROM payees WHERE id = ?", (payee_id,))
 
+    def row(self, payee_id: int) -> dict | None:
+        """The payee as stored, for ``put_back`` (undoing a merge)."""
+        return self._row("payees", payee_id)
+
+    def put_back(self, row: dict) -> None:
+        self._put_back("payees", row)
+
+    def transaction_ids(self, payee_id: int) -> list[int]:
+        rows = self._fetch_all("SELECT id FROM transactions WHERE payee_id = ?", (payee_id,))
+        return [row["id"] for row in rows]
+
+    def assign(self, transaction_ids: list[int], payee_id: int | None) -> None:
+        """Gives ``payee_id`` to the transactions ``transaction_ids``."""
+        self._database.connection.executemany(
+            "UPDATE transactions SET payee_id = ? WHERE id = ?",
+            [(payee_id, transaction_id) for transaction_id in transaction_ids],
+        )
+
     @staticmethod
     def _from_row(row: sqlite3.Row) -> Payee:
         return Payee(id=row["id"], name=row["name"], default_category_id=row["default_category_id"])
