@@ -23,6 +23,8 @@ TEXT_PAIRS = [
     *[("accent_text", back) for back in ("surface", "background", "sidebar", "accent_soft")],
     ("on_accent", "accent"),
     ("on_accent", "accent_hover"),
+    ("on_accent", "accent_pressed"),
+    *[(text, "pressed") for text in ("text", "text_muted")],
     ("on_expense", "expense"),
     *[
         (tone, back)

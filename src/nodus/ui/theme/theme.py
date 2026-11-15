@@ -37,10 +37,12 @@ class Theme:
     sidebar: str
     border: str
     hover: str
+    pressed: str  # a button held down: one step past hover
     text: str
     text_muted: str
     accent: str  # fills and borders: the primary button, a chosen box, the focus
     accent_hover: str
+    accent_pressed: str
     accent_soft: str
     accent_text: str  # the violet as text: the current page, a chosen tab or option
     on_accent: str  # text on the accent's fill: the primary button
@@ -85,10 +87,12 @@ LIGHT = Theme(
     sidebar="#fbfaf8",
     border="#e7e4dd",
     hover="#efede8",
+    pressed="#e9e6e0",
     text="#1f1d1a",
     text_muted="#6b6760",
     accent="#6d4fd6",
     accent_hover="#5e40c7",
+    accent_pressed="#5034b4",
     accent_soft="#ece8fb",
     accent_text="#6d4fd6",
     on_accent="#ffffff",
@@ -113,10 +117,12 @@ DARK = Theme(
     sidebar="#1a191e",
     border="#2e2c35",
     hover="#27252d",
+    pressed="#2d2b33",
     text="#ecebef",
     text_muted="#9a98a3",
     accent="#795ce9",
     accent_hover="#7055e3",
+    accent_pressed="#6347d8",
     accent_soft="#2c2640",
     accent_text="#9881ee",
     on_accent="#ffffff",

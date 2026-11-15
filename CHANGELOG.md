@@ -9,6 +9,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - La edición en grupo y «Unir» beneficiarios o etiquetas también se pueden deshacer desde el aviso: vuelven las transacciones como estaban y los beneficiarios o etiquetas unidos, con sus movimientos. Si mientras tanto creaste otro con el mismo nombre, Nodus te avisa que ya no se puede.
 - Ctrl+Z deshace lo último que hiciste, si avisó «Deshacer», desde cualquier página. Está en la lista de atajos de la Ayuda.
 - Si cierras un formulario con cambios, con Cancelar, Esc o la ✕, Nodus pregunta «¿Descartar los cambios?» antes de perder lo que escribiste. Sin cambios, se cierra como siempre.
+- Los botones se oscurecen al presionarlos. Al moverte con Tab, un anillo marca dónde estás, y no aparece al usar el mouse. Los formularios se abren en su primer campo, listos para escribir.
 - Los botones que tardan dicen que están trabajando mientras tanto: «Actualizando…» la cotización, «Guardando…» una copia, «Restaurando…» y «Exportando…». Un segundo clic ya no repite la consulta de la cotización.
 - Arreglo: si la copia del día había fallado, «Hacer copia» seguía mostrando el error aunque la nueva saliera bien.
 

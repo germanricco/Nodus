@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from PySide6.QtCore import SignalInstance
+from PySide6.QtCore import Qt, SignalInstance
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QAbstractButton,
@@ -210,6 +210,24 @@ class FormDialog(QDialog):
         super().showEvent(event)
         if self._shown_state is None:
             self._shown_state = self._form_state()
+            self._focus_first_field()
+
+    def _focus_first_field(self) -> None:
+        """Starts in the first field, ready to type, unless the dialog chose one. Qt
+        would give the focus to the main button, whose focus ring is for the keyboard."""
+        if not isinstance(self.focusWidget(), (QAbstractButton, type(None))):
+            return
+        widget = self.nextInFocusChain()
+        while widget is not self:
+            if (
+                isinstance(widget, (QLineEdit, QComboBox, QDateEdit))
+                and widget.isVisibleTo(self)
+                and widget.isEnabled()
+                and widget.focusPolicy() & Qt.FocusPolicy.TabFocus
+            ):
+                widget.setFocus(Qt.FocusReason.OtherFocusReason)
+                return
+            widget = widget.nextInFocusChain()
 
     def _form_state(self) -> list[object]:
         """What every field holds now, in the form's order, to tell later if any changed."""

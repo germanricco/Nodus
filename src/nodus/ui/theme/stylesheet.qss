@@ -49,6 +49,15 @@ QMainWindow, #ContentArea, #PageStack {
     font-weight: $strong_weight;
 }
 
+#NavButton:focus {
+    border: $line_thick solid $accent;
+    padding: $focus_padding_nav;
+}
+
+#NavButton[collapsed="true"]:focus {
+    padding: $focus_padding_nav_collapsed;
+}
+
 #SectionLabel {
     color: $text_muted;
     font-size: $label_size;
@@ -289,6 +298,36 @@ QPushButton#DangerButton:hover {
 
 QPushButton#SecondaryButton:hover, QPushButton#SmallButton:hover {
     background: $hover;
+}
+
+/* Held down: one step past hover, so a click is felt before the result shows. */
+QPushButton#PrimaryButton:pressed {
+    background: $accent_pressed;
+}
+
+QPushButton#SecondaryButton:pressed, QPushButton#SmallButton:pressed,
+QPushButton#DangerButton:pressed, QPushButton#Segment:pressed, QPushButton#Tab:pressed,
+#NavButton:pressed {
+    background: $pressed;
+}
+
+/* The focus ring, for the keyboard: buttons take the focus only from Tab (focus.py),
+   so a click never leaves it behind. The ring trades padding for border, so nothing
+   moves. The primary button's ring is in the text color, since violet would not show
+   around its violet fill. */
+QPushButton#SecondaryButton:focus, QPushButton#DangerButton:focus {
+    border: $line_thick solid $accent;
+    padding: $focus_padding;
+}
+
+QPushButton#SmallButton:focus {
+    border: $line_thick solid $accent;
+    padding: $focus_padding_small;
+}
+
+QPushButton#PrimaryButton:focus {
+    border: $line_thick solid $text;
+    padding: $focus_padding_borderless;
 }
 
 /* A button that cannot be used now, or is busy with what it started («Actualizando…»):
@@ -601,6 +640,11 @@ QPushButton#Segment:disabled {
     color: $border;
 }
 
+QPushButton#Segment:focus {
+    border: $line_thick solid $accent;
+    padding: $focus_padding_segment;
+}
+
 /* Tabs that switch between the views of a page (Page.set_tabs): underlined, in the
    accent color when chosen, as the sidebar's current page. */
 
@@ -627,6 +671,12 @@ QPushButton#Tab:checked {
     color: $accent_text;
     font-weight: $strong_weight;
     border-bottom: $line_thick solid $accent;
+}
+
+QPushButton#Tab:focus {
+    border: $line_thick solid $accent;
+    border-radius: $radius_s;
+    padding: $focus_padding_tab;
 }
 
 /* Period selector: "‹ Noviembre 2026 ▾ ›" */

@@ -278,7 +278,8 @@ def design_tokens() -> dict[str, str]:
     """The scale as stylesheet tokens: ``font_family``, ``<role>_size`` and
     ``<role>_weight`` for each text role, ``space_<step>``, ``radius_<step>``,
     ``icon_<step>``, each ``ControlSize`` in lowercase (``field_height``…),
-    ``line_thin`` and ``line_thick``, and the ``Popup`` steps (``popup_padding``…)."""
+    ``line_thin`` and ``line_thick``, the ``Popup`` steps (``popup_padding``…) and the
+    paddings of a button with the focus ring (``focus_padding``…)."""
     tokens = {"font_family": f'"{FONT_FAMILY}"'}
     for role in TextRole:
         name = role.name.lower()
@@ -297,4 +298,22 @@ def design_tokens() -> dict[str, str]:
         menu_item_padding=_padding(Popup.MENU_ITEM_PADDING),
         popup_divider_margin=f"{Popup.DIVIDER_MARGIN}px",
     )
+    tokens.update(
+        focus_padding=_focus_padding(Space.S, Space.L, Line.THIN),
+        focus_padding_borderless=_focus_padding(Space.S, Space.L, 0),
+        focus_padding_small=_focus_padding(Space.XS, Space.M, Line.THIN),
+        focus_padding_segment=_focus_padding(Space.XS, Space.L, 0),
+        focus_padding_nav=_focus_padding(Space.S, Space.M, Line.THIN),
+        focus_padding_nav_collapsed=_focus_padding(Space.S, Space.S, Line.THIN),
+        focus_padding_tab=(
+            f"{Space.S - Line.THICK}px 0px {Space.S}px 0px"  # the bottom line was there
+        ),
+    )
     return tokens
+
+
+def _focus_padding(vertical: int, horizontal: int, border: int) -> str:
+    """The padding of a button with keyboard focus: its own less what the ring
+    (``Line.THICK``) adds to its ``border``, so the button keeps its size."""
+    extra = Line.THICK - border
+    return f"{vertical - extra}px {horizontal - extra}px"
