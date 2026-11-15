@@ -11,12 +11,23 @@ if sys.platform == "win32":
     os.environ.setdefault("QT_QPA_FONTDIR", os.path.join(os.environ["WINDIR"], "Fonts"))
 
 from factories import ars, eur, usd  # noqa: E402
+from qt_cleanup import flush_deleted  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
 from nodus.models.account import Account, AccountType  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
 from nodus.ui.theme.design import set_reduced_motion  # noqa: E402
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_teardown(item):
+    """Frees the windows a test leaves behind. pytest-qt closes them and asks for their
+    deletion but only processes events, so they stayed alive: the stylesheet each test
+    applies then restyled every one of them, and the suite slowed down test after test."""
+    result = yield
+    flush_deleted()
+    return result
 
 
 @pytest.fixture(autouse=True)

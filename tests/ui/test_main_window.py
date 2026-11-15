@@ -4,7 +4,8 @@ from decimal import Decimal
 from demo_data import load_demo_data
 from factories import ars, expense_draft
 from PySide6.QtCore import QEvent, QObject, Qt
-from PySide6.QtWidgets import QLabel, QWidget
+from PySide6.QtWidgets import QApplication, QLabel, QWidget
+from qt_cleanup import flush_deleted
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
@@ -15,6 +16,22 @@ from nodus.ui.widgets.sidebar import Sidebar, SidebarAccountRow
 
 def sidebar_texts(window) -> list[str]:
     return [label.text() for label in window.sidebar.findChildren(QLabel) if label.isVisible()]
+
+
+def test_a_closed_window_frees_its_widgets(qapp, services, event_bus, theme_manager):
+    """Nothing may keep a closed window alive: each one left behind slows every later test."""
+    flush_deleted()
+    before = len(QApplication.allWidgets())
+    main_window = MainWindow(services, event_bus, theme_manager)
+    main_window.show()
+    assert len(QApplication.allWidgets()) > before + 100
+
+    main_window.close()
+    main_window.deleteLater()
+    del main_window
+    flush_deleted()
+
+    assert len(QApplication.allWidgets()) <= before + 5
 
 
 def test_opens_on_dashboard(window):
