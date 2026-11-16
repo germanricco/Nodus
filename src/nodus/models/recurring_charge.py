@@ -74,6 +74,9 @@ class RecurringCharge:
     charged to a card. For the latter, ``last_paid_rate`` holds the pesos per dollar of
     its last payment, card taxes included. ``anchor_day`` is the day of the month it was
     set up for, which ``next_due_on`` returns to after short months.
+
+    ``remind_from`` is the day its warning comes back after the user said «Ya lo vi»:
+    until then, a charge due soon shows no warning. One overdue always warns.
     """
 
     id: int | None
@@ -87,6 +90,7 @@ class RecurringCharge:
     is_active: bool = True
     note: str = ""
     last_paid_rate: Decimal | None = None
+    remind_from: date | None = None
 
     def __post_init__(self) -> None:
         if self.amount.cents <= 0:
@@ -108,6 +112,28 @@ class RecurringCharge:
     def days_until(self, today: date) -> int:
         """Days until it is due; negative when it is overdue."""
         return (self.next_due_on - today).days
+
+    def quiet_until(self) -> date:
+        """The day «Ya lo vi» lets the warning come back: the day before it is due."""
+        return self.next_due_on - timedelta(days=1)
+
+    def is_quiet(self, today: date) -> bool:
+        """Whether its warning is put off today; never when it is overdue."""
+        return (
+            self.remind_from is not None
+            and today < self.remind_from
+            and self.status(today) is not DueStatus.OVERDUE
+        )
+
+    def can_be_seen(self, today: date) -> bool:
+        """Whether «Ya lo vi» makes sense: it warns now, and the day before is still
+        ahead, so putting it off leaves at least one quiet day."""
+        return (
+            self.is_active
+            and self.status(today) is DueStatus.SOON
+            and self.quiet_until() > today
+            and not self.is_quiet(today)
+        )
 
     def status(self, today: date) -> DueStatus:
         """Overdue only after its day has passed; the due day itself is still on time."""

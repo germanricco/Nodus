@@ -43,7 +43,7 @@ from nodus.ui.pages.dashboard_cards import (
 )
 from nodus.ui.pages.guide_card import GuideCard
 from nodus.ui.pages.page import Page
-from nodus.ui.pages.recurring_page import skip_charge
+from nodus.ui.pages.recurring_page import skip_charge, toggle_seen
 from nodus.ui.pages.transaction_list_view import delete_transactions, edit_transaction
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -103,6 +103,9 @@ class DashboardPage(Page):
         self.upcoming_card.pay_requested.connect(self.open_pay_dialog)
         self.upcoming_card.skip_requested.connect(
             lambda charge: skip_charge(self, services, event_bus, charge)
+        )
+        self.upcoming_card.seen_toggled.connect(
+            lambda charge: toggle_seen(self, services, event_bus, charge)
         )
         self.upcoming_card.see_all_requested.connect(
             lambda: self.navigate_requested.emit(PageId.RECURRING)

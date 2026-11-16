@@ -23,6 +23,8 @@ OPPOSITES = {
     "Subir": "Bajar",
     "Bajar": "Subir",
     "Deshacer adelanto": "Adelantar las cuotas que faltan",
+    "Ya lo vi": "Volver a avisarme",
+    "Volver a avisarme": "Ya lo vi",
 }
 
 

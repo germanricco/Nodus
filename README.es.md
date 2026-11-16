@@ -93,7 +93,7 @@ Cuando un comercio te devuelve dinero o un amigo te paga su parte, vinculas ese 
 </picture>
 
 ### No olvidarte de lo que pagas todos los meses
-Anotas el alquiler, los servicios o las suscripciones una sola vez, y Nodus te muestra cuánto suman por mes, qué vence pronto y qué está atrasado. Pagar uno toma dos clics: el gasto queda registrado y el cargo pasa a su próxima fecha. Una suscripción con precio fijo en dólares puede pagarse desde una cuenta en pesos: Nodus estima los pesos con la cotización de tu último pago, impuestos de la tarjeta incluidos, y tú anotas lo que realmente salió.
+Anotas el alquiler, los servicios o las suscripciones una sola vez, y Nodus te muestra cuánto suman por mes, qué vence pronto y qué está atrasado. Pagar uno toma dos clics: el gasto queda registrado y el cargo pasa a su próxima fecha. Si ya sabes que viene, «Ya lo vi» calla su aviso hasta el día anterior al vencimiento. Una suscripción con precio fijo en dólares puede pagarse desde una cuenta en pesos: Nodus estima los pesos con la cotización de tu último pago, impuestos de la tarjeta incluidos, y tú anotas lo que realmente salió.
 
 Las compras en cuotas son igual de simples. Al anotar un gasto, dices que se paga en seis cuotas y si el monto es el total o lo que vale cada una: Nodus anota todas las cuotas en sus fechas, cada una se descuenta de la cuenta el día que le toca, y Recurrentes muestra cuántas pagaste, la próxima y cuánto se llevan las cuotas cada mes. Cualquier cuota abre la compra entera para cambiarla, adelantar lo que falta o eliminarla.
 

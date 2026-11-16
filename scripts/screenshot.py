@@ -218,6 +218,7 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         for toast in list(window.toasts.toasts):
             toast.dismiss()
         capture_undo(app, window, args.out, mode)
+        capture_seen(app, window, args.out, mode)
         capture_discard(app, services, event_bus, window, args.out, mode)
         for name, build_dialog in DIALOGS.items():
             dialog = build_dialog(services, event_bus, window)
@@ -456,6 +457,22 @@ def capture_undo(app: QApplication, window: MainWindow, out: Path, mode: ThemeMo
     app.processEvents()
     save(window, out / f"toast-undo-{mode.value}.png")
     window.undo_last()
+    for toast in list(window.toasts.toasts):
+        toast.dismiss()
+
+
+def capture_seen(app: QApplication, window: MainWindow, out: Path, mode: ThemeMode) -> None:
+    """«Ya lo vi» on the first upcoming payment of Inicio: its pill gray and the notice
+    with the day it warns again; put back after, for the next captures."""
+    window.show_page(PageId.DASHBOARD)
+    row = window.page(PageId.DASHBOARD).upcoming_card.rows[1]  # due in 2 days
+    charge = row.charge
+    seen = next(action for action in row.actions() if action.text == "Ya lo vi")
+    seen.callback()
+    app.processEvents()
+    save(window, out / f"upcoming-seen-{mode.value}.png")
+    window._services.recurring.remind_again(charge.id)
+    window._event_bus.recurring_changed.emit()
     for toast in list(window.toasts.toasts):
         toast.dismiss()
 

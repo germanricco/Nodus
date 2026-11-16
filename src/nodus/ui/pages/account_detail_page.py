@@ -38,7 +38,7 @@ from nodus.ui.pages.dashboard_cards import (
     muted_label,
 )
 from nodus.ui.pages.detail_page import DetailPage, danger_zone
-from nodus.ui.pages.recurring_page import skip_charge
+from nodus.ui.pages.recurring_page import skip_charge, toggle_seen
 from nodus.ui.pages.transaction_list_view import TransactionListView
 from nodus.ui.theme.design import Chart, Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -365,6 +365,9 @@ class AccountDetailPage(DetailPage):
             row.pay_requested.connect(self.pay)
             row.skip_requested.connect(
                 lambda c: skip_charge(self, self._services, self._event_bus, c)
+            )
+            row.seen_toggled.connect(
+                lambda c: toggle_seen(self, self._services, self._event_bus, c)
             )
             self._payment_rows.addWidget(row)
             self.payment_rows.append(row)

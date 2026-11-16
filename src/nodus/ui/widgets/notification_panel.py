@@ -15,6 +15,8 @@ DISMISS_LABELS = {
     NoticeKind.UPDATE: ("Descartar", "No volver a avisar de esta versión"),
     NoticeKind.BACKUP_REMINDER: ("Ahora no", "Volver a avisar a fin del mes que viene"),
     NoticeKind.GOAL_REACHED: ("Listo", "Quitar el aviso"),
+    # Only when no charge is overdue (``Notice.item_ids``): what is overdue always warns.
+    NoticeKind.CHARGES_DUE: ("Ya lo vi", "Volver a avisar el día anterior a cada vencimiento"),
 }
 
 ACTION_LABELS = {
@@ -26,6 +28,11 @@ ACTION_LABELS = {
     NoticeKind.BUDGET_OVER: "Ver presupuestos",
     NoticeKind.GOAL_REACHED: "Ver meta",
 }
+
+
+def can_dismiss(notice: Notice) -> bool:
+    """Charges can be put off only when the notice names some that can wait."""
+    return notice.kind is not NoticeKind.CHARGES_DUE or bool(notice.item_ids)
 
 
 class NoticeRow(QWidget):
@@ -56,7 +63,7 @@ class NoticeRow(QWidget):
         self.action_button.setObjectName("SmallButton")
         buttons.addWidget(self.action_button)
         self.dismiss_button: QPushButton | None = None
-        if notice.kind in DISMISS_LABELS:
+        if notice.kind in DISMISS_LABELS and can_dismiss(notice):
             text, tooltip = DISMISS_LABELS[notice.kind]
             self.dismiss_button = QPushButton(text)
             self.dismiss_button.setObjectName("SmallButton")

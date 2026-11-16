@@ -1,3 +1,4 @@
+import dataclasses
 from datetime import date
 
 import pytest
@@ -84,3 +85,44 @@ def test_rejects_non_positive_amounts_and_invalid_days():
         charge(amount="0")
     with pytest.raises(ValueError):
         charge(anchor_day=32)
+
+
+def seen(due: date) -> RecurringCharge:
+    """A charge due on ``due`` whose warning the user put off with «Ya lo vi»."""
+    plain = charge(due=due)
+    return dataclasses.replace(plain, remind_from=plain.quiet_until())
+
+
+def test_ya_lo_vi_keeps_quiet_until_the_day_before():
+    due = date(2026, 11, 11)
+
+    assert seen(due).quiet_until() == date(2026, 11, 10)
+    assert seen(due).is_quiet(TODAY)
+    assert seen(due).is_quiet(date(2026, 11, 9))
+    assert not seen(due).is_quiet(date(2026, 11, 10))
+
+
+def test_an_overdue_charge_always_warns():
+    assert not seen(date(2026, 11, 11)).is_quiet(date(2026, 11, 12))
+
+
+@pytest.mark.parametrize(
+    ("due", "can"),
+    [
+        (date(2026, 11, 8), True),  # due in 2 days: one quiet day left
+        (date(2026, 11, 13), True),  # in 7 days, still due soon
+        (date(2026, 11, 7), False),  # tomorrow: the day before is today
+        (TODAY, False),
+        (date(2026, 11, 5), False),  # overdue
+        (date(2026, 11, 14), False),  # in 8 days: no warning yet
+    ],
+)
+def test_ya_lo_vi_is_offered_only_while_it_warns_with_a_day_to_spare(due, can):
+    assert charge(due=due).can_be_seen(TODAY) is can
+
+
+def test_ya_lo_vi_is_not_offered_twice_nor_while_paused():
+    due = date(2026, 11, 11)
+
+    assert not seen(due).can_be_seen(TODAY)
+    assert not dataclasses.replace(charge(due=due), is_active=False).can_be_seen(TODAY)

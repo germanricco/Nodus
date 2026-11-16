@@ -205,3 +205,33 @@ class TestBackupReminder:
 
         notice = services.notifications.notices(date(2026, 11, 28), None)[-1]
         assert notice.detail.startswith("La última es del 10/10/2026.")
+
+
+def test_a_charge_put_off_with_ya_lo_vi_is_not_announced(services, pesos):
+    charge = services.recurring.create(
+        charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=3), name="Netflix")
+    )
+    assert charges_notice(services).item_ids == (charge.id,)
+
+    services.recurring.mark_seen(charge.id, TODAY)
+
+    assert charges_notice(services) is None
+
+
+def test_a_notice_with_overdue_charges_cannot_be_put_off(services, pesos):
+    for name, days in (("Internet", -2), ("Spotify", 3)):
+        services.recurring.create(
+            charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=days), name=name)
+        )
+
+    assert charges_notice(services).item_ids == ()
+
+
+def test_only_charges_with_a_day_to_spare_can_be_put_off(services, pesos):
+    for name, days in (("Netflix", 1), ("Spotify", 3)):
+        services.recurring.create(
+            charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=days), name=name)
+        )
+
+    spotify = next(c for c in services.recurring.list_charges() if c.name == "Spotify")
+    assert charges_notice(services).item_ids == (spotify.id,)

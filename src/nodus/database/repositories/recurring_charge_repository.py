@@ -19,8 +19,8 @@ class RecurringChargeRepository(Repository):
     def add(self, charge: RecurringCharge) -> RecurringCharge:
         charge_id = self._insert(
             "INSERT INTO recurring_charges (name, amount_cents, account_id, category_id,"
-            " frequency, anchor_day, next_due_on, is_active, note, currency, last_paid_rate)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            " frequency, anchor_day, next_due_on, is_active, note, currency, last_paid_rate,"
+            " remind_from) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             self._values(charge),
         )
         return dataclasses.replace(charge, id=charge_id)
@@ -29,7 +29,7 @@ class RecurringChargeRepository(Repository):
         self._execute(
             "UPDATE recurring_charges SET name = ?, amount_cents = ?, account_id = ?,"
             " category_id = ?, frequency = ?, anchor_day = ?, next_due_on = ?, is_active = ?,"
-            " note = ?, currency = ?, last_paid_rate = ? WHERE id = ?",
+            " note = ?, currency = ?, last_paid_rate = ?, remind_from = ? WHERE id = ?",
             (*self._values(charge), charge.id),
         )
 
@@ -64,6 +64,7 @@ class RecurringChargeRepository(Repository):
             charge.note,
             charge.amount.currency.value,
             None if charge.last_paid_rate is None else str(charge.last_paid_rate),
+            None if charge.remind_from is None else charge.remind_from.isoformat(),
         )
 
     @staticmethod
@@ -81,5 +82,8 @@ class RecurringChargeRepository(Repository):
             note=row["note"],
             last_paid_rate=(
                 None if row["last_paid_rate"] is None else Decimal(row["last_paid_rate"])
+            ),
+            remind_from=(
+                None if row["remind_from"] is None else date.fromisoformat(row["remind_from"])
             ),
         )

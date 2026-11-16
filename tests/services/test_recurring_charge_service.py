@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import TODAY, ars, category_id, charge_draft, usd
+from factories import TODAY, ars, category_id, charge_draft, table_rows, usd
 
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
@@ -203,3 +203,59 @@ class TestDollarChargesPaidInPesos:
         services.recurring.pay(subscription.id, usd("100"), TODAY, dollars.id)
 
         assert services.recurring.get(subscription.id).last_paid_rate is None
+
+
+class TestYaLoVi:
+    """«Ya lo vi» puts off a warning until the day before the charge is due."""
+
+    def test_it_puts_the_warning_off_until_the_day_before(self, services, pesos):
+        charge = create(services, pesos.id, ars("100"), date(2026, 11, 10))
+
+        assert services.recurring.mark_seen(charge.id, TODAY) == date(2026, 11, 9)
+        assert services.recurring.get(charge.id).is_quiet(TODAY)
+
+        services.recurring.remind_again(charge.id)
+        assert not services.recurring.get(charge.id).is_quiet(TODAY)
+
+    @pytest.mark.parametrize("due", [date(2026, 11, 6), date(2026, 11, 1)])
+    def test_not_for_one_due_tomorrow_or_overdue(self, services, pesos, due):
+        charge = create(services, pesos.id, ars("100"), due)
+
+        with pytest.raises(ValidationError, match="no tiene un aviso"):
+            services.recurring.mark_seen(charge.id, TODAY)
+
+    def test_paying_or_skipping_warns_again_on_the_next_date(self, services, pesos):
+        first = create(services, pesos.id, ars("100"), date(2026, 11, 10))
+        second = create(services, pesos.id, ars("200"), date(2026, 11, 10), name="Luz")
+        for charge in (first, second):
+            services.recurring.mark_seen(charge.id, TODAY)
+
+        services.recurring.pay(first.id, ars("100"), TODAY, pesos.id)
+        services.recurring.skip(second.id)
+
+        assert services.recurring.get(first.id).remind_from is None
+        assert services.recurring.get(second.id).remind_from is None
+
+    def test_undoing_a_payment_puts_it_back_seen(self, services, database, pesos):
+        charge = create(services, pesos.id, ars("100"), date(2026, 11, 10))
+        services.recurring.mark_seen(charge.id, TODAY)
+        before = table_rows(database, "recurring_charges", "transactions")
+
+        services.recurring.pay(charge.id, ars("100"), TODAY, pesos.id)
+        services.undo.undo()
+
+        assert table_rows(database, "recurring_charges", "transactions") == before
+
+    def test_editing_keeps_it_unless_the_date_changes(self, services, pesos):
+        charge = create(services, pesos.id, ars("100"), date(2026, 11, 10))
+        services.recurring.mark_seen(charge.id, TODAY)
+
+        services.recurring.update(
+            charge.id, charge_draft(services, pesos.id, ars("120"), date(2026, 11, 10))
+        )
+        assert services.recurring.get(charge.id).remind_from == date(2026, 11, 9)
+
+        services.recurring.update(
+            charge.id, charge_draft(services, pesos.id, ars("120"), date(2026, 11, 12))
+        )
+        assert services.recurring.get(charge.id).remind_from is None

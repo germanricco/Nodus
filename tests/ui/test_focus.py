@@ -67,3 +67,13 @@ def test_the_window_opens_with_no_button_focused(qtbot, window):
     qtbot.waitUntil(window.isActiveWindow)
 
     assert not isinstance(window.focusWidget(), QPushButton)
+
+
+def test_closing_ayuda_leaves_no_button_focused(qtbot, window):
+    window.activateWindow()
+    qtbot.waitUntil(window.isActiveWindow)
+    window.toggle_help()
+
+    window.toggle_help()
+
+    assert not isinstance(window.focusWidget(), QPushButton)

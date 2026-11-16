@@ -185,6 +185,8 @@ class MainWindow(QMainWindow):
         self.help_panel.spotlight_changed.connect(self.sidebar.spotlight)
         self.help_panel.tour_requested.connect(self._tour_from_help)
         self.help_panel.guide_requested.connect(self.show_guide)
+        # The panel had the focus; Qt would hand it to the sidebar's first button.
+        self.help_panel.closed.connect(self._content.setFocus)
         self.top_bar.notifications_requested.connect(self.open_notifications)
         self.top_bar.feedback_requested.connect(lambda: open_url(feedback_url()))
         self.top_bar.set_amounts_hidden(services.settings.amounts_hidden())
@@ -388,6 +390,10 @@ class MainWindow(QMainWindow):
             self._services.backups.put_off_reminder(date.today())
         elif notice.kind is NoticeKind.GOAL_REACHED and notice.item_id is not None:
             self._services.goals.mark_seen(notice.item_id)
+        elif notice.kind is NoticeKind.CHARGES_DUE:
+            for charge_id in notice.item_ids:
+                self._services.recurring.mark_seen(charge_id, date.today())
+            self._event_bus.recurring_changed.emit()  # Inicio and Recurrentes gray them
         elif self._release is not None:
             self._services.notifications.dismiss(self._release)
         self.refresh_notifications()

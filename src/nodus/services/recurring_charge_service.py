@@ -101,6 +101,8 @@ class RecurringChargeService:
         )
         anchor_day = current.anchor_day if same_schedule else draft.next_due_on.day
         charge = self._build(charge_id, draft, anchor_day, current.is_active)
+        if same_schedule:  # «Ya lo vi» was about this due date, which stays
+            charge = dataclasses.replace(charge, remind_from=current.remind_from)
         if self._paid_in_other_currency(charge):  # the rate per dollar is still good
             charge = dataclasses.replace(charge, last_paid_rate=current.last_paid_rate)
         with self._database.transaction():
@@ -148,7 +150,7 @@ class RecurringChargeService:
         """
         charge = self._require_active(charge_id)
         note = charge.name
-        advanced = dataclasses.replace(charge, next_due_on=charge.following_due())
+        advanced = self._advanced(charge)
         if amount.currency is not charge.amount.currency:
             note = f"{charge.name} ({charge.amount.format()})"
             rate = (Decimal(amount.cents) / Decimal(charge.amount.cents)).quantize(RATE_PLACES)
@@ -168,9 +170,27 @@ class RecurringChargeService:
         """Moves the charge to its next date without recording anything; it can be
         undone."""
         charge = self._require_active(charge_id)
-        advanced = dataclasses.replace(charge, next_due_on=charge.following_due())
+        advanced = self._advanced(charge)
         self._save(advanced)
         self._undo.offer(f"Se omitió {charge.name}.", lambda: self._put_back(charge, advanced))
+
+    def mark_seen(self, charge_id: int, today: date) -> date:
+        """«Ya lo vi»: no warning about this charge until the day before it is due, the
+        day returned. The next due date, after paying or skipping, warns again."""
+        charge = self.get(charge_id)
+        if not charge.can_be_seen(today):
+            raise ValidationError(f"«{charge.name}» no tiene un aviso para dejar para después.")
+        self._save(dataclasses.replace(charge, remind_from=charge.quiet_until()))
+        return charge.quiet_until()
+
+    def remind_again(self, charge_id: int) -> None:
+        """Undoes «Ya lo vi»: the charge warns again from today."""
+        self._save(dataclasses.replace(self.get(charge_id), remind_from=None))
+
+    @staticmethod
+    def _advanced(charge: RecurringCharge) -> RecurringCharge:
+        """The charge on its next due date, which warns again whatever was put off."""
+        return dataclasses.replace(charge, next_due_on=charge.following_due(), remind_from=None)
 
     def _put_back(
         self,

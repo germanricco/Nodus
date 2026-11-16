@@ -43,7 +43,8 @@ class NoticeKind(Enum):
 @dataclass(frozen=True)
 class Notice:
     """One notification: a short title, a detail line and, for a new version, its page
-    and release notes; ``item_id`` names what it is about, such as a goal."""
+    and release notes; ``item_id`` names what it is about, such as a goal, and
+    ``item_ids`` the charges «Ya lo vi» can put off."""
 
     kind: NoticeKind
     title: str
@@ -51,6 +52,7 @@ class Notice:
     url: str = ""
     notes: str = ""
     item_id: int | None = None
+    item_ids: tuple[int, ...] = ()
 
 
 class NotificationService:
@@ -158,22 +160,29 @@ class NotificationService:
         )
 
     def _charges_notice(self, today: date) -> Notice | None:
-        """Overdue charges and those due in the next days, in a single notice."""
-        charges = self._recurring.upcoming(today, CHARGE_NOTICE_DAYS)
+        """Overdue charges and those due in the next days, in a single notice, but for
+        those put off with «Ya lo vi». Without overdue ones, it lets the user put off
+        those that still have a day to spare (``item_ids``)."""
+        charges = [
+            c for c in self._recurring.upcoming(today, CHARGE_NOTICE_DAYS) if not c.is_quiet(today)
+        ]
         if not charges:
             return None
+        overdue = sum(1 for c in charges if c.days_until(today) < 0)
+        seeable = () if overdue else tuple(c.id for c in charges if c.can_be_seen(today))
         if len(charges) == 1:
             charge = charges[0]
             return Notice(
                 NoticeKind.CHARGES_DUE,
                 f"{charge.name} {_due_phrase(charge.days_until(today))}",
                 f"{charge.amount.format()} · Regístralo desde Recurrentes.",
+                item_ids=seeable,
             )
-        overdue = sum(1 for c in charges if c.days_until(today) < 0)
         title = f"{len(charges)} cargos por pagar"
         if overdue:
             title += f" ({overdue} vencido{'s' if overdue > 1 else ''})"
-        return Notice(NoticeKind.CHARGES_DUE, title, ", ".join(c.name for c in charges) + ".")
+        names = ", ".join(c.name for c in charges) + "."
+        return Notice(NoticeKind.CHARGES_DUE, title, names, item_ids=seeable)
 
     def _budgets_notice(self, today: date) -> Notice | None:
         """The budgets already passed this month, in a single notice."""

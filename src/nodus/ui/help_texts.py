@@ -209,7 +209,8 @@ HELP_TOPICS = [
         (
             "En Recurrentes, «Agregar cargo» te pide cuánto es, cada cuánto se paga y desde qué"
             " cuenta. Nodus te muestra cuánto suman por mes, qué vence pronto y qué está"
-            " atrasado, y la campana te avisa.",
+            " atrasado, y la campana te avisa. Si ya sabes que viene, «Ya lo vi», en su menú o"
+            " en la campana, calla el aviso hasta el día anterior; lo vencido avisa siempre.",
             "«Pagar» registra el gasto y pasa el cargo a su próxima fecha. Si un mes no se paga,"
             " «Omitir» lo salta sin registrar nada. Los dos se pueden deshacer desde el aviso"
             " que aparece abajo, o con Ctrl + Z.",

@@ -95,7 +95,7 @@ When a store gives your money back or a friend pays you their share, link that i
 </picture>
 
 ### Never forget what you pay every month
-Enter rent, utilities or subscriptions once, and Nodus shows what they add up to per month, what is due soon and what is overdue. Paying one takes two clicks: the expense is recorded and the charge moves on to its next date. A subscription with a fixed price in dollars can be paid from a peso account: Nodus estimates the pesos at the rate of your last payment, card taxes included, and you write down what actually came out.
+Enter rent, utilities or subscriptions once, and Nodus shows what they add up to per month, what is due soon and what is overdue. Paying one takes two clicks: the expense is recorded and the charge moves on to its next date. If you already know it is coming, «Ya lo vi» quiets its warning until the day before it is due. A subscription with a fixed price in dollars can be paid from a peso account: Nodus estimates the pesos at the rate of your last payment, card taxes included, and you write down what actually came out.
 
 Purchases in installments are just as easy. When you record an expense, say it is paid in six installments and whether the amount is the total or what each one costs: Nodus writes down every installment on its date, each one comes off the account on its day, and Recurring shows how many are paid, the next one and what the installments take each month. Any installment opens the whole purchase to change it, pay off the rest early or delete it.
 

@@ -184,3 +184,30 @@ class TestBackupReminder:
 
         assert services.backups.last_external_backup() == date.today()
         assert count(reminded_window) == ""
+
+
+def test_ya_lo_vi_puts_the_charges_notice_off(qtbot, services, event_bus, offline_window, pesos):
+    charge = services.recurring.create(
+        charge_draft(services, pesos.id, ars("100"), date.today() + timedelta(days=3))
+    )
+    event_bus.recurring_changed.emit()
+    offline_window.open_notifications()
+    row = offline_window.notification_panel.rows[0]
+    assert row.dismiss_button.text() == "Ya lo vi"
+
+    row.dismiss_button.click()
+
+    assert services.recurring.get(charge.id).is_quiet(date.today())
+    assert not offline_window.top_bar.notification_count.isVisibleTo(offline_window)
+
+
+def test_an_overdue_charge_cannot_be_put_off_from_the_bell(
+    services, event_bus, offline_window, pesos
+):
+    services.recurring.create(
+        charge_draft(services, pesos.id, ars("100"), date.today() - timedelta(days=1))
+    )
+    event_bus.recurring_changed.emit()
+    offline_window.open_notifications()
+
+    assert offline_window.notification_panel.rows[0].dismiss_button is None

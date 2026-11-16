@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, SignalInstance
 from PySide6.QtGui import QEnterEvent, QMouseEvent
 from PySide6.QtWidgets import (
     QBoxLayout,
@@ -89,9 +89,36 @@ def status_pill(text: str, tone: str) -> QLabel:
     return label
 
 
+SEEN_TEXT = "Ya lo vi"
+REMIND_AGAIN_TEXT = "Volver a avisarme"
+
+
 def due_status_label(charge: RecurringCharge, today: date) -> QLabel:
-    """When the charge is due, in a pill: red once overdue, amber within the week."""
-    return status_pill(due_label(charge.days_until(today)), DUE_TONES[charge.status(today)])
+    """When the charge is due, in a pill: red once overdue, amber within the week, and
+    gray again while «Ya lo vi» puts its warning off."""
+    quiet = charge.is_quiet(today)
+    tone = "neutral" if quiet else DUE_TONES[charge.status(today)]
+    pill = status_pill(due_label(charge.days_until(today)), tone)
+    if quiet and charge.remind_from is not None:
+        pill.setToolTip(f"Ya lo viste. Te lo recordamos {reminder_day(charge.remind_from, today)}.")
+    return pill
+
+
+def reminder_day(day: date, today: date) -> str:
+    """When a warning put off comes back: «mañana» or «el 16/11/2026»."""
+    return "mañana" if (day - today).days == 1 else f"el {format_date(day)}"
+
+
+def seen_actions(charge: RecurringCharge, today: date, toggled: SignalInstance) -> list[RowAction]:
+    """«Ya lo vi» while the charge warns with a day to spare, «Volver a avisarme» while
+    it is put off; nothing otherwise (overdue, due tomorrow or not due soon)."""
+    if charge.is_quiet(today):
+        text, icon = REMIND_AGAIN_TEXT, "bell"
+    elif charge.can_be_seen(today):
+        text, icon = SEEN_TEXT, "check"
+    else:
+        return []
+    return [RowAction(text, lambda: toggled.emit(charge), icon, effect=Effect.TOGGLE)]
 
 
 def flow_bar_groups(flow: list[MonthFlow], selected: Month | None = None) -> list[BarGroup]:
@@ -320,10 +347,12 @@ class UpcomingPaymentRow(QWidget):
 
     pay_requested = Signal(object)  # RecurringCharge
     skip_requested = Signal(object)  # RecurringCharge
+    seen_toggled = Signal(object)  # RecurringCharge
 
     def __init__(self, charge: RecurringCharge, today: date, estimate: str = "") -> None:
         super().__init__()
         self.charge = charge
+        self._today = today
         install_row_actions(self, self.actions)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
@@ -364,6 +393,7 @@ class UpcomingPaymentRow(QWidget):
             RowAction(
                 "Omitir", lambda: self.skip_requested.emit(charge), "skip", effect=Effect.UNDOABLE
             ),
+            *seen_actions(charge, self._today, self.seen_toggled),
         ]
 
 
@@ -372,6 +402,7 @@ class UpcomingPaymentsCard(Card):
 
     pay_requested = Signal(object)  # RecurringCharge
     skip_requested = Signal(object)  # RecurringCharge
+    seen_toggled = Signal(object)  # RecurringCharge
     see_all_requested = Signal()
 
     def __init__(self, services: Services) -> None:
@@ -407,6 +438,7 @@ class UpcomingPaymentsCard(Card):
             row = UpcomingPaymentRow(charge, today, estimate_text(charge.amount, estimate))
             row.pay_requested.connect(self.pay_requested)
             row.skip_requested.connect(self.skip_requested)
+            row.seen_toggled.connect(self.seen_toggled)
             self._rows.addWidget(row)
             self.rows.append(row)
 
