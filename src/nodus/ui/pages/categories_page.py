@@ -21,6 +21,7 @@ from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, i
 
 SECTION_TITLES = {TransactionType.EXPENSE: "Gastos", TransactionType.INCOME: "Ingresos"}
 SYSTEM_HINT = "Recibe las transacciones de las categorías que se eliminan."
+REFUNDS_HINT = "Sus ingresos se pueden vincular al gasto que devuelven, con «Reembolso de»."
 
 
 class CategoryRow(QWidget):
@@ -48,10 +49,10 @@ class CategoryRow(QWidget):
         name = QLabel(category.name)
         name.setObjectName("RowTitle")
         layout.addWidget(name)
-        if category.is_system:
+        if category.is_fixed:
             tag = QLabel("sistema")
             tag.setObjectName("Tag")
-            tag.setToolTip(SYSTEM_HINT)
+            tag.setToolTip(SYSTEM_HINT if category.is_system else REFUNDS_HINT)
             layout.addWidget(tag, alignment=Qt.AlignmentFlag.AlignVCenter)
         layout.addStretch()
 
@@ -60,8 +61,8 @@ class CategoryRow(QWidget):
         install_row_actions(self, self.actions)
 
     def actions(self) -> list[RowAction]:
-        """Its movements, editing and deleting; "Otros" only shows its movements, since it
-        cannot change."""
+        """Its movements, editing and deleting; a system category («Otros», «Reembolsos»)
+        only shows its movements, since it cannot change."""
         category = self.category
         result = [
             RowAction(
@@ -69,12 +70,12 @@ class CategoryRow(QWidget):
                 lambda: self.transactions_requested.emit(category),
                 "list",
                 enabled=self.has_movements,
-                # «Otros» cannot change, so its movements are what it opens.
-                default=category.is_system,
+                # A system category cannot change, so its movements are what it opens.
+                default=category.is_fixed,
                 effect=Effect.OPEN,
             )
         ]
-        if category.is_system:
+        if category.is_fixed:
             return result
         result.append(
             RowAction(

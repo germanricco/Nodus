@@ -4,6 +4,9 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 
 ## 1.9.0
 
+- Dos cuentas ya no pueden llamarse igual, aunque cambien las mayúsculas o las tildes: «Banco» y «banco», o «Bancó», serían dos cuentas imposibles de distinguir en un menú. Lo mismo vale para las categorías, así que «Comida» y «Cómida» son la misma. Si ya tenías dos con el mismo nombre, se quedan como están y las puedes seguir editando.
+- «Reembolsos» pasa a ser una categoría de sistema, como «Otros»: Nodus la usa para ofrecer «Reembolso de», así que ya no se renombra ni se elimina. Si la habías renombrado, Nodus reconoce la tuya por los reembolsos que tiene; si la habías eliminado, vuelve.
+- Arreglo: renombrar o eliminar «Reembolsos» hacía desaparecer «Reembolso de» del formulario, sin aviso.
 - Arreglo: un pago recurrente en euros o pesos chilenos sin cotización hacía fallar la página Recurrentes. Ahora su total se suma aparte, uno por moneda, como ya pasaba con los dólares.
 - Arreglo: escribir letras en el «Objetivo» de una meta nueva podía cerrar el formulario con un error. Ahora el resumen espera a que haya un monto, y al guardar te dice qué corregir.
 - Arreglo: un monto absurdo, de 17 cifras o más, hacía fallar el guardado, y varios así podían impedir que Nodus abriera. Ahora cualquier campo de monto te avisa «El monto es demasiado grande.» antes de guardar.

@@ -12,9 +12,17 @@ from dataclasses import dataclass
 from nodus.database.database import Database
 from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.models.category import Category
+from nodus.models.payee import normalize_name
 from nodus.models.transaction import TransactionType
-from nodus.services.errors import ValidationError, clean_name, require_found
+from nodus.services.errors import (
+    ValidationError,
+    clean_name,
+    require_found,
+    require_unique_name,
+)
 from nodus.services.sorting import name_sort_key
+
+DUPLICATE_TEXT = "Ya existe una categoría con ese nombre."
 
 
 @dataclass(frozen=True)
@@ -54,6 +62,10 @@ class CategoryService:
         ids = [category_id, *self._categories.subcategory_ids(category_id)]
         return self._categories.count_transactions(ids)
 
+    def refunds_category(self) -> Category:
+        """The income category whose movements can be linked to an expense as its refund."""
+        return self._categories.get_refunds()
+
     def get(self, category_id: int) -> Category:
         return require_found(self._categories.get(category_id), "La categoría no existe.")
 
@@ -63,6 +75,7 @@ class CategoryService:
         if parent_id is not None:
             self._require_valid_parent(self.get(parent_id), kind)
         category = Category(None, clean_name(name), kind, color, parent_id)
+        self._require_new_name(category)
         with self._unique_name(), self._database.transaction():
             return self._categories.add(category)
 
@@ -73,6 +86,8 @@ class CategoryService:
         """
         category = self._require_editable(category_id)
         updated = dataclasses.replace(category, name=clean_name(name), color=color)
+        if normalize_name(updated.name) != normalize_name(category.name):
+            self._require_new_name(updated)
         with self._unique_name(), self._database.transaction():
             self._categories.update(updated)
 
@@ -88,9 +103,19 @@ class CategoryService:
 
     def _require_editable(self, category_id: int) -> Category:
         category = self.get(category_id)
-        if category.is_system:
+        if category.is_fixed:
             raise ValidationError(f"La categoría «{category.name}» no se puede modificar.")
         return category
+
+    def _require_new_name(self, category: Category) -> None:
+        """No other category beside it (same kind and parent) has the same name, ignoring
+        case and accents: «Cómida» is «Comida»."""
+        siblings = (
+            other.name
+            for other in self._categories.list(category.kind)
+            if other.parent_id == category.parent_id and other.id != category.id
+        )
+        require_unique_name(category.name, siblings, DUPLICATE_TEXT)
 
     @staticmethod
     def _require_valid_parent(parent: Category, kind: TransactionType) -> None:
@@ -98,7 +123,7 @@ class CategoryService:
             raise ValidationError(
                 "Una subcategoría no puede tener subcategorías.", field="parent_id"
             )
-        if parent.is_system:
+        if parent.is_fixed:
             raise ValidationError(
                 f"No se pueden agregar subcategorías a «{parent.name}».", field="parent_id"
             )
@@ -114,6 +139,4 @@ class CategoryService:
         try:
             yield
         except sqlite3.IntegrityError as error:
-            raise ValidationError(
-                "Ya existe una categoría con ese nombre.", field="name"
-            ) from error
+            raise ValidationError(DUPLICATE_TEXT, field="name") from error

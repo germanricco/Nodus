@@ -131,3 +131,30 @@ class TestOrder:
     def test_reorder_rejects_repeated_or_unknown_ids(self, services, pesos, dollars, ids):
         with pytest.raises(ValidationError):
             services.accounts.reorder(ids)
+
+
+@pytest.mark.parametrize("typed", ["banco", "BANCO", "Bancó", " Banco  "])
+def test_two_accounts_cannot_share_a_name(services, pesos, typed):
+    """Case and accents aside, so a menu never shows two accounts nobody can tell apart."""
+    with pytest.raises(ValidationError, match="Ya hay una cuenta"):
+        services.accounts.create(typed, AccountType.CASH, Currency.ARS, ars("0"))
+    other = services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("0"))
+    with pytest.raises(ValidationError, match="Ya hay una cuenta"):
+        services.accounts.update(other.id, typed, AccountType.CASH, ars("0"))
+
+
+def test_an_archived_account_keeps_its_name_taken(services, pesos):
+    services.accounts.set_archived(pesos.id, True)
+    with pytest.raises(ValidationError):
+        services.accounts.create(pesos.name, AccountType.CASH, Currency.ARS, ars("0"))
+
+
+def test_accounts_already_named_alike_can_still_be_edited(services, database, pesos):
+    """Before v1.9 two accounts could share a name; editing one keeps working."""
+    twin = services.accounts.create("Otra", AccountType.CASH, Currency.ARS, ars("0"))
+    with database.transaction():
+        database.connection.execute(
+            "UPDATE accounts SET name = ? WHERE id = ?", (pesos.name.lower(), twin.id)
+        )
+    services.accounts.update(twin.id, pesos.name.lower(), AccountType.BANK, ars("10"))
+    assert services.accounts.get(twin.id).initial_balance == ars("10")

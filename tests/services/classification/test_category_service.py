@@ -125,3 +125,43 @@ def test_transaction_count_includes_subcategories(services, pesos):
 
     assert services.categories.transaction_count(viajes.id) == 3
     assert services.categories.transaction_count(hoteles.id) == 2
+
+
+@pytest.mark.parametrize("typed", ["Cómida", "COMIDA", "  comida "])
+def test_a_name_that_differs_only_in_case_or_accents_is_the_same(services, typed):
+    services.categories.create("Comida", EXPENSE, "#000000")
+    with pytest.raises(ValidationError, match="Ya existe"):
+        services.categories.create(typed, EXPENSE, "#000000")
+
+
+def test_the_same_name_is_fine_in_the_other_kind_or_under_another_parent(services):
+    viajes = services.categories.create("Viajes", EXPENSE, "#000000")
+    services.categories.create("Otros gastos", EXPENSE, "#000000", parent_id=viajes.id)
+    services.categories.create("Viajes", INCOME, "#000000")
+    services.categories.create("Ocio", EXPENSE, "#000000", parent_id=viajes.id)
+
+
+def test_renaming_a_category_to_its_own_name_with_accents_is_fine(services):
+    comida = services.categories.create("Comida", EXPENSE, "#000000")
+    services.categories.update(comida.id, "Cómida", "#000000")
+    assert services.categories.get(comida.id).name == "Cómida"
+
+
+class TestRefundsCategory:
+    """Linking a refund to its expense relies on it, so it stays as it is, like «Otros»."""
+
+    def test_it_is_found_by_its_mark(self, services):
+        refunds = services.categories.refunds_category()
+        assert (refunds.name, refunds.kind, refunds.is_fixed) == ("Reembolsos", INCOME, True)
+
+    @pytest.mark.parametrize("change", ["rename", "delete", "subcategory"])
+    def test_it_cannot_change(self, services, change):
+        refunds = services.categories.refunds_category()
+        with pytest.raises(ValidationError):
+            if change == "rename":
+                services.categories.update(refunds.id, "Devoluciones", refunds.color)
+            elif change == "delete":
+                services.categories.delete(refunds.id)
+            else:
+                services.categories.create("Amigos", INCOME, "#000000", parent_id=refunds.id)
+        assert services.categories.refunds_category() == refunds

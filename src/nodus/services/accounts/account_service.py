@@ -11,6 +11,7 @@ from nodus.database.repositories.value_adjustment_repository import ValueAdjustm
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.models.money import Money
+from nodus.models.payee import normalize_name
 from nodus.models.period import Period
 from nodus.models.value_adjustment import ValueAdjustment
 from nodus.services.errors import (
@@ -19,6 +20,7 @@ from nodus.services.errors import (
     require_found,
     require_in_calendar,
     require_storable,
+    require_unique_name,
 )
 from nodus.services.sorting import name_sort_key
 
@@ -39,6 +41,7 @@ class AccountService:
     ) -> Account:
         require_storable(initial_balance, "initial_balance")
         account = Account(None, clean_name(name), account_type, currency, initial_balance)
+        self._require_new_name(account)
         with self._database.transaction():
             position = self._accounts.next_position()
             return self._accounts.add(dataclasses.replace(account, position=position))
@@ -55,6 +58,9 @@ class AccountService:
         updated = dataclasses.replace(
             existing, name=clean_name(name), type=account_type, initial_balance=initial_balance
         )
+        # Two accounts that were already called the same can still be edited.
+        if normalize_name(updated.name) != normalize_name(existing.name):
+            self._require_new_name(updated)
         with self._database.transaction():
             self._accounts.update(updated)
 
@@ -77,6 +83,12 @@ class AccountService:
 
     def get(self, account_id: int) -> Account:
         return require_found(self._accounts.get(account_id), "La cuenta no existe.")
+
+    def _require_new_name(self, account: Account) -> None:
+        """No other account, archived or not, has the same name (case and accents aside),
+        so a list or a menu never shows two accounts nobody can tell apart."""
+        others = (a.name for a in self._accounts.list(include_archived=True) if a.id != account.id)
+        require_unique_name(account.name, others, f"Ya hay una cuenta «{account.name}».")
 
     def list_accounts(self, include_archived: bool = False) -> list[Account]:
         """Accounts in the order the user gave them; alphabetical among equal positions,

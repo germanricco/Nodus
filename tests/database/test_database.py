@@ -426,3 +426,57 @@ def test_goals_migration_and_its_links(db_path):
     assert connection.execute("SELECT COUNT(*) FROM goal_accounts").fetchone()[0] == 0
     assert connection.execute("SELECT name FROM goals").fetchone()[0] == "Auto"
     database.close()
+
+
+def refunds_after_012(db_path, before_012: str) -> list[tuple[str, int]]:
+    """Runs ``before_012`` on a v1.8 database, migrates it and returns the marked
+    refunds category as (name, number of income categories with that name)."""
+    old = Database.open(db_path, [m for m in load_packaged_migrations() if m.version <= 11])
+    with old.transaction():
+        old.connection.executescript(before_012)
+    old.close()
+    database = Database.open(db_path)
+    rows = database.connection.execute(
+        "SELECT c.name, (SELECT COUNT(*) FROM categories o WHERE o.kind = 'income'"
+        " AND o.name = c.name) AS same FROM categories c WHERE c.is_refunds = 1"
+    ).fetchall()
+    database.close()
+    return [(row["name"], row["same"]) for row in rows]
+
+
+ACCOUNT_AND_EXPENSE = (
+    "INSERT INTO accounts (id, name, type, currency) VALUES (1, 'Banco', 'bank', 'ARS');"
+    " INSERT INTO transactions (id, account_id, type, amount_cents, occurred_on,"
+    " category_id) VALUES (1, 1, 'expense', 1000, '2026-11-01',"
+    " (SELECT id FROM categories WHERE name = 'Supermercado y comida'));"
+)
+
+
+class TestRefundsCategoryMigration:
+    """012 marks the refunds category, whatever the user did with «Reembolsos»."""
+
+    def test_the_default_one_is_marked(self, db_path):
+        assert refunds_after_012(db_path, "") == [("Reembolsos", 1)]
+
+    def test_a_renamed_one_is_found_by_its_refunds(self, db_path):
+        renamed = (
+            "UPDATE categories SET name = 'Devoluciones' WHERE name = 'Reembolsos';"
+            + ACCOUNT_AND_EXPENSE
+            + " INSERT INTO transactions (account_id, type, amount_cents, occurred_on,"
+            " category_id, refund_of_id) VALUES (1, 'income', 500, '2026-11-02',"
+            " (SELECT id FROM categories WHERE name = 'Devoluciones'), 1);"
+        )
+        assert refunds_after_012(db_path, renamed) == [("Devoluciones", 1)]
+
+    def test_a_deleted_one_comes_back(self, db_path):
+        deleted = "DELETE FROM categories WHERE name = 'Reembolsos';"
+        assert refunds_after_012(db_path, deleted) == [("Reembolsos", 1)]
+
+    def test_there_is_only_ever_one(self, db_path):
+        refunds_after_012(db_path, "")
+        database = Database.open(db_path)
+        with pytest.raises(sqlite3.IntegrityError), database.transaction():
+            database.connection.execute(
+                "UPDATE categories SET is_refunds = 1 WHERE name = 'Sueldo'"
+            )
+        database.close()

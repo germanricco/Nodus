@@ -69,7 +69,7 @@ class CategoryDialog(FormDialog):
         self.parent_input.clear()
         self.parent_input.addItem(NO_PARENT_LABEL, None)
         for node in self._services.categories.category_tree(self.kind_input.currentData()):
-            if not node.category.is_system:
+            if not node.category.is_fixed:
                 self.parent_input.addItem(node.category.name, node.category.id)
 
     def _load(self, category: Category) -> None:

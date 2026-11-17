@@ -53,12 +53,13 @@ class TestCategoryDialog:
         assert created.color == "#8e44ad"
         assert created.parent_id is None
 
-    def test_parent_choices_follow_kind_and_exclude_otros(self, qtbot, services, event_bus):
+    def test_parent_choices_follow_kind_and_exclude_system_ones(self, qtbot, services, event_bus):
+        """«Otros» and «Reembolsos» cannot hold subcategories."""
         dialog = make_dialog(qtbot, services, event_bus, kind=INCOME)
 
         choices = [dialog.parent_input.itemText(i) for i in range(dialog.parent_input.count())]
 
-        assert choices == [NO_PARENT_LABEL, "Reembolsos", "Sueldo", "Trabajo freelance"]
+        assert choices == [NO_PARENT_LABEL, "Sueldo", "Trabajo freelance"]
 
     def test_creates_subcategory_with_preselected_parent(self, qtbot, services, event_bus):
         vivienda = category_id(services, "Vivienda", EXPENSE)

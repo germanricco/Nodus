@@ -286,7 +286,9 @@ HELP_TOPICS = [
         (
             "En Categorías, cada una puede tener subcategorías, como Supermercado dentro de"
             " Comida, con «Agregar subcategoría» en su menú. Si eliminas una, sus movimientos"
-            " pasan a «Otros» y no se pierden. Para el color, además de la paleta, el «+»"
+            " pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de sistema: Nodus"
+            " las usa, así que no se renombran ni se eliminan. Para el color, además de la"
+            " paleta, el «+»"
             " abre una rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano"
             " después de la paleta, también para las etiquetas.",
             "Beneficiarios y Etiquetas muestran cuántos movimientos y cuánto dinero suma cada"

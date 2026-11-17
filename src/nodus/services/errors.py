@@ -5,10 +5,12 @@ Error messages are in Spanish because the UI shows them to the user as they are.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import date
 from typing import TypeVar
 
 from nodus.models.money import Money
+from nodus.models.payee import normalize_name
 from nodus.models.period import FIRST_DAY, LAST_DAY
 
 T = TypeVar("T")
@@ -80,3 +82,12 @@ def require_in_calendar(day: date, field: str | None = None) -> None:
     charge, the last installment) could not be computed."""
     if not FIRST_DAY <= day <= LAST_DAY:
         raise ValidationError(OUT_OF_CALENDAR_TEXT, field=field)
+
+
+def require_unique_name(name: str, others: Iterable[str], message: str) -> None:
+    """Rejects ``name`` when one of ``others`` is the same name once case, accents and signs
+    are set aside (``normalize_name``): «Banco» and «banco», or «Comida» and «Cómida»,
+    would be two records nobody could tell apart. The name is kept as typed."""
+    normalized = normalize_name(name)
+    if any(normalize_name(other) == normalized for other in others):
+        raise ValidationError(message, field="name")

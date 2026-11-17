@@ -13,7 +13,8 @@ class Category:
 
     ``parent_id`` makes it a subcategory, which always has its parent's kind. System
     categories ("Otros", one per kind) receive the transactions of deleted categories,
-    so they cannot be edited or deleted.
+    and ``is_refunds`` marks the income category whose movements can be linked to an
+    expense as its refund; neither can be edited or deleted (``is_fixed``).
     """
 
     id: int | None
@@ -22,6 +23,12 @@ class Category:
     color: str
     parent_id: int | None = None
     is_system: bool = False
+    is_refunds: bool = False
+
+    @property
+    def is_fixed(self) -> bool:
+        """Nodus relies on it, so it cannot be renamed, deleted or given subcategories."""
+        return self.is_system or self.is_refunds
 
     @property
     def is_subcategory(self) -> bool:

@@ -51,6 +51,10 @@ class CategoryRepository(Repository):
         )
         return self._from_row(row)
 
+    def get_refunds(self) -> Category:
+        """The refunds category, marked by migration 012."""
+        return self._from_row(self._fetch_one("SELECT * FROM categories WHERE is_refunds = 1"))
+
     def subcategory_ids(self, parent_id: int) -> list[int]:
         rows = self._fetch_all("SELECT id FROM categories WHERE parent_id = ?", (parent_id,))
         return [row["id"] for row in rows]
@@ -83,4 +87,5 @@ class CategoryRepository(Repository):
             color=row["color"],
             parent_id=row["parent_id"],
             is_system=bool(row["is_system"]),
+            is_refunds=bool(row["is_refunds"]),
         )

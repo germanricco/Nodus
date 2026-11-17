@@ -237,10 +237,15 @@ def test_listing_more_refunds_does_not_take_more_queries(services, database, tmp
     assert more == few
 
 
-@known("A12: the refund link is found by the category's name «Reembolsos»")
-def test_a_renamed_refunds_category_still_links_refunds(qtbot, services, event_bus, pesos):
+def test_a_renamed_refunds_category_still_links_refunds(
+    qtbot, services, database, event_bus, pesos
+):
+    """Renamed before v1.9, when it still could be: the link follows its mark."""
     refunds = category_id(services, "Reembolsos", INCOME)
-    services.categories.update(refunds, "Devoluciones", services.categories.get(refunds).color)
+    with database.transaction():
+        database.connection.execute(
+            "UPDATE categories SET name = 'Devoluciones' WHERE id = ?", (refunds,)
+        )
     dialog = TransactionDialog(services, event_bus, light_theme())
     qtbot.addWidget(dialog)
     dialog.mode_input.set_index(INCOME_MODE)

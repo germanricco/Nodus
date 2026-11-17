@@ -45,7 +45,6 @@ MODE_LABELS = ["Gasto", "Ingreso", "Transferencia"]
 FIRST_INSTALLMENT_LABEL = "Primera cuota"
 _MODE_TYPES = {EXPENSE_MODE: TransactionType.EXPENSE, INCOME_MODE: TransactionType.INCOME}
 # The default income category for refunds.
-REFUNDS_CATEGORY = "Reembolsos"
 
 
 @dataclass(frozen=True)
@@ -314,8 +313,8 @@ class TransactionDialog(FormDialog):
         self._update_installments()
 
     def _update_refund_row(self) -> None:
-        """«Reembolso de» only for a refund: an income in «Reembolsos», or one already
-        linked to an expense."""
+        """«Reembolso de» only for a refund: an income in the refunds category, or one
+        already linked to an expense."""
         income = self.mode_input.index() == INCOME_MODE
         linked = self.refund_input.expense_id() is not None
         self.form.setRowVisible(self.refund_input, income and (self._is_refund() or linked))
@@ -325,22 +324,15 @@ class TransactionDialog(FormDialog):
         return chosen is not None and chosen == self._refunds_category_id()
 
     def _category_chosen(self) -> None:
-        """The user picked a category: it is kept over the payee's, and leaving
-        «Reembolsos» drops the link to an expense, so no hidden link is ever saved."""
+        """The user picked a category: it is kept over the payee's, and leaving the refunds
+        category drops the link to an expense, so no hidden link is ever saved."""
         self._category_picked = True
         if not self._is_refund():
             self.refund_input.set_expense(None)
         self._update_refund_row()
 
-    def _refunds_category_id(self) -> int | None:
-        return next(
-            (
-                category.id
-                for category in self._services.categories.list_categories(TransactionType.INCOME)
-                if category.name == REFUNDS_CATEGORY
-            ),
-            None,
-        )
+    def _refunds_category_id(self) -> int:
+        return self._services.categories.refunds_category().id
 
     def _update_installments(self) -> None:
         """Names «Monto» and «Fecha» for what they are in a purchase in installments, and
