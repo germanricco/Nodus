@@ -11,15 +11,15 @@ from nodus.database.database import Database
 from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.models.category import Category
 from nodus.models.money import Money
-from nodus.models.names import normalize_name
 from nodus.models.payee import Payee, PayeeUsage
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
-from nodus.services.app.undo_service import UndoError, UndoService, changed_since
+from nodus.services.app.undo_service import UndoService
 from nodus.services.classification.category_service import CategoryService
+from nodus.services.classification.named_records import NamedRecordService
 from nodus.services.conversion import net_in_pesos
-from nodus.services.errors import ValidationError, clean_name, require_found, require_free_name
+from nodus.services.errors import clean_name, require_free_name
 from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transactions.transaction_service import TransactionService
 
@@ -43,7 +43,11 @@ class PayeeSummary:
     last_on: date | None
 
 
-class PayeeService:
+class PayeeService(NamedRecordService[Payee]):
+    NOT_FOUND_TEXT = "El beneficiario no existe."
+    NO_OTHER_TEXT = "Elige otro beneficiario para unir."
+    NAME_TAKEN_TEXT = "Ya hay otro beneficiario «{name}», así que no se puede deshacer."
+
     # How far back use orders the suggestions while typing, and before typing anything:
     # the latter shows only what is used now, a few of them.
     MATCHES_DAYS = 365
@@ -59,7 +63,7 @@ class PayeeService:
         exchange_rates: ExchangeRateService,
         undo: UndoService,
     ) -> None:
-        self._database = database
+        super().__init__(database, payees)
         self._payees = payees
         self._undo = undo
         self._transactions = transactions
@@ -68,15 +72,7 @@ class PayeeService:
 
     def list_payees(self) -> list[Payee]:
         """Every payee in alphabetical order."""
-        return sorted(self._payees.list(), key=lambda p: name_sort_key(p.name))
-
-    def get(self, payee_id: int) -> Payee:
-        return require_found(self._payees.get(payee_id), "El beneficiario no existe.")
-
-    def find(self, name: str) -> Payee | None:
-        """The payee called ``name``, ignoring case, accents and signs."""
-        normalized = normalize_name(name)
-        return self._payees.find_by_normalized(normalized) if normalized else None
+        return self._sorted()
 
     def matches(
         self,
@@ -128,27 +124,9 @@ class PayeeService:
     def transaction_count(self, payee_id: int) -> int:
         return self._payees.count_transactions(payee_id)
 
-    def delete(self, payee_id: int) -> int:
-        """Deletes a payee and returns how many transactions were left without one."""
-        return self.delete_many([payee_id])
-
-    def delete_many(self, payee_ids: list[int]) -> int:
-        """Deletes every one of ``payee_ids`` together, or none if one is missing, and
-        returns how many transactions were left without a payee."""
-        for payee_id in payee_ids:
-            self.get(payee_id)
-        count = sum(self._payees.count_transactions(payee_id) for payee_id in payee_ids)
-        with self._database.transaction():
-            for payee_id in payee_ids:
-                self._payees.delete(payee_id)
-        return count
-
-    def merge(self, source_id: int, target_id: int) -> None:
-        """Moves the transactions of ``source_id`` to ``target_id`` and deletes the former.
-
-        The target keeps its default category, or takes the source's if it had none.
-        """
-        self.merge_many([source_id], target_id)
+    def _affected(self, payee_ids: list[int]) -> int:
+        """Deleting payees leaves their transactions without one."""
+        return sum(self._payees.count_transactions(payee_id) for payee_id in payee_ids)
 
     def merge_many(self, source_ids: list[int], target_id: int) -> None:
         """Moves the transactions of every one of ``source_ids`` to ``target_id`` and
@@ -157,10 +135,7 @@ class PayeeService:
         The target keeps its default category, or takes the first source's that has one.
         It can be undone.
         """
-        sources = [self.get(source_id) for source_id in source_ids if source_id != target_id]
-        if not sources:
-            raise ValidationError("Elige otro beneficiario para unir.")
-        target = self.get(target_id)
+        sources, target = self._merge_parties(source_ids, target_id)
         inherited = next(
             (s.default_category_id for s in sources if s.default_category_id is not None), None
         )
@@ -183,16 +158,8 @@ class PayeeService:
     ) -> None:
         """Undoes ``merge_many``: the merged payees back, with their own id and their
         transactions, and the target's default category as it was."""
-        if self._payees.get(target.id) != merged:
-            raise changed_since(f"«{target.name}»")
-        kept = set(self._payees.transaction_ids(target.id))
-        for row, transaction_ids in zip(rows, moved, strict=True):
-            if self._payees.find_by_normalized(row["normalized_name"]) is not None:
-                raise UndoError(
-                    f"Ya hay otro beneficiario «{row['name']}», así que no se puede deshacer."
-                )
-            if not set(transaction_ids) <= kept:
-                raise changed_since(f"Algún movimiento de «{row['name']}»")
+        held = set(self._payees.transaction_ids(target.id))
+        self._require_restorable(target, merged, rows, [set(m) for m in moved], held)
         for row, transaction_ids in zip(rows, moved, strict=True):
             self._payees.put_back(row)
             self._payees.assign(transaction_ids, row["id"])

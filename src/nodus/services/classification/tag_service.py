@@ -11,14 +11,14 @@ from datetime import date
 from nodus.database.database import Database
 from nodus.database.repositories.tag_repository import TagRepository
 from nodus.models.money import Money
-from nodus.models.names import normalize_name
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
-from nodus.services.app.undo_service import UndoError, UndoService, changed_since
+from nodus.services.app.undo_service import UndoService
+from nodus.services.classification.named_records import NamedRecordService
 from nodus.services.conversion import net_in_pesos
-from nodus.services.errors import ValidationError, clean_name, require_found, require_free_name
+from nodus.services.errors import clean_name, require_free_name
 from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transactions.transaction_service import TransactionService
 
@@ -38,7 +38,11 @@ class TagSummary:
     last_on: date | None
 
 
-class TagService:
+class TagService(NamedRecordService[Tag]):
+    NOT_FOUND_TEXT = "La etiqueta no existe."
+    NO_OTHER_TEXT = "Elige otra etiqueta para unir."
+    NAME_TAKEN_TEXT = "Ya hay otra etiqueta «{name}», así que no se puede deshacer."
+
     def __init__(
         self,
         database: Database,
@@ -47,7 +51,7 @@ class TagService:
         exchange_rates: ExchangeRateService,
         undo: UndoService,
     ) -> None:
-        self._database = database
+        super().__init__(database, tags)
         self._tags = tags
         self._undo = undo
         self._transactions = transactions
@@ -55,19 +59,11 @@ class TagService:
 
     def list_tags(self) -> list[Tag]:
         """Every tag in alphabetical order."""
-        return sorted(self._tags.list(), key=lambda t: name_sort_key(t.name))
-
-    def get(self, tag_id: int) -> Tag:
-        return require_found(self._tags.get(tag_id), "La etiqueta no existe.")
+        return self._sorted()
 
     def any_new(self, names: Iterable[str]) -> bool:
         """Whether saving ``names`` creates a tag, so the lists of tags need refreshing."""
         return any(self.find(name) is None for name in names)
-
-    def find(self, name: str) -> Tag | None:
-        """The tag called ``name``, ignoring case, accents and signs."""
-        normalized = normalize_name(name)
-        return self._tags.find_by_normalized(normalized) if normalized else None
 
     def matches(self, text: str) -> list[Tag]:
         """Tags whose name contains ``text``, those starting with it first."""
@@ -98,33 +94,14 @@ class TagService:
         """How many transactions carry at least one of ``tag_ids``."""
         return self._tags.count_tagged(tag_ids)
 
-    def delete(self, tag_id: int) -> int:
-        """Deletes a tag, which its transactions lose, and returns how many had it."""
-        return self.delete_many([tag_id])
-
-    def delete_many(self, tag_ids: list[int]) -> int:
-        """Deletes every one of ``tag_ids`` together, or none if one is missing, and
-        returns how many transactions had any of them."""
-        for tag_id in tag_ids:
-            self.get(tag_id)
-        count = self.tagged_count(tag_ids)
-        with self._database.transaction():
-            for tag_id in tag_ids:
-                self._tags.delete(tag_id)
-        return count
-
-    def merge(self, source_id: int, target_id: int) -> None:
-        """Gives ``target_id`` to the transactions tagged ``source_id`` and deletes the
-        latter, for duplicates such as "Viaje" and "Vacaciones"."""
-        self.merge_many([source_id], target_id)
+    def _affected(self, tag_ids: list[int]) -> int:
+        """Deleting tags takes them off their transactions."""
+        return self.tagged_count(tag_ids)
 
     def merge_many(self, source_ids: list[int], target_id: int) -> None:
         """Gives ``target_id`` to the transactions tagged with any of ``source_ids`` and
         deletes the sources, all together. It can be undone."""
-        sources = [self.get(source_id) for source_id in source_ids if source_id != target_id]
-        if not sources:
-            raise ValidationError("Elige otra etiqueta para unir.")
-        target = self.get(target_id)
+        sources, target = self._merge_parties(source_ids, target_id)
         rows = [self._tags.row(source.id) for source in sources]
         tagged = [self._tags.tagged(source.id) for source in sources]
         target_had = self._tags.tagged(target_id)
@@ -148,16 +125,7 @@ class TagService:
     ) -> None:
         """Undoes ``merge_many``: the merged tags back, with their own id and their
         transactions, and the target only where it was before."""
-        if self._tags.get(target.id) != merged:
-            raise changed_since(f"«{target.name}»")
-        carrying = self._tags.tagged(target.id)
-        for row, transaction_ids in zip(rows, tagged, strict=True):
-            if self._tags.find_by_normalized(row["normalized_name"]) is not None:
-                raise UndoError(
-                    f"Ya hay otra etiqueta «{row['name']}», así que no se puede deshacer."
-                )
-            if not transaction_ids <= carrying:
-                raise changed_since(f"Algún movimiento de «{row['name']}»")
+        self._require_restorable(target, merged, rows, tagged, self._tags.tagged(target.id))
         for row, transaction_ids in zip(rows, tagged, strict=True):
             self._tags.put_back(row)
             self._tags.link(transaction_ids, row["id"])
