@@ -21,6 +21,7 @@ from nodus.models.money import MAX_CENTS, Money
 from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
+from nodus.services.transactions.transaction_service import TransferDraft
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.account_group_dialogs import GroupDialog
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
@@ -230,7 +231,6 @@ def queries_to_build_rows(services, database, refunds: int) -> int:
     return len(statements)
 
 
-@known("A5: one query per refund row")
 def test_listing_more_refunds_does_not_take_more_queries(services, database, tmp_path, pesos):
     few = queries_to_build_rows(services, database, 2)
     more = queries_to_build_rows(services, database, 6)
@@ -274,3 +274,26 @@ def test_keys_on_every_page_without_anything_to_act_on(qtbot, window, world, pag
         target = QApplication.focusWidget() or window
         qtbot.keyClick(target, key, modifiers)
     assert window._services.transactions.list_transactions(TransactionFilter()) == before
+
+
+def queries_to_build_transfers(services, database, count: int, account_id: int) -> int:
+    """How many statements the list of one account runs to show ``count`` transfers,
+    whose other leg it does not have."""
+    other = services.accounts.list_accounts()[-1]
+    for _ in range(count):
+        services.transactions.create_transfer(TransferDraft(account_id, other.id, ars("10"), TODAY))
+    rows = services.transactions.list_transactions(TransactionFilter(account_id=account_id))
+    statements: list[str] = []
+    database.connection.set_trace_callback(statements.append)
+    try:
+        TransactionListBuilder(services).build(rows)
+    finally:
+        database.connection.set_trace_callback(None)
+    return len(statements)
+
+
+def test_listing_more_transfers_does_not_take_more_queries(services, database, pesos):
+    services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("0"))
+    few = queries_to_build_transfers(services, database, 2, pesos.id)
+    more = queries_to_build_transfers(services, database, 6, pesos.id)
+    assert more == few

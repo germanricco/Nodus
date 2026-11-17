@@ -398,12 +398,22 @@ class TransactionService:
             self._transactions.update(transfer.outgoing)
             self._transactions.update(transfer.incoming)
 
+    def get_many(self, transaction_ids: list[int]) -> dict[int, Transaction]:
+        """The transactions with these ids, by id, read together: a list shows many."""
+        return {t.id: t for t in self._transactions.get_many(transaction_ids)}
+
     def get_transfer(self, transfer_id: str) -> Transfer:
         legs = self._transactions.list_transfer_legs(transfer_id)
         if len(legs) != 2:
             raise ValidationError("La transferencia no existe.")
-        outgoing, incoming = sorted(legs, key=lambda leg: leg.type is TransactionType.INCOME)
-        return Transfer(outgoing=outgoing, incoming=incoming)
+        return _paired(legs)
+
+    def get_transfers(self, transfer_ids: list[str]) -> dict[str, Transfer]:
+        """These transfers, by id, read together: a list shows many."""
+        legs: dict[str, list[Transaction]] = {}
+        for leg in self._transactions.list_legs_of(transfer_ids):
+            legs.setdefault(leg.transfer_id, []).append(leg)
+        return {key: _paired(pair) for key, pair in legs.items() if len(pair) == 2}
 
     def _with_payee(self, transaction: Transaction, payee_name: str) -> Transaction:
         """``transaction`` linked to the payee called ``payee_name``, creating it if needed.
@@ -567,3 +577,9 @@ class TransactionService:
         if amount.cents <= 0:
             raise ValidationError("El monto debe ser mayor que cero.", field=field)
         require_storable(amount, field)
+
+
+def _paired(legs: list[Transaction]) -> Transfer:
+    """The two legs of a transfer as one: the expense leaves, the income arrives."""
+    outgoing, incoming = sorted(legs, key=lambda leg: leg.type is TransactionType.INCOME)
+    return Transfer(outgoing=outgoing, incoming=incoming)

@@ -92,6 +92,13 @@ class TransactionListBuilder:
         self._payee_names = {p.id: p.name for p in self._services.payees.list_payees()}
         self._refunded = self._services.transactions.refund_totals()
         self._tags = self._services.transactions.tags_for([t.id for t in transactions])
+        # What the rows point to, read in two queries instead of one per row.
+        self._refunded_expenses = self._services.transactions.get_many(
+            list({t.refund_of_id for t in transactions if t.refund_of_id is not None})
+        )
+        self._transfers = self._services.transactions.get_transfers(
+            list({t.transfer_id for t in transactions if t.transfer_id is not None})
+        )
         self._today = date.today()
         items: list[TransactionListItem] = []
         seen_transfers: set[str] = set()
@@ -109,7 +116,7 @@ class TransactionListBuilder:
 
     def _refund_text(self, transaction: Transaction) -> str:
         if transaction.refund_of_id is not None:
-            expense = self._services.transactions.get(transaction.refund_of_id)
+            expense = self._refunded_expenses[transaction.refund_of_id]
             return refund_of_text(expense, self.describe(expense))
         if transaction.id in self._refunded:
             return refunded_text(self._refunded[transaction.id])
@@ -135,7 +142,7 @@ class TransactionListBuilder:
         )
 
     def _transfer_item(self, transfer_id: str) -> TransactionListItem:
-        transfer = self._services.transactions.get_transfer(transfer_id)
+        transfer = self._transfers[transfer_id]
         outgoing, incoming = transfer.outgoing, transfer.incoming
         amount_text = outgoing.amount.format()
         if incoming.amount.currency is not outgoing.amount.currency:

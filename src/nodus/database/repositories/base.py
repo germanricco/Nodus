@@ -8,6 +8,9 @@ from typing import Any
 
 from nodus.database.database import Database
 
+# Values per ``IN`` list: well below the 999 parameters older SQLite versions allow.
+_IN_CHUNK = 500
+
 # ``LIKE`` with a backslash as escape character, for ``contains`` patterns.
 LIKE = "LIKE ? ESCAPE '\\'"
 
@@ -37,6 +40,15 @@ class Repository:
 
     def _fetch_all(self, sql: str, params: Sequence[Any] = ()) -> list[sqlite3.Row]:
         return self._execute(sql, params).fetchall()
+
+    def _fetch_in(self, sql: str, values: Sequence[Any]) -> list[sqlite3.Row]:
+        """The rows of ``sql``, whose ``{}`` is filled with an ``IN`` list of ``values``,
+        a chunk at a time so no list goes over SQLite's limit of parameters."""
+        rows: list[sqlite3.Row] = []
+        for start in range(0, len(values), _IN_CHUNK):
+            chunk = values[start : start + _IN_CHUNK]
+            rows += self._fetch_all(sql.format(", ".join("?" * len(chunk))), chunk)
+        return rows
 
     def _insert(self, sql: str, params: Sequence[Any] = ()) -> int:
         """Runs an INSERT and returns the id of the new row."""

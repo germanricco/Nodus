@@ -25,6 +25,33 @@ CHARGE_NOTICE_DAYS = 3
 UPDATE_PREFIX = "update:"
 
 
+# The keys of the record of what the user saw, one per kind of thing announced. They are
+# stored, so changing one makes every notice of its kind look new again. A charge names
+# its own (``RecurringCharge.seen_key``).
+def _update_key(version: str) -> str:
+    return f"{UPDATE_PREFIX}{version}"
+
+
+def _backup_failed_key(today: date) -> str:
+    return f"backup-failed:{today}"
+
+
+def _backup_reminder_key(month_start: date) -> str:
+    return f"backup:{month_start:%Y-%m}"
+
+
+def _goal_key(goal_id: int) -> str:
+    return f"goal:{goal_id}"
+
+
+def _rate_key(currency: Currency, rate_date: date | None) -> str:
+    return f"rate:{currency.value}:{rate_date or 'none'}"
+
+
+def _budget_key(today: date, category_id: int) -> str:
+    return f"budget:{today:%Y-%m}:{category_id}"
+
+
 # How the notices name each foreign currency: singular and plural.
 _CURRENCY_NAMES = {
     Currency.USD: ("dólar", "dólares"),
@@ -132,7 +159,7 @@ class NotificationService:
                     "Se instala en un momento y tus datos se conservan.",
                     release.url,
                     release.notes,
-                    items=(f"{UPDATE_PREFIX}{release.version}",),
+                    items=(_update_key(release.version),),
                 )
             )
         notices.extend(self._goal_notices(today))
@@ -146,7 +173,7 @@ class NotificationService:
                     NoticeKind.BACKUP_FAILED,
                     "La copia de hoy falló",
                     self._backups.last_error,
-                    items=(f"backup-failed:{today}",),
+                    items=(_backup_failed_key(today),),
                 )
             )
         reminder = self._backup_reminder(today)
@@ -164,7 +191,7 @@ class NotificationService:
                 f"Alcanzaste «{goal.name}»",
                 "Archívala para usar sus cuentas en otra meta, o súbele el objetivo.",
                 item_id=goal.id,
-                items=(f"goal:{goal.id}",),
+                items=(_goal_key(goal.id),),
             )
             for goal in self._goals.unseen_reached()
         ]
@@ -185,7 +212,7 @@ class NotificationService:
             "Guarda una copia fuera de esta computadora",
             f"{since} En un pendrive o en Drive, tus datos se salvan aunque la PC se pierda"
             " o se rompa.",
-            items=(f"backup:{reminder_start(today):%Y-%m}",),
+            items=(_backup_reminder_key(reminder_start(today)),),
         )
 
     def _rate_notices(self, today: date) -> list[Notice]:
@@ -203,7 +230,7 @@ class NotificationService:
                 NoticeKind.STALE_RATE,
                 f"Sin cotización del {name}",
                 f"Cárgala para sumar tus cuentas en {plural} al resto.",
-                items=(f"rate:{currency.value}:none",),
+                items=(_rate_key(currency, None),),
             )
         days = (today - rate.rate_date).days
         if days <= STALE_RATE_DAYS:
@@ -212,7 +239,7 @@ class NotificationService:
             NoticeKind.STALE_RATE,
             f"Sin cotización del {name} desde hace {days} días",
             f"La última es del {rate.rate_date:%d/%m/%Y}.",
-            items=(f"rate:{currency.value}:{rate.rate_date}",),
+            items=(_rate_key(currency, rate.rate_date),),
         )
 
     def _charges_notice(self, today: date) -> Notice | None:
@@ -243,7 +270,7 @@ class NotificationService:
         over = self._budgets.over_limit(today)
         if not over:
             return None
-        items = tuple(f"budget:{today:%Y-%m}:{b.category.id}" for b in over)
+        items = tuple(_budget_key(today, b.category.id) for b in over)
         if len(over) == 1:
             budget = over[0]
             return Notice(

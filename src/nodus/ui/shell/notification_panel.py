@@ -6,30 +6,13 @@ from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from nodus.services.app.notification_service import Notice, NoticeKind
+from nodus.ui.shell.notices import NOTICES
 from nodus.ui.theme.design import Layout, Line, Popup, Space
 from nodus.ui.theme.theme_manager import active_theme
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.style import clear_layout, set_style_property
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
-
-# Where a click on each notice leads, said in its tooltip and in bold in its menu.
-ACTION_LABELS = {
-    NoticeKind.UPDATE: "Actualizar",
-    NoticeKind.STALE_RATE: "Ir a Ajustes",
-    NoticeKind.BACKUP_FAILED: "Ir a Ajustes",
-    NoticeKind.BACKUP_REMINDER: "Guardar copia…",
-    NoticeKind.CHARGES_DUE: "Ver cargos",
-    NoticeKind.BUDGET_OVER: "Ver presupuestos",
-    NoticeKind.GOAL_REACHED: "Ver meta",
-}
-
-# The notices the user can put away from the row's menu.
-DISMISS_LABELS = {
-    NoticeKind.UPDATE: "Descartar esta versión",
-    NoticeKind.BACKUP_REMINDER: "Ahora no: avisar a fin del mes que viene",
-    NoticeKind.GOAL_REACHED: "Quitar el aviso",
-}
 
 NEWS_LABEL = "Qué trae"
 
@@ -66,13 +49,14 @@ class NoticeRow(QWidget):
         texts.addWidget(detail)
         layout.addLayout(texts, stretch=1)
         self.setAccessibleName(f"{'' if notice.seen else 'Sin revisar: '}{notice.title}")
-        install_row_actions(self, self.actions, open_on_click=ACTION_LABELS[notice.kind])
+        install_row_actions(self, self.actions, open_on_click=NOTICES[notice.kind].action_text)
 
     def actions(self) -> list[RowAction]:
         notice = self.notice
+        behavior = NOTICES[notice.kind]
         result = [
             RowAction(
-                ACTION_LABELS[notice.kind],
+                behavior.action_text,
                 lambda: self.opened.emit(notice),
                 default=True,
                 effect=Effect.OPEN,
@@ -82,10 +66,10 @@ class NoticeRow(QWidget):
             result.append(
                 RowAction(NEWS_LABEL, lambda: self.news_requested.emit(notice), effect=Effect.OPEN)
             )
-        if notice.kind in DISMISS_LABELS:
+        if behavior.dismiss_text is not None:
             result.append(
                 RowAction(
-                    DISMISS_LABELS[notice.kind],
+                    behavior.dismiss_text,
                     lambda: self.dismissed.emit(notice),
                     # It only puts the notice away: whatever comes next is announced.
                     effect=Effect.TOGGLE,

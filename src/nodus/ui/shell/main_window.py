@@ -22,13 +22,12 @@ from PySide6.QtWidgets import (
 
 from nodus.links import feedback_url
 from nodus.models.period import Month
-from nodus.services.app.notification_service import Notice, NoticeKind
+from nodus.services.app.notification_service import Notice
 from nodus.services.container import Services
 from nodus.services.external.update_service import Release
 from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.confirm import ask
-from nodus.ui.dialogs.external_backup import save_copy_outside
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog, TransactionStart
 from nodus.ui.dialogs.update_dialog import UpdateDialog
@@ -54,6 +53,7 @@ from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.rate_updater import RateUpdater, updated_text
 from nodus.ui.shell.coach_marks import CoachMarks
 from nodus.ui.shell.help_panel import HelpPanel
+from nodus.ui.shell.notices import NOTICES
 from nodus.ui.shell.notification_panel import NotificationPanel
 from nodus.ui.shell.shortcuts import HELP, UNDO
 from nodus.ui.shell.sidebar import Sidebar
@@ -297,26 +297,25 @@ class MainWindow(QMainWindow):
         self.notification_panel.set_notices(self.notices())
         self.notification_panel.open_below(self.top_bar.notifications_button)
 
+    @property
+    def services(self) -> Services:
+        return self._services
+
+    @property
+    def event_bus(self) -> EventBus:
+        return self._event_bus
+
+    @property
+    def release(self) -> Release | None:
+        """The newer version found, if any."""
+        return self._release
+
     def _act_on_notice(self, notice: Notice) -> None:
-        """Opening a notice marks it seen, and leads where its problem shows."""
+        """Opening a notice marks it seen and leads where its problem shows (``NOTICES``);
+        the bell is refreshed once, after both."""
         self._services.notifications.mark_seen(notice)
-        if notice.kind is NoticeKind.CHARGES_DUE:  # seen here is «Ya lo vi» on their rows
-            self._event_bus.recurring_changed.emit()
+        NOTICES[notice.kind].open(self, notice)
         self.refresh_notifications()
-        if notice.kind is NoticeKind.UPDATE and self._release is not None:
-            self.start_update(self._release)
-        elif notice.kind is NoticeKind.CHARGES_DUE:
-            self.show_page(PageId.RECURRING)
-        elif notice.kind is NoticeKind.BUDGET_OVER:
-            self.show_budgets(Month.of(date.today()))
-        elif notice.kind is NoticeKind.BACKUP_REMINDER:
-            save_copy_outside(self, self._services, self._event_bus)
-        elif notice.kind is NoticeKind.GOAL_REACHED and notice.item_id is not None:
-            self._services.goals.mark_seen(notice.item_id)
-            self.refresh_notifications()
-            self.show_detail(DetailId.GOAL, notice.item_id)
-        else:
-            self.show_page(PageId.SETTINGS)
 
     def _show_release_news(self, _notice: Notice) -> None:
         if self._release is None:
@@ -338,13 +337,11 @@ class MainWindow(QMainWindow):
             QApplication.quit()
 
     def _dismiss_notice(self, notice: Notice) -> None:
-        if notice.kind is NoticeKind.BACKUP_REMINDER:
-            self._services.backups.put_off_reminder(date.today())
-        elif notice.kind is NoticeKind.GOAL_REACHED and notice.item_id is not None:
-            self._services.goals.mark_seen(notice.item_id)
-        else:
-            self._services.notifications.dismiss_release()
-        self.refresh_notifications()
+        """Puts the notice away as its kind does; a kind that cannot be is left alone."""
+        dismiss = NOTICES[notice.kind].dismiss
+        if dismiss is not None:
+            dismiss(self, notice)
+            self.refresh_notifications()
 
     @property
     def current_page(self) -> Page:

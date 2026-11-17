@@ -50,7 +50,16 @@ class TransactionRepository(Repository):
         return self._from_row(row) if row else None
 
     def list_transfer_legs(self, transfer_id: str) -> list[Transaction]:
-        rows = self._fetch_all(f"{_SELECT} WHERE t.transfer_id = ?", (transfer_id,))
+        return self.list_legs_of([transfer_id])
+
+    def get_many(self, transaction_ids: list[int]) -> list[Transaction]:
+        """The transactions with these ids, in one query however many there are."""
+        rows = self._fetch_in(f"{_SELECT} WHERE t.id IN ({{}})", transaction_ids)
+        return [self._from_row(row) for row in rows]
+
+    def list_legs_of(self, transfer_ids: list[str]) -> list[Transaction]:
+        """Both legs of each of these transfers, in one query however many there are."""
+        rows = self._fetch_in(f"{_SELECT} WHERE t.transfer_id IN ({{}})", transfer_ids)
         return [self._from_row(row) for row in rows]
 
     def list(self, criteria: TransactionFilter) -> list[Transaction]:

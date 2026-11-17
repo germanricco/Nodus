@@ -17,6 +17,7 @@ from nodus.ui import browser
 from nodus.ui.dialogs import external_backup
 from nodus.ui.navigation import PageId
 from nodus.ui.shell.main_window import MainWindow
+from nodus.ui.shell.notices import NOTICES
 
 NEWER = json.dumps({"tag_name": "v9.0.0", "html_url": "https://example.com/v9"}).encode()
 
@@ -255,3 +256,11 @@ class TestSeen:
         offline_window.open_notifications()
 
         assert texts(offline_window.notification_panel.rows[0].actions()) == ["Ver presupuestos"]
+
+
+@pytest.mark.parametrize("kind", list(NoticeKind))
+def test_every_kind_of_notice_has_its_row(kind):
+    """A new kind of notice says where its click leads and, if it can be put away, how."""
+    behavior = NOTICES[kind]
+    assert behavior.action_text
+    assert (behavior.dismiss_text is None) == (behavior.dismiss is None)
