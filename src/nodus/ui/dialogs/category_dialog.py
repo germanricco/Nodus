@@ -7,10 +7,10 @@ from PySide6.QtWidgets import QLineEdit, QWidget
 from nodus.models.category import Category
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
+from nodus.ui.dialogs.color_choice import color_picker, remember_color
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import TRANSACTION_TYPE_LABELS
-from nodus.ui.widgets.color import ColorPicker
 from nodus.ui.widgets.combo_box import ComboBox
 
 NO_PARENT_LABEL = "Ninguna (categoría principal)"
@@ -47,7 +47,7 @@ class CategoryDialog(FormDialog):
         for transaction_type, label in TRANSACTION_TYPE_LABELS.items():
             self.kind_input.addItem(label, transaction_type)
         self.parent_input = ComboBox()
-        self.color_input = ColorPicker()
+        self.color_input = color_picker(services)
 
         self.form.addRow("Nombre", self.name_input)
         self.form.addRow("Tipo", self.kind_input)
@@ -93,4 +93,5 @@ class CategoryDialog(FormDialog):
             self._services.categories.create(
                 name, self.kind_input.currentData(), color, self.parent_input.currentData()
             )
+        remember_color(self._services, color)
         self._event_bus.categories_changed.emit()

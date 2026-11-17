@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtCore import QPointF
 
 from nodus.models.palette import PALETTE
-from nodus.ui.widgets.color import ColorPicker
+from nodus.ui.widgets.color import ColorPicker, ColorSwatch
 from nodus.ui.widgets.color_wheel import VALUE_STEPS, ColorWheelPopup
 
 
@@ -92,3 +92,16 @@ def test_an_incomplete_code_cannot_be_used(popup):
 
     assert popup.accept_button.isEnabled()
     assert popup.color() == "#123abc"
+
+
+def test_recent_colors_follow_the_palette_before_the_wheel(qtbot):
+    picker = ColorPicker(["#123456", PALETTE[1], "#ABCDEF"])
+    qtbot.addWidget(picker)
+
+    swatches = [s.color for s in picker.findChildren(ColorSwatch)]
+
+    assert swatches == [*PALETTE, "#123456", "#abcdef"]
+    assert picker._swatches["#123456"].toolTip() == "Usado hace poco: #123456"
+    picker.set_color("#abcdef")
+    assert picker.color() == "#abcdef"  # chosen again, without a second swatch
+    assert len(picker.findChildren(ColorSwatch)) == len(PALETTE) + 2

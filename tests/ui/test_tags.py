@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction_filter import TransactionFilter
+from nodus.ui.dialogs.category_dialog import CategoryDialog
 from nodus.ui.dialogs.tag_dialogs import MergeTagDialog, TagDialog
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages import tags_page
@@ -198,3 +199,29 @@ def test_tags_column_shows_only_when_a_row_has_tags(services, window, pesos):
     transactions.reload()
 
     assert not transactions.table.isColumnHidden(TAGS)
+
+
+def test_a_custom_color_saved_on_a_tag_is_offered_to_categories(qtbot, services, event_bus):
+    dialog = TagDialog(services, event_bus)
+    qtbot.addWidget(dialog)
+    dialog.name_input.setText("Viaje")
+    dialog.color_input.set_color("#123456")
+    dialog.save_button.click()
+
+    category = CategoryDialog(services, event_bus)
+    qtbot.addWidget(category)
+
+    assert "#123456" in category.color_input._swatches
+    assert category.color_input.color() != "#123456"  # offered, not chosen
+
+
+def test_a_color_is_not_remembered_when_saving_fails(qtbot, services, event_bus):
+    services.tags.create("Viaje", "#95a5a6")
+    dialog = TagDialog(services, event_bus)
+    qtbot.addWidget(dialog)
+    dialog.name_input.setText("viaje")
+    dialog.color_input.set_color("#123456")
+
+    dialog.save_button.click()
+
+    assert services.settings.recent_colors() == []

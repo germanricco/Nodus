@@ -1,5 +1,6 @@
 import pytest
 
+from nodus.models.palette import PALETTE
 from nodus.services import settings_service
 
 
@@ -51,3 +52,24 @@ def test_the_account_chart_range_is_remembered(services, months):
     services.settings.set_account_chart_months(months)
 
     assert services.settings.account_chart_months() == months
+
+
+class TestRecentColors:
+    def test_the_latest_first_without_repeats(self, services):
+        for color in ("#111111", "#222222", "#111111"):
+            services.settings.add_recent_color(color)
+
+        assert services.settings.recent_colors() == ["#111111", "#222222"]
+
+    def test_only_the_last_few_are_kept(self, services):
+        for index in range(settings_service.RECENT_COLORS + 2):
+            services.settings.add_recent_color(f"#00000{index}")
+
+        recent = services.settings.recent_colors()
+        assert len(recent) == settings_service.RECENT_COLORS
+        assert recent[0] == f"#00000{settings_service.RECENT_COLORS + 1}"
+
+    def test_palette_colors_are_always_at_hand_and_not_kept(self, services):
+        services.settings.add_recent_color(PALETTE[0].upper())
+
+        assert services.settings.recent_colors() == []

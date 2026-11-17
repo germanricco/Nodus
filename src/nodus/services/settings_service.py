@@ -11,6 +11,10 @@ from nodus.config.system import windows_animations_on
 from nodus.database.database import Database
 from nodus.database.repositories.settings_repository import SettingsRepository
 from nodus.models.currency import TOTAL_CURRENCIES, Currency
+from nodus.models.palette import PALETTE
+
+# How many recent colors the picker offers: one row with the «+».
+RECENT_COLORS = 5
 
 
 class SettingsService:
@@ -39,6 +43,7 @@ class SettingsService:
     ACCOUNT_CHART_MONTHS_KEY = "account_chart_months"
     TOUR_OFFERED_KEY = "tour_offered"
     SEEN_NOTICES_KEY = "seen_notices"
+    RECENT_COLORS_KEY = "recent_colors"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -84,6 +89,20 @@ class SettingsService:
 
     def set_folded_groups(self, group_ids: set[int]) -> None:
         self._set_list(self.FOLDED_GROUPS_KEY, map(str, sorted(group_ids)))
+
+    def recent_colors(self) -> list[str]:
+        """The colors outside the palette chosen last for a category or tag, the most
+        recent first, so they can be chosen again with one click."""
+        return self._list(self.RECENT_COLORS_KEY)
+
+    def add_recent_color(self, color: str) -> None:
+        """Puts ``color`` first among the recent ones, unless it is a palette color, which
+        is always at hand anyway. Keeps ``RECENT_COLORS``, without repeats."""
+        color = color.lower()
+        if color in PALETTE:
+            return
+        recent = [color, *(c for c in self.recent_colors() if c != color)]
+        self._set_list(self.RECENT_COLORS_KEY, recent[:RECENT_COLORS])
 
     def seen_notices(self) -> set[str]:
         """The keys of the notifications the user already opened (``Notice.key``)."""

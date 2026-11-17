@@ -7,11 +7,11 @@ from PySide6.QtWidgets import QLineEdit, QWidget
 from nodus.models.palette import palette_color
 from nodus.models.tag import Tag
 from nodus.services.container import Services
+from nodus.ui.dialogs.color_choice import color_picker, remember_color
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.undo import offer_undo
-from nodus.ui.widgets.color import ColorPicker
 
 
 def announce_tag_change(event_bus: EventBus) -> None:
@@ -41,7 +41,7 @@ class TagDialog(FormDialog):
 
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText("Ej.: Vacaciones 2026, Trabajo, Mudanza")
-        self.color_input = ColorPicker()
+        self.color_input = color_picker(services)
         self.form.addRow("Nombre", self.name_input)
         self.form.addRow("Color", self.color_input)
         self.bind_field(self.name_input, "name")
@@ -61,6 +61,7 @@ class TagDialog(FormDialog):
             self._services.tags.update(self._tag.id, name, color)
         else:
             self._services.tags.create(name, color)
+        remember_color(self._services, color)
         announce_tag_change(self._event_bus)
 
 

@@ -98,14 +98,15 @@ class ColorPicker(QWidget):
     """A grid of round swatches; exactly one is selected. The last one, «+», opens a
     color wheel for any other color.
 
-    A color outside the palette (set with ``set_color`` or chosen on the wheel) gets its
-    own swatch, so editing never silently changes a category's color.
+    After the palette come the ``recent`` colors, the ones chosen on the wheel lately, so
+    they can be used again. A color outside both (set with ``set_color`` or chosen on the
+    wheel) gets its own swatch too, so editing never silently changes a category's color.
     """
 
     SWATCH_SIZE = ControlSize.COLOR_SWATCH
     COLUMNS = 6
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, recent: list[str] | None = None, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._grid = QGridLayout(self)
         self._grid.setContentsMargins(0, 0, 0, 0)
@@ -120,6 +121,9 @@ class ColorPicker(QWidget):
         self.wheel_popup: ColorWheelPopup | None = None
         for color in PALETTE:
             self._add_swatch(color)
+        for color in recent or []:
+            if color.lower() not in self._swatches:
+                self._add_swatch(color.lower(), f"Usado hace poco: {color.lower()}")
         self.set_color(PALETTE[0])
 
     def color(self) -> str:
@@ -137,8 +141,10 @@ class ColorPicker(QWidget):
         self.wheel_popup.color_chosen.connect(self.set_color)
         self.wheel_popup.open_below(self.wheel_swatch)
 
-    def _add_swatch(self, color: str) -> None:
+    def _add_swatch(self, color: str, tooltip: str | None = None) -> None:
         swatch = ColorSwatch(color, self.SWATCH_SIZE)
+        if tooltip:
+            swatch.setToolTip(tooltip)
         index = len(self._swatches)
         self._grid.addWidget(swatch, index // self.COLUMNS, index % self.COLUMNS)
         self._group.addButton(swatch)

@@ -207,3 +207,7 @@ def load_demo_data(services: Services, today: date) -> None:
         services.budgets.set_limit(categories[(expense, category)], since, ars(amount))
     services.budgets.set_limit(categories[(expense, "Supermercado y comida")], current,
                                ars("400000"))  # fmt: skip
+
+    # Two colors of their own, chosen on the wheel lately, which the color picker offers.
+    for color in ("#2a9d8f", "#c0587e"):
+        services.settings.add_recent_color(color)
