@@ -59,14 +59,6 @@ class AnalysisPage(Page):
 
         self.tabs.changed.connect(self._show_tab)
         self.period_selector.period_changed.connect(lambda _period: self.refresh())
-        for signal in (
-            event_bus.transactions_changed,
-            event_bus.categories_changed,
-            event_bus.payees_changed,
-            event_bus.exchange_rates_changed,
-            event_bus.accounts_changed,
-        ):
-            signal.connect(self.request_refresh)
 
     @property
     def current_view(self) -> AnalysisView:

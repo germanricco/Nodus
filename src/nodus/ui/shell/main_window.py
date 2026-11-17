@@ -34,28 +34,15 @@ from nodus.ui.dialogs.transaction_dialog import TransactionDialog, TransactionSt
 from nodus.ui.dialogs.update_dialog import UpdateDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId, PageId, TransactionFocus
-from nodus.ui.pages.account_detail_page import AccountDetailPage
-from nodus.ui.pages.accounts_page import AccountsPage
-from nodus.ui.pages.analysis.analysis_page import AnalysisPage
 from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.page import Page
-from nodus.ui.pages.budgets_page import BudgetsPage
-from nodus.ui.pages.categories_page import CategoriesPage
-from nodus.ui.pages.dashboard.dashboard_page import DashboardPage
-from nodus.ui.pages.goal_detail_page import GoalDetailPage
-from nodus.ui.pages.goals_page import GoalsPage
-from nodus.ui.pages.payee_detail_page import PayeeDetailPage
-from nodus.ui.pages.payees_page import PayeesPage
-from nodus.ui.pages.recurring_page import RecurringPage
-from nodus.ui.pages.settings.settings_page import SettingsPage
-from nodus.ui.pages.tag_detail_page import TagDetailPage
-from nodus.ui.pages.tags_page import TagsPage
-from nodus.ui.pages.transactions_page import TransactionsPage
-from nodus.ui.rate_updater import RateUpdater, updated_text
+from nodus.ui.rate_updater import shared_rate_updater, updated_text
+from nodus.ui.refresh import refresh_on_changes
 from nodus.ui.shell.coach_marks import CoachMarks
 from nodus.ui.shell.help_panel import HelpPanel
 from nodus.ui.shell.notices import NOTICES
 from nodus.ui.shell.notification_panel import NotificationPanel
+from nodus.ui.shell.page_registry import DETAIL_OF_LIST, DETAIL_TYPES, PAGE_TYPES
 from nodus.ui.shell.sidebar import Sidebar
 from nodus.ui.shell.top_bar import TopBar
 from nodus.ui.shell.tour import TOUR_STEPS
@@ -127,20 +114,30 @@ class MainWindow(QMainWindow):
         self.top_bar.feedback_requested.connect(lambda: open_url(feedback_url()))
         self.top_bar.set_amounts_hidden(services.settings.amounts_hidden())
         self.top_bar.hide_amounts_toggled.connect(self.toggle_amounts_hidden)
-        for signal in (
-            event_bus.exchange_rates_changed,
-            event_bus.accounts_changed,
-            event_bus.recurring_changed,
-            event_bus.transactions_changed,
-            event_bus.budgets_changed,
-            event_bus.categories_changed,
-            event_bus.backups_changed,
-            event_bus.goals_changed,
-        ):
-            signal.connect(self.refresh_notifications)
+        self._rate_updater = shared_rate_updater(services, event_bus)
+        # Whoever asked for the rates, at the start of Nodus or from Ajustes.
+        self._rate_updater.updated.connect(self._announce_rates)
+        refresh_on_changes(
+            event_bus, theme_manager, self.refresh_screen, self._refresh_current_page
+        )
         event_bus.accounts_changed.connect(self._offer_tour_soon)
         self.show_page(PageId.DASHBOARD)
         self.refresh_notifications()
+
+    def _announce_rates(self, rates: dict) -> None:
+        self.toast(updated_text(rates))
+
+    def refresh_screen(self) -> None:
+        """What a change refreshes (``refresh``): the page in view, the accounts of the
+        sidebar and the bell."""
+        self._refresh_current_page()
+        self.sidebar.refresh_accounts()
+        self.refresh_notifications()
+
+    def _refresh_current_page(self) -> None:
+        page = self._stack.currentWidget()
+        if isinstance(page, Page):
+            page.request_refresh()
 
     def toast(
         self,
@@ -187,8 +184,6 @@ class MainWindow(QMainWindow):
         """Brings today's dollar rate in the background when the source is automatic.
 
         Called by the app once the window is open, like ``check_for_updates``."""
-        self._rate_updater = RateUpdater(self._services, self._event_bus, parent=self)
-        self._rate_updater.updated.connect(lambda rates: self.toast(updated_text(rates)))
         self._rate_updater.update()
 
     def show_unseen_news(self) -> None:
@@ -368,47 +363,30 @@ class MainWindow(QMainWindow):
         return self._pages[page_id]
 
     def _build_page(self, page_id: PageId) -> Page:
-        """A new page ``page_id`` with its requests connected to the window."""
-        services, bus, theme = self._services, self._event_bus, self.theme_manager
-        if page_id is PageId.DASHBOARD:
-            page = DashboardPage(services, bus, theme)
-            page.budgets_requested.connect(self.show_budgets)
-        elif page_id is PageId.ACCOUNTS:
-            page = AccountsPage(services, bus, theme)
-            page.detail_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
-        elif page_id is PageId.TRANSACTIONS:
-            page = TransactionsPage(services, bus, theme)
-            page.new_transaction_requested.connect(self.open_new_transaction)
-        elif page_id is PageId.RECURRING:
-            page = RecurringPage(services, bus, theme)
-        elif page_id is PageId.BUDGETS:
-            page = BudgetsPage(services, bus, theme)
-        elif page_id is PageId.GOALS:
-            page = GoalsPage(services, bus, theme)
-            page.detail_requested.connect(lambda i: self.show_detail(DetailId.GOAL, i))
-        elif page_id is PageId.ANALYSIS:
-            page = AnalysisPage(services, bus, theme)
-        elif page_id is PageId.CATEGORIES:
-            page = CategoriesPage(services, bus)
-        elif page_id is PageId.PAYEES:
-            page = PayeesPage(services, bus, theme)
-            page.detail_requested.connect(lambda i: self.show_detail(DetailId.PAYEE, i))
-        elif page_id is PageId.TAGS:
-            page = TagsPage(services, bus, theme)
-            page.detail_requested.connect(lambda i: self.show_detail(DetailId.TAG, i))
-        else:
-            page = SettingsPage(services, bus, theme)
-            page.tour_requested.connect(self.start_tour)
-            page.help_requested.connect(self.toggle_help)
-        # The requests pages share, where a page has them.
+        """A new page ``page_id`` (``PAGE_TYPES``) with its requests connected."""
+        page = PAGE_TYPES[page_id](self._services, self._event_bus, self.theme_manager)
+        detail = DETAIL_OF_LIST.get(page_id)
+        if detail is not None:
+            page.detail_requested.connect(partial(self.show_detail, detail))
+        self._connect_requests(page)
+        return page
+
+    def _connect_requests(self, page: Page) -> None:
+        """Connects what a page may ask of the window, by the name of its signal: every
+        page that has one asks for the same thing."""
         for name, slot in (
             ("navigate_requested", self.show_page),
             ("transactions_requested", self.show_transactions),
+            ("budgets_requested", self.show_budgets),
+            ("new_transaction_requested", self.open_new_transaction),
+            ("tour_requested", self.start_tour),
+            ("help_requested", self.toggle_help),
+            ("account_requested", partial(self.show_detail, DetailId.ACCOUNT)),
+            ("goal_requested", partial(self.show_detail, DetailId.GOAL)),
         ):
             signal = getattr(page, name, None)
             if signal is not None:
                 signal.connect(slot)
-        return page
 
     def show_page(self, page_id: PageId) -> None:
         built = page_id in self._pages
@@ -422,18 +400,9 @@ class MainWindow(QMainWindow):
         """The detail page ``detail_id``, built and wired the first time it is asked for."""
         if detail_id not in self._details:
             services, bus, theme = self._services, self._event_bus, self.theme_manager
-            if detail_id is DetailId.ACCOUNT:
-                detail = AccountDetailPage(services, bus, theme)
-                detail.goal_requested.connect(lambda i: self.show_detail(DetailId.GOAL, i))
-            elif detail_id is DetailId.PAYEE:
-                detail = PayeeDetailPage(services, bus, theme)
-            elif detail_id is DetailId.TAG:
-                detail = TagDetailPage(services, bus, theme)
-            else:
-                detail = GoalDetailPage(services, bus, theme)
-                detail.account_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
+            detail = DETAIL_TYPES[detail_id](services, bus, theme)
             detail.back_requested.connect(partial(self.show_page, detail_id.list_page))
-            detail.new_transaction_requested.connect(self.open_new_transaction)
+            self._connect_requests(detail)
             self._details[detail_id] = detail
             self._stack.addWidget(detail)
         return self._details[detail_id]

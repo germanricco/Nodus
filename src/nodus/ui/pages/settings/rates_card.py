@@ -16,7 +16,7 @@ from nodus.services.errors import ValidationError
 from nodus.services.external.rate_feed_service import SOURCES
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
-from nodus.ui.rate_updater import RateUpdater, updated_text
+from nodus.ui.rate_updater import shared_rate_updater
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import NO_RATE_TEXT, rate_text
 from nodus.ui.theme.design import Layout, Space
@@ -92,7 +92,7 @@ class RatesCard(Card):
         self._history.setSpacing(0)
         self.body.addLayout(self._history)
 
-        self._rate_updater = RateUpdater(services, event_bus, parent=self)
+        self._rate_updater = shared_rate_updater(services, event_bus)
         self._rate_updater.updated.connect(self._on_rate_updated)
         self._rate_updater.failed.connect(self._on_rate_failed)
 
@@ -185,8 +185,7 @@ class RatesCard(Card):
 
     def _on_rate_updated(self, rates: dict[Currency, Decimal]) -> None:
         stop_busy(self.refresh_rate_button)
-        self.rate_source_row.set_detail("Actualizada hoy")
-        show_toast(self, updated_text(rates))
+        self.rate_source_row.set_detail("Actualizada hoy")  # the window says it in a toast
 
     def _on_rate_failed(self) -> None:
         stop_busy(self.refresh_rate_button)

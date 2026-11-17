@@ -132,13 +132,6 @@ class GoalDetailPage(DetailPage):
         self.content_layout.addStretch(1)  # the cards keep their height; the rest is blank
         self.account_rows: list[ContributionRow] = []
 
-        for signal in (
-            event_bus.goals_changed,
-            event_bus.accounts_changed,
-            event_bus.transactions_changed,
-            event_bus.exchange_rates_changed,
-        ):
-            signal.connect(self.request_refresh)
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
     def refresh(self) -> None:

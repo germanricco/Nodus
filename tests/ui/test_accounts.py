@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 from dragging import send_drop
-from factories import TODAY, ars, eur, expense_draft, usd
+from factories import TODAY, ars, eur, expense_draft, in_view, usd
 from menus import run_action
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
@@ -21,6 +21,7 @@ from nodus.ui.pages.accounts_page import AccountRow, AccountsPage
 def page(qtbot, services, event_bus, theme_manager) -> AccountsPage:
     accounts_page = AccountsPage(services, event_bus, theme_manager)
     qtbot.addWidget(accounts_page)
+    in_view(accounts_page, event_bus, theme_manager)
     accounts_page.refresh()
     return accounts_page
 

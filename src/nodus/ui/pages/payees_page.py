@@ -58,13 +58,6 @@ class PayeesPage(SummaryPage[PayeeSummary]):
         )
         self._services = services
         self._event_bus = event_bus
-        for signal in (
-            event_bus.payees_changed,
-            event_bus.transactions_changed,
-            event_bus.categories_changed,
-            event_bus.exchange_rates_changed,
-        ):
-            signal.connect(self.request_refresh)
 
     def load_summaries(self) -> list[PayeeSummary]:
         return self._services.payees.summaries()

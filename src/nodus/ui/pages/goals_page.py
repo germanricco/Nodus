@@ -145,16 +145,6 @@ class GoalsPage(Page):
         self.rows: list[GoalRow] = []
         self.section_titles: list[str] = []
 
-        theme_manager.theme_changed.connect(lambda _theme: self.refresh(self._today))
-        for signal in (
-            event_bus.goals_changed,
-            event_bus.accounts_changed,
-            event_bus.transactions_changed,
-            event_bus.exchange_rates_changed,
-            event_bus.amounts_hidden_changed,
-        ):
-            signal.connect(self.request_refresh)
-
     def refresh(self, today: date | None = None) -> None:
         """``today`` is fixed by tests, and kept by later refreshes; otherwise the
         real date is used."""

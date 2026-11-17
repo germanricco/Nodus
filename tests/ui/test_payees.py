@@ -3,7 +3,7 @@
 from datetime import date
 
 import pytest
-from factories import ars, category_id, expense_draft, income_draft
+from factories import ars, category_id, expense_draft, in_view, income_draft
 from menus import run_action, texts
 from PySide6.QtCore import Qt
 
@@ -22,6 +22,7 @@ EXPENSE = TransactionType.EXPENSE
 def page(qtbot, services, event_bus, theme_manager) -> PayeesPage:
     payees = PayeesPage(services, event_bus, theme_manager)
     qtbot.addWidget(payees)
+    in_view(payees, event_bus, theme_manager)
     payees.show()
     payees.refresh()
     return payees

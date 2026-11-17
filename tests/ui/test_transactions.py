@@ -5,6 +5,7 @@ from factories import (
     ars,
     category_id,
     expense_draft,
+    in_view,
     income_draft,
     transaction_dialog,
     usd,
@@ -226,6 +227,7 @@ class TestTransactionDialog:
 @pytest.fixture
 def page(qtbot, services, event_bus, theme_manager) -> TransactionsPage:
     transactions = TransactionsPage(services, event_bus, theme_manager)
+    in_view(transactions, event_bus)
     qtbot.addWidget(transactions)
     transactions.period_selector.set_period(Period.of_months(NOVEMBER))
     transactions.refresh()

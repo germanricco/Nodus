@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import FakeRegistry, ars, eur, expense_draft
+from factories import FakeRegistry, ars, eur, expense_draft, in_view
 from menus import run_action
 
 from nodus.models.account import AccountType
@@ -24,6 +24,7 @@ from nodus.ui.theme.theme import ThemeMode
 def page(qtbot, services, event_bus, theme_manager) -> SettingsPage:
     settings = SettingsPage(services, event_bus, theme_manager)
     qtbot.addWidget(settings)
+    in_view(settings, event_bus, theme_manager)
     settings.refresh()
     return settings
 

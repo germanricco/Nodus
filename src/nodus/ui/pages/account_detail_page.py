@@ -110,17 +110,6 @@ class AccountDetailPage(DetailPage):
         self._danger_text = self.danger_card.findChild(QLabel, "FieldHint")
         body.addWidget(self.danger_card)
 
-        for signal in (
-            event_bus.accounts_changed,
-            event_bus.transactions_changed,
-            event_bus.exchange_rates_changed,
-            event_bus.categories_changed,
-            event_bus.payees_changed,
-            event_bus.tags_changed,
-            event_bus.goals_changed,
-            event_bus.recurring_changed,
-        ):
-            signal.connect(self.request_refresh)
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
     def _add_header_buttons(self) -> None:

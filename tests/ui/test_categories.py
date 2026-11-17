@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-from factories import ars, category_id, expense_draft
+from factories import ars, category_id, expense_draft, in_view
 from menus import run_action, texts
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
@@ -19,6 +19,7 @@ INCOME = TransactionType.INCOME
 def page(qtbot, services, event_bus) -> CategoriesPage:
     categories = CategoriesPage(services, event_bus)
     qtbot.addWidget(categories)
+    in_view(categories, event_bus)
     categories.refresh()
     return categories
 

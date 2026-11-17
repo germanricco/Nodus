@@ -3,7 +3,7 @@
 from datetime import date
 
 import pytest
-from factories import ars, expense_draft, income_draft
+from factories import ars, expense_draft, in_view, income_draft
 from menus import run_action
 from PySide6.QtCore import Qt
 
@@ -23,6 +23,7 @@ from nodus.ui.widgets.tables.transaction_table import AMOUNT, TAGS
 def page(qtbot, services, event_bus, theme_manager) -> TagsPage:
     tags = TagsPage(services, event_bus, theme_manager)
     qtbot.addWidget(tags)
+    in_view(tags, event_bus, theme_manager)
     tags.show()
     tags.refresh()
     return tags

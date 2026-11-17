@@ -15,6 +15,7 @@ from nodus.services.transactions.recurring_charge_service import RecurringCharge
 from nodus.services.transactions.transaction_service import TransactionDraft
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
+from nodus.ui.refresh import screen_signals
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 
@@ -144,3 +145,13 @@ def table_rows(database, *tables: str) -> dict[str, list[tuple]]:
 def services_for(database: Database) -> Services:
     """The services on ``database``, with their copies in a folder next to it, as in the app."""
     return Services.create(database, AppPaths(database.path.parent).backups_dir)
+
+
+def in_view(page, event_bus: EventBus, theme_manager: ThemeManager | None = None):
+    """``page`` refreshed after every change, as ``MainWindow`` refreshes the page in
+    view (``nodus.ui.refresh``): for a page tested on its own."""
+    for signal in screen_signals(event_bus):
+        signal.connect(lambda *_args: page.request_refresh())
+    if theme_manager is not None:
+        theme_manager.theme_changed.connect(lambda _theme: page.request_refresh())
+    return page

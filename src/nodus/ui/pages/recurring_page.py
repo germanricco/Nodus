@@ -204,15 +204,6 @@ class RecurringPage(Page):
         self.yearly_label = QLabel()
         self.active_label = QLabel()
 
-        for signal in (
-            event_bus.recurring_changed,
-            event_bus.transactions_changed,
-            event_bus.accounts_changed,
-            event_bus.categories_changed,
-            event_bus.exchange_rates_changed,
-        ):
-            signal.connect(self.request_refresh)
-
     def refresh(self, today: date | None = None) -> None:
         today = today or date.today()
         clear_layout(self._sections)

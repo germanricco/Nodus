@@ -226,15 +226,6 @@ class AccountsPage(Page):
         page_layout.addLayout(self._sections)
         page_layout.addStretch()
 
-        for signal in (
-            event_bus.accounts_changed,
-            event_bus.transactions_changed,
-            event_bus.exchange_rates_changed,
-            event_bus.amounts_hidden_changed,
-            event_bus.net_worth_currency_changed,
-        ):
-            signal.connect(self.request_refresh)
-
     def refresh(self) -> None:
         clear_layout(self._sections)
         self.account_list = None

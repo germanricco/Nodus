@@ -145,19 +145,7 @@ class DashboardPage(Page):
         self.content_layout.addWidget(self._stack)
 
         self.period_selector.period_changed.connect(self.refresh)
-        theme_manager.theme_changed.connect(self.request_refresh)
         theme_manager.theme_changed.connect(self._remeasure)
-        for signal in (
-            event_bus.accounts_changed,
-            event_bus.categories_changed,
-            event_bus.transactions_changed,
-            event_bus.exchange_rates_changed,
-            event_bus.recurring_changed,
-            event_bus.budgets_changed,
-            event_bus.goals_changed,
-            event_bus.backups_changed,
-        ):
-            signal.connect(self.request_refresh)
 
     @property
     def see_all_button(self) -> QPushButton:

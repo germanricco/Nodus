@@ -39,7 +39,6 @@ class SettingsPage(Page):
         self.about.tour_requested.connect(self.tour_requested)
         self.about.help_requested.connect(self.help_requested)
         self.data.restored.connect(self.refresh)
-        event_bus.exchange_rates_changed.connect(self.request_refresh)
 
     def refresh(self) -> None:
         for card in self._cards:

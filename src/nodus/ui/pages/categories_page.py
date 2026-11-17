@@ -14,6 +14,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, history_focus
 from nodus.ui.pages.base.page import Page
 from nodus.ui.theme.design import Layout, Space
+from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.style import clear_layout
@@ -112,7 +113,10 @@ class CategoriesPage(Page):
 
     transactions_requested = Signal(object)  # TransactionFocus
 
-    def __init__(self, services: Services, event_bus: EventBus) -> None:
+    def __init__(
+        self, services: Services, event_bus: EventBus, _theme_manager: ThemeManager | None = None
+    ) -> None:
+        """Takes the theme like every page (``PAGE_TYPES``); its rows need none."""
         super().__init__(PageId.CATEGORIES.label)
         self._services = services
         self._event_bus = event_bus
@@ -120,8 +124,6 @@ class CategoriesPage(Page):
         self.create_button.clicked.connect(lambda: self.open_category_dialog())
 
         self._sections = self.scrolling_body()
-
-        event_bus.categories_changed.connect(self.request_refresh)
 
     def refresh(self) -> None:
         clear_layout(self._sections)

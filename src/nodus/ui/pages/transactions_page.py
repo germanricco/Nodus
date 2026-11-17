@@ -113,15 +113,6 @@ class TransactionsPage(Page):
         self.tag_filter.currentIndexChanged.connect(self.reload)
         self.type_filter.currentIndexChanged.connect(self.reload)
         self.search_input.textChanged.connect(self.reload)
-        for signal in (
-            event_bus.transactions_changed,
-            event_bus.accounts_changed,
-            event_bus.categories_changed,
-            event_bus.payees_changed,
-            event_bus.tags_changed,
-            event_bus.exchange_rates_changed,
-        ):
-            signal.connect(self.request_refresh)
 
     def refresh(self) -> None:
         """Reloads the filter choices (keeping the selection) and then the movements."""

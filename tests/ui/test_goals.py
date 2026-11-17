@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import TODAY, ars, expense_draft, income_draft, usd
+from factories import TODAY, ars, expense_draft, in_view, income_draft, usd
 from menus import run_action, texts
 from PySide6.QtCore import Qt
 
@@ -26,6 +26,7 @@ from nodus.ui.widgets.money_label import month_change_text
 def page(qtbot, services, event_bus, theme_manager) -> GoalsPage:
     goals = GoalsPage(services, event_bus, theme_manager)
     qtbot.addWidget(goals)
+    in_view(goals, event_bus, theme_manager)
     goals.refresh(TODAY)
     return goals
 

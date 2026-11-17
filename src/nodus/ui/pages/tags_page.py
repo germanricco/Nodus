@@ -42,12 +42,6 @@ class TagsPage(SummaryPage[TagSummary]):
         )
         self._services = services
         self._event_bus = event_bus
-        for signal in (
-            event_bus.tags_changed,
-            event_bus.transactions_changed,
-            event_bus.exchange_rates_changed,
-        ):
-            signal.connect(self.request_refresh)
 
     def load_summaries(self) -> list[TagSummary]:
         return self._services.tags.summaries()

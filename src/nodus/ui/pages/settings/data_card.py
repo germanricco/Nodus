@@ -97,8 +97,6 @@ class DataCard(Card):
         self.restore_button.clicked.connect(self.restore_backup)
         self.body.addWidget(restore_row)
 
-        event_bus.backups_changed.connect(self.refresh)
-
     def refresh(self) -> None:
         """The state of the backups, with the error of the daily one if it failed."""
         backups = self._services.backups

@@ -7,7 +7,7 @@ switch the amount back and forth, change the kind of movement, double-click a ro
 from datetime import date
 
 import pytest
-from factories import ars, category_id, expense_draft, light_theme, transaction_dialog
+from factories import ars, category_id, expense_draft, in_view, light_theme, transaction_dialog
 from menus import double_click_row, main_action, run_action, texts
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget
@@ -414,6 +414,7 @@ class TestDialog:
 @pytest.fixture
 def page(qtbot, services, event_bus, theme_manager) -> TransactionsPage:
     transactions = TransactionsPage(services, event_bus, theme_manager)
+    in_view(transactions, event_bus)
     qtbot.addWidget(transactions)
     month = Month.of(TODAY)
     transactions.period_selector.set_period(Period.of_months(month, month.shifted(6)))
@@ -553,6 +554,7 @@ class TestDashboard:
 @pytest.fixture
 def recurring(qtbot, services, event_bus) -> RecurringPage:
     recurring = RecurringPage(services, event_bus, light_theme())
+    in_view(recurring, event_bus)
     qtbot.addWidget(recurring)
     return recurring
 

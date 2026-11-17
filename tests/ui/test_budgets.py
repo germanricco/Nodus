@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-from factories import TODAY, ars, category_id, expense_draft
+from factories import TODAY, ars, category_id, expense_draft, in_view
 from PySide6.QtCore import Qt
 
 from nodus.models.budget import BudgetState
@@ -29,6 +29,7 @@ def spend(services, account_id, amount, category, on=TODAY):
 def page(qtbot, services, event_bus, theme_manager) -> BudgetsPage:
     budgets = BudgetsPage(services, event_bus, theme_manager)
     qtbot.addWidget(budgets)
+    in_view(budgets, event_bus, theme_manager)
     budgets.show_month(NOVEMBER)
     budgets.refresh(TODAY)
     return budgets

@@ -103,14 +103,6 @@ class BudgetsPage(Page):
         self._today: date | None = None
 
         self.month_selector.period_changed.connect(lambda _period: self.refresh(self._today))
-        theme_manager.theme_changed.connect(lambda _theme: self.refresh(self._today))
-        for signal in (
-            event_bus.budgets_changed,
-            event_bus.transactions_changed,
-            event_bus.categories_changed,
-            event_bus.exchange_rates_changed,
-        ):
-            signal.connect(self.request_refresh)
 
     @property
     def month(self) -> Month:

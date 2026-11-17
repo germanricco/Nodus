@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from weakref import WeakKeyDictionary
 
 from PySide6.QtCore import QObject, Signal
 
@@ -63,6 +64,20 @@ class RateUpdater(QObject):
         if saved:
             self._event_bus.exchange_rates_changed.emit()
             self.updated.emit(rates)
+
+
+_SHARED: WeakKeyDictionary[EventBus, RateUpdater] = WeakKeyDictionary()
+
+
+def shared_rate_updater(services: Services, event_bus: EventBus) -> RateUpdater:
+    """The one ``RateUpdater`` of the app, which Ajustes and the start of Nodus share: two
+    of them could ask DolarApi at once and save the same day twice. It lives as long as
+    ``event_bus``, which is one per app."""
+    updater = _SHARED.get(event_bus)
+    if updater is None:
+        updater = RateUpdater(services, event_bus, parent=event_bus)
+        _SHARED[event_bus] = updater
+    return updater
 
 
 def updated_text(rates: dict[Currency, Decimal]) -> str:

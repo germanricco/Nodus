@@ -72,15 +72,6 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self._danger_text = self.danger_card.findChild(QLabel, "FieldHint")
         self.content_layout.addWidget(self.danger_card)
 
-        for signal in (
-            event_bus.transactions_changed,
-            event_bus.exchange_rates_changed,
-            event_bus.categories_changed,
-            event_bus.payees_changed,
-            event_bus.tags_changed,
-            event_bus.accounts_changed,
-        ):
-            signal.connect(self.request_refresh)
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
     # To implement

@@ -151,11 +151,6 @@ class Sidebar(QFrame):
         self.set_collapsed(services.settings.sidebar_collapsed())
         self._apply_theme(theme_manager.theme)
         theme_manager.theme_changed.connect(self._apply_theme)
-        event_bus.accounts_changed.connect(self.refresh_accounts)
-        event_bus.transactions_changed.connect(self.refresh_accounts)
-        event_bus.exchange_rates_changed.connect(self.refresh_accounts)
-        event_bus.net_worth_currency_changed.connect(self.refresh_accounts)
-        event_bus.amounts_hidden_changed.connect(lambda _hidden: self.refresh_accounts())
         self.refresh_accounts()
 
     @property
