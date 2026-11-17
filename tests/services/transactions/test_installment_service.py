@@ -4,7 +4,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, category_id, expense_draft, income_draft, usd
+from factories import ars, category_id, clp, expense_draft, income_draft, usd
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
@@ -384,3 +384,47 @@ class TestSave:
 
         assert services.transactions.get(single.id).note == "Pan"
         assert database_counts(services) == (0, 1)
+
+
+class TestChileanPesos:
+    """A currency without cents splits in whole units, which the services require."""
+
+    @pytest.fixture
+    def chile(self, services):
+        return services.accounts.create("Chile", AccountType.CASH, Currency.CLP, clp("0"))
+
+    def chile_draft(self, services, chile):
+        return expense_draft(services, chile.id, clp("1000"), FIRST)
+
+    def test_the_installments_are_whole_pesos_that_add_up(self, services, chile):
+        plan = InstallmentPlan(None, 3, clp("1000"), FIRST)
+        saved = installments(
+            services, services.installments.create(self.chile_draft(services, chile), plan).id
+        )
+
+        assert [t.amount for t in saved] == [clp("334"), clp("333"), clp("333")]
+
+    def test_a_purchase_split_with_cents_before_stays_as_it_was(self, services, chile):
+        """Data saved before the split was in whole pesos is read untouched, and saving the
+        purchase again splits it in whole pesos."""
+        plan = InstallmentPlan(None, 3, clp("1000"), FIRST)
+        purchase = services.installments.create(self.chile_draft(services, chile), plan)
+        connection = services.transactions._database.connection
+        for transaction, cents in zip(
+            installments(services, purchase.id), (33_334, 33_333, 33_333), strict=True
+        ):
+            connection.execute(
+                "UPDATE transactions SET amount_cents = ? WHERE id = ?", (cents, transaction.id)
+            )
+
+        before = installments(services, purchase.id)
+        assert [t.amount.cents for t in before] == [33_334, 33_333, 33_333]
+        assert services.accounts.balance(chile.id, FIRST.replace(year=2027)) == clp("-1000")
+
+        services.installments.update(before[0].id, self.chile_draft(services, chile), plan)
+
+        assert [t.amount for t in installments(services, purchase.id)] == [
+            clp("334"),
+            clp("333"),
+            clp("333"),
+        ]

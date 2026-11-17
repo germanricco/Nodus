@@ -89,7 +89,7 @@ class GoalService:
         goes back to being in progress, and is announced again when reached."""
         existing = self.get(goal_id)
         goal = dataclasses.replace(
-            self._checked(draft, goal_id, today),
+            self._checked(draft, goal_id, today, existing.target_date),
             id=goal_id,
             reached_on=existing.reached_on,
             reached_seen=existing.reached_seen,
@@ -282,12 +282,16 @@ class GoalService:
                 field="shares",
             )
 
-    def _checked(self, draft: GoalDraft, goal_id: int | None, today: date) -> Goal:
+    def _checked(
+        self, draft: GoalDraft, goal_id: int | None, today: date, kept_date: date | None = None
+    ) -> Goal:
+        """The goal ``draft`` describes, checked. ``kept_date`` is the date an edited goal
+        already has: a goal that ran late keeps it, and only a new date must be ahead."""
         name = clean_name(draft.name)
         if draft.target.cents <= 0:
             raise ValidationError("El objetivo tiene que ser mayor que cero.", field="target")
         require_storable(draft.target, "target")
-        if draft.target_date is not None and draft.target_date <= today:
+        if draft.target_date not in (None, kept_date) and draft.target_date <= today:
             raise ValidationError("Elige una fecha posterior a hoy.", field="target_date")
         if draft.target_date is not None:
             require_in_calendar(draft.target_date, "target_date")

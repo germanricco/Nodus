@@ -3,7 +3,7 @@
 from datetime import date
 
 import pytest
-from factories import ars
+from factories import ars, clp
 
 from nodus.models.installment_plan import Installment, InstallmentPlan
 from nodus.models.money import Money
@@ -39,6 +39,28 @@ class TestAmounts:
         assert max(parts[1:]) == min(parts[1:])  # every one after the first is equal
         assert 0 <= parts[0] - parts[1] < count  # the first carries only the remainder
 
+    def test_chilean_pesos_split_in_whole_pesos_that_add_up(self):
+        split = InstallmentPlan(None, 3, clp("1000"), date(2026, 11, 10)).amounts()
+
+        assert split == [clp("334"), clp("333"), clp("333")]
+        assert all(part.is_whole_for_currency for part in split)
+
+    @pytest.mark.parametrize(
+        ("units", "count"),
+        [
+            (units, count)
+            for units in (2, 7, 100, 101, 999_999)
+            for count in (2, 3, 7, 72)
+            if units >= count
+        ],
+    )
+    def test_any_chilean_split_is_in_whole_pesos(self, units, count):
+        parts = InstallmentPlan(None, count, clp(str(units)), date.today()).amounts()
+
+        assert sum(part.cents for part in parts) == units * 100
+        assert all(part.is_whole_for_currency for part in parts)
+        assert max(parts[1:]) == min(parts[1:])
+
     def test_per_installment_amount_gives_the_total(self):
         by_installment = InstallmentPlan.from_installment_amount(
             ars("12500"), 6, date(2026, 11, 10)
@@ -58,6 +80,10 @@ class TestLimits:
     def test_less_than_a_cent_per_installment_is_rejected(self, total, count):
         with pytest.raises(ValueError):
             plan(total, count)
+
+    def test_less_than_a_chilean_peso_per_installment_is_rejected(self):
+        with pytest.raises(ValueError):
+            InstallmentPlan(None, 3, clp("2"), date.today())
 
     def test_paying_off_before_the_first_installment_is_rejected(self):
         with pytest.raises(ValueError):

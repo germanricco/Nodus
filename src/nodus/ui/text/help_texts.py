@@ -108,6 +108,9 @@ HELP_TOPICS = [
             " bastan para elegir a quién le pagaste, y Nodus completa la categoría que sueles"
             " usar con él. Las etiquetas son opcionales y sirven para juntar lo que va junto,"
             " como los gastos de un viaje.",
+            "Los montos se escriben con coma para los decimales y punto para los miles, como"
+            " en 1.234,56. Si escribes uno que se puede leer de dos maneras, como 1,234.56,"
+            " Nodus no adivina: te muestra cómo escribirlo.",
             "Para cambiar una transacción, haz doble clic en ella. Cada fila tiene su menú «⋯»,"
             " que también se abre con el clic derecho, con todo lo que puedes hacer con ella.",
             "Para cambiar varias a la vez, márcalas con Ctrl + clic o Mayús + clic: la barra"

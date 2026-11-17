@@ -1,45 +1,16 @@
-"""Text field for amounts typed in Argentine format."""
+"""Text field for amounts typed in Argentine format, read by ``parse_amount``."""
 
 from __future__ import annotations
 
-import re
-from decimal import Decimal, InvalidOperation
-
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
 
+from nodus.models.amount_parsing import AmountTextError, parse_amount
 from nodus.models.currency import Currency
-from nodus.models.money import MAX_UNITS, Money
-from nodus.services.errors import TOO_LARGE_TEXT
+from nodus.models.money import Money
 from nodus.ui.widgets.inputs.input_error import InputError
-
-_ALLOWED = re.compile(r"^-?[\d.,]+$")
-
 
 # The hint of an empty field: "0,00", or "0" for a currency without cents.
 _ZERO_HINTS = {True: "0,00", False: "0"}
-
-
-def parse_amount(text: str) -> Decimal:
-    """Reads a number as people type it in Argentina.
-
-    The comma is the decimal separator and the dot groups thousands ("1.234,56"). Since
-    many people also type "12.50", a lone dot followed by one or two digits is read as a
-    decimal point. Raises ``ValueError``, with a message for the user, when the text is
-    not a number.
-    """
-    cleaned = text.strip().replace(" ", "")
-    if not _ALLOWED.match(cleaned):
-        raise ValueError(f"«{text.strip()}» no es un monto válido.")
-    if "," in cleaned:
-        normalized = cleaned.replace(".", "").replace(",", ".")
-    elif re.search(r"^-?\d*\.\d{1,2}$", cleaned):
-        normalized = cleaned
-    else:
-        normalized = cleaned.replace(".", "")
-    try:
-        return Decimal(normalized)
-    except InvalidOperation as error:
-        raise ValueError(f"«{text.strip()}» no es un monto válido.") from error
 
 
 class AmountInput(QWidget):
@@ -67,15 +38,12 @@ class AmountInput(QWidget):
         """The typed amount; an empty field counts as zero. Raises ``InputError`` about
         this field when the text is not an amount."""
         text = self.line_edit.text()
+        if not text.strip():
+            return Money.zero(self._currency)
         try:
-            amount = parse_amount(text) if text.strip() else Decimal(0)
-        except ValueError as error:
+            return parse_amount(text, self._currency)
+        except AmountTextError as error:
             raise InputError(str(error), self) from error  # user-text: parse_amount's own
-        if abs(amount) > MAX_UNITS:  # before rounding, which a 30-digit number would break
-            raise InputError(TOO_LARGE_TEXT, self)
-        if not self._currency.decimals and amount != amount.to_integral_value():
-            raise InputError("Los pesos chilenos no llevan centavos.", self)
-        return Money.from_decimal(amount, self._currency)
 
     def set_money(self, money: Money) -> None:
         self.set_currency(money.currency)

@@ -55,9 +55,7 @@ class TransferService:
     def update(self, transfer_id: str, draft: TransferDraft) -> None:
         """Rewrites both legs in place, keeping their ids."""
         current = self.get(transfer_id)
-        transfer = self._build(
-            transfer_id, draft, leg_ids=(current.outgoing.id, current.incoming.id)
-        )
+        transfer = self._build(transfer_id, draft, current)
         with self._database.transaction():
             self._transactions.update(transfer.outgoing)
             self._transactions.update(transfer.incoming)
@@ -79,20 +77,35 @@ class TransferService:
         self,
         transfer_id: str,
         draft: TransferDraft,
-        leg_ids: tuple[int | None, int | None] = (None, None),
+        current: Transfer | None = None,
     ) -> Transfer:
+        """The transfer ``draft`` describes, checked; ``current`` is the one it replaces,
+        whose legs keep their ids and may stay in an archived account."""
         if draft.from_account_id == draft.to_account_id:
             raise ValidationError(
                 "La cuenta de origen y la de destino deben ser distintas.", field="to_account_id"
             )
-        source = active_account(self._accounts, draft.from_account_id, "from_account_id")
-        destination = active_account(self._accounts, draft.to_account_id, "to_account_id")
+        out_leg = current.outgoing if current else None
+        in_leg = current.incoming if current else None
+        source = active_account(
+            self._accounts,
+            draft.from_account_id,
+            "from_account_id",
+            out_leg.account_id if out_leg else None,
+        )
+        destination = active_account(
+            self._accounts,
+            draft.to_account_id,
+            "to_account_id",
+            in_leg.account_id if in_leg else None,
+        )
         amount_in = _incoming_amount(draft, source, destination)
         require_amount_for(draft.amount_out, source, "amount_out")
         require_amount_for(amount_in, destination, "amount_in")
         require_in_calendar(draft.occurred_on, "occurred_on")
         note = draft.note.strip()
-        outgoing_id, incoming_id = leg_ids
+        outgoing_id = out_leg.id if out_leg else None
+        incoming_id = in_leg.id if in_leg else None
         return Transfer(
             outgoing=Transaction(
                 outgoing_id, source.id, TransactionType.EXPENSE, draft.amount_out,

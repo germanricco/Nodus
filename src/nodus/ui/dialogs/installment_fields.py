@@ -114,7 +114,7 @@ class InstallmentFields(QWidget):
             return InstallmentPlan(None, count, amount, first_due_on)
         except ValueError as error:
             raise ValidationError(
-                f"El monto no alcanza para {count} cuotas de al menos un centavo.", field="amount"
+                f"El monto no alcanza para {count} cuotas.", field="amount"
             ) from error
 
     def hint_text(self, amount: Money | None, first_due_on: date) -> str | None:

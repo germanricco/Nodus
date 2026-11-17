@@ -227,7 +227,9 @@ class TransactionService:
     def _build_transaction(
         self, transaction_id: int | None, draft: TransactionDraft
     ) -> Transaction:
-        account = active_account(self._accounts, draft.account_id, "account_id")
+        current = self._transactions.get(transaction_id) if transaction_id is not None else None
+        kept_id = current.account_id if current is not None else None
+        account = active_account(self._accounts, draft.account_id, "account_id", kept_id)
         require_amount_for(draft.amount, account, "amount")
         require_in_calendar(draft.occurred_on, "occurred_on")
         category = require_found(self._categories.get(draft.category_id), "La categoría no existe.")

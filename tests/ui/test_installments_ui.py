@@ -334,9 +334,7 @@ class TestDialog:
 
         save(qtbot, dialog)
 
-        assert dialog.field_error(dialog.amount_input) == (
-            "El monto no alcanza para 6 cuotas de al menos un centavo."
-        )
+        assert dialog.field_error(dialog.amount_input) == ("El monto no alcanza para 6 cuotas.")
         assert all_transactions(services) == []
 
     def test_any_installment_opens_the_whole_purchase(self, qtbot, services, event_bus, heladera):

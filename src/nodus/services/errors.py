@@ -9,13 +9,13 @@ from collections.abc import Callable, Iterable
 from datetime import date
 from typing import Protocol, TypeVar
 
+from nodus.models.amount_parsing import TOO_LARGE_TEXT, without_cents_text
 from nodus.models.money import Money
 from nodus.models.names import normalize_name
 from nodus.models.period import FIRST_DAY, LAST_DAY
 
 T = TypeVar("T")
 
-TOO_LARGE_TEXT = "El monto es demasiado grande."
 OUT_OF_CALENDAR_TEXT = f"La fecha tiene que estar entre {FIRST_DAY.year} y {LAST_DAY.year}."
 NO_LETTERS_TEXT = "El nombre debe tener letras o números."
 
@@ -80,9 +80,12 @@ def clean_name(name: str) -> str:
 
 
 def require_storable(amount: Money, field: str | None = None) -> None:
-    """Rejects an amount beyond ``MAX_UNITS``: saved, it would break the balances."""
+    """Rejects an amount beyond ``MAX_UNITS``, which saved would break the balances, and
+    one with cents in a currency without them, which no screen could show as it is."""
     if not amount.is_storable:
         raise ValidationError(TOO_LARGE_TEXT, field=field)
+    if not amount.is_whole_for_currency:
+        raise ValidationError(without_cents_text(amount.currency), field=field)
 
 
 def require_in_calendar(day: date, field: str | None = None) -> None:

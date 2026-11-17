@@ -93,9 +93,10 @@ class TestAmountField:
         [
             "9" * 17,
             "9" * 30,
-            pytest.param("1,234.56", marks=known("task 6: a dot after a comma is guessed")),
-            pytest.param("10,005", marks=known("task 6: a third decimal is rounded")),
-            pytest.param("12.5.5", marks=known("task 6: dots that do not group thousands")),
+            "1,234.56",
+            "10,005",
+            "12.5.5",
+            "1,234",
         ],
     )
     def test_refuses_what_it_would_have_to_guess(self, qtbot, text):

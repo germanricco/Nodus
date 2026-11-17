@@ -70,6 +70,17 @@ class Money:
         """Whether the amount is within ``MAX_UNITS``, either way."""
         return abs(self.cents) <= MAX_CENTS
 
+    @property
+    def is_whole_for_currency(self) -> bool:
+        """Whether the amount has no cents its currency lacks: a Chilean peso amount is
+        always whole units."""
+        return self.currency.decimals > 0 or self.cents % CENTS_PER_UNIT == 0
+
+    @property
+    def smallest_step(self) -> int:
+        """The cents in the currency's smallest unit: 1, or 100 without cents."""
+        return 1 if self.currency.decimals else CENTS_PER_UNIT
+
     def __add__(self, other: Money) -> Money:
         self._require_same_currency(other)
         return Money(self.cents + other.cents, self.currency)

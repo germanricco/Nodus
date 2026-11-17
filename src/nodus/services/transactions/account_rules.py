@@ -8,10 +8,16 @@ from nodus.models.money import Money
 from nodus.services.errors import ValidationError, require_found, require_storable
 
 
-def active_account(accounts: AccountRepository, account_id: int, field: str) -> Account:
-    """The account, if it exists and is not archived; ``field`` names it in the draft."""
+def active_account(
+    accounts: AccountRepository, account_id: int, field: str, kept_id: int | None = None
+) -> Account:
+    """The account, if it exists and is not archived; ``field`` names it in the draft.
+
+    ``kept_id`` is the account an edited movement already has, which may be archived: an
+    archived account takes no new movements, but its history can still be corrected.
+    """
     account = require_found(accounts.get(account_id), "La cuenta no existe.")
-    if account.is_archived:
+    if account.is_archived and account.id != kept_id:
         raise ValidationError(f"La cuenta «{account.name}» está archivada.", field=field)
     return account
 

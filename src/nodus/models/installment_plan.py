@@ -52,8 +52,8 @@ class InstallmentPlan:
             raise ValueError(
                 f"A purchase has {MIN_INSTALLMENTS} to {MAX_INSTALLMENTS} installments"
             )
-        if self.total.cents < self.count:
-            raise ValueError("Each installment must be at least one cent")
+        if self.total.cents < self.count * self.total.smallest_step:
+            raise ValueError("Each installment must be at least the currency's smallest unit")
         if self.settled_on is not None and self.settled_on < self.first_due_on:
             raise ValueError("A purchase cannot be paid off before its first installment")
 
@@ -66,9 +66,12 @@ class InstallmentPlan:
         return cls(plan_id, count, Money(amount.cents * count, amount.currency), first_due_on)
 
     def amounts(self) -> list[Money]:
-        """What each installment is worth. The cents that do not divide evenly go to the
-        first one, so the installments add up to the total exactly."""
-        share, rest = divmod(self.total.cents, self.count)
+        """What each installment is worth, in whole cents, or whole units for a currency
+        without cents. What does not divide evenly goes to the first one, so the
+        installments add up to the total exactly."""
+        step = self.total.smallest_step
+        share = self.total.cents // (self.count * step) * step
+        rest = self.total.cents - share * self.count
         currency = self.total.currency
         return [Money(share + rest, currency)] + [Money(share, currency)] * (self.count - 1)
 

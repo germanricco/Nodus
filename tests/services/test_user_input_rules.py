@@ -14,7 +14,7 @@ from contextlib import suppress
 from datetime import date, datetime
 
 import pytest
-from factories import TODAY, ars, charge_draft, eur, expense_draft, usd
+from factories import TODAY, ars, charge_draft, clp, eur, expense_draft, usd
 
 from nodus.database.database import Database
 from nodus.models.account import AccountType
@@ -128,6 +128,23 @@ def test_absurd_amounts_are_refused_with_a_message(services, pesos, save):
             services.budgets.set_limit(category, Month.of(TODAY), absurd)
         else:
             services.accounts.create("Enorme", AccountType.CASH, Currency.ARS, absurd)
+
+
+@pytest.mark.parametrize("save", ["expense", "charge", "initial balance", "value"])
+def test_chilean_pesos_with_cents_are_refused_by_the_services(services, save):
+    """The field refuses them first; the services do too, so no other way of saving an
+    amount (Telegram, a script) stores cents that no screen shows."""
+    with_cents = Money(12_350, Currency.CLP)
+    savings = services.accounts.create("Chile", AccountType.SAVINGS, Currency.CLP, clp("0"))
+    with pytest.raises(ValidationError, match="Los pesos chilenos no llevan centavos."):
+        if save == "expense":
+            services.transactions.create(expense_draft(services, savings.id, with_cents))
+        elif save == "charge":
+            services.recurring.create(charge_draft(services, savings.id, with_cents))
+        elif save == "initial balance":
+            services.accounts.create("Otra", AccountType.CASH, Currency.CLP, with_cents)
+        else:
+            services.accounts.adjust_value(savings.id, with_cents, TODAY)
 
 
 def test_the_largest_amounts_accepted_still_add_up(services, pesos):
