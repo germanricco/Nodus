@@ -140,6 +140,8 @@ A bell gathers what needs your attention: a payment coming due, a budget passed,
 
 Everything lives in one file on your computer, `%APPDATA%\Nodus\nodus.db`, with the daily backups next to it in `%APPDATA%\Nodus\backups`. Updating or uninstalling Nodus never touches it. The app only goes online for two things, and you can turn both off: checking GitHub for a new version, without sending any of your data (the installer itself is only downloaded when you click «Actualizar»), and fetching exchange rates from [DolarApi](https://dolarapi.com) if you chose an automatic source.
 
+To track down errors, Nodus keeps a short log in `%APPDATA%\Nodus\logs`, with what it did and what failed but never amounts, names or notes. It never leaves your computer on its own. If something goes wrong, Nodus says so and offers «Enviar reporte», which opens the feedback form with the error already written; you read it in your browser and decide whether to send it.
+
 ## Download and install
 
 Nodus runs on **64-bit Windows 10 and 11**.

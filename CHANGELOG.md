@@ -4,6 +4,9 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 
 ## 1.9.0
 
+- Si algo falla en Nodus, ya no pasa en silencio: un aviso te dice que lo que estabas haciendo puede no haberse guardado y ofrece «Enviar reporte», que abre el formulario de comentarios con el error ya escrito. Lo lees en el navegador antes de enviarlo, y no lleva montos, nombres ni rutas de tu computadora.
+- Nodus lleva un registro de lo que hace, junto a tus datos, para encontrar un error después: qué copia guardó, si trajo la cotización o por qué no. No anota montos ni nombres, y se abre desde Ajustes, en «Registro de errores».
+- Si tus datos no se pueden abrir al iniciar, Nodus te dice qué hacer, en lugar de un mensaje técnico.
 - Dos cuentas ya no pueden llamarse igual, aunque cambien las mayúsculas o las tildes: «Banco» y «banco», o «Bancó», serían dos cuentas imposibles de distinguir en un menú. Lo mismo vale para las categorías, así que «Comida» y «Cómida» son la misma. Si ya tenías dos con el mismo nombre, se quedan como están y las puedes seguir editando.
 - «Reembolsos» pasa a ser una categoría de sistema, como «Otros»: Nodus la usa para ofrecer «Reembolso de», así que ya no se renombra ni se elimina. Si la habías renombrado, Nodus reconoce la tuya por los reembolsos que tiene; si la habías eliminado, vuelve.
 - Esc cierra la Ayuda, y la lista de atajos lo dice.

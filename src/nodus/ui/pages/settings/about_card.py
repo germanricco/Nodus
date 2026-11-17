@@ -7,7 +7,7 @@ from PySide6.QtCore import Signal
 from nodus import __version__
 from nodus.links import DONATE_URL, REPOSITORY_URL, feedback_url
 from nodus.services.container import Services
-from nodus.ui.browser import open_url
+from nodus.ui.browser import open_folder, open_url
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.text.labels import TOUR_LABEL
 from nodus.ui.widgets.card import Card
@@ -17,7 +17,7 @@ from nodus.ui.widgets.style import secondary_button
 
 
 class AboutCard(Card):
-    """Nodus itself: the version, updates, news, help, the tour and the project."""
+    """Nodus itself: the version, updates, news, help, the tour, the log and the project."""
 
     tour_requested = Signal()
     help_requested = Signal()
@@ -39,6 +39,13 @@ class AboutCard(Card):
         tour_row.add(secondary_button(TOUR_LABEL, self.tour_requested.emit))
         help_row = SettingRow("Ayuda", "Cómo se hace cada cosa y los atajos. También con F1.")
         help_row.add(secondary_button("Abrir la ayuda", self.help_requested.emit))
+        logs_row = SettingRow(
+            "Registro de errores",
+            "Lo que anota Nodus para encontrar un error. Queda en tu computadora.",
+        )
+        self.logs_button = logs_row.add(
+            secondary_button("Abrir carpeta", lambda: open_folder(services.settings.logs_folder))
+        )
         feedback_row = SettingRow("Comentarios", "Una idea o un error, sin crear una cuenta.")
         feedback_row.add(secondary_button("Enviar comentarios", lambda: open_url(feedback_url())))
         donate_row = SettingRow("Apoyar el proyecto", "Nodus es gratis y lo va a seguir siendo.")
@@ -50,6 +57,7 @@ class AboutCard(Card):
             help_row,
             tour_row,
             feedback_row,
+            logs_row,
             donate_row,
         ):
             self.body.addWidget(row)

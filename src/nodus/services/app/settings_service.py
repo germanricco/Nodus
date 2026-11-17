@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from datetime import date
 from pathlib import Path
 
-from nodus.config.paths import visible_path
+from nodus.config.paths import AppPaths, visible_path
 from nodus.config.system import windows_animations_on
 from nodus.database.database import Database
 from nodus.database.repositories.settings_repository import SettingsRepository
@@ -53,6 +53,11 @@ class SettingsService:
     def data_file(self) -> Path:
         """The SQLite file that holds all of the user's data, where the user can find it."""
         return visible_path(self._database.path)
+
+    @property
+    def logs_folder(self) -> Path:
+        """Where Nodus writes down what happened, next to the data file."""
+        return visible_path(AppPaths(self._database.path.parent).logs_dir)
 
     def theme_preference(self) -> str | None:
         """The saved theme ("light", "dark" or "system"), or None if never chosen."""

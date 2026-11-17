@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from nodus.config.logs import describe
 from nodus.links import DOLARAPI_URL, QUOTES_URL
 from nodus.models.currency import Currency
 from nodus.services.accounts.account_service import AccountService
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.settings_service import SettingsService
 from nodus.services.external.http import Fetch
+
+logger = logging.getLogger(__name__)
 
 # QUOTES_URL lists the official rates of the other currencies, keyed by "moneda".
 MANUAL = "manual"
@@ -103,7 +107,8 @@ class RateFeedService:
             quotes = json.loads(self._fetch(DOLARAPI_URL))
             quote = next(q for q in quotes if q["casa"] == source)
             return _positive(quote["venta"])
-        except _BAD_ANSWER:
+        except _BAD_ANSWER as error:
+            logger.warning("Dollar rate from %s unavailable: %s", source, describe(error))
             return None
 
     def fetch_official(self, currencies: list[Currency]) -> dict[Currency, Decimal]:
@@ -114,7 +119,8 @@ class RateFeedService:
         try:
             quotes = json.loads(self._fetch(QUOTES_URL))
             by_code = {q.get("moneda"): q for q in quotes}
-        except _BAD_ANSWER:
+        except _BAD_ANSWER as error:
+            logger.warning("Official rates unavailable: %s", describe(error))
             return {}
         rates = {}
         for currency in currencies:
@@ -132,6 +138,11 @@ class RateFeedService:
         rates = self.fetch_official([c for c in currencies if c is not Currency.USD])
         if Currency.USD in currencies and (dollar := self.fetch(source)) is not None:
             rates[Currency.USD] = dollar
+        logger.info(
+            "Rates fetched for %s of %s",
+            ", ".join(c.value for c in rates) or "none",
+            ", ".join(c.value for c in currencies),
+        )
         return rates
 
     def save(self, value: Decimal, today: date, currency: Currency = Currency.USD) -> None:

@@ -344,6 +344,9 @@ HELP_TOPICS = [
             "Nodus solo se conecta a internet para ver si hay una versión nueva y para traer"
             " las cotizaciones, si elegiste una fuente automática. Las dos cosas se apagan en"
             " Ajustes.",
+            "Para encontrar un error, Nodus anota lo que hace en un registro, sin montos ni"
+            " nombres, que queda en tu computadora. Si algo falla, «Enviar reporte» abre el"
+            " formulario de comentarios con el error ya escrito, y lo lees antes de enviarlo.",
         ),
         ("backups",),
     ),

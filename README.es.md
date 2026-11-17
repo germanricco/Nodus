@@ -138,6 +138,8 @@ Una campana junta lo que merece tu atención: un pago que vence, un presupuesto 
 
 Todo vive en un archivo de tu computadora, `%APPDATA%\Nodus\nodus.db`, con las copias diarias al lado, en `%APPDATA%\Nodus\backups`. Actualizar o desinstalar Nodus no lo toca. La aplicación solo se conecta a internet para dos cosas, y puedes desactivar las dos: ver en GitHub si hay una versión nueva, sin enviar ningún dato tuyo (el instalador solo se descarga cuando tocas «Actualizar»), y traer las cotizaciones de [DolarApi](https://dolarapi.com) si elegiste una fuente automática.
 
+Para encontrar errores, Nodus lleva un registro breve en `%APPDATA%\Nodus\logs`, con lo que hizo y lo que falló, pero nunca montos, nombres ni notas. Nunca sale de tu computadora por su cuenta. Si algo falla, Nodus te lo dice y ofrece «Enviar reporte», que abre el formulario de comentarios con el error ya escrito; lo lees en el navegador y decides si enviarlo.
+
 ## Descargar e instalar
 
 Nodus funciona en **Windows 10 y 11 de 64 bits**.

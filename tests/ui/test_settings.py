@@ -10,6 +10,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import FOREIGN_CURRENCIES, Currency
 from nodus.services.errors import BackupError
 from nodus.services.external.startup_service import StartupService
+from nodus.ui import browser
 from nodus.ui.dialogs import export, external_backup
 from nodus.ui.pages.settings import data_card, rates_card
 from nodus.ui.pages.settings.general_card import THEME_MODES
@@ -294,3 +295,14 @@ class TestCopyOutside:
         page.data.backup_reminder_input.click()
 
         assert services.settings.backup_reminder() is False
+
+
+def test_the_log_folder_opens_next_to_the_data(page, services, monkeypatch):
+    opened = []
+    monkeypatch.setattr(browser.QDesktopServices, "openUrl", lambda url: opened.append(url))
+
+    page.about.logs_button.click()
+
+    assert opened[0].toLocalFile() == str(services.settings.logs_folder).replace("\\", "/")
+    assert services.settings.logs_folder == services.settings.data_file.parent / "logs"
+    assert services.settings.logs_folder.is_dir()

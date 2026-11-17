@@ -52,6 +52,11 @@ class AppPaths:
         """Where the daily copies are kept, next to the data."""
         return self.data_dir / "backups"
 
+    @property
+    def logs_dir(self) -> Path:
+        """Where Nodus writes down what happened, to find an error after the fact."""
+        return self.data_dir / "logs"
+
     def ensure_data_dir(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)
 

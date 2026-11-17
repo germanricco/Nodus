@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import shutil
 import subprocess
 import tempfile
@@ -13,10 +14,13 @@ from pathlib import Path
 from typing import Any
 
 from nodus import APP_NAME, USER_AGENT, is_installed
+from nodus.config.logs import describe
 from nodus.links import LATEST_RELEASE_API
 from nodus.models.version import parse_version
 from nodus.services.errors import UpdateError
 from nodus.services.external.http import Fetch, Stream, downloader, streamer
+
+logger = logging.getLogger(__name__)
 
 GITHUB_JSON = "application/vnd.github+json"
 # The installer runs without questions, keeps the choices of the previous installation
@@ -104,8 +108,10 @@ class UpdateService:
             installer = _installer(version, data.get("assets") or [])
             latest = Release(version, data["html_url"], notes, installer)
             is_newer = parse_version(latest.version) > parse_version(self.current_version)
-        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+            logger.warning("Update check failed: %s", describe(error))
             return None
+        logger.info("Update check: latest is %s", latest.version)
         return latest if is_newer else None
 
     def can_install(self, release: Release) -> bool:
@@ -142,6 +148,7 @@ class UpdateService:
                     received += len(chunk)
                     on_progress(received)
         except OSError as error:
+            logger.warning("Update download failed", exc_info=error)
             partial.unlink(missing_ok=True)
             raise UpdateError(
                 "No se pudo descargar la actualización. Revisa la conexión a internet y"
@@ -152,6 +159,7 @@ class UpdateService:
             partial.unlink(missing_ok=True)
             return None
         if digest.hexdigest() != installer.sha256:
+            logger.warning("Update download arrived damaged")
             partial.unlink(missing_ok=True)
             raise UpdateError("La descarga llegó dañada. Vuelve a intentarlo.")
         partial.replace(destination)
@@ -167,6 +175,7 @@ class UpdateService:
         try:
             self._launch([str(installer), *INSTALLER_ARGUMENTS])
         except OSError as error:
+            logger.warning("The installer could not start", exc_info=error)
             raise UpdateError(
                 "No se pudo abrir el instalador. Vuelve a intentarlo.",
                 str(error),

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import sqlite3
 from collections.abc import Iterator
@@ -9,6 +10,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 _MIGRATIONS_PACKAGE = "nodus.database.migrations"
 _MIGRATION_FILENAME = re.compile(r"^(\d+)_(\w+)\.sql$")
@@ -54,6 +57,9 @@ class Database:
             database.migrate(migrations if migrations is not None else load_packaged_migrations())
         except sqlite3.DatabaseError as error:
             raise DatabaseError(f"{path}: {error}") from error
+        logger.info(
+            "Data opened: schema %d%s", database.schema_version, ", new" if database.created else ""
+        )
         return database
 
     @staticmethod
@@ -100,6 +106,9 @@ class Database:
         )
         if not pending:
             return
+        logger.info(
+            "Updating the data from schema %d to %d", self.schema_version, pending[-1].version
+        )
         if self.schema_version > 0:
             self.backup_to(self.backup_path)
         for migration in pending:

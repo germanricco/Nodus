@@ -5,14 +5,14 @@ from __future__ import annotations
 from datetime import date, datetime
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFileDialog, QFrame, QMessageBox, QPushButton
 
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.backup_service import BackupService
 from nodus.services.container import Services
 from nodus.services.errors import BackupError, ValidationError
+from nodus.ui.browser import open_folder
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import all_transactions_filename, export_transactions
 from nodus.ui.dialogs.external_backup import save_copy_outside
@@ -28,10 +28,6 @@ from nodus.ui.widgets.inputs.toggle_switch import ToggleSwitch
 from nodus.ui.widgets.setting_row import SettingRow
 from nodus.ui.widgets.style import secondary_button
 from nodus.ui.widgets.toast import show_toast
-
-
-def open_folder(folder: Path) -> None:
-    QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
 
 class DataCard(Card):
@@ -158,9 +154,7 @@ class DataCard(Card):
         )
 
     def _open_backups_folder(self) -> None:
-        backups_dir = self._services.backups.backups_dir
-        backups_dir.mkdir(parents=True, exist_ok=True)
-        open_folder(backups_dir)
+        open_folder(self._services.backups.backups_dir)
 
     def restore_backup(self) -> None:
         """Replaces the data with a copy the user picks, after confirming."""

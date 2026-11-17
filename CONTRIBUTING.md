@@ -47,6 +47,7 @@ Dentro de `services` y de `ui`, cada carpeta agrupa archivos que comparten una r
 Los tests en `tests/` siguen la misma estructura. Algunas reglas que conviene conocer:
 
 - **Dinero:** los montos se guardan en centavos enteros, nunca en números de punto flotante, que acumulan errores de redondeo.
+- **Registro:** cada módulo anota con `logging.getLogger(__name__)`, y `config/logs.py` lo escribe en `logs/nodus.log`, junto a los datos. Una línea dice qué pasó o qué tipo de error hubo, nunca montos, nombres ni notas, porque el usuario puede mandar el registro al reportar un problema; los mensajes de error pasan por `scrub`, que tapa lo que va entre comillas, los números largos y las rutas. Un error que nada atrapó llega a `ui/error_reporter.py`, que lo anota y lo muestra con «Enviar reporte».
 - **Migraciones:** el esquema vive en `src/nodus/database/migrations/NNN_nombre.sql` y se aplica con `PRAGMA user_version`. Una migración publicada nunca se edita, porque las bases de los usuarios ya la aplicaron: cada cambio va en un archivo nuevo con el número siguiente.
 - **Idiomas:** el código, los identificadores y los mensajes de commit van en inglés; los textos que ve el usuario, en español.
 - **Estilo:** PEP 8 y type hints en todo código nuevo, con un docstring breve en cada módulo, clase y método público.

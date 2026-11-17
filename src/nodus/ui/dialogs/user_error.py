@@ -7,6 +7,8 @@ not used because its button reads «Show Details…» in English.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
@@ -19,11 +21,20 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus import APP_NAME
+from nodus.config.logs import error_lines
+from nodus.ui.browser import open_folder, open_url
+from nodus.ui.text.error_report import report_url
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.style import secondary_button
 
 SHOW_DETAIL = "Ver detalle"
 HIDE_DETAIL = "Ocultar detalle"
+UNEXPECTED_WHAT = "Algo falló en Nodus."
+UNEXPECTED_HOW = (
+    "Lo que estabas haciendo puede no haberse guardado: revísalo. Envía el reporte para que"
+    " lo arreglemos: se abre en el navegador y lo lees antes de enviarlo."
+)
 
 
 class ErrorDetail(QWidget):
@@ -92,14 +103,32 @@ class UserErrorDialog(QDialog):
         self.detail = ErrorDetail()
         self.detail.set_detail(detail)
         layout.addWidget(self.detail)
-        buttons = QHBoxLayout()
-        buttons.addStretch()
+        self.buttons = QHBoxLayout()
+        self.buttons.addStretch()
         self.close_button = QPushButton("Cerrar")
         self.close_button.setObjectName("PrimaryButton")
         self.close_button.setDefault(True)
         self.close_button.clicked.connect(self.accept)
-        buttons.addWidget(self.close_button)
-        layout.addLayout(buttons)
+        self.buttons.addWidget(self.close_button)
+        layout.addLayout(self.buttons)
+
+
+class UnexpectedErrorDialog(UserErrorDialog):
+    """An error Nodus did not expect, which is a fault of Nodus and not of the user:
+    besides what to do, it offers «Enviar reporte», the comments form filled in with
+    what failed and where, and «Abrir registros», the folder of the log."""
+
+    def __init__(self, error: BaseException, logs_dir: Path, parent: QWidget | None = None):
+        detail = "\n".join(error_lines(error))
+        super().__init__(APP_NAME, UNEXPECTED_WHAT, UNEXPECTED_HOW, detail, parent)
+        self.logs_button = secondary_button("Abrir registros", lambda: open_folder(logs_dir))
+        self.logs_button.setToolTip("La carpeta donde Nodus anota lo que pasó")
+        self.buttons.insertWidget(0, self.logs_button)
+        self.report_button = secondary_button("Enviar reporte", lambda: open_url(report_url(error)))
+        self.report_button.setToolTip(
+            "Abre el formulario de comentarios con el reporte; lo lees antes de enviarlo"
+        )
+        self.buttons.insertWidget(self.buttons.indexOf(self.close_button), self.report_button)
 
 
 def user_error(parent: QWidget | None, title: str, what: str, how: str, detail: str = "") -> None:

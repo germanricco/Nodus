@@ -4,6 +4,7 @@ from one of them."""
 from __future__ import annotations
 
 import calendar
+import logging
 import re
 import sqlite3
 from datetime import date, datetime, timedelta
@@ -12,6 +13,8 @@ from pathlib import Path
 from nodus.database.database import Database, DatabaseError, latest_schema_version
 from nodus.services.app.settings_service import SettingsService
 from nodus.services.errors import BackupError, ValidationError
+
+logger = logging.getLogger(__name__)
 
 # A copy is named after its day; ``_DAILY_NAME`` reads the day back, for the old ones.
 _DAILY_NAME = re.compile(r"^nodus-(\d{4}-\d{2}-\d{2})\.db$")
@@ -65,7 +68,9 @@ class BackupService:
             self._copy_to(destination)
             self._prune()
         except (OSError, sqlite3.Error) as error:
+            logger.warning("Backup failed", exc_info=error)
             raise BackupError(str(error)) from error
+        logger.info("Backup saved")
         self.last_error = None  # a copy made by hand mends the day's failed one
         return destination
 
@@ -103,7 +108,9 @@ class BackupService:
         try:
             self._database.backup_to(destination)
         except (OSError, sqlite3.Error) as error:
+            logger.warning("Copy outside the computer failed", exc_info=error)
             raise BackupError(str(error)) from error
+        logger.info("Copy saved outside the computer")
         self._settings.set_external_backup(today, folder)
         return destination
 
@@ -144,15 +151,19 @@ class BackupService:
         try:
             version = Database.inspect(source)
         except DatabaseError as error:
+            logger.warning("Restore refused: not a readable database", exc_info=error)
             raise ValidationError("El archivo no es una copia válida de Nodus.") from error
         if version == 0:
+            logger.warning("Restore refused: an empty database")
             raise ValidationError("El archivo no es una copia de Nodus.")
         if version > latest_schema_version():
+            logger.warning("Restore refused: schema %d is newer than this Nodus", version)
             raise ValidationError(
                 "La copia viene de una versión más nueva de Nodus. Actualiza Nodus para usarla."
             )
         self._copy_to(self.backups_dir / f"nodus-antes-de-restaurar-{now:%Y-%m-%d-%H%M}.db")
         self._database.restore_from(source)
+        logger.info("Copy restored: schema %d", version)
 
     def _copy_to(self, destination: Path) -> None:
         self.backups_dir.mkdir(parents=True, exist_ok=True)
