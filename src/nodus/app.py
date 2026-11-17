@@ -21,6 +21,8 @@ from nodus.database.database import (
 from nodus.links import DOWNLOAD_URL
 from nodus.services.backups.recovery import DataRecovery
 from nodus.services.container import Services
+from nodus.smoke_test import FLAG as SMOKE_TEST_FLAG
+from nodus.smoke_test import SmokeTest
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.recovery_dialog import offer_recovery
 from nodus.ui.dialogs.user_error import UnexpectedErrorDialog, UserErrorDialog, user_error
@@ -89,7 +91,9 @@ class NodusApp:
         self._qt_app.setWindowIcon(app_icon())
         self._qt_texts = spanish_qt_texts(self._qt_app)
         self._set_taskbar_identity()
-        self._paths = AppPaths.from_environment()
+        # ``--smoke-test`` checks the built program, over a data folder of its own.
+        self._smoke_test = SmokeTest() if SMOKE_TEST_FLAG in argv else None
+        self._paths = self._smoke_test.paths if self._smoke_test else AppPaths.from_environment()
         self._window: MainWindow | None = None
 
     def run(self) -> int:
@@ -106,7 +110,10 @@ class NodusApp:
         run_log = RunLog(self._paths.logs_dir)
         run_log.start()
         reporter = ErrorReporter(visible_path(self._paths.logs_dir))
-        reporter.install()
+        if self._smoke_test is None:
+            reporter.install()
+        else:
+            self._smoke_test.install()
         logger.info("Starting: %s", system_line())
         try:
             return self._open_and_run(reporter, instance)
@@ -115,6 +122,8 @@ class NodusApp:
             reporter.uninstall()
             run_log.stop()
             instance.release()
+            if self._smoke_test is not None:
+                self._smoke_test.close()
 
     def _show_the_open_one(self, instance: SingleInstance) -> int:
         """This run ends here: the Nodus that is open comes to the front, or, if it does
@@ -196,13 +205,19 @@ class NodusApp:
     def _open_window(self, services: Services) -> None:
         """Tidies the data up, opens the window and starts what runs behind it."""
         services.backups.create_if_due(date.today())
-        services.startup.repair()
+        if self._smoke_test is None:  # Windows' start-up entry is the real program's
+            services.startup.repair()
         services.updates.clean()
         set_reduced_motion(services.settings.reduce_motion())
         theme_mode = ThemeMode.from_setting(services.settings.theme_preference())
         theme_manager = ThemeManager(self._qt_app, theme_mode)
         self._window = window = MainWindow(services, EventBus(), theme_manager)
         window.show()
+        if self._smoke_test is not None:
+            smoke_test, app = self._smoke_test, self._qt_app
+            spanish = self._qt_texts is not None
+            QTimer.singleShot(0, lambda: smoke_test.finish(app, window, spanish))
+            return  # nothing from the internet, no dialogs nobody would answer
         window.check_for_updates()
         window.update_exchange_rate()
         # Once the window has painted, so the news appear over it, not before it.

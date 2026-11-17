@@ -8,9 +8,11 @@ Hace falta **Python 3.11**. En Windows, conviene instalarlo desde [python.org](h
 
 ```bash
 python -m venv .venv
-.venv/Scripts/python -m pip install -e ".[dev]"   # en Linux o macOS: .venv/bin/python
+.venv/Scripts/python -m pip install -e ".[dev]" -c constraints.txt   # en Linux o macOS: .venv/bin/python
 .venv/Scripts/python -m nodus
 ```
+
+`constraints.txt` fija la versión exacta de todo lo que se instala, Qt y PyInstaller incluidos: es lo mismo que usan la CI y la compilación del instalador, así que un test que pasa en tu máquina pasa allá. Para subir una versión, se cambia ahí y se corren los tests; el archivo dice cómo regenerarlo. La interfaz usa `PySide6-Essentials`, los módulos básicos de Qt, y no el paquete `PySide6` entero.
 
 Para probar sin tocar tus datos reales, define la variable de entorno `NODUS_DATA_DIR` con otra carpeta antes de abrirlo; Nodus crea ahí su base de datos y sus copias de seguridad.
 
@@ -26,6 +28,7 @@ La forma rápida de probar con tus datos de siempre es `scripts/dev.py`. Copia t
 
 ```bash
 .venv/Scripts/python -m pytest                       # tests
+.venv/Scripts/python -m pytest --cov=nodus          # tests, con la cobertura de cada módulo
 .venv/Scripts/python -m ruff check .                 # lint
 .venv/Scripts/python -m ruff format .                # formato
 .venv/Scripts/python scripts/screenshot.py --demo    # capturas de cada pantalla, claras y oscuras
@@ -55,11 +58,11 @@ Los tests en `tests/` siguen la misma estructura. Algunas reglas que conviene co
 ## Compilar el instalador
 
 ```bash
-.venv/Scripts/python -m pip install -e ".[build]"
+.venv/Scripts/python -m pip install -e ".[build]" -c constraints.txt
 .venv/Scripts/python scripts/build.py
 ```
 
-El script congela la aplicación con PyInstaller en `dist/Nodus/` y, si encuentra [Inno Setup 6](https://jrsoftware.org/isinfo.php), genera `dist/Nodus-Setup-<versión>.exe`. Para probar el instalador sin tocar tus datos, ábrelo con `NODUS_DATA_DIR` definida.
+El script congela la aplicación con PyInstaller en `dist/Nodus/` y, si encuentra [Inno Setup 6](https://jrsoftware.org/isinfo.php), genera `dist/Nodus-Setup-<versión>.exe`. Antes de armar el instalador abre el programa compilado con `Nodus.exe --smoke-test`. Esa prueba abre Nodus sobre una carpeta de datos temporal, sin internet y sin tocar el inicio con Windows, revisa lo que PyInstaller podría haber dejado afuera (el plugin de SVG, la traducción de Qt, las novedades, cada página) y sale con un código distinto de 0 si algo falta; en ese caso el script muestra el registro y se detiene. Para probar el instalador sin tocar tus datos, ábrelo con `NODUS_DATA_DIR` definida.
 
 Cuando el usuario toca «Actualizar», Nodus descarga el instalador del release (verificando el SHA-256 que publica GitHub para cada archivo adjunto) y lo abre con `/SILENT /SUPPRESSMSGBOXES /NORESTART /RELAUNCH=1` antes de cerrarse. `/RELAUNCH=1` hace que `packaging/nodus.iss` vuelva a abrir Nodus al terminar; sin ese parámetro, una instalación silenciosa deja la aplicación cerrada. Por eso el instalador de cada release tiene que llamarse `Nodus-Setup-<versión>.exe`, como lo genera `scripts/build.py`.
 
@@ -74,6 +77,6 @@ Cuando el usuario toca «Actualizar», Nodus descarga el instalador del release 
    ```
 
    `CHANGELOG.md` es la única fuente de las novedades, escrita para usuarios y en español. De ahí salen las notas del release (el mensaje de la etiqueta), el «Qué trae» del aviso de versión nueva y el diálogo de novedades que Nodus muestra una vez al abrir la versión nueva; el programa compilado lo lleva adentro.
-3. Subir el commit y la etiqueta. El flujo `.github/workflows/release.yml` comprueba que la etiqueta coincida con la versión, corre los tests, compila el instalador y crea el release con él.
+3. Subir el commit y la etiqueta. El flujo `.github/workflows/release.yml` comprueba que la etiqueta coincida con la versión, corre los tests, compila (con la prueba `--smoke-test`), instala el resultado en modo silencioso como lo haría un usuario, vuelve a abrir la copia instalada con `--smoke-test` y solo entonces crea el release. La CI de cada push informa además la cobertura de los tests en la página de la ejecución.
 
 Para probar la compilación sin publicar nada, en GitHub: Actions → Release → Run workflow, que deja el instalador como artefacto de la ejecución.

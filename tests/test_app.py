@@ -34,6 +34,8 @@ def nodus_app(qapp, tmp_path) -> NodusApp:
     nodus = NodusApp.__new__(NodusApp)
     nodus._qt_app = qapp
     nodus._paths = AppPaths(tmp_path / "Nodus")
+    nodus._smoke_test = None
+    nodus._qt_texts = None
     return nodus
 
 

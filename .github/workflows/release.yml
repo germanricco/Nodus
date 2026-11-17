@@ -27,10 +27,12 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-          cache-dependency-path: pyproject.toml
+          cache-dependency-path: |
+            pyproject.toml
+            constraints.txt
 
       - name: Install
-        run: python -m pip install -e ".[dev,build]"
+        run: python -m pip install -e ".[dev,build]" -c constraints.txt
 
       - name: Check that the tag matches the version in the code
         if: github.event_name == 'push'
@@ -51,6 +53,7 @@ jobs:
           fi
 
       - name: Build
+        # Also opens the built program with --smoke-test, and stops if it does not open whole.
         run: python scripts/build.py
 
       - name: Find the installer
@@ -58,6 +61,26 @@ jobs:
         run: |
           INSTALLER=$(ls dist/Nodus-Setup-*.exe)
           echo "path=${INSTALLER}" >> "$GITHUB_OUTPUT"
+
+      - name: Install it as a user would, and open the installed copy
+        shell: pwsh
+        timeout-minutes: 5
+        env:
+          NODUS_DATA_DIR: ${{ runner.temp }}\nodus-data
+        run: |
+          $app = Join-Path $env:RUNNER_TEMP "Nodus-installed"
+          $setup = Start-Process "${{ steps.installer.outputs.path }}" -Wait -PassThru `
+            -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/DIR=$app"
+          if ($setup.ExitCode -ne 0) {
+            Write-Error "The installer failed with exit code $($setup.ExitCode)."
+            exit 1
+          }
+          $run = Start-Process (Join-Path $app "Nodus.exe") -ArgumentList "--smoke-test" -Wait -PassThru
+          Get-Content (Join-Path $env:NODUS_DATA_DIR "logs\nodus.log") -ErrorAction Continue
+          if ($run.ExitCode -ne 0) {
+            Write-Error "The installed Nodus did not open whole (exit code $($run.ExitCode))."
+            exit 1
+          }
 
       - name: Attach the installer to the run
         if: github.event_name == 'workflow_dispatch'
