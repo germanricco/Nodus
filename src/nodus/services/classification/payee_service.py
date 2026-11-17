@@ -18,7 +18,7 @@ from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.undo_service import UndoError, UndoService, changed_since
 from nodus.services.classification.category_service import CategoryService
-from nodus.services.errors import ValidationError, clean_name, require_found
+from nodus.services.errors import ValidationError, clean_name, require_found, require_free_name
 from nodus.services.reports.dashboard_service import net_in_pesos
 from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transactions.transaction_service import TransactionService
@@ -248,14 +248,15 @@ class PayeeService:
 
     def _checked(self, payee: Payee) -> Payee:
         """``payee`` if its name is usable and no other payee has it."""
-        if not payee.normalized_name:
-            raise ValidationError("El nombre debe tener letras o números.", field="name")
+        hint = "; para juntarlos usa «Unir con…»" if payee.id is not None else ""
+        require_free_name(
+            payee.id,
+            payee.normalized_name,
+            self._payees.find_by_normalized,
+            lambda name: f"Ya existe «{name}»{hint}.",
+        )
         if payee.default_category_id is not None:
             self._categories.get(payee.default_category_id)
-        existing = self._payees.find_by_normalized(payee.normalized_name)
-        if existing is not None and existing.id != payee.id:
-            hint = "; para juntarlos usa «Unir con…»" if payee.id is not None else ""
-            raise ValidationError(f"Ya existe «{existing.name}»{hint}.", field="name")
         return payee
 
 

@@ -17,7 +17,7 @@ from nodus.services.accounts.account_service import AccountService
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.settings_service import SettingsService
 from nodus.services.app.undo_service import UndoService, changed_since
-from nodus.services.errors import ValidationError, clean_name, require_found
+from nodus.services.errors import ValidationError, clean_name, require_found, require_free_name
 from nodus.services.sorting import name_sort_key
 
 
@@ -191,9 +191,10 @@ class AccountGroupService:
 
     def _checked(self, group: AccountGroup) -> AccountGroup:
         """``group`` if its name is usable and no other group has it."""
-        if not group.normalized_name:
-            raise ValidationError("El nombre debe tener letras o números.", field="name")
-        existing = self._groups.find_by_normalized(group.normalized_name)
-        if existing is not None and existing.id != group.id:
-            raise ValidationError(f"Ya existe el grupo «{existing.name}».", field="name")
+        require_free_name(
+            group.id,
+            group.normalized_name,
+            self._groups.find_by_normalized,
+            lambda name: f"Ya existe el grupo «{name}».",
+        )
         return group

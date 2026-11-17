@@ -5,9 +5,9 @@ Error messages are in Spanish because the UI shows them to the user as they are.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import date
-from typing import TypeVar
+from typing import Protocol, TypeVar
 
 from nodus.models.money import Money
 from nodus.models.names import normalize_name
@@ -17,6 +17,14 @@ T = TypeVar("T")
 
 TOO_LARGE_TEXT = "El monto es demasiado grande."
 OUT_OF_CALENDAR_TEXT = f"La fecha tiene que estar entre {FIRST_DAY.year} y {LAST_DAY.year}."
+NO_LETTERS_TEXT = "El nombre debe tener letras o números."
+
+
+class Named(Protocol):
+    """A record with an id and a name: a payee, a tag, a group."""
+
+    id: int | None
+    name: str
 
 
 class ValidationError(Exception):
@@ -91,3 +99,19 @@ def require_unique_name(name: str, others: Iterable[str], message: str) -> None:
     normalized = normalize_name(name)
     if any(normalize_name(other) == normalized for other in others):
         raise ValidationError(message, field="name")
+
+
+def require_free_name(
+    own_id: int | None,
+    normalized: str,
+    find: Callable[[str], Named | None],
+    message: Callable[[str], str],
+) -> None:
+    """Rejects a name with no letters or numbers, or one that another record already has:
+    ``find`` looks it up by its ``normalize_name`` form, and ``message`` says so with the
+    other record's name. The record called ``own_id`` may keep its own name."""
+    if not normalized:
+        raise ValidationError(NO_LETTERS_TEXT, field="name")
+    existing = find(normalized)
+    if existing is not None and existing.id != own_id:
+        raise ValidationError(message(existing.name), field="name")

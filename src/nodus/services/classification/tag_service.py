@@ -16,7 +16,7 @@ from nodus.models.transaction import Transaction
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.undo_service import UndoError, UndoService, changed_since
-from nodus.services.errors import ValidationError, clean_name, require_found
+from nodus.services.errors import ValidationError, clean_name, require_found, require_free_name
 from nodus.services.reports.dashboard_service import net_in_pesos
 from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transactions.transaction_service import TransactionService
@@ -186,10 +186,11 @@ class TagService:
 
     def _checked(self, tag: Tag) -> Tag:
         """``tag`` if its name is usable and no other tag has it."""
-        if not tag.normalized_name:
-            raise ValidationError("El nombre debe tener letras o números.", field="name")
-        existing = self._tags.find_by_normalized(tag.normalized_name)
-        if existing is not None and existing.id != tag.id:
-            hint = "; para juntarlas usa «Unir con…»" if tag.id is not None else ""
-            raise ValidationError(f"Ya existe «{existing.name}»{hint}.", field="name")
+        hint = "; para juntarlas usa «Unir con…»" if tag.id is not None else ""
+        require_free_name(
+            tag.id,
+            tag.normalized_name,
+            self._tags.find_by_normalized,
+            lambda name: f"Ya existe «{name}»{hint}.",
+        )
         return tag
