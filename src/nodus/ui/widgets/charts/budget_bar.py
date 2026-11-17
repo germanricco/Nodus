@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
-from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
+from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.models.budget import Budget, BudgetState, used_percent_label
 from nodus.ui.theme.design import ControlSize, Line, Opacity
@@ -86,9 +86,7 @@ class BudgetBar(AnimatedChart):
     def __init__(self, theme: Theme, budget: Budget, parent: QWidget | None = None) -> None:
         super().__init__(theme, parent)
         self.budget = budget
-        self.setFixedHeight(self.HEIGHT + 2 * self.MARK_OVERHANG)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.setMouseTracking(False)
+        self.make_strip(self.HEIGHT + 2 * self.MARK_OVERHANG)
         if self.shows_pace:
             self.setToolTip(f"Ritmo del mes: {round(budget.elapsed * 100)} %")
         self._start_transition()

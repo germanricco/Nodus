@@ -23,9 +23,8 @@ from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.charts.chart_base import format_compact
 from nodus.ui.widgets.charts.goal_bar import goal_pill, goal_sentence, month_phrase
-from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint
+from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint, money_formats
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.money_label import amount_text, month_change_text
@@ -119,7 +118,8 @@ class GoalDetailPage(DetailPage):
 
         chart_card = Card("Lo ahorrado en el tiempo")
         self.chart = LineChart(
-            theme_manager.theme, self._format_value, self._format_axis, self._format_day
+            theme_manager.theme,
+            *money_formats(lambda: self.goal.currency if self.goal else None, lambda: self._hidden),
         )
         self.chart.setFixedHeight(Chart.ACCOUNT_HEIGHT)
         chart_card.body.addWidget(self.chart)
@@ -242,17 +242,3 @@ class GoalDetailPage(DetailPage):
     def _set_amounts_hidden(self, hidden: bool) -> None:
         self._hidden = hidden
         self.request_refresh()
-
-    def _format_value(self, cents: float) -> str:
-        currency = self.goal.currency if self.goal else None
-        if currency is None:
-            return ""
-        return amount_text(Money(round(cents), currency), self._hidden)
-
-    def _format_axis(self, cents: float) -> str:
-        if self._hidden or self.goal is None:
-            return ""
-        return format_compact(cents, self.goal.currency)
-
-    def _format_day(self, day: date) -> str:
-        return Month.of(day).short_name

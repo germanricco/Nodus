@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 from nodus.models.account import Account
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.money import Money
-from nodus.models.period import Month, format_day_month
+from nodus.models.period import Month
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
@@ -37,9 +37,8 @@ from nodus.ui.theme.design import Chart, Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import format_signed_percent
-from nodus.ui.widgets.charts.chart_base import format_compact
 from nodus.ui.widgets.charts.goal_bar import month_phrase
-from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint
+from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint, money_formats
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
@@ -155,7 +154,8 @@ class AccountDetailPage(DetailPage):
         self.range_input.changed.connect(self._set_chart_range)
         header.addWidget(self.range_input)
         self.chart = LineChart(
-            theme_manager.theme, self._format_value, self._format_axis, self._format_day
+            theme_manager.theme,
+            *money_formats(self._currency, lambda: self._hidden, lambda: self._daily),
         )
         self.chart.setFixedHeight(Chart.ACCOUNT_HEIGHT)
         chart_card.body.addWidget(self.chart)
@@ -385,12 +385,3 @@ class AccountDetailPage(DetailPage):
 
     def _currency(self) -> Currency:
         return self.account.currency if self.account else HOME_CURRENCY
-
-    def _format_value(self, cents: float) -> str:
-        return amount_text(Money(round(cents), self._currency()), self._hidden)
-
-    def _format_axis(self, cents: float) -> str:
-        return "" if self._hidden else format_compact(cents, self._currency())
-
-    def _format_day(self, day: date) -> str:
-        return format_day_month(day) if self._daily else Month.of(day).short_name

@@ -17,16 +17,20 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QWidget
 
-from nodus.models.period import format_date
+from nodus.models.currency import Currency
+from nodus.models.money import Money
+from nodus.models.period import Month, format_date, format_day_month
 from nodus.ui.theme.design import Chart, Line, Opacity, Space, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.charts.chart_base import (
     ColumnHoverChart,
+    format_compact,
     lerp,
     resample,
     starting_values,
     with_alpha,
 )
+from nodus.ui.widgets.money_label import amount_text
 
 # Up/down dots are drawn only while they stay readable.
 MAX_CHANGE_DOTS = 31
@@ -393,3 +397,29 @@ class LineChart(ColumnHoverChart):
             return None
         plot = self._plot_rect()
         return min(known, key=lambda i: abs(self._x(i, plot) - x))
+
+
+MoneyFormats = tuple[Callable[[float], str], Callable[[float], str], Callable[[date], str]]
+
+
+def money_formats(
+    currency: Callable[[], Currency | None],
+    hidden: Callable[[], bool],
+    daily: Callable[[], bool] = lambda: False,
+) -> MoneyFormats:
+    """How a chart of money writes its tooltip value, its axis and its days, asked each
+    time it paints: the currency it shows, whether amounts are hidden, and whether its
+    points are days (or months)."""
+
+    def value(cents: float) -> str:
+        shown = currency()
+        return "" if shown is None else amount_text(Money(round(cents), shown), hidden())
+
+    def axis(cents: float) -> str:
+        shown = currency()
+        return "" if shown is None or hidden() else format_compact(cents, shown)
+
+    def day(point: date) -> str:
+        return format_day_month(point) if daily() else Month.of(point).short_name
+
+    return value, axis, day

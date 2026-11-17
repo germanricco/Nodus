@@ -5,20 +5,18 @@ from __future__ import annotations
 from collections.abc import Hashable
 from dataclasses import dataclass
 
-from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
+from PySide6.QtCore import QRectF, QSize, Qt, Signal
+from PySide6.QtGui import QMouseEvent, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
 
 from nodus.models.period import Month, format_month
 from nodus.services.reports.dashboard_service import MonthFlow
-from nodus.ui.theme.design import Chart, Line, Opacity, Radius, TextRole, role_font
+from nodus.ui.theme.design import Chart, Opacity, Radius
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.charts.chart_base import (
-    ColumnHoverChart,
-    column_slots,
+    BarColumnsChart,
     lerp,
     rounded_bar_path,
-    slot_index,
     starting_values,
     with_alpha,
 )
@@ -43,7 +41,7 @@ class BarGroup:
         return self.label if self.key is None else self.key
 
 
-class BarChart(ColumnHoverChart):
+class BarChart(BarColumnsChart):
     """A green income bar next to a red expense bar for each month, so both sides of the
     result can be compared at a glance.
 
@@ -54,7 +52,7 @@ class BarChart(ColumnHoverChart):
 
     clicked = Signal(int)
 
-    BOTTOM, TOP = 22.0, 8.0  # geometry: room for the axis labels
+    TOP = 8.0  # geometry
     GROUP_GAP_RATIO = 0.3  # geometry
 
     def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
@@ -81,6 +79,9 @@ class BarChart(ColumnHoverChart):
     def groups(self) -> list[BarGroup]:
         return self._groups
 
+    def columns(self) -> list[BarGroup]:
+        return self._groups
+
     def _values_at(self, progress: float) -> list[tuple[float, float]]:
         """The (income, expenses) heights on screen at ``progress``, never below zero."""
         targets = [(max(g.income, 0.0), max(g.expenses, 0.0)) for g in self._groups]
@@ -91,10 +92,6 @@ class BarChart(ColumnHoverChart):
             for begin, end in zip(self._previous, targets, strict=True)
         ]
 
-    def _slots(self) -> list[QRectF]:
-        """The column each month occupies, full height."""
-        return column_slots(len(self._groups), self.width(), self.height())
-
     def paintEvent(self, _event: QPaintEvent) -> None:  # noqa: N802
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -103,9 +100,8 @@ class BarChart(ColumnHoverChart):
         room = baseline - top
         largest = max([v for pair in values for v in pair] + [1.0])
 
-        small = role_font(TextRole.NOTE)
         for index, (slot, group, pair) in enumerate(
-            zip(self._slots(), self._groups, values, strict=True)
+            zip(self.slots(), self._groups, values, strict=True)
         ):
             faded = self.hover_index is not None and index != self.hover_index
             inner = slot.width() * (1 - self.GROUP_GAP_RATIO)
@@ -122,32 +118,14 @@ class BarChart(ColumnHoverChart):
                 painter.setPen(Qt.PenStyle.NoPen)
                 painter.setBrush(with_alpha(color, Opacity.FADED if faded else Opacity.BAR))
                 painter.drawPath(rounded_bar_path(rect, Radius.S, True))
-            font = QFont(small)
-            font.setWeight(QFont.Weight.DemiBold if group.selected else QFont.Weight.Normal)
-            painter.setFont(font)
-            painter.setPen(QColor(self._theme.text if group.selected else self._theme.text_muted))
-            painter.drawText(
-                QRectF(slot.left(), baseline + 4, slot.width(), self.BOTTOM - 4),
-                Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
-                group.label,
-            )
-        painter.setPen(QPen(QColor(self._theme.border), Line.THIN))
-        painter.drawLine(QPointF(0, baseline), QPointF(self.width(), baseline))
-        if self.hover_index is not None:
-            slot = self._slots()[self.hover_index]
-            group = self._groups[self.hover_index]
-            self.paint_tooltip(
-                painter, QPointF(slot.center().x(), self.height() / 2), group.tooltip_title,
-                group.tooltip_lines,
-            )  # fmt: skip
+            self.paint_label(painter, slot, group.label, group.selected)
+        self.paint_baseline(painter, baseline)
+        self.paint_hover(painter)
         painter.end()
 
-    def index_at(self, x: float) -> int | None:
-        return slot_index(self._slots(), x)
-
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
-        index = self.index_at(event.position().x())
-        if index is not None and event.button() is Qt.MouseButton.LeftButton:
+        index = self.clicked_index(event)
+        if index is not None:
             self.clicked.emit(index)
 
 

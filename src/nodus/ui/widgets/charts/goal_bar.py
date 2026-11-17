@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QPainter, QPaintEvent
-from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
+from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.models.goal import Goal, GoalProgress, GoalState
 from nodus.models.money import Money
@@ -103,9 +103,7 @@ class GoalBar(AnimatedChart):
     def __init__(self, theme: Theme, progress: GoalProgress, parent: QWidget | None = None) -> None:
         super().__init__(theme, parent)
         self.goal_progress = progress
-        self.setFixedHeight(self.HEIGHT)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.setMouseTracking(False)
+        self.make_strip(self.HEIGHT)
         self._start_transition()
 
     @property

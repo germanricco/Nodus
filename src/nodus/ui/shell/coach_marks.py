@@ -8,13 +8,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import QEvent, QObject, QRect, QRectF, Qt, QVariantAnimation, Signal
+from PySide6.QtCore import QEvent, QObject, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QKeyEvent, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QPen
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from nodus.ui.theme.design import Easing, Layout, Line, Motion, Opacity, Radius, Space, motion_ms
 from nodus.ui.theme.theme import Theme
-from nodus.ui.widgets.style import elevate, muted_label
+from nodus.ui.widgets.style import elevate, muted_label, unit_animation
 
 COACH_TARGET = "coach_target"
 
@@ -82,11 +82,7 @@ class CoachMarks(QWidget):
         layout.addLayout(buttons)
         elevate(self.bubble, theme)
 
-        self._fade_in = QVariantAnimation(self)
-        self._fade_in.setStartValue(0.0)
-        self._fade_in.setEndValue(1.0)
-        self._fade_in.setEasingCurve(Easing.SETTLE)
-        self._fade_in.valueChanged.connect(self._set_fade)
+        self._fade_in = unit_animation(self, Easing.SETTLE, self._set_fade)
         window.installEventFilter(self)
 
     def _button(self, text: str, style: str, slot) -> QPushButton:

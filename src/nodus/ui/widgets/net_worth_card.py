@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWi
 
 from nodus.models.currency import TOTAL_CURRENCIES, Currency
 from nodus.models.money import Money
-from nodus.models.period import Month, Period, format_day_month
+from nodus.models.period import Period, format_day_month
 from nodus.services.container import Services
 from nodus.services.reports.dashboard_service import relative_change
 from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint
@@ -20,13 +20,12 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.change_badge import ChangeBadge, format_signed_percent
-from nodus.ui.widgets.charts.chart_base import format_compact
 from nodus.ui.widgets.charts.charts import ProportionBar, Segment
-from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint
+from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint, money_formats
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.flow_layout import FlowLayout
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
-from nodus.ui.widgets.money_label import AnimatedMoneyLabel, masked
+from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 from nodus.ui.widgets.style import muted_label
 
 # The net worth can be shown in these; the parts held in any currency are listed apart.
@@ -105,7 +104,8 @@ class NetWorthCard(Card):
         self.chart: LineChart | None = None
         if not compact:
             self.chart = LineChart(
-                self._theme, self._format_value, self._format_axis, self._format_axis_day
+                self._theme,
+                *money_formats(self.currency, lambda: self._hidden, lambda: self._daily),
             )
             self.body.addWidget(self.chart, stretch=1)
         self.composition = ProportionBar(self._theme)
@@ -347,16 +347,6 @@ class NetWorthCard(Card):
         return "\n".join(lines)
 
     # Chart formatting
-
-    def _format_value(self, cents: float) -> str:
-        money = Money(round(cents), self.currency())
-        return masked(money) if self._hidden else money.format()
-
-    def _format_axis(self, cents: float) -> str:
-        return "" if self._hidden else format_compact(cents, self.currency())
-
-    def _format_axis_day(self, day: date) -> str:
-        return format_day_month(day) if self._daily else Month.of(day).short_name
 
     # Reactions
 

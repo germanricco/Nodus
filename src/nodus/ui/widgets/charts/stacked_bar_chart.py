@@ -9,14 +9,12 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
-from nodus.ui.theme.design import Chart, Line, Opacity, Radius, TextRole, role_font
+from nodus.ui.theme.design import Chart, Line, Opacity, Radius
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.charts.chart_base import (
-    ColumnHoverChart,
-    column_slots,
+    BarColumnsChart,
     lerp,
     rounded_bar_path,
-    slot_index,
     starting_values,
     with_alpha,
 )
@@ -50,7 +48,7 @@ class StackedBar:
         return self.label if self.key is None else self.key
 
 
-class StackedBarChart(ColumnHoverChart):
+class StackedBarChart(BarColumnsChart):
     """A bar per month, stacked by category, with a dashed line at the monthly average.
 
     Bars grow the first time and each piece resizes to its new value afterwards, matched
@@ -61,7 +59,7 @@ class StackedBarChart(ColumnHoverChart):
 
     clicked = Signal(int, object)  # bar index, segment key or None
 
-    BOTTOM, TOP = 22.0, 18.0  # geometry: room for the axis labels and the totals
+    TOP = 18.0  # geometry: room for the totals
     GAP_RATIO = 0.35  # geometry
 
     def __init__(
@@ -98,6 +96,9 @@ class StackedBarChart(ColumnHoverChart):
     def bars(self) -> list[StackedBar]:
         return self._bars
 
+    def columns(self) -> list[StackedBar]:
+        return self._bars
+
     def _values_at(self, progress: float) -> list[list[float]]:
         """The value of each piece on screen at ``progress``."""
         if len(self._previous) != len(self._bars):
@@ -108,9 +109,6 @@ class StackedBarChart(ColumnHoverChart):
         ]
 
     # Geometry
-
-    def _slots(self) -> list[QRectF]:
-        return column_slots(len(self._bars), self.width(), self.height())
 
     def _scale(self, values: list[list[float]]) -> tuple[float, float]:
         """The baseline's height on screen and the pixels per cent."""
@@ -128,7 +126,7 @@ class StackedBarChart(ColumnHoverChart):
     ) -> list[tuple[StackSegment, QRectF]]:
         """Where each piece of bar ``index`` is drawn: positives stack up from the
         baseline, negatives down from it."""
-        slot = self._slots()[index]
+        slot = self.slots()[index]
         width = min(slot.width() * (1 - self.GAP_RATIO), Chart.STACKED_BAR_MAX_WIDTH)
         left = slot.center().x() - width / 2
         up = down = baseline
@@ -144,9 +142,6 @@ class StackedBarChart(ColumnHoverChart):
                 pieces.append((segment, QRectF(left, down, width, height)))
                 down += height
         return pieces
-
-    def index_at(self, x: float) -> int | None:
-        return slot_index(self._slots(), x)
 
     def segment_at(self, point: QPointF) -> tuple[int | None, int | None]:
         """The bar and the category under ``point``; the category is None between pieces."""
@@ -167,10 +162,8 @@ class StackedBarChart(ColumnHoverChart):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         all_values = self._values_at(self.progress)
         baseline, per_cent = self._scale(all_values)
-        small = role_font(TextRole.NOTE)
-        painter.setFont(small)
         for index, (slot, bar, values) in enumerate(
-            zip(self._slots(), self._bars, all_values, strict=True)
+            zip(self.slots(), self._bars, all_values, strict=True)
         ):
             faded = self.hover_index is not None and index != self.hover_index
             pieces = self._pieces(index, values, baseline, per_cent)
@@ -183,23 +176,11 @@ class StackedBarChart(ColumnHoverChart):
                     painter.drawPath(rounded_bar_path(rect, Radius.S, position == outer_up))
                 else:
                     painter.drawRect(rect)
-            painter.setPen(QColor(self._theme.text_muted))
-            painter.drawText(
-                QRectF(slot.left(), self.height() - self.BOTTOM + 4, slot.width(), self.BOTTOM - 4),
-                Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
-                bar.label,
-            )
-        painter.setPen(QPen(QColor(self._theme.border), Line.THIN))
-        painter.drawLine(QPointF(0, baseline), QPointF(self.width(), baseline))
+            self.paint_label(painter, slot, bar.label, selected=False)
+        self.paint_baseline(painter, baseline)
         if self.average is not None and self._bars:
             self._paint_average(painter, baseline - self.average * per_cent)
-        if self.hover_index is not None:
-            slot = self._slots()[self.hover_index]
-            bar = self._bars[self.hover_index]
-            self.paint_tooltip(
-                painter, QPointF(slot.center().x(), self.height() / 2), bar.tooltip_title,
-                bar.tooltip_lines,
-            )  # fmt: skip
+        self.paint_hover(painter)
         painter.end()
 
     def _paint_average(self, painter: QPainter, y: float) -> None:
@@ -219,6 +200,5 @@ class StackedBarChart(ColumnHoverChart):
     # Mouse
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
-        index, key = self.segment_at(event.position())
-        if index is not None and event.button() is Qt.MouseButton.LeftButton:
-            self.clicked.emit(index, key)
+        if self.clicked_index(event) is not None:
+            self.clicked.emit(*self.segment_at(event.position()))

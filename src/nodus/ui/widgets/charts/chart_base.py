@@ -8,9 +8,9 @@ it rebuilds its series.
 from __future__ import annotations
 
 from collections.abc import Hashable, Mapping, Sequence
-from typing import TypeVar
+from typing import Protocol, TypeVar
 
-from PySide6.QtCore import QPointF, QRectF, Qt, QVariantAnimation
+from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import (
     QColor,
     QFont,
@@ -18,14 +18,25 @@ from PySide6.QtGui import (
     QMouseEvent,
     QPainter,
     QPainterPath,
+    QPen,
     QShowEvent,
 )
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.ui.theme.design import Easing, Motion, Radius, TextRole, Tooltip, motion_ms, role_font
+from nodus.ui.theme.design import (
+    Easing,
+    Line,
+    Motion,
+    Radius,
+    TextRole,
+    Tooltip,
+    motion_ms,
+    role_font,
+)
 from nodus.ui.theme.theme import Theme
+from nodus.ui.widgets.style import unit_animation
 
 K = TypeVar("K", bound=Hashable)
 V = TypeVar("V")
@@ -99,17 +110,20 @@ class AnimatedChart(QWidget):
         self._theme = theme
         self.progress = 1.0
         self._pending = False
-        self._animation = QVariantAnimation(self)
-        self._animation.setStartValue(0.0)
-        self._animation.setEndValue(1.0)
-        self._animation.setEasingCurve(Easing.SETTLE)
-        self._animation.valueChanged.connect(self._advance)
+        self._animation = unit_animation(self, Easing.SETTLE, self._advance)
         self.setMouseTracking(True)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def set_theme(self, theme: Theme) -> None:
         self._theme = theme
         self.update()
+
+    def make_strip(self, height: int) -> None:
+        """Makes the chart a thin bar across its row, ``height`` tall, with nothing to
+        show under the mouse: a budget's, a goal's, a proportion's."""
+        self.setFixedHeight(height)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setMouseTracking(False)
 
     def _start_transition(self) -> None:
         """Called by subclasses after storing new data."""
@@ -209,6 +223,61 @@ class ColumnHoverChart(AnimatedChart):
         super().leaveEvent(event)
         self.hover_index = None
         self.update()
+
+
+class BarColumn(Protocol):
+    """What a bar chart's column shows besides its bars: a label and a tooltip."""
+
+    label: str
+    tooltip_title: str
+    tooltip_lines: tuple[str, ...]
+
+
+class BarColumnsChart(ColumnHoverChart):
+    """Bars in equal columns, a label under each and a baseline across: what the cash
+    flow and the trend charts share. Subclasses give their columns and draw the bars."""
+
+    BOTTOM = 22.0  # geometry: room for the labels under the axis
+
+    def columns(self) -> Sequence[BarColumn]:
+        raise NotImplementedError
+
+    def slots(self) -> list[QRectF]:
+        """The column each bar group occupies, full height."""
+        return column_slots(len(self.columns()), self.width(), self.height())
+
+    def index_at(self, x: float) -> int | None:
+        return slot_index(self.slots(), x)
+
+    def paint_label(self, painter: QPainter, slot: QRectF, text: str, selected: bool) -> None:
+        """``text`` under the axis, bolder and darker for the column being viewed."""
+        font = role_font(TextRole.NOTE)
+        font.setWeight(QFont.Weight.DemiBold if selected else QFont.Weight.Normal)
+        painter.setFont(font)
+        painter.setPen(QColor(self._theme.text if selected else self._theme.text_muted))
+        painter.drawText(
+            QRectF(slot.left(), self.height() - self.BOTTOM + 4, slot.width(), self.BOTTOM - 4),
+            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
+            text,
+        )
+
+    def paint_baseline(self, painter: QPainter, y: float) -> None:
+        painter.setPen(QPen(QColor(self._theme.border), Line.THIN))
+        painter.drawLine(QPointF(0, y), QPointF(self.width(), y))
+
+    def paint_hover(self, painter: QPainter) -> None:
+        """The tooltip of the column under the mouse, if any, at its middle."""
+        if self.hover_index is None:
+            return
+        column = self.columns()[self.hover_index]
+        center = QPointF(self.slots()[self.hover_index].center().x(), self.height() / 2)
+        self.paint_tooltip(painter, center, column.tooltip_title, column.tooltip_lines)
+
+    def clicked_index(self, event: QMouseEvent) -> int | None:
+        """The column a left click fell on, if any."""
+        if event.button() is not Qt.MouseButton.LeftButton:
+            return None
+        return self.index_at(event.position().x())
 
 
 def column_slots(count: int, width: float, height: float) -> list[QRectF]:

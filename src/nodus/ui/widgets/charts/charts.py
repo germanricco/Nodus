@@ -5,14 +5,15 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QVariantAnimation, Signal
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
-from PySide6.QtWidgets import QSizePolicy, QWidget
+from PySide6.QtWidgets import QWidget
 
 from nodus.models.money import Money
 from nodus.ui.theme.design import Chart, Easing, Motion, Opacity, TextRole, motion_ms, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.charts.chart_base import AnimatedChart, lerp, starting_values, with_alpha
+from nodus.ui.widgets.style import unit_animation
 
 
 @dataclass(frozen=True)
@@ -88,11 +89,7 @@ class DonutChart(AnimatedChart):
         self._empty_text = ""
         self.hover_index: int | None = None
         self._pop = 1.0
-        self._pop_animation = QVariantAnimation(self)
-        self._pop_animation.setStartValue(0.0)
-        self._pop_animation.setEndValue(1.0)
-        self._pop_animation.setEasingCurve(Easing.POP)
-        self._pop_animation.valueChanged.connect(self._set_pop)
+        self._pop_animation = unit_animation(self, Easing.POP, self._set_pop)
         self.setMinimumSize(Chart.DONUT_MIN_SIZE, Chart.DONUT_MIN_SIZE)
 
     def sizeHint(self) -> QSize:  # noqa: N802
@@ -308,9 +305,7 @@ class ProportionBar(AnimatedChart):
         super().__init__(theme, parent)
         self._segments: list[Segment] = []
         self._previous: list[float] = []
-        self.setFixedHeight(self.HEIGHT)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.setMouseTracking(False)
+        self.make_strip(self.HEIGHT)
         if segments:
             self.set_segments(segments)
 

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEasingCurve, QObject, Qt, QVariantAnimation
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect,
@@ -106,3 +106,16 @@ def amount_label(money: Money) -> QLabel:
     label = QLabel(money.format())
     label.setAlignment(RIGHT_ALIGNED)
     return label
+
+
+def unit_animation(
+    parent: QObject, easing: QEasingCurve.Type, on_value: Callable[[float], object]
+) -> QVariantAnimation:
+    """An animation from 0 to 1 that calls ``on_value`` on every step; who starts it sets
+    its duration, from the motion scale."""
+    animation = QVariantAnimation(parent)
+    animation.setStartValue(0.0)
+    animation.setEndValue(1.0)
+    animation.setEasingCurve(easing)
+    animation.valueChanged.connect(on_value)
+    return animation
