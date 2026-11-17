@@ -43,9 +43,13 @@ from nodus.services.reports.analysis_service import AnalysisService
 from nodus.services.reports.dashboard_service import DashboardService
 from nodus.services.reports.export_service import ExportService
 from nodus.services.reports.net_worth_service import NetWorthService
+from nodus.services.transactions.bulk_edit_service import BulkEditService
 from nodus.services.transactions.installment_service import InstallmentService
+from nodus.services.transactions.labels import MovementLabels
 from nodus.services.transactions.recurring_charge_service import RecurringChargeService
+from nodus.services.transactions.refund_service import RefundService
 from nodus.services.transactions.transaction_service import TransactionService
+from nodus.services.transactions.transfer_service import TransferService
 
 
 @dataclass(frozen=True)
@@ -61,6 +65,9 @@ class Services:
     goals: GoalService
     categories: CategoryService
     transactions: TransactionService
+    transfers: TransferService
+    refunds: RefundService
+    bulk_edits: BulkEditService
     exchange_rates: ExchangeRateService
     net_worth: NetWorthService
     settings: SettingsService
@@ -92,14 +99,16 @@ class Services:
         payee_repository = PayeeRepository(database)
         tag_repository = TagRepository(database)
         undo = UndoService(database)
+        labels = MovementLabels(payee_repository, tag_repository)
+        refunds = RefundService(transaction_repository)
         transactions = TransactionService(
             database,
             transaction_repository,
             account_repository,
             category_repository,
-            payee_repository,
             tag_repository,
-            undo,
+            labels,
+            refunds,
         )
         payees = PayeeService(
             database, payee_repository, transactions, categories, exchange_rates, undo
@@ -136,6 +145,17 @@ class Services:
             ),
             categories=categories,
             transactions=transactions,
+            transfers=TransferService(database, transaction_repository, account_repository),
+            refunds=refunds,
+            bulk_edits=BulkEditService(
+                database,
+                transaction_repository,
+                category_repository,
+                payee_repository,
+                tag_repository,
+                labels,
+                undo,
+            ),
             exchange_rates=exchange_rates,
             net_worth=NetWorthService(accounts, transactions, exchange_rates),
             settings=settings,

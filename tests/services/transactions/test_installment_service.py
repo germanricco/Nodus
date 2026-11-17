@@ -13,7 +13,7 @@ from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import ValidationError
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 FIRST = date(2026, 11, 10)
 SIX = InstallmentPlan(None, 6, ars("75000"), FIRST)
@@ -186,7 +186,7 @@ class TestUpdate:
         from nodus.models.bulk_changes import BulkChanges
 
         ids = [t.id for t in installments(services, purchase.id)]
-        services.transactions.bulk_edit(ids, BulkChanges(note="Heladera Samsung"))
+        services.bulk_edits.apply(ids, BulkChanges(note="Heladera Samsung"))
 
         assert [t.installment.label for t in installments(services, purchase.id)] == [
             f"{n}/6" for n in range(1, 7)
@@ -337,7 +337,7 @@ def test_a_transfer_leg_can_never_be_an_installment(services, pesos, dollars):
 
     from nodus.models.installment_plan import Installment
 
-    transfer = services.transactions.create_transfer(
+    transfer = services.transfers.create(
         TransferDraft(pesos.id, dollars.id, ars("1000"), FIRST, amount_in=usd("1"))
     )
     with pytest.raises(ValueError):

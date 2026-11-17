@@ -1,36 +1,32 @@
-"""Business rules for transactions and transfers."""
+"""Business rules for income and expenses: saving, editing, deleting and reading them.
+
+Transfers, refunds and editing several at once have services of their own, next to this
+one.
+"""
 
 from __future__ import annotations
 
 import dataclasses
-import uuid
 from dataclasses import dataclass
 from datetime import date
 
 from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.category_repository import CategoryRepository
-from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.database.repositories.tag_repository import TagRepository
 from nodus.database.repositories.transaction_repository import (
     TransactionFilter,
     TransactionRepository,
 )
 from nodus.models.account import Account
-from nodus.models.bulk_changes import BulkChanges
 from nodus.models.money import Money
-from nodus.models.names import normalize_name
-from nodus.models.payee import Payee
 from nodus.models.period import Month, Period
 from nodus.models.tag import Tag
-from nodus.models.transaction import Transaction, TransactionType, Transfer
-from nodus.services.app.undo_service import UndoService, changed_since
-from nodus.services.errors import (
-    ValidationError,
-    require_found,
-    require_in_calendar,
-    require_storable,
-)
+from nodus.models.transaction import Transaction, TransactionType
+from nodus.services.errors import ValidationError, require_found, require_in_calendar
+from nodus.services.transactions.account_rules import active_account, require_amount_for
+from nodus.services.transactions.labels import MovementLabels
+from nodus.services.transactions.refund_service import RefundService
 
 
 @dataclass(frozen=True)
@@ -66,37 +62,6 @@ class AccountActivity:
     transfers_out: Money
 
 
-@dataclass(frozen=True)
-class RefundSummary:
-    """How much of an expense has been paid back. ``refunded`` adds the refunds in the
-    expense's currency; refunds in another currency are listed but have no cap."""
-
-    expense: Transaction
-    refunds: list[Transaction]
-    refunded: Money
-
-    @property
-    def remaining(self) -> Money:
-        return self.expense.amount - self.refunded
-
-
-@dataclass(frozen=True)
-class TransferDraft:
-    """What the user fills in for a transfer between two of their accounts.
-
-    ``amount_in`` is required only between accounts of different currencies (for example,
-    buying dollars), where it records the actual rate obtained. Otherwise it is
-    ``amount_out``.
-    """
-
-    from_account_id: int
-    to_account_id: int
-    amount_out: Money
-    occurred_on: date
-    amount_in: Money | None = None
-    note: str = ""
-
-
 class TransactionService:
     def __init__(
         self,
@@ -104,17 +69,17 @@ class TransactionService:
         transactions: TransactionRepository,
         accounts: AccountRepository,
         categories: CategoryRepository,
-        payees: PayeeRepository,
         tags: TagRepository,
-        undo: UndoService,
+        labels: MovementLabels,
+        refunds: RefundService,
     ) -> None:
         self._database = database
-        self._undo = undo
         self._transactions = transactions
         self._accounts = accounts
         self._categories = categories
-        self._payees = payees
         self._tags = tags
+        self._labels = labels
+        self._refunds = refunds
 
     # Income and expenses
 
@@ -133,36 +98,18 @@ class TransactionService:
         """Saves a validated ``transaction`` (added without an id, updated with one) with the
         payee and tags of ``draft``, inside the database transaction the caller opened, for
         services that save several together, as the installments of a purchase."""
-        transaction = self._with_payee(transaction, draft.payee_name)
+        transaction = self._labels.with_payee(transaction, draft.payee_name)
         if transaction.id is None:
             transaction = self._transactions.add(transaction)
         else:
             self._transactions.update(transaction)
-        self._set_tags(transaction.id, draft.tag_names)
+        self._labels.set_tags(transaction.id, draft.tag_names)
         return transaction
 
     def update(self, transaction_id: int, draft: TransactionDraft) -> None:
         transaction = self._edited(transaction_id, draft)
         with self._database.transaction():
             self._stage_edit(transaction, draft)
-
-    def refund_excess(
-        self, draft: TransactionDraft, transaction_id: int | None = None
-    ) -> Money | None:
-        """How much the refund ``draft`` brings back over what is left of its expense, as
-        when a friend sends $ 1.000 for a $ 998 share; None when it fits, when it is not a
-        refund, or in another currency, which has no cap. ``transaction_id`` is the refund
-        being edited, so its own amount does not count as already refunded."""
-        if draft.type is not TransactionType.INCOME or draft.refund_of_id is None:
-            return None
-        summary = self.refund_summary(draft.refund_of_id, ignore_id=transaction_id)
-        remaining = summary.remaining
-        if draft.amount.currency is not remaining.currency or not draft.amount > remaining:
-            return None
-        # Nothing left: the whole amount is no refund at all, and the cap says so.
-        if remaining.is_zero or remaining.is_negative:
-            return None
-        return draft.amount - remaining
 
     def save_refund_with_extra(
         self,
@@ -175,7 +122,7 @@ class TransactionService:
         ``extra_category_id``, with the same account, day, payee, note and tags. So the
         expense ends fully refunded and never below zero. ``transaction_id`` is the
         refund being edited, if any."""
-        excess = self.refund_excess(draft, transaction_id)
+        excess = self._refunds.excess(draft, transaction_id)
         if excess is None:
             raise ValidationError("Ese reembolso no supera lo que queda del gasto.", field="amount")
         refund_draft = dataclasses.replace(draft, amount=draft.amount - excess)
@@ -234,132 +181,9 @@ class TransactionService:
                 if not transaction.is_transfer and transaction.installment is None:
                     self._transactions.delete(transaction.id)
 
-    def bulk_edit(self, transaction_ids: list[int], changes: BulkChanges) -> None:
-        """Applies ``changes`` to every one of ``transaction_ids``, or to none if one fails.
-
-        Transfers take only the note, on both legs: they have no category, payee or tags.
-        A new category must suit every expense or income chosen. It can be undone.
-        """
-        if changes.is_empty:
-            raise ValidationError("Completa al menos un campo para cambiar.")
-        transactions = [self.get(transaction_id) for transaction_id in transaction_ids]
-        movements = [t for t in transactions if not t.is_transfer]
-        if changes.category_id is not None:
-            self._require_category_for(changes.category_id, movements)
-        note = changes.note.strip()
-        transfer_ids = {t.transfer_id for t in transactions if t.is_transfer}
-        legs = [
-            leg
-            for transfer_id in (transfer_ids if note else ())
-            for leg in self._transactions.list_transfer_legs(transfer_id)
-        ]
-        before = movements + legs
-        tags_before = self._tag_ids_of(movements)
-        payees_before = {payee.id for payee in self._payees.list()}
-        tags_known = {tag.id for tag in self._tags.list()}
-        with self._database.transaction():
-            for transaction in movements:
-                edited = transaction
-                if changes.category_id is not None:
-                    edited = dataclasses.replace(edited, category_id=changes.category_id)
-                if note:
-                    edited = dataclasses.replace(edited, note=note)
-                if changes.payee_name.strip():
-                    edited = self._with_payee(edited, changes.payee_name)
-                self._transactions.update(edited)
-                if changes.add_tags or changes.remove_tags:
-                    self._change_tags(transaction.id, changes.add_tags, changes.remove_tags)
-            for leg in legs:
-                self._transactions.update(dataclasses.replace(leg, note=note))
-            after = [self.get(t.id) for t in before]
-            tags_after = self._tag_ids_of(movements)
-        new_payees = {payee.id for payee in self._payees.list()} - payees_before
-        new_tags = {tag.id for tag in self._tags.list()} - tags_known
-        count = len(transactions)
-        self._undo.offer(
-            f"Se editó {count} transacción."
-            if count == 1
-            else f"Se editaron {count} transacciones.",
-            lambda: self._unedit(before, after, tags_before, tags_after, new_payees, new_tags),
-        )
-
-    def _tag_ids_of(self, transactions: list[Transaction]) -> dict[int, list[int]]:
-        found = self._tags.tags_for(t.id for t in transactions)
-        return {t.id: [tag.id for tag in found.get(t.id, [])] for t in transactions}
-
-    def _unedit(
-        self,
-        before: list[Transaction],
-        after: list[Transaction],
-        tags_before: dict[int, list[int]],
-        tags_after: dict[int, list[int]],
-        new_payees: set[int],
-        new_tags: set[int],
-    ) -> None:
-        """Undoes ``bulk_edit``: each transaction and its tags as they were, and the
-        payees and tags it created gone, unless something else uses them now."""
-        edited = [self._transactions.get(t.id) for t in after]
-        movements = [t for t in after if t.id in tags_after]
-        if edited != after or self._tag_ids_of(movements) != tags_after:
-            raise changed_since("Alguna de esas transacciones")
-        for transaction in before:
-            self._transactions.update(transaction)
-        for transaction_id, tag_ids in tags_before.items():
-            self._tags.set_for(transaction_id, tag_ids)
-        for payee_id in new_payees:
-            if self._payees.count_transactions(payee_id) == 0:
-                self._payees.delete(payee_id)
-        for tag_id in new_tags:
-            if self._tags.count_transactions(tag_id) == 0:
-                self._tags.delete(tag_id)
-
-    def _require_category_for(self, category_id: int, movements: list[Transaction]) -> None:
-        category = require_found(self._categories.get(category_id), "La categoría no existe.")
-        if not movements:
-            raise ValidationError("Las transferencias no tienen categoría.")
-        if any(t.type is not category.kind for t in movements):
-            raise ValidationError(
-                f"La categoría «{category.name}» no corresponde a todas las transacciones elegidas."
-            )
-
-    def refund_summary(self, expense_id: int, ignore_id: int | None = None) -> RefundSummary:
-        """What has been refunded of ``expense_id``, leaving out ``ignore_id`` (the refund
-        being edited, so its own amount does not count against it)."""
-        expense = self.get(expense_id)
-        refunds = [
-            refund
-            for refund in self._transactions.list_refunds_of(expense_id)
-            if refund.id != ignore_id
-        ]
-        same_currency = [r.amount for r in refunds if r.amount.currency is expense.amount.currency]
-        refunded = sum(same_currency, Money.zero(expense.amount.currency))
-        return RefundSummary(expense, refunds, refunded)
-
     def tags_for(self, transaction_ids: list[int]) -> dict[int, list[Tag]]:
         """The tags of each of ``transaction_ids`` by name, read at once for lists."""
         return self._tags.tags_for(transaction_ids)
-
-    def refund_totals(self) -> dict[int, list[Money]]:
-        """What has been refunded of each refunded expense, one amount per currency, read
-        at once for lists."""
-        return self._transactions.refund_totals()
-
-    def still_refundable(
-        self, expenses: list[Transaction], keep_id: int | None = None
-    ) -> list[Transaction]:
-        """The ``expenses`` whose refunds in their own currency do not cover them yet, in
-        their order; ``keep_id``, the one a refund already pays back, stays regardless."""
-        refunded = self.refund_totals()
-
-        def covered(expense: Transaction) -> bool:
-            same_currency = [
-                money.cents
-                for money in refunded.get(expense.id, [])
-                if money.currency is expense.amount.currency
-            ]
-            return sum(same_currency) >= expense.amount.cents
-
-        return [e for e in expenses if e.id == keep_id or not covered(e)]
 
     def get(self, transaction_id: int) -> Transaction:
         return require_found(self._transactions.get(transaction_id), "La transacción no existe.")
@@ -395,93 +219,17 @@ class TransactionService:
             return []
         return period.months_since(span[0], today or date.today())
 
-    # Transfers
-
-    def create_transfer(self, draft: TransferDraft) -> Transfer:
-        transfer = self._build_transfer(uuid.uuid4().hex, draft)
-        with self._database.transaction():
-            return Transfer(
-                outgoing=self._transactions.add(transfer.outgoing),
-                incoming=self._transactions.add(transfer.incoming),
-            )
-
-    def update_transfer(self, transfer_id: str, draft: TransferDraft) -> None:
-        """Rewrites both legs in place, keeping their ids."""
-        current = self.get_transfer(transfer_id)
-        transfer = self._build_transfer(
-            transfer_id, draft, leg_ids=(current.outgoing.id, current.incoming.id)
-        )
-        with self._database.transaction():
-            self._transactions.update(transfer.outgoing)
-            self._transactions.update(transfer.incoming)
-
     def get_many(self, transaction_ids: list[int]) -> dict[int, Transaction]:
         """The transactions with these ids, by id, read together: a list shows many."""
         return {t.id: t for t in self._transactions.get_many(transaction_ids)}
-
-    def get_transfer(self, transfer_id: str) -> Transfer:
-        legs = self._transactions.list_transfer_legs(transfer_id)
-        if len(legs) != 2:
-            raise ValidationError("La transferencia no existe.")
-        return _paired(legs)
-
-    def get_transfers(self, transfer_ids: list[str]) -> dict[str, Transfer]:
-        """These transfers, by id, read together: a list shows many."""
-        legs: dict[str, list[Transaction]] = {}
-        for leg in self._transactions.list_legs_of(transfer_ids):
-            legs.setdefault(leg.transfer_id, []).append(leg)
-        return {key: _paired(pair) for key, pair in legs.items() if len(pair) == 2}
-
-    def _with_payee(self, transaction: Transaction, payee_name: str) -> Transaction:
-        """``transaction`` linked to the payee called ``payee_name``, creating it if needed.
-
-        Runs inside the caller's database transaction, so a save that fails leaves no
-        orphan payee behind.
-        """
-        normalized = normalize_name(payee_name)
-        if not normalized:
-            return dataclasses.replace(transaction, payee_id=None)
-        payee = self._payees.find_by_normalized(normalized) or self._payees.add(
-            Payee(None, payee_name.strip())
-        )
-        return dataclasses.replace(transaction, payee_id=payee.id)
-
-    def _set_tags(self, transaction_id: int, names: tuple[str, ...]) -> None:
-        """Gives the transaction the tags called ``names``. Runs inside the caller's
-        database transaction, like ``_with_payee``."""
-        self._tags.set_for(transaction_id, self._tag_ids(names))
-
-    def _change_tags(
-        self, transaction_id: int, added: tuple[str, ...], removed: tuple[str, ...]
-    ) -> None:
-        """Adds the tags called ``added`` and takes away those called ``removed``, keeping
-        the transaction's other tags."""
-        dropped = {normalize_name(name) for name in removed}
-        current = self._tags.tags_for([transaction_id]).get(transaction_id, [])
-        kept = [tag.id for tag in current if normalize_name(tag.name) not in dropped]
-        new = [tag_id for tag_id in self._tag_ids(added) if tag_id not in kept]
-        self._tags.set_for(transaction_id, kept + new)
-
-    def _tag_ids(self, names: tuple[str, ...]) -> list[int]:
-        """The tags called ``names``, creating the new ones with the next preset color."""
-        tag_ids = []
-        for name in names:
-            normalized = normalize_name(name)
-            if not normalized:
-                continue
-            tag = self._tags.find_by_normalized(normalized)
-            if tag is None:
-                tag = self._tags.add(Tag(None, name.strip(), self._tags.next_color()))
-            tag_ids.append(tag.id)
-        return tag_ids
 
     # Validation
 
     def _build_transaction(
         self, transaction_id: int | None, draft: TransactionDraft
     ) -> Transaction:
-        account = self._active_account(draft.account_id, "account_id")
-        self._require_amount_for(draft.amount, account, "amount")
+        account = active_account(self._accounts, draft.account_id, "account_id")
+        require_amount_for(draft.amount, account, "amount")
         require_in_calendar(draft.occurred_on, "occurred_on")
         category = require_found(self._categories.get(draft.category_id), "La categoría no existe.")
         if category.kind is not draft.type:
@@ -512,7 +260,7 @@ class TransactionService:
         expense = self._transactions.get(expense_id)
         if expense is None or expense.is_transfer or expense.type is not TransactionType.EXPENSE:
             raise ValidationError("Un reembolso tiene que devolver un gasto.")
-        summary = self.refund_summary(expense_id, ignore_id=refund_id)
+        summary = self._refunds.summary(expense_id, ignore_id=refund_id)
         if amount.currency is expense.amount.currency and amount > summary.remaining:
             raise ValidationError(
                 f"El reembolso supera lo que queda por reembolsar de ese gasto:"
@@ -522,80 +270,10 @@ class TransactionService:
 
     def _require_covers_refunds(self, expense_id: int, amount: Money) -> None:
         """An expense cannot become smaller than what has already been refunded of it."""
-        refunded = self.refund_summary(expense_id).refunded
+        refunded = self._refunds.summary(expense_id).refunded
         if amount.currency is refunded.currency and amount < refunded:
             raise ValidationError(
                 f"Ya se reembolsaron {refunded.format()} de este gasto:"
                 " el monto no puede ser menor.",
                 field="amount",
             )
-
-    def _build_transfer(
-        self,
-        transfer_id: str,
-        draft: TransferDraft,
-        leg_ids: tuple[int | None, int | None] = (None, None),
-    ) -> Transfer:
-        if draft.from_account_id == draft.to_account_id:
-            raise ValidationError(
-                "La cuenta de origen y la de destino deben ser distintas.", field="to_account_id"
-            )
-        source = self._active_account(draft.from_account_id, "from_account_id")
-        destination = self._active_account(draft.to_account_id, "to_account_id")
-        amount_in = self._incoming_amount(draft, source, destination)
-        self._require_amount_for(draft.amount_out, source, "amount_out")
-        self._require_amount_for(amount_in, destination, "amount_in")
-        require_in_calendar(draft.occurred_on, "occurred_on")
-        note = draft.note.strip()
-        outgoing_id, incoming_id = leg_ids
-        return Transfer(
-            outgoing=Transaction(
-                outgoing_id, source.id, TransactionType.EXPENSE, draft.amount_out,
-                draft.occurred_on, None, note, transfer_id,
-            ),
-            incoming=Transaction(
-                incoming_id, destination.id, TransactionType.INCOME, amount_in,
-                draft.occurred_on, None, note, transfer_id,
-            ),
-        )  # fmt: skip
-
-    @staticmethod
-    def _incoming_amount(draft: TransferDraft, source: Account, destination: Account) -> Money:
-        if source.currency is destination.currency:
-            if draft.amount_in is not None and draft.amount_in != draft.amount_out:
-                raise ValidationError(
-                    "Entre cuentas de la misma moneda, el monto que sale y el que entra"
-                    " deben ser iguales.",
-                    field="amount_in",
-                )
-            return draft.amount_out
-        if draft.amount_in is None:
-            raise ValidationError(
-                "Indica el monto que entra en la cuenta de destino.", field="amount_in"
-            )
-        return draft.amount_in
-
-    def _active_account(self, account_id: int, field: str) -> Account:
-        """The account, if it exists and is not archived; ``field`` names it in the draft."""
-        account = require_found(self._accounts.get(account_id), "La cuenta no existe.")
-        if account.is_archived:
-            raise ValidationError(f"La cuenta «{account.name}» está archivada.", field=field)
-        return account
-
-    @staticmethod
-    def _require_amount_for(amount: Money, account: Account, field: str) -> None:
-        """``amount`` is positive and in the account's currency; ``field`` names it."""
-        if amount.currency is not account.currency:
-            raise ValidationError(
-                f"El monto debe estar en {account.currency.value}, la moneda de «{account.name}».",
-                field=field,
-            )
-        if amount.cents <= 0:
-            raise ValidationError("El monto debe ser mayor que cero.", field=field)
-        require_storable(amount, field)
-
-
-def _paired(legs: list[Transaction]) -> Transfer:
-    """The two legs of a transfer as one: the expense leaves, the income arrives."""
-    outgoing, incoming = sorted(legs, key=lambda leg: leg.type is TransactionType.INCOME)
-    return Transfer(outgoing=outgoing, incoming=incoming)

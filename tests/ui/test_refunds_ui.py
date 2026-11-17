@@ -85,7 +85,7 @@ def test_linking_a_refund_from_the_dialog(monkeypatch, qtbot, services, event_bu
     assert "Zapatillas" in dialog.refund_input.summary_label.text()
     assert "queda $ 1.000,00" in dialog.refund_input.summary_label.text()
     qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
-    assert services.transactions.refund_summary(shoes.id).refunded == ars("400")
+    assert services.refunds.summary(shoes.id).refunded == ars("400")
 
 
 def test_leaving_refunds_drops_the_link(monkeypatch, qtbot, services, event_bus, pesos, shoes):
@@ -101,7 +101,7 @@ def test_leaving_refunds_drops_the_link(monkeypatch, qtbot, services, event_bus,
     qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
 
     assert dialog.refund_input.expense_id() is None
-    assert services.transactions.refund_summary(shoes.id).refunded == ars("0")
+    assert services.refunds.summary(shoes.id).refunded == ars("0")
 
 
 def test_editing_keeps_or_removes_the_link(qtbot, services, event_bus, pesos, shoes):
@@ -236,7 +236,7 @@ class TestRefundWithExtra:
         self.fill(monkeypatch, qtbot, services, event_bus, pesos, shoes, accept)
 
         assert offered == ["Otros"]
-        assert services.transactions.refund_summary(shoes.id).remaining == ars("0")
+        assert services.refunds.summary(shoes.id).remaining == ars("0")
         others = category_id(services, "Otros", INCOME)
         incomes = [
             t for t in services.transactions.list_transactions(TransactionFilter())
@@ -251,4 +251,4 @@ class TestRefundWithExtra:
 
         assert not dialog.result()
         assert "$ 600,00" in dialog.findChild(QLabel, FIELD_ERROR).text()
-        assert len(services.transactions.refund_summary(shoes.id).refunds) == 1
+        assert len(services.refunds.summary(shoes.id).refunds) == 1

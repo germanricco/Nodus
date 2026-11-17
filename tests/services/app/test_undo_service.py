@@ -9,7 +9,7 @@ from nodus.models.bulk_changes import BulkChanges
 from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.transaction import TransactionType
 from nodus.services.app.undo_service import UndoError
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 CHARGE_TABLES = ("recurring_charges", "transactions")
 PLAN_TABLES = ("installment_plans", "transactions")
@@ -101,7 +101,7 @@ class TestBulkEdit:
             expense_draft(services, pesos.id, ars("10"), tag_names=("Viaje",), note="Antes")
         )
         second = services.transactions.create(expense_draft(services, pesos.id, ars("20")))
-        transfer = services.transactions.create_transfer(
+        transfer = services.transfers.create(
             TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
         )
         before = table_rows(database, *NAME_TABLES)
@@ -113,7 +113,7 @@ class TestBulkEdit:
             remove_tags=("Viaje",),
         )
 
-        services.transactions.bulk_edit([first.id, second.id, transfer.outgoing.id], changes)
+        services.bulk_edits.apply([first.id, second.id, transfer.outgoing.id], changes)
         assert services.undo.last.description == "Se editaron 3 transacciones."
         services.undo.undo()
 
@@ -122,13 +122,13 @@ class TestBulkEdit:
     def test_one_transaction_is_said_in_singular(self, services, pesos):
         expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
 
-        services.transactions.bulk_edit([expense.id], BulkChanges(note="Compra"))
+        services.bulk_edits.apply([expense.id], BulkChanges(note="Compra"))
 
         assert services.undo.last.description == "Se editó 1 transacción."
 
     def test_a_payee_it_created_and_used_since_stays(self, services, pesos):
         expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
-        services.transactions.bulk_edit([expense.id], BulkChanges(payee_name="Coto"))
+        services.bulk_edits.apply([expense.id], BulkChanges(payee_name="Coto"))
         services.transactions.create(
             expense_draft(services, pesos.id, ars("30"), payee_name="Coto")
         )
@@ -140,7 +140,7 @@ class TestBulkEdit:
 
     def test_a_transaction_edited_since_is_left_alone(self, services, database, pesos):
         expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
-        services.transactions.bulk_edit([expense.id], BulkChanges(note="Compra"))
+        services.bulk_edits.apply([expense.id], BulkChanges(note="Compra"))
         services.transactions.update(
             expense.id, expense_draft(services, pesos.id, ars("15"), note="Otra")
         )

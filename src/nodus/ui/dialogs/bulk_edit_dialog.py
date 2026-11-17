@@ -101,7 +101,7 @@ class BulkEditDialog(FormDialog):
     def save(self) -> None:
         changes = self.changes()
         creates_tags = self._services.tags.any_new(changes.add_tags)
-        self._services.transactions.bulk_edit(self._ids, changes)
+        self._services.bulk_edits.apply(self._ids, changes)
         self._event_bus.transactions_changed.emit()
         if changes.payee_name.strip():
             self._event_bus.payees_changed.emit()

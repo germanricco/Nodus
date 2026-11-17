@@ -80,7 +80,7 @@ class RefundPickerDialog(FormDialog):
                 text=self.search_input.text().strip() or None,
             )
         )
-        candidates = self._services.transactions.still_refundable(expenses, self._linked_id)
+        candidates = self._services.refunds.still_refundable(expenses, self._linked_id)
         self.model.set_items(self._builder.build(candidates))
         self.table.setVisible(bool(candidates))
         self.empty_label.setVisible(not candidates)
@@ -140,7 +140,7 @@ class RefundField(QWidget):
         self.unlink_button.setVisible(linked)
         if expense is not None:
             (item,) = TransactionListBuilder(self._services).build([expense])
-            remaining = self._services.transactions.refund_summary(
+            remaining = self._services.refunds.summary(
                 expense.id, ignore_id=self._refund_id
             ).remaining
             self.summary_label.setText(

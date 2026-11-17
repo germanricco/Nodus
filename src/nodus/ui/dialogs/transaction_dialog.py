@@ -14,7 +14,8 @@ from nodus.models.payee import Payee
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
-from nodus.services.transactions.transaction_service import TransactionDraft, TransferDraft
+from nodus.services.transactions.transaction_service import TransactionDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 from nodus.ui.dialogs.account_fields import required_account, selectable_accounts
 from nodus.ui.dialogs.form_dialog import (
     ACCOUNT_PLACEHOLDER,
@@ -229,7 +230,7 @@ class TransactionDialog(FormDialog):
 
     def _load(self, transaction: Transaction) -> None:
         if transaction.is_transfer:
-            transfer = self._services.transactions.get_transfer(transaction.transfer_id)
+            transfer = self._services.transfers.get(transaction.transfer_id)
             self.mode_input.set_index(TRANSFER_MODE)
             self.mode_input.set_segment_enabled(EXPENSE_MODE, False)
             self.mode_input.set_segment_enabled(INCOME_MODE, False)
@@ -274,7 +275,7 @@ class TransactionDialog(FormDialog):
 
     def _show_refunded(self, transaction: Transaction) -> None:
         """ "Reembolsado $ 400,00 de $ 1.000,00", for an expense with refunds."""
-        summary = self._services.transactions.refund_summary(transaction.id)
+        summary = self._services.refunds.summary(transaction.id)
         if summary.refunds:
             self.refunded_hint.setText(
                 f"Reembolsado {summary.refunded.format()} de {transaction.amount.format()}"
@@ -283,7 +284,7 @@ class TransactionDialog(FormDialog):
     def _legs(self, transaction: Transaction) -> list[Transaction]:
         if not transaction.is_transfer:
             return [transaction]
-        transfer = self._services.transactions.get_transfer(transaction.transfer_id)
+        transfer = self._services.transfers.get(transaction.transfer_id)
         return [transfer.outgoing, transfer.incoming]
 
     # Reacting to changes
@@ -433,7 +434,7 @@ class TransactionDialog(FormDialog):
             else None
         )
         transaction_id = self._transaction.id if self._transaction else None
-        excess = self._services.transactions.refund_excess(draft, transaction_id)
+        excess = self._services.refunds.excess(draft, transaction_id)
         if excess is not None:
             extra = RefundExtraDialog(self._services, draft, excess, transaction_id, self)
             if not extra.exec():
@@ -460,9 +461,9 @@ class TransactionDialog(FormDialog):
             note=self.note_input.text(),
         )
         if self._transaction:
-            self._services.transactions.update_transfer(self._transaction.transfer_id, draft)
+            self._services.transfers.update(self._transaction.transfer_id, draft)
         else:
-            self._services.transactions.create_transfer(draft)
+            self._services.transfers.create(draft)
             self._services.settings.set_last_account_id(source.id)
 
 

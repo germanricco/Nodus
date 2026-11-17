@@ -6,7 +6,7 @@ from factories import TODAY, ars, expense_draft, income_draft, usd
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.services.errors import NotFoundError, ValidationError
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 
 def test_create_trims_name_and_assigns_id(services):
@@ -81,7 +81,7 @@ def test_get_missing_account_raises(services):
 
 def test_delete_takes_movements_and_whole_transfers(services, pesos, dollars):
     services.transactions.create(expense_draft(services, dollars.id, usd("20")))
-    services.transactions.create_transfer(
+    services.transfers.create(
         TransferDraft(pesos.id, dollars.id, ars("120000"), TODAY, amount_in=usd("100"))
     )
     assert services.accounts.transaction_count(dollars.id) == (2, 1)

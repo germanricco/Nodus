@@ -9,7 +9,7 @@ from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.services.conversion import FlowTotals
 from nodus.services.reports.analysis_service import CashFlowReport, Metric
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 EXPENSE, INCOME = TransactionType.EXPENSE, TransactionType.INCOME
 SEP_NOV = Period.of_months(Month(2026, 9), Month(2026, 11))
@@ -39,7 +39,7 @@ def history(services, pesos, dollars, euros):
         category_id=category_id(services, "Servicios", EXPENSE),
     )  # fmt: skip
     spend(services, pesos, ars("400"), date(2026, 6, 10))  # previous period
-    services.transactions.create_transfer(
+    services.transfers.create(
         TransferDraft(pesos.id, dollars.id, ars("5000"), date(2026, 10, 9), amount_in=usd("5"))
     )
 

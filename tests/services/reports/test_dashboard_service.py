@@ -7,7 +7,7 @@ from factories import ars, category_id, eur, expense_draft, income_draft, usd
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.services.reports.dashboard_service import relative_change
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 NOVEMBER = Period.of_months(Month(2026, 11))
 EXPENSE = TransactionType.EXPENSE
@@ -18,7 +18,7 @@ def test_month_totals_exclude_transfers_and_other_months(services, pesos, dollar
     services.transactions.create(income_draft(services, pesos.id, ars("500000")))
     services.transactions.create(expense_draft(services, pesos.id, ars("120000")))
     services.transactions.create(expense_draft(services, pesos.id, ars("1"), on=date(2026, 10, 31)))
-    services.transactions.create_transfer(
+    services.transfers.create(
         TransferDraft(pesos.id, dollars.id, ars("100000"), date(2026, 11, 2), amount_in=usd("100"))
     )
 

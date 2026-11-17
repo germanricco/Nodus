@@ -62,7 +62,7 @@ def transaction_delete_warning(services: Services, items: list[TransactionListIt
         if any(item.transaction.installment for item in items):
             text += " Las cuotas se eliminan con toda su compra."
     refunds = sum(
-        len(services.transactions.refund_summary(item.transaction.id).refunds)
+        len(services.refunds.summary(item.transaction.id).refunds)
         for item in items
         if not item.is_transfer
     )

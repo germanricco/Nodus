@@ -18,7 +18,7 @@ from nodus.models.currency import Currency
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 from nodus.ui.actions import transactions as transaction_actions
 from nodus.ui.dialogs import export
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog
@@ -51,7 +51,7 @@ def all_transactions(services):
 
 
 def buy_dollars(services, pesos, dollars):
-    return services.transactions.create_transfer(
+    return services.transfers.create(
         TransferDraft(pesos.id, dollars.id, ars("121550"), date(2026, 11, 4), amount_in=usd("100"))
     )
 
@@ -155,7 +155,7 @@ class TestTransactionDialog:
         save(qtbot, dialog)
 
         [outgoing] = services.transactions.list_transactions(TransactionFilter(account_id=pesos.id))
-        transfer = services.transactions.get_transfer(outgoing.transfer_id)
+        transfer = services.transfers.get(outgoing.transfer_id)
         assert transfer.incoming.amount == usd("100")
 
     def test_new_transfer_waits_for_its_destination(
@@ -192,7 +192,7 @@ class TestTransactionDialog:
         dialog.amount_in_input.line_edit.setText("101")
         save(qtbot, dialog)
 
-        assert services.transactions.get_transfer(transfer.id).incoming.amount == usd("101")
+        assert services.transfers.get(transfer.id).incoming.amount == usd("101")
         assert len(all_transactions(services)) == 2
 
     def test_editing_expense_keeps_category_and_can_become_income(

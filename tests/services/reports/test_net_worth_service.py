@@ -9,7 +9,7 @@ from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.period import Month, Period
 from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint, trend_change
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 
 def test_without_accounts_everything_is_zero(services):
@@ -60,7 +60,7 @@ def test_net_worth_uses_the_balances_of_that_day(services, pesos):
 
 
 def test_balances_on_a_day_count_both_legs_of_a_transfer(services, pesos, dollars):
-    services.transactions.create_transfer(
+    services.transfers.create(
         TransferDraft(pesos.id, dollars.id, ars("100000"), TODAY, amount_in=usd("100"))
     )
 

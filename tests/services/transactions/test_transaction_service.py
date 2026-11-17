@@ -9,7 +9,7 @@ from nodus.models.currency import Currency
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import NotFoundError, ValidationError
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 
 class TestIncomeAndExpenses:
@@ -76,7 +76,7 @@ class TestSeveralAtOnce:
     def test_delete_many_takes_transfers_whole(self, services, pesos, dollars):
         expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
         kept = services.transactions.create(expense_draft(services, pesos.id, ars("20")))
-        transfer = services.transactions.create_transfer(
+        transfer = services.transfers.create(
             TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
         )
 
@@ -100,7 +100,7 @@ class TestSeveralAtOnce:
             for a in ("10", "20")
         ]
 
-        services.transactions.bulk_edit(ids, BulkChanges(category_id=ocio))
+        services.bulk_edits.apply(ids, BulkChanges(category_id=ocio))
 
         edited = [services.transactions.get(i) for i in ids]
         assert [t.category_id for t in edited] == [ocio, ocio]
@@ -112,7 +112,7 @@ class TestSeveralAtOnce:
         income = services.transactions.create(income_draft(services, pesos.id, ars("20")))
 
         with pytest.raises(ValidationError, match="no corresponde"):
-            services.transactions.bulk_edit(
+            services.bulk_edits.apply(
                 [expense.id, income.id], BulkChanges(category_id=ocio, note="x")
             )
 
@@ -123,7 +123,7 @@ class TestSeveralAtOnce:
         expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
 
         with pytest.raises(ValidationError, match="al menos"):
-            services.transactions.bulk_edit([expense.id], BulkChanges())
+            services.bulk_edits.apply([expense.id], BulkChanges())
 
     def test_bulk_edit_sets_the_payee_and_the_note(self, services, pesos):
         ids = [
@@ -131,7 +131,7 @@ class TestSeveralAtOnce:
             for a in ("10", "20")
         ]
 
-        services.transactions.bulk_edit(ids, BulkChanges(payee_name="Coto", note="Compra"))
+        services.bulk_edits.apply(ids, BulkChanges(payee_name="Coto", note="Compra"))
 
         coto = services.payees.find("Coto")
         assert {services.transactions.get(i).payee_id for i in ids} == {coto.id}
@@ -143,7 +143,7 @@ class TestSeveralAtOnce:
         )
         second = services.transactions.create(expense_draft(services, pesos.id, ars("20")))
 
-        services.transactions.bulk_edit(
+        services.bulk_edits.apply(
             [first.id, second.id], BulkChanges(add_tags=("Vacaciones",), remove_tags=("viaje",))
         )
 
@@ -154,32 +154,32 @@ class TestSeveralAtOnce:
     def test_bulk_edit_gives_transfers_only_the_note(self, services, pesos, dollars):
         ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
         expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
-        transfer = services.transactions.create_transfer(
+        transfer = services.transfers.create(
             TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
         )
 
-        services.transactions.bulk_edit(
+        services.bulk_edits.apply(
             [expense.id, transfer.outgoing.id], BulkChanges(category_id=ocio, note="Viaje")
         )
 
         assert services.transactions.get(expense.id).category_id == ocio
-        legs = services.transactions.get_transfer(transfer.outgoing.transfer_id)
+        legs = services.transfers.get(transfer.outgoing.transfer_id)
         assert {legs.outgoing.note, legs.incoming.note} == {"Viaje"}
         assert legs.outgoing.category_id is None
 
     def test_bulk_edit_refuses_a_category_for_transfers_alone(self, services, pesos, dollars):
         ocio = category_id(services, "Ocio", TransactionType.EXPENSE)
-        transfer = services.transactions.create_transfer(
+        transfer = services.transfers.create(
             TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
         )
 
         with pytest.raises(ValidationError, match="transferencias"):
-            services.transactions.bulk_edit([transfer.outgoing.id], BulkChanges(category_id=ocio))
+            services.bulk_edits.apply([transfer.outgoing.id], BulkChanges(category_id=ocio))
 
 
 class TestTransfers:
     def test_buying_dollars_moves_both_balances(self, services, pesos, dollars):
-        transfer = services.transactions.create_transfer(
+        transfer = services.transfers.create(
             TransferDraft(pesos.id, dollars.id, ars("120000"), TODAY, amount_in=usd("100"))
         )
 
@@ -192,7 +192,7 @@ class TestTransfers:
     def test_same_currency_defaults_incoming_to_outgoing(self, services, pesos):
         efectivo = services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("0"))
 
-        transfer = services.transactions.create_transfer(
+        transfer = services.transfers.create(
             TransferDraft(pesos.id, efectivo.id, ars("5000"), TODAY)
         )
 
@@ -202,38 +202,34 @@ class TestTransfers:
         efectivo = services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("0"))
 
         with pytest.raises(ValidationError, match="iguales"):
-            services.transactions.create_transfer(
+            services.transfers.create(
                 TransferDraft(pesos.id, efectivo.id, ars("5000"), TODAY, amount_in=ars("4000"))
             )
 
     def test_different_currency_requires_incoming_amount(self, services, pesos, dollars):
         with pytest.raises(ValidationError, match="monto que entra"):
-            services.transactions.create_transfer(
-                TransferDraft(pesos.id, dollars.id, ars("120000"), TODAY)
-            )
+            services.transfers.create(TransferDraft(pesos.id, dollars.id, ars("120000"), TODAY))
 
     def test_same_account_is_rejected(self, services, pesos):
         with pytest.raises(ValidationError, match="distintas"):
-            services.transactions.create_transfer(
-                TransferDraft(pesos.id, pesos.id, ars("1"), TODAY)
-            )
+            services.transfers.create(TransferDraft(pesos.id, pesos.id, ars("1"), TODAY))
 
     def test_update_rewrites_both_legs_keeping_ids(self, services, pesos, dollars):
         draft = TransferDraft(pesos.id, dollars.id, ars("120000"), TODAY, amount_in=usd("100"))
-        original = services.transactions.create_transfer(draft)
+        original = services.transfers.create(draft)
 
-        services.transactions.update_transfer(
+        services.transfers.update(
             original.id, dataclasses.replace(draft, amount_out=ars("125000"), note="MEP")
         )
 
-        updated = services.transactions.get_transfer(original.id)
+        updated = services.transfers.get(original.id)
         assert updated.outgoing.id == original.outgoing.id
         assert updated.incoming.id == original.incoming.id
         assert updated.outgoing.amount == ars("125000")
         assert updated.incoming.note == "MEP"
 
     def test_transfer_legs_cannot_be_edited_as_plain_transactions(self, services, pesos, dollars):
-        transfer = services.transactions.create_transfer(
+        transfer = services.transfers.create(
             TransferDraft(pesos.id, dollars.id, ars("120000"), TODAY, amount_in=usd("100"))
         )
 
@@ -243,14 +239,14 @@ class TestTransfers:
             )
 
     def test_deleting_one_leg_deletes_the_transfer(self, services, pesos, dollars):
-        transfer = services.transactions.create_transfer(
+        transfer = services.transfers.create(
             TransferDraft(pesos.id, dollars.id, ars("120000"), TODAY, amount_in=usd("100"))
         )
 
         services.transactions.delete(transfer.incoming.id)
 
         with pytest.raises(ValidationError):
-            services.transactions.get_transfer(transfer.id)
+            services.transfers.get(transfer.id)
         assert services.accounts.balance(pesos.id) == ars("100000")
         assert services.accounts.balance(dollars.id) == usd("500")
 
@@ -259,7 +255,7 @@ class TestAccountActivity:
     def test_money_in_and_out_with_the_transfers_apart(self, services, pesos, dollars):
         services.transactions.create(income_draft(services, pesos.id, ars("5000")))
         services.transactions.create(expense_draft(services, pesos.id, ars("300")))
-        services.transactions.create_transfer(
+        services.transfers.create(
             TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
         )
         earlier = TODAY.replace(day=1).replace(month=TODAY.month - 1)
@@ -271,7 +267,7 @@ class TestAccountActivity:
         assert (activity.transfers_in, activity.transfers_out) == (ars("0"), ars("1200"))
 
     def test_in_the_account_currency(self, services, pesos, dollars):
-        services.transactions.create_transfer(
+        services.transfers.create(
             TransferDraft(pesos.id, dollars.id, ars("1200"), TODAY, amount_in=usd("1"))
         )
 

@@ -5,7 +5,7 @@ from factories import ars, expense_draft, income_draft, usd
 
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.reports.export_service import HEADER
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 
 def all_transactions(services):
@@ -42,7 +42,7 @@ def test_rows_for_expense_and_income_oldest_first(services, pesos):
 
 
 def test_transfer_is_one_row_per_leg(services, pesos, dollars):
-    services.transactions.create_transfer(
+    services.transfers.create(
         TransferDraft(pesos.id, dollars.id, ars("120000"), date(2026, 11, 2), amount_in=usd("100"))
     )
 

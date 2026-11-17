@@ -120,7 +120,7 @@ def value_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QW
 def refund_extra_dialog(services: Services, window: QWidget) -> QWidget:
     """A friend sends $ 2 more than what was left of the demo refunded purchase."""
     refund = demo_refund(services)
-    left = services.transactions.refund_summary(refund.refund_of_id).remaining
+    left = services.refunds.summary(refund.refund_of_id).remaining
     excess = Money.from_decimal(2, left.currency)
     draft = TransactionDraft(
         account_id=refund.account_id,

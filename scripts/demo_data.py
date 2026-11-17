@@ -16,7 +16,8 @@ from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
 from nodus.services.planning.goal_service import GoalDraft
 from nodus.services.transactions.recurring_charge_service import RecurringChargeDraft
-from nodus.services.transactions.transaction_service import TransactionDraft, TransferDraft
+from nodus.services.transactions.transaction_service import TransactionDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 # Months of history before the current one, so the dashboard has trends to show.
 HISTORY_MONTHS = 5
@@ -145,11 +146,11 @@ class DemoData:
                 record(banco, EXPENSE, "Ocio", ars("400000"), on(25), "Excursiones", tags=self.trip)
                 self.summer_clothes = record(banco, EXPENSE, "Ropa", ars("180000"), on(26),
                                              "Ropa de verano", tags=self.trip)  # fmt: skip
-            self.services.transactions.create_transfer(
+            self.services.transfers.create(
                 TransferDraft(banco, self.ahorro.id, ars(int(rate * 150)), on(20),
                               amount_in=usd(150), note="Compra de dólares MEP")
             )  # fmt: skip
-            self.services.transactions.create_transfer(
+            self.services.transfers.create(
                 TransferDraft(banco, efectivo, ars("120000"), on(4), note="Extracción")
             )  # fmt: skip
 
@@ -176,7 +177,7 @@ class DemoData:
         record(banco, EXPENSE, "Ocio", ars("52000"), days_ago(0), "Entradas recital")
         record(banco, EXPENSE, "Educación", ars("65000"), days_ago(0), "Curso de inglés",
                tags=WORK)  # fmt: skip
-        self.services.transactions.create_transfer(
+        self.services.transfers.create(
             TransferDraft(banco, self.ahorro.id, ars("243100"), days_ago(1),
                           amount_in=usd("200"), note="Compra de dólares MEP")
         )  # fmt: skip

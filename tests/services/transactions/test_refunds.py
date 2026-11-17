@@ -10,7 +10,7 @@ from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.services.errors import ValidationError
 from nodus.services.reports.analysis_service import Metric
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 INCOME = TransactionType.INCOME
 EXPENSE = TransactionType.EXPENSE
@@ -68,7 +68,7 @@ def test_refunds_cannot_exceed_the_expense(services, pesos, purchase):
     # Editing a refund does not count its own amount against it.
     services.transactions.update(first.id, refund_draft(services, pesos.id, ars("1000"), purchase))
 
-    refund_summary = services.transactions.refund_summary(purchase.id)
+    refund_summary = services.refunds.summary(purchase.id)
     assert refund_summary.refunded == ars("1000")
     assert refund_summary.remaining == ars("0")
 
@@ -79,12 +79,12 @@ def test_refund_in_another_currency_has_no_cap(services, pesos, dollars, purchas
     services.transactions.create(refund_draft(services, dollars.id, usd("2"), purchase))
 
     assert summary(services, NOVEMBER).expenses == ars("-2000")
-    assert services.transactions.refund_summary(purchase.id).remaining == ars("1000")
+    assert services.refunds.summary(purchase.id).remaining == ars("1000")
 
 
 def test_only_an_expense_can_be_refunded(services, pesos, dollars):
     income = services.transactions.create(income_draft(services, pesos.id, ars("100")))
-    transfer = services.transactions.create_transfer(
+    transfer = services.transfers.create(
         TransferDraft(pesos.id, dollars.id, ars("1000"), date(2026, 11, 1), amount_in=usd("1"))
     )
 
@@ -160,7 +160,7 @@ class TestRefundWithExtra:
         return category_id(services, "Otros", INCOME)
 
     def test_excess_over_what_is_left(self, services, pesos, dollars, share):
-        excess = services.transactions.refund_excess
+        excess = services.refunds.excess
         assert excess(refund_draft(services, pesos.id, ars("1000"), share)) == ars("2")
         assert excess(refund_draft(services, pesos.id, ars("998"), share)) is None
         assert excess(refund_draft(services, dollars.id, usd("1000"), share)) is None
@@ -184,7 +184,7 @@ class TestRefundWithExtra:
         assert extra.payee_id == refund.payee_id is not None
         tags = services.transactions.tags_for([extra.id])[extra.id]
         assert [tag.name for tag in tags] == ["Juntada"]
-        assert services.transactions.refund_summary(share.id).remaining == ars("0")
+        assert services.refunds.summary(share.id).remaining == ars("0")
 
     def test_raising_an_edited_refund(self, services, pesos, share):
         first = services.transactions.create(refund_draft(services, pesos.id, ars("500"), share))
@@ -203,7 +203,7 @@ class TestRefundWithExtra:
 
         with pytest.raises(ValidationError, match="no corresponde"):
             services.transactions.save_refund_with_extra(draft, expense_category)
-        assert services.transactions.refund_summary(share.id).refunds == []
+        assert services.refunds.summary(share.id).refunds == []
 
     def test_only_when_it_goes_over(self, services, pesos, share):
         draft = refund_draft(services, pesos.id, ars("998"), share)
@@ -218,8 +218,8 @@ def test_still_refundable_leaves_out_what_is_refunded_in_full(services, pesos, p
     services.transactions.create(refund_draft(services, pesos.id, ars("1000"), purchase))
     services.transactions.create(refund_draft(services, pesos.id, ars("100"), other))
 
-    assert services.transactions.still_refundable([purchase, other]) == [other]
-    assert services.transactions.still_refundable([purchase, other], purchase.id) == [
+    assert services.refunds.still_refundable([purchase, other]) == [other]
+    assert services.refunds.still_refundable([purchase, other], purchase.id) == [
         purchase,
         other,
     ]

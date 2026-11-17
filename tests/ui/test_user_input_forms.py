@@ -21,7 +21,7 @@ from nodus.models.money import MAX_CENTS, Money
 from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.account_group_dialogs import GroupDialog
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
@@ -281,7 +281,7 @@ def queries_to_build_transfers(services, database, count: int, account_id: int) 
     whose other leg it does not have."""
     other = services.accounts.list_accounts()[-1]
     for _ in range(count):
-        services.transactions.create_transfer(TransferDraft(account_id, other.id, ars("10"), TODAY))
+        services.transfers.create(TransferDraft(account_id, other.id, ars("10"), TODAY))
     rows = services.transactions.list_transactions(TransactionFilter(account_id=account_id))
     statements: list[str] = []
     database.connection.set_trace_callback(statements.append)

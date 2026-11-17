@@ -7,7 +7,7 @@ from factories import ars, category_id, expense_draft, income_draft, usd
 
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.services.transactions.transfer_service import TransferDraft
 
 NOVEMBER = TransactionFilter(start=date(2026, 11, 1), end=date(2026, 11, 30))
 
@@ -55,7 +55,7 @@ def test_follows_the_filter_and_nets_refunds(services, pesos):
 
 
 def test_transfers_add_up_to_nothing(services, pesos, dollars):
-    services.transactions.create_transfer(
+    services.transfers.create(
         TransferDraft(pesos.id, dollars.id, ars("1000"), date(2026, 11, 4), amount_in=usd("1"))
     )
 
