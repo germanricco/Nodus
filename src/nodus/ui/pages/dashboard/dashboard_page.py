@@ -45,6 +45,10 @@ from nodus.ui.widgets.style import muted_label, scrolling
 # Below this page width, the cards go one per row.
 
 
+# A card's place in the grid: (card, row, column, rows spanned, columns spanned).
+Placement = tuple[QWidget, int, int, int, int]
+
+
 class DashboardPage(Page):
     """Net worth with its trend, the period's cash flow, expenses by category and against
     the previous period, and the latest movements. Without accounts it shows how to get
@@ -219,44 +223,37 @@ class DashboardPage(Page):
             grid = self._grid
             for card in self._cards():
                 grid.removeWidget(card)
-            if narrow:
-                rows = [
-                    [(self.net_worth_card, 2)],
-                    [(self.upcoming_card, 1), (self.latest_card, 1)]
-                    if upcoming
-                    else [(self.latest_card, 2)],
-                    [(self.expenses_card, 2)],
-                    [(self.comparison_card, 2)],
-                    [(self.flow_card, 2)],
-                ]
-                if budgets:
-                    rows.append([(self.budgets_card, 2)])
-                self._place(rows)
-            else:
-                grid.addWidget(self.net_worth_card, 0, 0, 2, 4)
-                if upcoming:
-                    grid.addWidget(self.upcoming_card, 0, 4, 1, 2)
-                    grid.addWidget(self.latest_card, 1, 4, 1, 2)
-                else:
-                    grid.addWidget(self.latest_card, 0, 4, 2, 2)
-                grid.addWidget(self.expenses_card, 2, 0, 1, 4)
-                grid.addWidget(self.comparison_card, 2, 4, 1, 2)
-                if budgets:
-                    grid.addWidget(self.flow_card, 3, 0, 1, 4)
-                    grid.addWidget(self.budgets_card, 3, 4, 1, 2)
-                else:
-                    grid.addWidget(self.flow_card, 3, 0, 1, 6)
+            for card, row, column, rows, columns in self._placements(*layout):
+                grid.addWidget(card, row, column, rows, columns)
             for column in range(6):
                 grid.setColumnStretch(column, 1 if column < (2 if narrow else 6) else 0)
         self._remeasure()
 
-    def _place(self, rows: list[list[tuple[QWidget, int]]]) -> None:
-        """Adds each row of (card, columns spanned) below the previous one."""
-        for row_index, row in enumerate(rows):
-            column = 0
-            for card, span in row:
-                self._grid.addWidget(card, row_index, column, 1, span)
-                column += span
+    def _placements(self, narrow: bool, upcoming: bool, budgets: bool) -> list[Placement]:
+        """Where each card goes, as (card, row, column, rows spanned, columns spanned):
+        six columns wide, two when narrow. Both layouts are here, so a new card is placed
+        in one function."""
+        side = [self.upcoming_card, self.latest_card] if upcoming else [self.latest_card]
+        bottom = [self.flow_card, self.budgets_card] if budgets else [self.flow_card]
+        if narrow:
+            rows = [[self.net_worth_card], side, [self.expenses_card], [self.comparison_card]]
+            rows += [[card] for card in bottom]
+            return [
+                (card, row, column * 2 // len(cards), 1, 2 // len(cards))
+                for row, cards in enumerate(rows)
+                for column, card in enumerate(cards)
+            ]
+        return [
+            (self.net_worth_card, 0, 0, 2, 4),
+            *((card, row, 4, 2 // len(side), 2) for row, card in enumerate(side)),
+            (self.expenses_card, 2, 0, 1, 4),
+            (self.comparison_card, 2, 4, 1, 2),
+            *(
+                [(self.flow_card, 3, 0, 1, 4), (self.budgets_card, 3, 4, 1, 2)]
+                if budgets
+                else [(self.flow_card, 3, 0, 1, 6)]
+            ),
+        ]
 
     def _cards(self) -> list[QWidget]:
         return [
