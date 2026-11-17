@@ -20,8 +20,8 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.change_badge import ChangeBadge, format_signed_percent
-from nodus.ui.widgets.charts.charts import ProportionBar, Segment
 from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint, money_formats
+from nodus.ui.widgets.charts.share_charts import ProportionBar, Segment
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.flow_layout import FlowLayout
 from nodus.ui.widgets.inputs.segmented import SegmentedControl

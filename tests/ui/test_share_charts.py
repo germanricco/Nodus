@@ -9,14 +9,6 @@ from nodus.ui.theme.theme import LIGHT
 from nodus.ui.widgets.change_badge import ChangeBadge, format_change
 from nodus.ui.widgets.charts.bar_chart import BarChart, BarGroup
 from nodus.ui.widgets.charts.chart_base import format_compact, resample
-from nodus.ui.widgets.charts.charts import (
-    DonutChart,
-    ProportionBar,
-    Segment,
-    clockwise_angle,
-    index_at_angle,
-    segment_spans,
-)
 from nodus.ui.widgets.charts.line_chart import (
     LineChart,
     LinePoint,
@@ -24,6 +16,14 @@ from nodus.ui.widgets.charts.line_chart import (
     change_directions,
     height,
     value_range,
+)
+from nodus.ui.widgets.charts.share_charts import (
+    DonutChart,
+    ProportionBar,
+    Segment,
+    clockwise_angle,
+    index_at_angle,
+    segment_spans,
 )
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 

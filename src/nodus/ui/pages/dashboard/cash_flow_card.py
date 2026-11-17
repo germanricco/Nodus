@@ -14,7 +14,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts.bar_chart import BarChart, flow_bar_groups
-from nodus.ui.widgets.charts.charts import ProportionBar, Segment
+from nodus.ui.widgets.charts.share_charts import ProportionBar, Segment
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 from nodus.ui.widgets.style import muted_label

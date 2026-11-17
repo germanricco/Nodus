@@ -409,7 +409,7 @@ class AccountsPage(Page):
             row.move_requested.connect(self.open_move_dialog)
             row.goal_requested.connect(self.open_goal_dialog)
             row.archive_toggled.connect(self._toggle_archived)
-            row.delete_requested.connect(self.delete_account)
+            row.delete_requested.connect(self._delete_account)
             if rows is None:
                 card.body.addWidget(row)
             else:
@@ -429,7 +429,7 @@ class AccountsPage(Page):
     def _toggle_archived(self, account: Account) -> None:
         toggle_account_archived(self._services, self._event_bus, account)
 
-    def delete_account(self, account: Account) -> None:
+    def _delete_account(self, account: Account) -> None:
         delete_account(self.window(), self._services, self._event_bus, account)
 
     def _empty_state(self) -> Card:

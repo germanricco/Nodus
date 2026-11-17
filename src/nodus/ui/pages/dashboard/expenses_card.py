@@ -12,7 +12,7 @@ from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
-from nodus.ui.widgets.charts.charts import DonutChart, Segment
+from nodus.ui.widgets.charts.share_charts import DonutChart, Segment
 from nodus.ui.widgets.style import amount_label, clear_layout, muted_label
 from nodus.ui.widgets.tables.category_line import CategoryLine
 

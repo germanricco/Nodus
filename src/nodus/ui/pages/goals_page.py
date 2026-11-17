@@ -193,7 +193,7 @@ class GoalsPage(Page):
     def toggle_archived(self, goal: Goal) -> None:
         toggle_goal_archived(self._services, self._event_bus, goal)
 
-    def delete_goal(self, goal: Goal) -> None:
+    def delete(self, goal: Goal) -> None:
         delete_goal(self.window(), self._services, self._event_bus, goal)
 
     # Building
@@ -212,7 +212,7 @@ class GoalsPage(Page):
             row.detail_requested.connect(lambda goal: self.detail_requested.emit(goal.id))
             row.edit_requested.connect(self.open_goal_dialog)
             row.archive_toggled.connect(self.toggle_archived)
-            row.delete_requested.connect(self.delete_goal)
+            row.delete_requested.connect(self.delete)
             row.rate_requested.connect(lambda: self.navigate_requested.emit(PageId.SETTINGS))
             card.body.addWidget(row)
             self.rows.append(row)

@@ -158,7 +158,7 @@ class TestPage:
         monkeypatch.setattr(
             goal_actions, "confirm", lambda _p, _t, text: texts.append(text) or True
         )
-        page.delete_goal(services.goals.get(goal.id))
+        page.delete(services.goals.get(goal.id))
 
         assert services.goals.list_goals() == []
         assert "Las cuentas y sus movimientos no se tocan." in texts[0]
