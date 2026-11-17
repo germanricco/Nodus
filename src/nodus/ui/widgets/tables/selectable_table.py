@@ -47,7 +47,7 @@ from nodus.ui.theme.design import IconSize, Layout, Line, Radius
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
 from nodus.ui.widgets.tables.row_actions import RowAction, run_default, show_menu
-from nodus.ui.widgets.tables.table import configure_record_table
+from nodus.ui.widgets.tables.table import configure_record_table, light_row
 
 # Room for the check box at the start of a row and for the «⋯» at its end, in pixels.
 CHECK_GUTTER = Layout.CHECK_COLUMN
@@ -102,7 +102,7 @@ class _RowControlsDelegate(QStyledItemDelegate):
         if index.row() == self._table.hovered_row and not (
             option.state & QStyle.StateFlag.State_Selected
         ):
-            painter.fillRect(option.rect, QColor(active_theme().hover))
+            light_row(painter, option)
         first, last = self._table.edge_columns()
         if index.column() not in (first, last):
             super().paint(painter, option, index)

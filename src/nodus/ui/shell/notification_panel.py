@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from nodus.services.app.notification_service import Notice, NoticeKind
 from nodus.ui.shell.notices import NOTICES
-from nodus.ui.theme.design import Layout, Line, Popup, Space
+from nodus.ui.theme.design import Layout, Line, Space
 from nodus.ui.theme.theme_manager import active_theme
 from nodus.ui.widgets.card import card_title
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.style import clear_layout, muted_label, set_style_property
+from nodus.ui.widgets.style import clear_layout, muted_label, set_style_property, show_below
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
 
 NEWS_LABEL = "Qué trae"
@@ -133,10 +133,7 @@ class NotificationPanel(QFrame):
 
     def open_below(self, anchor: QWidget) -> None:
         """Shows the panel under ``anchor``, its right edge aligned with the anchor's."""
-        self.adjustSize()
-        corner = anchor.mapToGlobal(QPoint(anchor.width(), anchor.height() + Popup.PANEL_OFFSET))
-        self.move(corner.x() - self.width(), corner.y())
-        self.show()
+        show_below(self, anchor, align_right=True)
 
     def _show_news(self, notice: Notice) -> None:
         self.hide()

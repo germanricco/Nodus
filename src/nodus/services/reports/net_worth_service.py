@@ -65,12 +65,8 @@ class NetWorthService:
 
     def net_worth(self, day: date) -> NetWorth:
         """Balances at the end of ``day``, converted at that day's rate."""
-        balances = self._accounts.balances(day)
-        accounts = self._accounts.list_accounts()
-        by_currency = self._zeros({account.currency for account in accounts})
-        for account in accounts:
-            by_currency[account.currency] += balances[account.id]
-        return self._net_worth(by_currency, day)
+        currencies = {a.id: a.currency for a in self._accounts.list_accounts()}
+        return self._net_worth(self._by_currency(currencies, self._accounts.balances(day)), day)
 
     def history(self, period: Period, today: date) -> list[NetWorthPoint]:
         """The net worth along ``period``, up to ``today`` (the future has no data yet).
@@ -126,9 +122,7 @@ class NetWorthService:
         end = days[-1]
         currencies = {a.id: a.currency for a in self._accounts.list_accounts()}
         balances = self._accounts.balances(period.start - timedelta(days=1))
-        by_currency = self._zeros(set(currencies.values()))
-        for account_id, currency in currencies.items():
-            by_currency[currency] += balances[account_id]
+        by_currency = self._by_currency(currencies, balances)
         # Every change to a balance in the period: movements and value adjustments.
         changes = [
             (t.occurred_on, t.account_id, t.signed_amount)
@@ -166,6 +160,16 @@ class NetWorthService:
         if at_end is None or at_start is None:
             return None
         return at_end - at_start
+
+    def _by_currency(
+        self, currencies: dict[int, Currency], balances: dict[int, Money]
+    ) -> dict[Currency, Money]:
+        """The ``balances`` of the accounts in ``currencies`` (id to currency), added up per
+        currency, with every total currency present even at zero."""
+        by_currency = self._zeros(set(currencies.values()))
+        for account_id, currency in currencies.items():
+            by_currency[currency] += balances[account_id]
+        return by_currency
 
     @staticmethod
     def _zeros(held: set[Currency]) -> dict[Currency, Money]:

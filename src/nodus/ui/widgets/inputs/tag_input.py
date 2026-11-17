@@ -11,6 +11,7 @@ from nodus.services.classification.tag_service import TagService
 from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.widgets.inputs.color import color_icon
 from nodus.ui.widgets.inputs.name_completer import NameCompleter
+from nodus.ui.widgets.style import clear_layout
 
 # Color of the chip of a tag that does not exist yet and is created on saving.
 
@@ -115,10 +116,7 @@ class TagInput(QWidget):
         self.add(name)
 
     def _rebuild(self) -> None:
-        while self._chips_layout.count():
-            item = self._chips_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+        clear_layout(self._chips_layout)
         new = []
         for name in self._names:
             tag = self._tags.find(name)

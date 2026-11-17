@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from PySide6.QtCore import QPoint, QPointF, QRegularExpression, Qt, Signal
+from PySide6.QtCore import QPointF, QRegularExpression, Qt, Signal
 from PySide6.QtGui import (
     QBrush,
     QColor,
@@ -26,9 +26,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.ui.theme.design import ControlSize, Layout, Line, Popup, Space
+from nodus.ui.theme.design import ControlSize, Layout, Line, Space
 from nodus.ui.widgets.color_dot import ColorDot
-from nodus.ui.widgets.style import secondary_button
+from nodus.ui.widgets.style import secondary_button, show_below
 
 # Positions of the brightness slider; enough steps for every value of a hex digit pair.
 VALUE_STEPS = 1000
@@ -194,9 +194,7 @@ class ColorWheelPopup(QFrame):
 
     def open_below(self, anchor: QWidget) -> None:
         """Shows the popup under ``anchor``, its left edge aligned with the anchor's."""
-        self.adjustSize()
-        self.move(anchor.mapToGlobal(QPoint(0, anchor.height() + Popup.PANEL_OFFSET)))
-        self.show()
+        show_below(self, anchor)
         self.hex_input.setFocus()
 
     def _on_wheel_changed(self) -> None:

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-from PySide6.QtCore import QEasingCurve, QObject, Qt, QVariantAnimation
+from PySide6.QtCore import QEasingCurve, QObject, QPoint, Qt, QVariantAnimation
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect,
@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.models.money import Money
-from nodus.ui.theme.design import Elevation, Opacity
+from nodus.ui.theme.design import Elevation, Opacity, Popup
 from nodus.ui.theme.theme import Theme
 
 # Figures line up at their right edge, centered in their row.
@@ -119,3 +119,13 @@ def unit_animation(
     animation.setEasingCurve(easing)
     animation.valueChanged.connect(on_value)
     return animation
+
+
+def show_below(popup: QWidget, anchor: QWidget, align_right: bool = False) -> None:
+    """Shows ``popup`` just under ``anchor``, sized to its content, with its left edge on
+    the anchor's or, with ``align_right``, its right edge."""
+    popup.adjustSize()
+    x = anchor.width() if align_right else 0
+    corner = anchor.mapToGlobal(QPoint(x, anchor.height() + Popup.PANEL_OFFSET))
+    popup.move(corner.x() - (popup.width() if align_right else 0), corner.y())
+    popup.show()

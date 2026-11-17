@@ -146,13 +146,7 @@ class GoalService:
 
     def saved_on(self, goal: Goal, day: date, today: date) -> Money | None:
         """What the goal had at the end of ``day``, at today's rates; None without one."""
-        balances = self._accounts.balances(day)
-        total = Money.zero(goal.currency)
-        for contribution in self._counted(goal, balances, today):
-            if contribution is None:
-                return None
-            total += contribution
-        return total
+        return self._saved(goal, self._accounts.balances(day), today)
 
     def month_ends(self, goal: Goal, today: date, count: int) -> list[tuple[date, Money]]:
         """What the goal had at the end of each of the last ``count`` months, oldest first,
@@ -196,11 +190,9 @@ class GoalService:
             goal, shares=tuple(s for s in goal.shares if s.account_id != account_id)
         )
         balances = self._accounts.balances(today)
-        saved = Money.zero(goal.currency)
-        for counted in self._counted(others, balances, today):
-            if counted is None:
-                return free
-            saved += counted
+        saved = self._saved(others, balances, today)
+        if saved is None:
+            return free
         missing = goal.target.cents - saved.cents
         balance = balances[account_id]
         whole = self._exchange_rates.convert(
@@ -241,6 +233,15 @@ class GoalService:
             self._goals.update(dataclasses.replace(goal, reached_seen=True))
 
     # Helpers
+
+    def _saved(self, goal: Goal, balances: dict[int, Money], today: date) -> Money | None:
+        """What the goal's accounts add to it with ``balances``; None when one lacks a rate."""
+        total = Money.zero(goal.currency)
+        for contribution in self._counted(goal, balances, today):
+            if contribution is None:
+                return None
+            total += contribution
+        return total
 
     def _counted(self, goal: Goal, balances: dict[int, Money], today: date) -> list[Money | None]:
         """What each share of the goal adds, in the goal's currency. A negative balance

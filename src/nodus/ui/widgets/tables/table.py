@@ -83,6 +83,11 @@ def fit_rows(table: QTableView) -> None:
     table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
 
+def light_row(painter: QPainter, option: QStyleOptionViewItem) -> None:
+    """Lights a cell of the row under the mouse, the same way in every table."""
+    painter.fillRect(option.rect, QColor(active_theme().hover))
+
+
 class _LinkRows(QStyledItemDelegate):
     """Makes each row of a table a link: it lights up whole under the mouse, as every row
     that does something, and a click on it calls ``open_row`` (the table has nothing to
@@ -97,7 +102,7 @@ class _LinkRows(QStyledItemDelegate):
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         if index.row() == self.hovered_row:
-            painter.fillRect(option.rect, QColor(active_theme().hover))
+            light_row(painter, option)
         super().paint(painter, option, index)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802

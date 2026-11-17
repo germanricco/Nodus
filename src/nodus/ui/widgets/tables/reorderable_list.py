@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.ui.theme.design import Line, Opacity, Radius, Space
+from nodus.ui.widgets.style import set_style_property
 
 # What a dragged row carries: "<list id>:<row index>". A list accepts its own rows, and
 # those of the lists of its family.
@@ -279,9 +280,7 @@ class ReorderableList(QWidget):
         """Lights the empty list's frame while a row is over it."""
         zone = self._placeholder
         if zone is not None and zone.property("active") != active:
-            zone.setProperty("active", active)
-            zone.style().unpolish(zone)
-            zone.style().polish(zone)
+            set_style_property(zone, "active", active)
 
     def _show_indicator(self, gap: int) -> None:
         """Draws the line in the middle of the space before row ``gap``, or after the last;

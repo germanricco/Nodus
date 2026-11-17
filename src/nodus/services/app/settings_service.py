@@ -59,8 +59,7 @@ class SettingsService:
         return self._settings.get(self.THEME_KEY)
 
     def set_theme_preference(self, value: str) -> None:
-        with self._database.transaction():
-            self._settings.set(self.THEME_KEY, value)
+        self._save(self.THEME_KEY, value)
 
     def check_updates(self) -> bool:
         """Whether to look for a new version on startup; on unless the user turned it off."""
@@ -127,10 +126,7 @@ class SettingsService:
         return int(value) if value and value.isdigit() else 12
 
     def set_account_chart_months(self, months: int | None) -> None:
-        with self._database.transaction():
-            self._settings.set(
-                self.ACCOUNT_CHART_MONTHS_KEY, "all" if months is None else str(months)
-            )
+        self._save(self.ACCOUNT_CHART_MONTHS_KEY, "all" if months is None else str(months))
 
     def reduce_motion(self) -> bool:
         """Whether charts and figures jump to new data instead of moving to it. Until the
@@ -174,8 +170,7 @@ class SettingsService:
         return self._settings.get(self.BACKUP_REMINDER_DISMISSED_KEY)
 
     def set_backup_reminder_dismissed(self, month: str) -> None:
-        with self._database.transaction():
-            self._settings.set(self.BACKUP_REMINDER_DISMISSED_KEY, month)
+        self._save(self.BACKUP_REMINDER_DISMISSED_KEY, month)
 
     def last_account_id(self) -> int | None:
         """The account of the last movement recorded, offered first in the next one."""
@@ -183,8 +178,7 @@ class SettingsService:
         return int(value) if value and value.isdigit() else None
 
     def set_last_account_id(self, account_id: int) -> None:
-        with self._database.transaction():
-            self._settings.set(self.LAST_ACCOUNT_KEY, str(account_id))
+        self._save(self.LAST_ACCOUNT_KEY, str(account_id))
 
     def net_worth_currency(self) -> Currency:
         """The currency the dashboard shows the net worth in; pesos until chosen."""
@@ -192,40 +186,35 @@ class SettingsService:
         return next((c for c in TOTAL_CURRENCIES if c.value == value), HOME_CURRENCY)
 
     def set_net_worth_currency(self, currency: Currency) -> None:
-        with self._database.transaction():
-            self._settings.set(self.NET_WORTH_CURRENCY_KEY, currency.value)
+        self._save(self.NET_WORTH_CURRENCY_KEY, currency.value)
 
     def dismissed_version(self) -> str | None:
         """The new version the user chose not to hear about again, if any."""
         return self._settings.get(self.DISMISSED_VERSION_KEY)
 
     def set_dismissed_version(self, version: str) -> None:
-        with self._database.transaction():
-            self._settings.set(self.DISMISSED_VERSION_KEY, version)
+        self._save(self.DISMISSED_VERSION_KEY, version)
 
     def last_seen_version(self) -> str | None:
         """The last version whose news the user saw, or None if never recorded."""
         return self._settings.get(self.LAST_SEEN_VERSION_KEY)
 
     def set_last_seen_version(self, version: str) -> None:
-        with self._database.transaction():
-            self._settings.set(self.LAST_SEEN_VERSION_KEY, version)
+        self._save(self.LAST_SEEN_VERSION_KEY, version)
 
     def rate_source(self) -> str | None:
         """Where the dollar rate comes from ("manual", "bolsa"…), or None if never chosen."""
         return self._settings.get(self.RATE_SOURCE_KEY)
 
     def set_rate_source(self, source: str) -> None:
-        with self._database.transaction():
-            self._settings.set(self.RATE_SOURCE_KEY, source)
+        self._save(self.RATE_SOURCE_KEY, source)
 
     def _flag(self, key: str, default: bool) -> bool:
         value = self._settings.get(key)
         return default if value is None else value != "false"
 
     def _set_flag(self, key: str, value: bool) -> None:
-        with self._database.transaction():
-            self._settings.set(key, "true" if value else "false")
+        self._save(key, "true" if value else "false")
 
     def _list(self, key: str, separator: str = ",") -> list[str]:
         """A setting saved as a list of texts, in their order, split by ``separator``,
@@ -234,5 +223,9 @@ class SettingsService:
         return [part for part in value.split(separator) if part]
 
     def _set_list(self, key: str, values: Iterable[str], separator: str = ",") -> None:
+        self._save(key, separator.join(values))
+
+    def _save(self, key: str, value: str) -> None:
+        """Stores one setting, in a transaction of its own."""
         with self._database.transaction():
-            self._settings.set(key, separator.join(values))
+            self._settings.set(key, value)
