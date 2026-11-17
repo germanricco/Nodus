@@ -1,5 +1,7 @@
 """Buttons say what they do: the main button of a dialog and the one that confirms."""
 
+import pytest
+from boxes import answer_box
 from factories import ars
 from PySide6.QtWidgets import QMessageBox
 
@@ -7,7 +9,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.category_dialog import CategoryDialog
-from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.confirm import ask, confirm
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES
 
 
@@ -59,3 +61,31 @@ class TestMainButton:
         qtbot.addWidget(dialog)
 
         assert dialog.save_button.text() == "Agregar subcategoría"
+
+
+class TestAnswers:
+    """With the real box: every way of saying no says no, and each button is there.
+
+    A button handed to the box without being kept was once collected by Python and
+    vanished, leaving the other one alone to answer Esc and the ✕ as well."""
+
+    QUESTIONS = (
+        lambda: ask(None, "Recorrido guiado", "¿Te lo muestro?", "Ver el recorrido", "Ahora no"),
+        lambda: confirm(None, "Eliminar cuenta", "Se borra con sus movimientos."),
+    )
+
+    @pytest.mark.parametrize("how", ["Esc", "close", "cancel"])
+    @pytest.mark.parametrize("question", QUESTIONS)
+    def test_saying_no_says_no(self, qtbot, question, how):
+        buttons: list[str] = []
+        cancel = "Ahora no" if question is self.QUESTIONS[0] else "Cancelar"
+        answer_box(cancel if how == "cancel" else how, buttons)
+
+        assert question() is False
+        assert len(buttons) == 2 and cancel in buttons
+
+    def test_the_action_says_yes(self, qtbot):
+        buttons: list[str] = []
+        answer_box("Ver el recorrido", buttons)
+
+        assert self.QUESTIONS[0]() is True

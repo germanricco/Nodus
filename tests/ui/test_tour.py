@@ -1,6 +1,7 @@
 """The guided tour points at what is on Inicio, moves with the keys, and is offered once."""
 
 import pytest
+from boxes import answer_box
 from PySide6.QtCore import Qt
 
 from nodus.models.account import AccountType
@@ -114,6 +115,15 @@ class TestOffer:
         fresh_window.show_unseen_news()
 
         assert asked == ["news", "¿Te muestro cómo se usa Nodus? Es un minuto.", "news"]
+        assert services.settings.tour_offered()
+
+    @pytest.mark.parametrize("how", ["Ahora no", "Esc"])
+    def test_no_with_the_real_box_starts_nothing(self, services, pesos, fresh_window, how):
+        answer_box(how)
+
+        fresh_window.offer_tour()
+
+        assert getattr(fresh_window, "tour", None) is None
         assert services.settings.tour_offered()
 
     def test_yes_starts_it(self, services, pesos, fresh_window, monkeypatch):

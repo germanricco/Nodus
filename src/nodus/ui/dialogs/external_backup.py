@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox, QPushButton, QWidget
 
 from nodus.services.container import Services
 from nodus.services.errors import BackupError
-from nodus.ui.dialogs.confirm import styled_button
+from nodus.ui.dialogs.confirm import add_button
 from nodus.ui.dialogs.user_error import user_error
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.busy import busy
@@ -60,12 +60,11 @@ def choose_folder(parent: QWidget, services: Services) -> Path | None:
             f"¿Guardar la copia en {last}, como la última vez?",
             parent=parent,
         )
-        here = styled_button("Guardar ahí", "PrimaryButton")
-        box.addButton(here, QMessageBox.ButtonRole.AcceptRole)
-        other = styled_button("Elegir otra carpeta…", "SecondaryButton")
-        box.addButton(other, QMessageBox.ButtonRole.ActionRole)
-        cancel = styled_button("Cancelar", "SecondaryButton")
-        box.addButton(cancel, QMessageBox.ButtonRole.RejectRole)
+        here = add_button(box, "Guardar ahí", "PrimaryButton", QMessageBox.ButtonRole.AcceptRole)
+        other = add_button(
+            box, "Elegir otra carpeta…", "SecondaryButton", QMessageBox.ButtonRole.ActionRole
+        )
+        add_button(box, "Cancelar", "SecondaryButton", QMessageBox.ButtonRole.RejectRole)
         box.setDefaultButton(here)
         box.exec()
         if box.clickedButton() is here:
