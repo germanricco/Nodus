@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
 from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
@@ -15,6 +15,7 @@ from nodus.models.money import Money
 from nodus.models.names import normalize_name
 from nodus.models.period import Period
 from nodus.models.value_adjustment import ValueAdjustment
+from nodus.services.backups.backup_service import BackupService
 from nodus.services.errors import (
     ValidationError,
     clean_name,
@@ -44,10 +45,12 @@ class AccountService:
         database: Database,
         accounts: AccountRepository,
         adjustments: ValueAdjustmentRepository,
+        backups: BackupService,
     ) -> None:
         self._database = database
         self._accounts = accounts
         self._adjustments = adjustments
+        self._backups = backups
 
     def create(
         self, name: str, account_type: AccountType, currency: Currency, initial_balance: Money
@@ -90,8 +93,10 @@ class AccountService:
 
     def delete(self, account_id: int) -> None:
         """Deletes the account and its movements. Transfers are deleted whole, so the
-        other account's balance changes too; archiving is the way to keep the history."""
+        other account's balance changes too; archiving is the way to keep the history.
+        The data is copied first, and the copy kept for a month."""
         account = self.get(account_id)
+        self._backups.create_before_delete(datetime.now())
         with self._database.transaction():
             self._accounts.delete(account.id)
 

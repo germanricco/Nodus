@@ -36,6 +36,7 @@ class UndoRecord:
     description: str
     revert: Callable[[], None]
     undone: bool = field(default=False, init=False)
+    forgotten: bool = field(default=False, init=False)
 
 
 class UndoService:
@@ -45,11 +46,22 @@ class UndoService:
     def __init__(self, database: Database) -> None:
         self._database = database
         self.last: UndoRecord | None = None
+        self._offered: list[UndoRecord] = []
 
     def offer(self, description: str, revert: Callable[[], None]) -> UndoRecord:
         """Records an action that was just done; the services call it."""
         self.last = UndoRecord(description, revert)
+        self._offered.append(self.last)
         return self.last
+
+    def forget(self) -> None:
+        """Nothing done before can be undone any more, not even from a toast still on
+        screen: the data was replaced by a copy, and undoing would write old changes
+        over it."""
+        for record in self._offered:
+            record.forgotten = True
+        self._offered.clear()
+        self.last = None
 
     def undo(self, record: UndoRecord | None = None) -> UndoRecord:
         """Undoes ``record``, or the last action when None, and returns it.
@@ -61,6 +73,8 @@ class UndoService:
             raise UndoError("No hay nada para deshacer.")
         if record.undone:
             raise UndoError("Eso ya se deshizo.")
+        if record.forgotten:
+            raise UndoError("Después de restaurar una copia, eso ya no se puede deshacer.")
         with self._database.transaction():
             record.revert()
         record.undone = True

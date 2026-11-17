@@ -325,16 +325,40 @@ HELP_TOPICS = [
         "Tus datos viven solo en tu computadora, así que Nodus los cuida por ti con una copia"
         " cada día.",
         (
-            "Cada día, al abrirse, Nodus guarda una copia en tu computadora. En Ajustes, «Hacer"
-            " copia» guarda una en el momento y «Restaurar copia…» vuelve a una anterior,"
-            " después de guardar cómo están ahora.",
+            "Cada día, al abrirse, Nodus guarda una copia en tu computadora. Conserva las tres"
+            " más recientes, una por cada una de las cuatro semanas anteriores y una por cada"
+            " uno de los seis meses anteriores, así puedes volver a medio año atrás si notas"
+            " tarde un error. Antes de borrar una cuenta, una categoría o muchas transacciones,"
+            " también guarda una, que se queda un mes.",
+            "En Ajustes, «Hacer copia» guarda una en el momento y «Restaurar copia…» vuelve a"
+            " una anterior, después de guardar cómo están ahora. Nodus revisa la copia entera"
+            " antes de usarla: si está dañada o incompleta, te avisa y tus datos quedan como"
+            " estaban.",
             "Esas copias quedan en el mismo disco, así que una vez al mes conviene guardar una"
             " afuera con «Guardar copia en…», en un pendrive o en una carpeta de Drive. A fin de"
             " mes, Nodus te lo recuerda.",
             "Si el archivo de tus datos se daña, al abrirse Nodus te ofrece volver a la última"
             " copia sana, y guarda aparte el archivo dañado.",
         ),
-        ("privacy",),
+        ("moving", "privacy"),
+    ),
+    HelpTopic(
+        "moving",
+        "Pasar Nodus a otra computadora",
+        DATA,
+        (PageId.SETTINGS,),
+        "Tus datos pasan enteros a otra computadora con una copia: cuentas, movimientos y"
+        " ajustes, tal como estaban.",
+        (
+            "En la computadora de siempre, abre Ajustes y toca «Guardar copia en…». Elige un"
+            " pendrive o una carpeta de Drive u OneDrive.",
+            "En la nueva, instala Nodus. El Inicio te ofrece «Traer mis datos de otra"
+            " computadora»: elige la copia que guardaste y listo. Más tarde, lo mismo se hace"
+            " desde Ajustes, con «Restaurar copia…».",
+            "Si la copia viene de una versión anterior de Nodus, se actualiza sola al"
+            " traerla. Una de una versión más nueva necesita que primero actualices Nodus.",
+        ),
+        ("backups",),
     ),
     HelpTopic(
         "privacy",

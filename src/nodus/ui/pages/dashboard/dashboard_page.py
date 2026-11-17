@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 
 from PySide6.QtCore import QCoreApplication, QEvent, QTimer, Signal
 from PySide6.QtGui import QResizeEvent
@@ -20,6 +21,7 @@ from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
 from nodus.ui.actions.recurring import pay_charge, skip_charge, toggle_seen
 from nodus.ui.actions.transactions import delete_transactions, edit_transaction
+from nodus.ui.dialogs.restore_copy import restore_copy
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.base.net_worth_card import NetWorthCard
@@ -40,7 +42,7 @@ from nodus.ui.shell.coach_marks import mark_target
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.style import muted_label, scrolling
+from nodus.ui.widgets.style import muted_label, scrolling, secondary_button
 
 # A card's place in the grid: (card, row, column, rows spanned, columns spanned).
 Placement = tuple[QWidget, int, int, int, int]
@@ -66,6 +68,7 @@ class DashboardPage(Page):
         super().__init__(PageId.DASHBOARD.label)
         self._services = services
         self._event_bus = event_bus
+        self._theme_manager = theme_manager
         self.period_selector = PeriodSelector()
         self.add_header_widget(self.period_selector)
         mark_target(self.period_selector, tour.PERIOD)
@@ -279,6 +282,19 @@ class DashboardPage(Page):
         self._scroll.widget().setMinimumHeight(self._grid.minimumSize().height())
         QCoreApplication.postEvent(self._scroll, QEvent(QEvent.Type.LayoutRequest))
 
+    def _bring_data(self) -> None:
+        """Restores the copy saved on another computer, starting in the pen drive of the
+        last copy outside the computer when it is plugged in."""
+        start = self._services.backups.external_folder() or Path.home()
+        restore_copy(
+            self.window(),
+            self._services,
+            self._event_bus,
+            self._theme_manager,
+            start,
+            self.bring_data_button,
+        )
+
     def _welcome_card(self) -> Card:
         card = Card()
         title = QLabel("Te damos la bienvenida a Nodus")
@@ -292,8 +308,13 @@ class DashboardPage(Page):
         self.create_account_button.clicked.connect(
             lambda: self.navigate_requested.emit(PageId.ACCOUNTS)
         )
+        # Nodus on a new computer: the copy saved on the old one brings everything along.
+        self.bring_data_button = secondary_button(
+            "Traer mis datos de otra computadora", self._bring_data
+        )
         buttons = QHBoxLayout()
         buttons.addWidget(self.create_account_button)
+        buttons.addWidget(self.bring_data_button)
         buttons.addStretch()
         card.body.addWidget(title)
         card.body.addWidget(text)

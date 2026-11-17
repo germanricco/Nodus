@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
 from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
@@ -23,6 +23,7 @@ from nodus.models.money import Money
 from nodus.models.period import Month, Period
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction, TransactionType
+from nodus.services.backups.backup_service import LARGE_DELETE, BackupService
 from nodus.services.errors import ValidationError, require_found, require_in_calendar
 from nodus.services.transactions.account_rules import active_account, require_amount_for
 from nodus.services.transactions.labels import MovementLabels
@@ -75,7 +76,9 @@ class TransactionService:
         tags: TagRepository,
         labels: MovementLabels,
         refunds: RefundService,
+        backups: BackupService,
     ) -> None:
+        self._backups = backups
         self._database = database
         self._transactions = transactions
         self._accounts = accounts
@@ -166,9 +169,12 @@ class TransactionService:
         """Deletes every one of ``transaction_ids`` together, or none if one is missing.
 
         A transfer goes whole, even when both of its legs are listed, and so does a purchase
-        in installments: the installments are one purchase, never half of one.
+        in installments: the installments are one purchase, never half of one. Deleting
+        ``LARGE_DELETE`` or more copies the data first, and the copy is kept for a month.
         """
         transactions = [self.get(transaction_id) for transaction_id in transaction_ids]
+        if len(transactions) >= LARGE_DELETE:
+            self._backups.create_before_delete(datetime.now())
         transfer_ids = {t.transfer_id for t in transactions if t.is_transfer}
         plan_ids = {t.installment.plan_id for t in transactions if t.installment}
         with self._database.transaction():

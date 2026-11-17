@@ -6,7 +6,7 @@ from pathlib import Path
 
 from nodus import APP_NAME
 from nodus.models.period import format_date
-from nodus.services.backup_service import RecoveryCopy
+from nodus.services.backups.recovery import RecoveryCopy
 from nodus.ui.dialogs.user_error import UserErrorDialog, user_error
 
 DAMAGED = "El archivo de tus datos está dañado."

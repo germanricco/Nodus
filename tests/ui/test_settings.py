@@ -11,7 +11,7 @@ from nodus.models.currency import FOREIGN_CURRENCIES, Currency
 from nodus.services.errors import BackupError
 from nodus.services.external.startup_service import StartupService
 from nodus.ui import browser
-from nodus.ui.dialogs import export, external_backup
+from nodus.ui.dialogs import export, external_backup, restore_copy
 from nodus.ui.pages.settings import data_card, rates_card
 from nodus.ui.pages.settings.general_card import THEME_MODES
 from nodus.ui.pages.settings.rates_card import RateRow
@@ -133,10 +133,10 @@ def test_restore_replaces_data_and_announces_it(
 ):
     backup = services.backups.create(date(2026, 11, 1))
     services.accounts.delete(pesos.id)
-    monkeypatch.setattr(data_card.QFileDialog, "getOpenFileName", lambda *_a: (str(backup), ""))
-    monkeypatch.setattr(data_card, "confirm", lambda *_a, **_k: True)
+    monkeypatch.setattr(restore_copy.QFileDialog, "getOpenFileName", lambda *_a: (str(backup), ""))
+    monkeypatch.setattr(restore_copy, "confirm", lambda *_a, **_k: True)
     told = []
-    monkeypatch.setattr(data_card, "show_toast", lambda _w, text: told.append(text))
+    monkeypatch.setattr(restore_copy, "show_toast", lambda _w, text: told.append(text))
 
     with qtbot.waitSignal(event_bus.accounts_changed):
         page.data.restore_button.click()
@@ -151,9 +151,9 @@ def test_restore_of_an_invalid_file_warns_and_keeps_data(
     bogus = tmp_path / "bogus.db"
     bogus.write_bytes(b"no soy una base")
     warnings = []
-    monkeypatch.setattr(data_card.QFileDialog, "getOpenFileName", lambda *_a: (str(bogus), ""))
-    monkeypatch.setattr(data_card, "confirm", lambda *_a, **_k: True)
-    monkeypatch.setattr(data_card.QMessageBox, "warning", lambda *a: warnings.append(a[2]))
+    monkeypatch.setattr(restore_copy.QFileDialog, "getOpenFileName", lambda *_a: (str(bogus), ""))
+    monkeypatch.setattr(restore_copy, "confirm", lambda *_a, **_k: True)
+    monkeypatch.setattr(restore_copy.QMessageBox, "warning", lambda *a: warnings.append(a[2]))
 
     page.data.restore_button.click()
 
@@ -162,7 +162,7 @@ def test_restore_of_an_invalid_file_warns_and_keeps_data(
 
 
 def test_restore_cancelled_in_the_file_dialog_does_nothing(monkeypatch, services, page, pesos):
-    monkeypatch.setattr(data_card.QFileDialog, "getOpenFileName", lambda *_a: ("", ""))
+    monkeypatch.setattr(restore_copy.QFileDialog, "getOpenFileName", lambda *_a: ("", ""))
 
     page.data.restore_button.click()
 

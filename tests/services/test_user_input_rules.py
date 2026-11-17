@@ -222,10 +222,7 @@ def test_restoring_another_apps_database_gives_a_message(services, tmp_path):
         "100%",
         "[corchetes]",
         "a&b",
-        pytest.param(
-            "copia #1",
-            marks=pytest.mark.xfail(strict=True, reason="A3: # cuts the read-only URI"),
-        ),
+        "copia #1",
     ],
 )
 def test_a_copy_outside_the_pc_can_be_restored_from_any_folder_name(
@@ -239,7 +236,6 @@ def test_a_copy_outside_the_pc_can_be_restored_from_any_folder_name(
     assert services.accounts.get(pesos.id).name == "Banco"
 
 
-@pytest.mark.xfail(strict=True, reason="A11: copies are WAL databases; reading one writes")
 def test_restoring_leaves_only_the_copy_on_the_pen_drive(services, tmp_path):
     """A copy is opened read-only, so the pen drive keeps exactly the file the user saved
     (and a write-protected one can be read at all)."""
@@ -250,7 +246,6 @@ def test_restoring_leaves_only_the_copy_on_the_pen_drive(services, tmp_path):
     assert [p.name for p in folder.iterdir()] == [copy.name]
 
 
-@pytest.mark.xfail(strict=True, reason="A3: # cuts the read-only URI")
 def test_inspecting_a_copy_in_a_folder_with_a_hash_reads_that_copy(tmp_path):
     folder = tmp_path / "copia #1"
     folder.mkdir()

@@ -12,7 +12,7 @@ from nodus.services.accounts.account_service import AccountService
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.seen_service import SeenService
 from nodus.services.app.settings_service import SettingsService
-from nodus.services.backup_service import BackupService, reminder_start
+from nodus.services.backups.backup_service import BackupService, reminder_start
 from nodus.services.external.update_service import Release
 from nodus.services.planning.budget_service import BudgetService
 from nodus.services.planning.goal_service import GoalService

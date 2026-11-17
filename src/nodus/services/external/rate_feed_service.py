@@ -151,6 +151,7 @@ class RateFeedService:
 
 
 def _positive(value: object) -> Decimal | None:
-    """``value`` as a Decimal if it is a price above zero."""
+    """``value`` as a Decimal if it is a price above zero. JSON allows «Infinity» and
+    «NaN», which no price is."""
     number = Decimal(str(value))
-    return number if number > 0 else None
+    return number if number.is_finite() and number > 0 else None

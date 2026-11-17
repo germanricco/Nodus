@@ -12,6 +12,7 @@ from nodus.database.database import (
     NewerDatabaseError,
     latest_schema_version,
     load_packaged_migrations,
+    migration_backups,
 )
 
 CREATE_NOTES = Migration(1, "notes", "CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT);")
@@ -73,7 +74,7 @@ class TestPackagedSchema:
         database = Database.open(db_path)
 
         assert database.schema_version == max(m.version for m in load_packaged_migrations())
-        assert not database.backup_path.exists()
+        assert migration_backups(database.path) == []
         database.close()
 
 
@@ -93,11 +94,23 @@ class TestMigrations:
 
         database = Database.open(db_path, [CREATE_NOTES, ADD_TAGS])
 
-        backup = sqlite3.connect(database.backup_path)
+        assert migration_backups(database.path) == [db_path.with_name("nodus.db.v1.bak")]
+        backup = sqlite3.connect(migration_backups(database.path)[0])
         assert backup.execute("PRAGMA user_version").fetchone()[0] == 1
         assert backup.execute("SELECT text FROM notes").fetchone()[0] == "keep me"
         backup.close()
         database.close()
+
+    def test_each_update_keeps_only_the_copy_from_just_before_it(self, db_path):
+        """«nodus.db.bak», from before the name carried the version, goes with the rest."""
+        Database.open(db_path, [CREATE_NOTES]).close()
+        db_path.with_name("nodus.db.bak").write_bytes(b"older")
+        Database.open(db_path, [CREATE_NOTES, ADD_TAGS]).close()
+        third = Migration(3, "more", "CREATE TABLE more (id INTEGER PRIMARY KEY);")
+
+        Database.open(db_path, [CREATE_NOTES, ADD_TAGS, third]).close()
+
+        assert migration_backups(db_path) == [db_path.with_name("nodus.db.v2.bak")]
 
     def test_rebuilding_a_referenced_table_keeps_the_rows_that_refer_to_it(self, db_path):
         database = Database.open(db_path, [PARENT])

@@ -19,7 +19,7 @@ from nodus.database.database import (
     NewerDatabaseError,
 )
 from nodus.links import DOWNLOAD_URL
-from nodus.services.backup_service import DataRecovery
+from nodus.services.backups.recovery import DataRecovery
 from nodus.services.container import Services
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.recovery_dialog import offer_recovery

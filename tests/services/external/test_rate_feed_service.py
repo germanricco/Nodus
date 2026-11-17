@@ -8,6 +8,7 @@ from factories import clp, eur
 from nodus.links import DOLARAPI_URL, QUOTES_URL
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.services.errors import ValidationError
 from nodus.services.external.rate_feed_service import MANUAL, RateFeedService
 
 # Not factories.TODAY: the dates below are counted from this day.
@@ -67,6 +68,9 @@ def test_fetch_takes_the_selling_price_of_the_source(services, source, expected)
         json.dumps([{"casa": "blue"}]).encode(),
         json.dumps([{"casa": "blue", "venta": 0}]).encode(),
         json.dumps([{"casa": "blue", "venta": "abc"}]).encode(),
+        b'[{"casa": "blue", "venta": Infinity}]',  # valid JSON for Python, never a price
+        b'[{"casa": "blue", "venta": -Infinity}]',
+        b'[{"casa": "blue", "venta": NaN}]',
     ],
 )
 def test_fetch_failures_give_none(services, body):
@@ -170,3 +174,9 @@ class TestOtherCurrencies:
 
         assert services.exchange_rates.rate_on(TODAY, Currency.EUR).rate == Decimal("1738.25")
         assert services.exchange_rates.rate_on(TODAY) is None
+
+
+@pytest.mark.parametrize("value", ["Infinity", "NaN", "-Infinity"])
+def test_a_rate_that_is_not_a_number_is_refused(services, value):
+    with pytest.raises(ValidationError, match="mayor que cero"):
+        services.exchange_rates.set_rate(date(2026, 11, 5), Decimal(value))

@@ -8,12 +8,14 @@ from collections import defaultdict
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import datetime
 
 from nodus.database.database import Database
 from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.models.category import Category
 from nodus.models.names import normalize_name
 from nodus.models.transaction import TransactionType
+from nodus.services.backups.backup_service import BackupService
 from nodus.services.errors import (
     ValidationError,
     clean_name,
@@ -36,9 +38,12 @@ class CategoryNode:
 class CategoryService:
     """Income and expense categories, with their subcategories and colors."""
 
-    def __init__(self, database: Database, categories: CategoryRepository) -> None:
+    def __init__(
+        self, database: Database, categories: CategoryRepository, backups: BackupService
+    ) -> None:
         self._database = database
         self._categories = categories
+        self._backups = backups
 
     def list_categories(self, kind: TransactionType | None = None) -> list[Category]:
         """Categories in alphabetical order, with the system "Otros" last."""
@@ -94,8 +99,10 @@ class CategoryService:
             self._categories.update(updated)
 
     def delete(self, category_id: int) -> None:
-        """Deletes a category and its subcategories, moving their transactions to "Otros"."""
+        """Deletes a category and its subcategories, moving their transactions to "Otros".
+        The data is copied first, and the copy kept for a month."""
         category = self._require_editable(category_id)
+        self._backups.create_before_delete(datetime.now())
         fallback = self._categories.get_system(category.kind)
         subcategory_ids = self._categories.subcategory_ids(category_id)
         with self._database.transaction():

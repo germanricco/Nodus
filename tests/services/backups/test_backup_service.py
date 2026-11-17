@@ -4,13 +4,21 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from factories import ars, services_for
+from factories import ars, expense_draft, services_for
 
 from nodus.config.paths import AppPaths
-from nodus.database.database import Database, Migration, latest_schema_version
+from nodus.database.database import (
+    Database,
+    DatabaseError,
+    latest_schema_version,
+    load_packaged_migrations,
+)
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
-from nodus.services.backup_service import BackupService, DataRecovery, reminder_start
+from nodus.models.transaction import TransactionType
+from nodus.services.backups.backup_service import LARGE_DELETE, daily_backups, reminder_start
+from nodus.services.backups.recovery import DataRecovery
+from nodus.services.backups.retention import DAILY, kept_days
 from nodus.services.errors import BackupError, ValidationError
 
 # Not factories.TODAY: the copies below are named after this day.
@@ -22,8 +30,8 @@ def account_names(services) -> list[str]:
     return [account.name for account in services.accounts.list_accounts()]
 
 
-def add_account(services, name: str) -> None:
-    services.accounts.create(name, AccountType.CASH, Currency.ARS, ars("1000"))
+def add_account(services, name: str):
+    return services.accounts.create(name, AccountType.CASH, Currency.ARS, ars("1000"))
 
 
 def test_create_names_backup_by_day(services):
@@ -44,14 +52,23 @@ def test_backup_holds_the_current_data(services):
     copy.close()
 
 
-def test_keeps_only_the_latest_backups(services):
-    for offset in range(BackupService.KEEP + 3):
+def test_old_daily_copies_are_pruned_as_retention_says(services):
+    for offset in range(60):
         services.backups.create(TODAY + timedelta(days=offset))
 
-    names = sorted(p.name for p in services.backups.backups_dir.iterdir())
+    days = {day for day, _path in daily_backups(services.backups.backups_dir)}
 
-    assert len(names) == BackupService.KEEP
-    assert names[0] == "nodus-2026-11-09.db"
+    assert days == kept_days([TODAY + timedelta(days=offset) for offset in range(60)])
+
+
+def test_copies_before_restoring_or_deleting_go_after_a_month(services):
+    services.backups.create_before_delete(datetime(2026, 10, 1, 9, 30))
+    services.backups.create_before_delete(datetime(2026, 10, 20, 9, 30))
+
+    services.backups.create(date(2026, 11, 5))
+
+    names = sorted(p.name for p in services.backups.backups_dir.iterdir())
+    assert names == ["nodus-2026-11-05.db", "nodus-antes-de-borrar-2026-10-20-093000.db"]
 
 
 def test_create_if_due_makes_one_backup_per_day(services):
@@ -118,32 +135,38 @@ def test_restore_rejects_copies_from_a_newer_nodus(services, tmp_path):
         services.backups.restore(newer, NOW)
 
 
-def test_restored_older_copy_is_migrated(tmp_path):
+def test_a_copy_from_an_older_nodus_is_updated_on_restore(services, pesos, tmp_path):
     older = tmp_path / "older.db"
-    Database.open(older, [Migration(1, "base", "CREATE TABLE notes (text TEXT);")]).close()
-    current = Database.open(
-        tmp_path / "current.db",
-        [
-            Migration(1, "base", "CREATE TABLE notes (text TEXT);"),
-            Migration(2, "more", "ALTER TABLE notes ADD COLUMN day TEXT;"),
-        ],
-    )
+    migrations = sorted(load_packaged_migrations(), key=lambda m: m.version)
+    Database.open(older, migrations[:-1]).close()
 
-    current.restore_from(
-        older,
-        [
-            Migration(1, "base", "CREATE TABLE notes (text TEXT);"),
-            Migration(2, "more", "ALTER TABLE notes ADD COLUMN day TEXT;"),
-        ],
-    )
+    services.backups.restore(older, datetime(2026, 11, 5, 10))
 
-    assert current.schema_version == 2
-    columns = [row[1] for row in current.connection.execute("PRAGMA table_info(notes)")]
-    assert columns == ["text", "day"]
-    current.close()
+    assert services.transactions._database.schema_version == migrations[-1].version
+    assert services.accounts.list_accounts() == []  # the copy's data, now in use
+
+
+def test_a_copy_that_cannot_be_updated_leaves_the_data(services, pesos, tmp_path):
+    older = tmp_path / "older.db"
+    services.backups.export_to(tmp_path, TODAY).rename(older)
+    connection = sqlite3.connect(older)
+    connection.execute("PRAGMA user_version = 1")  # as if written before the last update
+    connection.commit()
+    connection.close()
+
+    with pytest.raises(ValidationError, match="incompleta"):
+        services.backups.restore(older, datetime(2026, 11, 5, 10))  # its tables are newer
+
+    assert services.accounts.get(pesos.id).name == "Banco"  # the data stays as it was
 
 
 class TestCopyOutside:
+    @pytest.fixture
+    def pen_drive(self, tmp_path) -> Path:
+        folder = tmp_path / "E"
+        folder.mkdir()
+        return folder
+
     def test_is_saved_in_the_folder_and_remembered(self, services, tmp_path):
         copy = services.backups.export_to(tmp_path, TODAY)
 
@@ -166,6 +189,34 @@ class TestCopyOutside:
             services.backups.export_to(tmp_path / "pendrive-sacado", TODAY)
 
         assert services.backups.last_external_backup() is None
+
+    def test_leaves_only_the_copy_in_the_folder(self, services, pen_drive):
+        copy = services.backups.export_to(pen_drive, TODAY)
+
+        assert [p.name for p in pen_drive.iterdir()] == [copy.name]  # no .part, no WAL
+
+    def test_a_pen_drive_taken_out_halfway_leaves_no_copy_with_a_good_name(
+        self, services, pen_drive, monkeypatch
+    ):
+        def taken_out(path):
+            raise DatabaseError(f"{path}: disk I/O error")
+
+        monkeypatch.setattr(Database, "check_copy", staticmethod(taken_out))
+
+        with pytest.raises(BackupError):
+            services.backups.export_to(pen_drive, TODAY)
+
+        assert list(pen_drive.iterdir()) == []
+        assert services.backups.last_external_backup() is None
+
+    def test_a_good_copy_replaces_the_one_saved_earlier_that_day(self, services, pen_drive):
+        services.backups.export_to(pen_drive, TODAY)
+        add_account(services, "Efectivo")
+
+        copy = services.backups.export_to(pen_drive, TODAY)
+
+        assert Database.inspect(copy) > 0
+        assert [p.name for p in pen_drive.iterdir()] == [copy.name]
 
     def test_the_last_folder_is_offered_only_while_it_is_there(self, services, tmp_path):
         pen_drive = tmp_path / "E"
@@ -203,7 +254,7 @@ def test_a_copy_named_after_an_impossible_day_is_not_a_daily_copy(services):
 
 
 def test_an_old_copy_that_cannot_be_deleted_does_not_fail_the_new_one(services, monkeypatch):
-    for days in range(BackupService.KEEP):
+    for days in range(DAILY):
         services.backups.create(TODAY - timedelta(days=days + 1))
     real_unlink = Path.unlink
 
@@ -280,3 +331,51 @@ class TestDataRecovery:
         assert aside.with_name(aside.name + "-wal").read_bytes() == b"wal"
         assert not paths.database_path.with_name("nodus.db-wal").exists()
         assert paths.database_path.read_bytes() == copy.read_bytes()
+
+
+class TestBeforeDeleting:
+    """Deleting a lot at once copies the data first, to a copy kept for a month."""
+
+    def before_delete_copies(self, services) -> list[Path]:
+        return sorted(services.backups.backups_dir.glob("nodus-antes-de-borrar-*.db"))
+
+    def test_deleting_an_account_copies_it_first(self, services):
+        account = add_account(services, "Banco")
+
+        services.accounts.delete(account.id)
+
+        (copy,) = self.before_delete_copies(services)
+        restored = Database.open(copy)
+        names = [row[0] for row in restored.connection.execute("SELECT name FROM accounts")]
+        restored.close()
+        assert names == ["Banco"]
+
+    def test_deleting_a_category_copies_it_first(self, services):
+        category = services.categories.create("Viajes", TransactionType.EXPENSE, "#123456")
+
+        services.categories.delete(category.id)
+
+        assert len(self.before_delete_copies(services)) == 1
+
+    @pytest.mark.parametrize(("count", "copies"), [(LARGE_DELETE - 1, 0), (LARGE_DELETE, 1)])
+    def test_deleting_many_movements_copies_them_first(self, services, count, copies):
+        account = add_account(services, "Banco")
+        ids = [
+            services.transactions.create(expense_draft(services, account.id, ars("1"))).id
+            for _ in range(count)
+        ]
+
+        services.transactions.delete_many(ids)
+
+        assert len(self.before_delete_copies(services)) == copies
+
+    def test_a_copy_that_cannot_be_written_does_not_stop_the_deletion(self, services, monkeypatch):
+        account = add_account(services, "Banco")
+
+        def full_disk(_destination):
+            raise OSError("disco lleno")
+
+        monkeypatch.setattr(services.backups, "_copy_to", full_disk)
+        services.accounts.delete(account.id)
+
+        assert services.accounts.list_accounts() == []

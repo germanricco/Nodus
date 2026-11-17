@@ -2,25 +2,23 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
-from pathlib import Path
+from datetime import date
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QFileDialog, QFrame, QMessageBox, QPushButton
+from PySide6.QtWidgets import QFrame, QPushButton
 
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.services.backup_service import BackupService
+from nodus.services.backups.retention import DAILY, MONTHLY, WEEKLY
 from nodus.services.container import Services
-from nodus.services.errors import BackupError, ValidationError
+from nodus.services.errors import BackupError
 from nodus.ui.browser import open_folder
-from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import all_transactions_filename, export_transactions
 from nodus.ui.dialogs.external_backup import save_copy_outside
+from nodus.ui.dialogs.restore_copy import restore_copy
 from nodus.ui.dialogs.user_error import user_error
 from nodus.ui.event_bus import EventBus
 from nodus.ui.text.formatting import format_date
 from nodus.ui.theme.design import Line, Space
-from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.busy import busy
 from nodus.ui.widgets.card import Card
@@ -51,8 +49,9 @@ class DataCard(Card):
 
         self.backup_row = SettingRow("Copia de seguridad")
         self.backup_row.setToolTip(
-            "Nodus guarda una copia por día al abrirse y conserva las últimas"
-            f" {BackupService.KEEP}."
+            f"Nodus guarda una copia por día al abrirse y conserva las {DAILY} más recientes,"
+            f" una por semana de las últimas {WEEKLY} semanas y una por mes de los últimos"
+            f" {MONTHLY} meses."
         )
         self.backup_now_button = self.backup_row.add(
             secondary_button("Hacer copia", self.backup_now)
@@ -158,27 +157,13 @@ class DataCard(Card):
 
     def restore_backup(self) -> None:
         """Replaces the data with a copy the user picks, after confirming."""
-        backups_dir = self._services.backups.backups_dir
-        path, _filter = QFileDialog.getOpenFileName(
-            self.window(), "Restaurar desde una copia", str(backups_dir), "Copias de Nodus (*.db)"
+        restored = restore_copy(
+            self.window(),
+            self._services,
+            self._event_bus,
+            self._theme_manager,
+            self._services.backups.backups_dir,
+            self.restore_button,
         )
-        if not path:
-            return
-        text = (
-            f"Tus datos actuales se van a reemplazar por los de «{Path(path).name}». Antes se"
-            " guarda una copia de cómo están ahora, en la carpeta de copias."
-        )
-        if not confirm(self.window(), "Restaurar copia", text):
-            return
-        try:
-            with busy(self.restore_button, "Restaurando…"):
-                self._services.backups.restore(Path(path), datetime.now())
-        except ValidationError as error:
-            QMessageBox.warning(self.window(), "Restaurar copia", str(error))
-            return
-        self._theme_manager.set_mode(
-            ThemeMode.from_setting(self._services.settings.theme_preference())
-        )
-        self._event_bus.emit_all()
-        self.restored.emit()
-        show_toast(self, "Copia restaurada.")
+        if restored:
+            self.restored.emit()

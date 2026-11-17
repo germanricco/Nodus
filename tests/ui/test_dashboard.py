@@ -1,14 +1,25 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
-from factories import ars, category_id, charge_draft, clp, eur, expense_draft, income_draft
+from factories import (
+    ars,
+    category_id,
+    charge_draft,
+    clp,
+    eur,
+    expense_draft,
+    income_draft,
+    services_for,
+)
 from PySide6.QtWidgets import QLabel, QScrollArea
 
+from nodus.database.database import Database
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.ui.actions import recurring as recurring_actions
+from nodus.ui.dialogs import restore_copy
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.dashboard.latest_transactions_card import LatestTransactionRow
 from nodus.ui.text.formatting import percent
@@ -31,6 +42,33 @@ def test_welcome_leads_to_accounts(qtbot, window, services):
     page.create_account_button.click()
 
     assert window.current_page is window.page(PageId.ACCOUNTS)
+
+
+def test_a_new_computer_brings_the_data_from_the_old_one(
+    qtbot, window, services, monkeypatch, tmp_path
+):
+    """Nodus on a new computer: the copy saved on the old one, on a pen drive, opens from
+    the Inicio as it was there, settings included."""
+    (tmp_path / "vieja").mkdir()
+    old_computer = Database.open(tmp_path / "vieja" / "nodus.db")
+    old = services_for(old_computer)
+    old.accounts.create("Banco", AccountType.BANK, Currency.ARS, ars("1000"))
+    old.settings.set_amounts_hidden(True)
+    old.settings.set_tour_offered(True)  # it was offered on the old computer
+    pen_drive = tmp_path / "pendrive"
+    pen_drive.mkdir()
+    copy = old.backups.export_to(pen_drive, date.today())
+    old_computer.close()
+    monkeypatch.setattr(restore_copy.QFileDialog, "getOpenFileName", lambda *_a: (str(copy), ""))
+    monkeypatch.setattr(restore_copy, "confirm", lambda *_a, **_k: True)
+    page = dashboard(window)
+    page.refresh()
+
+    page.bring_data_button.click()
+
+    assert [a.name for a in services.accounts.list_accounts()] == ["Banco"]
+    assert services.settings.amounts_hidden()
+    assert "Te damos la bienvenida a Nodus" not in visible_texts(page)
 
 
 def test_shows_month_flow_and_latest_movements(qtbot, window, services, event_bus, pesos):

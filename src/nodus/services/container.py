@@ -29,7 +29,7 @@ from nodus.services.app.seen_service import SeenService
 from nodus.services.app.settings_service import SettingsService
 from nodus.services.app.tour_service import TourService
 from nodus.services.app.undo_service import UndoService
-from nodus.services.backup_service import BackupService
+from nodus.services.backups.backup_service import BackupService
 from nodus.services.classification.category_service import CategoryService
 from nodus.services.classification.payee_service import PayeeService
 from nodus.services.classification.tag_service import TagService
@@ -90,15 +90,19 @@ class Services:
 
     @classmethod
     def create(cls, database: Database, backups_dir: Path) -> Services:
+        undo = UndoService(database)
+        settings = SettingsService(database, SettingsRepository(database))
+        backups = BackupService(database, backups_dir, settings, undo)
         account_repository = AccountRepository(database)
         category_repository = CategoryRepository(database)
-        accounts = AccountService(database, account_repository, ValueAdjustmentRepository(database))
+        accounts = AccountService(
+            database, account_repository, ValueAdjustmentRepository(database), backups
+        )
         exchange_rates = ExchangeRateService(database, ExchangeRateRepository(database))
-        categories = CategoryService(database, category_repository)
+        categories = CategoryService(database, category_repository, backups)
         transaction_repository = TransactionRepository(database)
         payee_repository = PayeeRepository(database)
         tag_repository = TagRepository(database)
-        undo = UndoService(database)
         labels = MovementLabels(payee_repository, tag_repository)
         refunds = RefundService(transaction_repository)
         transactions = TransactionService(
@@ -109,11 +113,11 @@ class Services:
             tag_repository,
             labels,
             refunds,
+            backups,
         )
         payees = PayeeService(
             database, payee_repository, transactions, categories, exchange_rates, undo
         )
-        settings = SettingsService(database, SettingsRepository(database))
         seen = SeenService(settings)
         recurring = RecurringChargeService(
             database,
@@ -125,7 +129,6 @@ class Services:
             undo,
             seen,
         )
-        backups = BackupService(database, backups_dir, settings)
         dashboard = DashboardService(transactions, categories, exchange_rates)
         budgets = BudgetService(
             database, BudgetRepository(database), categories, dashboard, transactions

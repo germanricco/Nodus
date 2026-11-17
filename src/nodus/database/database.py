@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import logging
 import re
 import sqlite3
@@ -148,34 +149,82 @@ class Database:
             "Updating the data from schema %d to %d", self.schema_version, pending[-1].version
         )
         if self.schema_version > 0:
-            self.backup_to(self.backup_path)
+            self._back_up_before_migrating()
         for migration in pending:
             self._apply(migration)
 
-    @property
-    def backup_path(self) -> Path:
-        return backup_path_for(self.path)
+    def _back_up_before_migrating(self) -> None:
+        """Copies the file as it is to ``nodus.db.v<version>.bak`` and deletes the copies
+        taken before earlier updates, which the daily copies already outlive."""
+        destination = migration_backup_path(self.path, self.schema_version)
+        self.backup_to(destination)
+        for older in migration_backups(self.path):
+            if older != destination:
+                try:
+                    older.unlink()
+                except OSError as error:  # kept until the next update; nothing is lost
+                    logger.warning("An older update copy could not be deleted", exc_info=error)
 
     def backup_to(self, destination: Path) -> None:
-        """Copies the whole database, including changes still in the WAL file."""
+        """Copies the whole database, including changes still in the WAL file.
+
+        The copy is a single file, without a WAL of its own: reading it later, even from a
+        write-protected pen drive, leaves nothing beside it.
+        """
         target = sqlite3.connect(destination)
         try:
             self._connection.backup(target)
+            target.execute("PRAGMA journal_mode = DELETE")
         finally:
             target.close()
 
-    def restore_from(self, source: Path, migrations: list[Migration] | None = None) -> None:
-        """Replaces every table with the contents of the database file ``source``.
+    def replace_with(self, other: Database) -> None:
+        """Replaces every table with the contents of ``other``, on the open connection, so
+        the app keeps running."""
+        other._connection.backup(self._connection)
 
-        Works on the open connection, so the app keeps running; a copy made by an older
-        Nodus is then migrated like any other database.
-        """
-        copy = sqlite3.connect(f"file:{source.as_posix()}?mode=ro", uri=True)
+    def foreign_keys_hold(self) -> bool:
+        """Whether every row points to a row that exists."""
+        return self._connection.execute("PRAGMA foreign_key_check").fetchone() is None
+
+    def table_names(self) -> set[str]:
+        rows = self._connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+        )
+        return {row[0] for row in rows}
+
+    @staticmethod
+    def copy_file(source: Path, destination: Path) -> None:
+        """Copies the database file ``source``, read-only, to ``destination``, as one file
+        without a WAL. Raises ``DatabaseError`` if ``source`` cannot be read."""
         try:
-            copy.backup(self._connection)
-        finally:
-            copy.close()
-        self.migrate(migrations if migrations is not None else load_packaged_migrations())
+            copy = _read_only(source)
+            try:
+                target = sqlite3.connect(destination)
+                try:
+                    copy.backup(target)
+                    target.execute("PRAGMA journal_mode = DELETE")
+                finally:
+                    target.close()
+            finally:
+                copy.close()
+        except sqlite3.DatabaseError as error:
+            raise DatabaseError(f"{source}: {error}") from error
+
+    @staticmethod
+    def check_copy(path: Path) -> None:
+        """Reads the copy at ``path`` back with SQLite's quick check, which is fast enough
+        for a pen drive. Raises ``DatabaseError`` if it is not whole."""
+        try:
+            connection = _read_only(path)
+            try:
+                result = connection.execute("PRAGMA quick_check").fetchone()[0]
+            finally:
+                connection.close()
+        except sqlite3.DatabaseError as error:
+            raise DatabaseError(f"{path}: {error}") from error
+        if result != "ok":
+            raise DatabaseError(f"{path}: quick check failed: {result}")
 
     @staticmethod
     def inspect(path: Path) -> int:
@@ -184,7 +233,7 @@ class Database:
         Raises DatabaseError if the file is not a readable SQLite database.
         """
         try:
-            connection = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
+            connection = _read_only(path)
             try:
                 if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                     raise DatabaseError(f"{path}: integrity check failed")
@@ -228,9 +277,22 @@ class Database:
         self._connection.close()
 
 
-def backup_path_for(database_path: Path) -> Path:
-    """Where ``migrate`` keeps the copy taken before updating the file at ``database_path``."""
-    return database_path.with_name(database_path.name + ".bak")
+def migration_backup_path(database_path: Path, version: int) -> Path:
+    """Where ``migrate`` keeps the copy taken before updating the file at ``database_path``
+    from schema ``version``: «nodus.db.v11.bak»."""
+    return database_path.with_name(f"{database_path.name}.v{version}.bak")
+
+
+def migration_backups(database_path: Path) -> list[Path]:
+    """The copies taken before updating the file, including the «nodus.db.bak» of the
+    versions before the name carried the schema."""
+    return sorted(database_path.parent.glob(f"{database_path.name}*.bak"))
+
+
+def _read_only(path: Path) -> sqlite3.Connection:
+    """A read-only connection to ``path``. The URI is percent-encoded, so a folder named
+    «copia #1» or «100%» opens that very file."""
+    return sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)
 
 
 def _opening_error(path: Path, error: sqlite3.DatabaseError) -> DatabaseError:
@@ -256,3 +318,19 @@ def load_packaged_migrations() -> list[Migration]:
 def latest_schema_version() -> int:
     """The schema version this build of Nodus migrates databases to."""
     return max(migration.version for migration in load_packaged_migrations())
+
+
+@functools.cache
+def latest_table_names() -> frozenset[str]:
+    """The tables a database has once every packaged migration ran: what a copy must
+    have, once updated, to be restored."""
+    connection = sqlite3.connect(":memory:")
+    try:
+        for migration in sorted(load_packaged_migrations(), key=lambda m: m.version):
+            connection.executescript(migration.sql)
+        rows = connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+        )
+        return frozenset(row[0] for row in rows)
+    finally:
+        connection.close()
