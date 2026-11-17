@@ -11,7 +11,7 @@ from nodus.models.currency import TOTAL_CURRENCIES, Currency
 from nodus.models.money import Money
 from nodus.models.period import Period, format_day_month
 from nodus.services.container import Services
-from nodus.services.reports.dashboard_service import relative_change
+from nodus.services.conversion import relative_change
 from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import HELD_IN_LABELS, NO_RATE_TEXT, rate_text

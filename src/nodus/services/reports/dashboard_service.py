@@ -1,14 +1,12 @@
 """Figures for the dashboard: how a period went and how it compares with the one before.
 
-The movements converted to pesos and the month-by-month flow are shared with the analysis
-service, so both screens count the same way.
+They count as ``services/conversion`` does, like the analysis; the month-by-month flow is
+shared with it too.
 """
 
 from __future__ import annotations
 
-import dataclasses
 from collections import defaultdict
-from collections.abc import Iterable
 from dataclasses import dataclass
 
 from nodus.models.category import Category
@@ -19,130 +17,25 @@ from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.classification.category_service import CategoryService
+from nodus.services.conversion import (
+    ConvertedMovement,
+    ConvertedMovements,
+    FlowFigures,
+    convert_movements,
+    converted_movements,
+    flow_totals,
+    period_filter,
+    positive_totals,
+    relative_change,
+)
 from nodus.services.transactions.transaction_service import TransactionService
 
 # A single month shows the trend of the months leading to it.
 TREND_MONTHS = 6
 
 
-def relative_change(current: Money, previous: Money) -> float | None:
-    """How much ``current`` moved from ``previous``, as a fraction (0.1 is +10 %).
-
-    None when ``previous`` is zero: there is nothing to compare with.
-    """
-    if previous.is_zero:
-        return None
-    return (current.cents - previous.cents) / abs(previous.cents)
-
-
-def savings_rate(income: Money, expenses: Money) -> float | None:
-    """The share of ``income`` that was not spent (0.2 is 20 %); None without income."""
-    if income.cents <= 0:
-        return None
-    return (income.cents - expenses.cents) / income.cents
-
-
 @dataclass(frozen=True)
-class ConvertedMovement:
-    """An income or expense with its amount in pesos, converted at the rate of its day.
-
-    ``kind`` and ``category_id`` are what the movement counts as. They are the
-    transaction's own, except for a refund: it counts as a negative expense in the
-    category of the expense it pays back, on the day the money came back.
-    """
-
-    transaction: Transaction
-    amount: Money
-    kind: TransactionType
-    category_id: int
-
-
-@dataclass(frozen=True)
-class ConvertedMovements:
-    """The income and expenses of a period in pesos. Dollar movements of days without a
-    rate cannot be converted: they are left out and counted in ``unconverted``, so the
-    screen can say so instead of showing a wrong total."""
-
-    movements: list[ConvertedMovement]
-    unconverted: int
-
-
-def period_filter(period: Period) -> TransactionFilter:
-    """Every transaction of ``period``."""
-    return TransactionFilter(start=period.start, end=period.end)
-
-
-def converted_movements(
-    transactions: TransactionService,
-    exchange_rates: ExchangeRateService,
-    criteria: TransactionFilter,
-) -> ConvertedMovements:
-    """Income and expenses matching ``criteria``, in pesos; transfers only move money
-    between accounts, so they are left out. Refunds are turned into less spending."""
-    if criteria.is_transfer:
-        return ConvertedMovements([], 0)
-    listed = transactions.list_transactions(dataclasses.replace(criteria, is_transfer=False))
-    return convert_movements(transactions, exchange_rates, listed)
-
-
-def convert_movements(
-    transactions: TransactionService,
-    exchange_rates: ExchangeRateService,
-    listed: Iterable[Transaction],
-) -> ConvertedMovements:
-    """``listed`` in pesos, as ``converted_movements`` counts them; transfers are left out."""
-    movements: list[ConvertedMovement] = []
-    unconverted = 0
-    refunded_categories: dict[int, int] = {}
-    for transaction in listed:
-        if transaction.is_transfer:
-            continue
-        amount = exchange_rates.convert(transaction.amount, HOME_CURRENCY, transaction.occurred_on)
-        if amount is None:
-            unconverted += 1
-        elif transaction.refund_of_id is None:
-            movements.append(
-                ConvertedMovement(transaction, amount, transaction.type, transaction.category_id)
-            )
-        else:
-            expense_id = transaction.refund_of_id
-            if expense_id not in refunded_categories:
-                refunded_categories[expense_id] = transactions.get(expense_id).category_id
-            movements.append(
-                ConvertedMovement(
-                    transaction, -amount, TransactionType.EXPENSE, refunded_categories[expense_id]
-                )
-            )
-    return ConvertedMovements(movements, unconverted)
-
-
-def net_in_pesos(
-    transactions: list[Transaction], exchange_rates: ExchangeRateService
-) -> tuple[Money, int]:
-    """Income minus expenses of ``transactions`` in pesos, each at the rate of its day, and
-    how many could not be converted for lack of a rate."""
-    net = Money.zero(HOME_CURRENCY)
-    unconverted = 0
-    for transaction in transactions:
-        amount = exchange_rates.convert(
-            transaction.signed_amount, HOME_CURRENCY, transaction.occurred_on
-        )
-        if amount is None:
-            unconverted += 1
-        else:
-            net += amount
-    return net, unconverted
-
-
-def positive_totals(totals: dict[int, Money]) -> list[tuple[int, Money]]:
-    """The ``totals`` above zero, largest first. A category whose refunds outweigh its
-    spending in a period has nothing to show for it."""
-    kept = [(key, total) for key, total in totals.items() if total.cents > 0]
-    return sorted(kept, key=lambda item: item[1].cents, reverse=True)
-
-
-@dataclass(frozen=True)
-class FilteredTotals:
+class FilteredTotals(FlowFigures):
     """Income and expenses in pesos of the movements a filter shows, for the foot of the
     transactions list. Refunds count as less spending, as everywhere else."""
 
@@ -152,7 +45,7 @@ class FilteredTotals:
 
     @property
     def net(self) -> Money:
-        return self.income - self.expenses
+        return self.savings
 
 
 @dataclass(frozen=True)
@@ -164,7 +57,7 @@ class CategoryTotal:
 
 
 @dataclass(frozen=True)
-class PeriodSummary:
+class PeriodSummary(FlowFigures):
     """Income and expenses of a period, in pesos.
 
     Dollar movements are converted at the rate of their day. Those without a rate yet
@@ -177,10 +70,6 @@ class PeriodSummary:
     expenses: Money
     expenses_by_category: list[CategoryTotal]  # largest first
     unconverted: int
-
-    @property
-    def savings(self) -> Money:
-        return self.income - self.expenses
 
 
 @dataclass(frozen=True)
@@ -215,36 +104,21 @@ class Comparison:
 
 
 @dataclass(frozen=True)
-class MonthFlow:
+class MonthFlow(FlowFigures):
     """Income and expenses of one month, a bar of the cash flow chart."""
 
     month: Month
     income: Money
     expenses: Money
 
-    @property
-    def savings(self) -> Money:
-        return self.income - self.expenses
-
-    @property
-    def savings_rate(self) -> float | None:
-        return savings_rate(self.income, self.expenses)
-
 
 def month_flows(movements: list[ConvertedMovement], months: list[Month]) -> list[MonthFlow]:
     """Income and expenses of each of ``months``, from movements already in pesos."""
-    zero = Money.zero(HOME_CURRENCY)
-    totals = {month: {kind: zero for kind in TransactionType} for month in months}
+    by_month: dict[Month, list[ConvertedMovement]] = {month: [] for month in months}
     for movement in movements:
-        month = Month.of(movement.transaction.occurred_on)
-        if month in totals:
-            totals[month][movement.kind] += movement.amount
-    return [
-        MonthFlow(
-            month, totals[month][TransactionType.INCOME], totals[month][TransactionType.EXPENSE]
-        )
-        for month in months
-    ]
+        by_month.get(Month.of(movement.transaction.occurred_on), []).append(movement)
+    flows = [(month, flow_totals(by_month[month])) for month in months]
+    return [MonthFlow(month, totals.income, totals.expenses) for month, totals in flows]
 
 
 class DashboardService:
@@ -260,19 +134,18 @@ class DashboardService:
 
     def summary(self, period: Period) -> PeriodSummary:
         categories = {c.id: c for c in self._categories.list_categories()}
-        totals = {kind: Money.zero(HOME_CURRENCY) for kind in TransactionType}
         by_category: dict[int, Money] = defaultdict(lambda: Money.zero(HOME_CURRENCY))
         converted = self._converted(period)
         for movement in converted.movements:
-            totals[movement.kind] += movement.amount
             if movement.kind is TransactionType.EXPENSE:
                 category = categories[movement.category_id]
                 by_category[category.parent_id or category.id] += movement.amount
         ranked = positive_totals(by_category)
+        totals = flow_totals(converted.movements)
         return PeriodSummary(
             period=period,
-            income=totals[TransactionType.INCOME],
-            expenses=totals[TransactionType.EXPENSE],
+            income=totals.income,
+            expenses=totals.expenses,
             expenses_by_category=[CategoryTotal(categories[i], total) for i, total in ranked],
             unconverted=converted.unconverted,
         )
@@ -308,12 +181,8 @@ class DashboardService:
         )
 
     def _totals(self, converted: ConvertedMovements) -> FilteredTotals:
-        totals = {kind: Money.zero(HOME_CURRENCY) for kind in TransactionType}
-        for movement in converted.movements:
-            totals[movement.kind] += movement.amount
-        return FilteredTotals(
-            totals[TransactionType.INCOME], totals[TransactionType.EXPENSE], converted.unconverted
-        )
+        totals = flow_totals(converted.movements)
+        return FilteredTotals(totals.income, totals.expenses, converted.unconverted)
 
     def _converted(self, period: Period) -> ConvertedMovements:
         return converted_movements(self._transactions, self._exchange_rates, period_filter(period))

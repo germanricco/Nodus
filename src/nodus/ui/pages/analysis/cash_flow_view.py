@@ -8,8 +8,9 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout
 
 from nodus.models.period import Month, Period, format_month
 from nodus.services.container import Services
+from nodus.services.conversion import relative_change
 from nodus.services.reports.analysis_service import CashFlowReport
-from nodus.services.reports.dashboard_service import MonthFlow, relative_change
+from nodus.services.reports.dashboard_service import MonthFlow
 from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.analysis.common import (
     MONTH,

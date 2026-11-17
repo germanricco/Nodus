@@ -22,17 +22,16 @@ from nodus.models.transaction import TransactionType
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.classification.category_service import CategoryService
 from nodus.services.classification.payee_service import PayeeService
-from nodus.services.reports.dashboard_service import (
-    CategoryTotal,
+from nodus.services.conversion import (
     ConvertedMovement,
-    MonthFlow,
+    FlowTotals,
     converted_movements,
-    month_flows,
+    flow_totals,
     period_filter,
     positive_totals,
     relative_change,
-    savings_rate,
 )
+from nodus.services.reports.dashboard_service import CategoryTotal, MonthFlow, month_flows
 from nodus.services.transactions.transaction_service import TransactionService
 
 
@@ -113,22 +112,6 @@ class Trends:
 
 
 @dataclass(frozen=True)
-class FlowTotals:
-    """Income and expenses added up over a period."""
-
-    income: Money
-    expenses: Money
-
-    @property
-    def savings(self) -> Money:
-        return self.income - self.expenses
-
-    @property
-    def savings_rate(self) -> float | None:
-        return savings_rate(self.income, self.expenses)
-
-
-@dataclass(frozen=True)
 class CashFlowReport:
     """Income, expenses and savings of each month of a period, with the totals of the
     period and of the one before it. ``history`` holds its months with a history
@@ -195,8 +178,8 @@ class AnalysisService:
         return CashFlowReport(
             period=period,
             months=month_flows(converted.movements, period.months()),
-            current=_flow_totals(converted.movements),
-            previous=_flow_totals(previous),
+            current=flow_totals(converted.movements),
+            previous=flow_totals(previous),
             unconverted=converted.unconverted,
             history=self._transactions.history_months(period, today),
         )
@@ -252,12 +235,5 @@ class AnalysisService:
         return [TagTotal(tags[i], total, counts[i]) for i, total in positive_totals(totals)]
 
 
-def _flow_totals(movements: list[ConvertedMovement]) -> FlowTotals:
-    def total(kind: TransactionType) -> Money:
-        return _sum(m.amount for m in movements if m.kind is kind)
-
-    return FlowTotals(total(TransactionType.INCOME), total(TransactionType.EXPENSE))
-
-
 def _savings(movements: list[ConvertedMovement]) -> Money:
-    return _flow_totals(movements).savings
+    return flow_totals(movements).savings
