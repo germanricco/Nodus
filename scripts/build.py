@@ -17,10 +17,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+from _common import ROOT
+
 from nodus import APP_USER_MODEL_ID, __version__
 from nodus.links import REPOSITORY_URL
 
-ROOT = Path(__file__).resolve().parent.parent
 PACKAGING = ROOT / "packaging"
 DIST = ROOT / "dist"
 # Where winget (per user) and the classic installer put the Inno Setup compiler.

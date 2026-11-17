@@ -9,17 +9,18 @@ over a temporary database (optionally filled with demo data), never over real us
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 import tempfile
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-# The offscreen platform does not see the system fonts on Windows unless told where they are.
-if sys.platform == "win32":
-    os.environ.setdefault("QT_QPA_FONTDIR", str(Path(os.environ["WINDIR"]) / "Fonts"))
+sys.path.insert(0, str(Path(__file__).parent))
+from _common import use_offscreen_qt  # noqa: E402
 
+use_offscreen_qt()
+
+from demo_data import load_demo_data  # noqa: E402
 from PySide6.QtCore import Qt, QTimer  # noqa: E402
 from PySide6.QtWidgets import QApplication, QDialog, QScrollArea, QWidget  # noqa: E402
 
@@ -53,9 +54,6 @@ from nodus.ui.theme.design import set_reduced_motion  # noqa: E402
 from nodus.ui.theme.theme import ThemeMode  # noqa: E402
 from nodus.ui.theme.theme_manager import ThemeManager  # noqa: E402
 from nodus.ui.widgets.tables.row_actions import build_menu  # noqa: E402
-
-sys.path.insert(0, str(Path(__file__).parent))
-from demo_data import load_demo_data  # noqa: E402
 
 # Dialogs to capture, built over the demo data: name -> factory(services, event_bus, window).
 DIALOGS = {
@@ -196,6 +194,28 @@ SETTLE_PASSES = 5
 ANALYSIS_TABS = ("trends", "cash-flow", "net-worth")
 
 
+@dataclass
+class Shots:
+    """What every capture needs: the app, the window over its data, where the pictures go,
+    the theme they are taken in and the window's usual height."""
+
+    app: QApplication
+    services: Services
+    event_bus: EventBus
+    window: MainWindow
+    out: Path
+    height: int
+    mode: ThemeMode = ThemeMode.LIGHT
+
+    def save(self, widget: QWidget, name: str) -> None:
+        """Saves ``widget`` as ``<name>-<theme>.png``."""
+        save(widget, self.out / f"{name}-{self.mode.value}.png")
+
+    def settle(self) -> None:
+        """Lets Qt lay out and paint what just changed."""
+        self.app.processEvents()
+
+
 def render_pages(app: QApplication, services: Services, args: argparse.Namespace) -> None:
     if args.demo:
         load_demo_data(services, args.today)
@@ -205,215 +225,297 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
     event_bus = EventBus()
     window = MainWindow(services, event_bus, theme_manager)
     window.show()
-    height = window.height()
+    shots = Shots(app, services, event_bus, window, args.out, window.height())
     for mode in (ThemeMode.LIGHT, ThemeMode.DARK):
         theme_manager.set_mode(mode)
-        for page_id in PageId:
-            window.show_page(page_id)
-            app.processEvents()
-            save(window, args.out / f"{page_id.name.lower()}-{mode.value}.png")
-        # The guided tour, on its third step.
-        tour = window.start_tour()
-        tour.next()
-        tour.next()
-        save(window, args.out / f"tour-{mode.value}.png")
-        tour.finish()
-        # Ayuda at the side, on Metas from Inicio (Metas lit up in the sidebar), its
-        # topics and its shortcuts.
-        window.show_page(PageId.DASHBOARD)
-        window.show_help(TOPICS_BY_KEY["goals"])
-        save(window, args.out / f"help-{mode.value}.png")
-        window.help_panel.show_index()
-        save(window, args.out / f"help-topics-{mode.value}.png")
-        window.help_panel.show_shortcuts()
-        save(window, args.out / f"help-shortcuts-{mode.value}.png")
-        window.help_panel.close_panel()
-        # Toasts on Recurrentes: one that just tells, and one with «Deshacer».
-        window.show_page(PageId.RECURRING)
-        window.toast("Copia guardada.")
-        window.toast("Se omitió Internet.", "Deshacer", lambda: None)
-        save(window, args.out / f"toast-{mode.value}.png")
-        for toast in list(window.toasts.toasts):
-            toast.dismiss()
-        capture_undo(app, window, args.out, mode)
-        capture_seen(app, window, args.out, mode)
-        capture_empty_group(app, window, args.out, mode)
-        capture_discard(app, services, event_bus, window, args.out, mode)
-        for name, build_dialog in DIALOGS.items():
-            dialog = build_dialog(services, event_bus, window)
-            dialog.show()
-            app.processEvents()
-            save(dialog, args.out / f"{name}-{mode.value}.png")
-            discard(dialog)
-        capture_popups(app, services, event_bus, window, args.out, mode)
-        # The color wheel, opened from the category dialog's «+» swatch.
-        dialog = CategoryDialog(services, event_bus, parent=window)
-        dialog.show()
-        dialog.color_input.open_wheel()
-        dialog.color_input.wheel_popup.set_color("#2a9d8f")
-        app.processEvents()
-        save(dialog.color_input.wheel_popup, args.out / f"color-wheel-{mode.value}.png")
-        discard(dialog)
-        # The whole dashboard, below the fold too.
-        window.resize(window.width(), FULL_DASHBOARD_HEIGHT)
-        window.show_page(PageId.DASHBOARD)
-        app.processEvents()
-        save(window, args.out / f"dashboard-full-{mode.value}.png")
-        # Recurrentes, whole: the purchases in installments come after the charges.
-        window.show_page(PageId.RECURRING)
-        app.processEvents()
-        save(window, args.out / f"recurring-full-{mode.value}.png")
-        # The page of one account: the demo investment, with its value updates.
-        investment = next(
-            a
-            for a in services.accounts.list_accounts()
-            if a.type.changes_value and a.currency is Currency.ARS
-        )
-        window.show_detail(DetailId.ACCOUNT, investment.id)
-        app.processEvents()
-        save(window, args.out / f"account-detail-{mode.value}.png")
-        # The sidebar with a group folded down to its total, on the page of groups.
-        banks = services.account_groups.list_groups()[0]
-        window.sidebar.toggle_group(banks.id)
-        window.show_page(PageId.ACCOUNTS)
-        app.processEvents()
-        save(window, args.out / f"accounts-groups-{mode.value}.png")
-        window.sidebar.toggle_group(banks.id)
-        # The page of one goal: the trip, filled by the dollar savings, on track.
-        window.show_detail(DetailId.GOAL, services.goals.list_goals()[0].id)
-        app.processEvents()
-        save(window, args.out / f"goal-detail-{mode.value}.png")
-        # The same page in the narrowest window: the figures wrap instead of being cut.
-        wide = window.size()
-        window.resize(window.minimumWidth(), wide.height())
-        app.processEvents()
-        save(window, args.out / f"goal-detail-narrow-{mode.value}.png")
-        window.show_detail(DetailId.ACCOUNT, services.goals.list_goals()[0].shares[0].account_id)
-        app.processEvents()
-        save(window, args.out / f"account-detail-narrow-{mode.value}.png")
-        window.resize(wide)
-        app.processEvents()
-        # The card with the purchase in installments: what is still to pay.
-        card = next(a for a in services.accounts.list_accounts() if a.name == "Visa")
-        window.show_detail(DetailId.ACCOUNT, card.id)
-        app.processEvents()
-        save(window, args.out / f"card-detail-{mode.value}.png")
-        # The page of the most used payee.
-        payee = services.payees.summaries()[0].payee
-        window.show_detail(DetailId.PAYEE, payee.id)
-        app.processEvents()
-        save(window, args.out / f"payee-detail-{mode.value}.png")
-        # Empty states: a search that matches nothing offers to clear it.
-        for page_id in (PageId.TRANSACTIONS, PageId.PAYEES):
-            window.show_page(page_id)
-            window.page(page_id).search_input.setText("zzz")
-            app.processEvents()
-            save(window, args.out / f"{page_id.name.lower()}-empty-{mode.value}.png")
-            window.page(page_id).search_input.clear()
-        # Settings, whole: the data and about cards are below the fold.
-        window.resize(window.width(), FULL_SETTINGS_HEIGHT)
-        window.show_page(PageId.SETTINGS)
-        app.processEvents()
-        save(window, args.out / f"settings-full-{mode.value}.png")
-        window.resize(window.width(), FULL_DASHBOARD_HEIGHT)
-        # Each analysis report, whole.
-        window.show_page(PageId.ANALYSIS)
-        analysis = window.page(PageId.ANALYSIS)
-        for index, name in enumerate(ANALYSIS_TABS):
-            analysis.tabs.set_index(index)
-            # A table that grows to fit its rows resizes its card on a second pass.
-            app.processEvents()
-            app.processEvents()
-            save(window, args.out / f"analysis-{name}-{mode.value}.png")
-        analysis.tabs.set_index(0)
-        window.resize(window.width(), height)
-        # The sidebar collapsed to its icons.
-        window.sidebar.set_collapsed(True)
-        app.processEvents()
-        save(window, args.out / f"sidebar-collapsed-{mode.value}.png")
-        window.sidebar.set_collapsed(False)
-        # Balances and the net worth hidden with the eye.
-        window.show_page(PageId.DASHBOARD)
-        window.toggle_amounts_hidden()
-        app.processEvents()
-        save(window, args.out / f"amounts-hidden-{mode.value}.png")
-        window.toggle_amounts_hidden()
-        # The category filter open, with its expense and income sections.
-        window.show_page(PageId.TRANSACTIONS)
-        category_filter = window.page(PageId.TRANSACTIONS).category_filter
-        category_filter.showPopup()
-        app.processEvents()
-        save(category_filter.view().window(), args.out / f"category-filter-{mode.value}.png")
-        # Its end, with the «Editar» row that leads to Categorías.
-        category_filter.view().scrollToBottom()
-        app.processEvents()
-        save(category_filter.view().window(), args.out / f"category-filter-end-{mode.value}.png")
-        category_filter.hidePopup()
-        # A row's «⋯» menu, on an investment account, which offers every kind of action.
-        window.show_page(PageId.ACCOUNTS)
-        app.processEvents()
-        accounts = window.page(PageId.ACCOUNTS)
-        # Rebuilt lists leave hidden rows waiting to be deleted; only a shown one counts.
-        row = next(
-            r for r in accounts.findChildren(AccountRow) if r.isVisible() and r.can_update_value
-        )
-        row.more_button.open_menu()
-        app.processEvents()
-        save(row.more_button.menu, args.out / f"row-menu-{mode.value}.png")
-        row.more_button.menu.close()
-        # A row lights up under the mouse.
-        # Offscreen there is no real pointer, so the row is told it is under the mouse.
-        row.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, True)
-        row.repaint()
-        save(window, args.out / f"accounts-hover-{mode.value}.png")
-        row.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, False)
-        # Several transactions chosen: the selection bar takes the header.
-        window.show_page(PageId.TRANSACTIONS)
-        transactions = window.page(PageId.TRANSACTIONS)
-        for row in (1, 2, 3):
-            transactions.table.toggle_row(row)
-        transactions.table.hovered_row = 5  # under the mouse, not chosen
-        app.processEvents()
-        save(window, args.out / f"transactions-selection-{mode.value}.png")
-        transactions.table.clearSelection()
-        transactions.table.hovered_row = -1
-        # The notifications panel, with a new version announced and the last notice
-        # already opened, gray and without its dot.
-        window.show_page(PageId.DASHBOARD)
-        news = Release("9.9.0", "")
-        window._show_release(news)
-        notices = window.notices()
-        services.notifications.mark_seen(notices[-1])
-        window.open_notifications()
-        app.processEvents()
-        save(window.notification_panel, args.out / f"notifications-{mode.value}.png")
-        window.notification_panel.hide()
-        services.settings.set_seen_notices(set())
-        window._show_release(None)
-        # Updating from Nodus, halfway through the download (never started: no network).
-        size = 24_578_342
-        release = Release("9.9.0", "", installer=Installer("", size, ""))
-        update = UpdateDialog(services.updates, release, parent=window)
-        update.progressed.emit(size // 2)
-        update.show()
-        app.processEvents()
-        save(update, args.out / f"update-dialog-{mode.value}.png")
-        update.close()
-        # An error that says what to do, with the system's text unfolded.
-        error = UserErrorDialog(
-            "Copia fuera de la PC",
-            "No se pudo guardar la copia.",
-            r"Revisa que la carpeta E:\Nodus exista y que el pendrive o el disco sigan"
-            " conectados y con lugar libre. Después vuelve a intentarlo.",
-            r"[Errno 28] No space left on device: 'E:\Nodus\nodus-2026-11-14.db'",
-            parent=window,
-        )
-        error.detail.toggle()
-        error.show()
-        app.processEvents()
-        save(error, args.out / f"user-error-{mode.value}.png")
-        error.close()
+        shots.mode = mode
+        for capture in CAPTURES:
+            capture(shots)
     window.close()
+
+
+def capture_pages(shots: Shots) -> None:
+    """Every page, as it opens."""
+    window = shots.window
+    for page_id in PageId:
+        window.show_page(page_id)
+        shots.settle()
+        shots.save(window, page_id.name.lower())
+
+
+def capture_tour_and_help(shots: Shots) -> None:
+    """The guided tour, and Ayuda with its topics and shortcuts."""
+    window = shots.window
+    # The guided tour, on its third step.
+    tour = window.start_tour()
+    tour.next()
+    tour.next()
+    shots.save(window, "tour")
+    tour.finish()
+    # Ayuda at the side, on Metas from Inicio (Metas lit up in the sidebar), its
+    # topics and its shortcuts.
+    window.show_page(PageId.DASHBOARD)
+    window.show_help(TOPICS_BY_KEY["goals"])
+    shots.save(window, "help")
+    window.help_panel.show_index()
+    shots.save(window, "help-topics")
+    window.help_panel.show_shortcuts()
+    shots.save(window, "help-shortcuts")
+    window.help_panel.close_panel()
+
+
+def capture_toasts(shots: Shots) -> None:
+    """Toasts on Recurrentes."""
+    window = shots.window
+    # Toasts on Recurrentes: one that just tells, and one with «Deshacer».
+    window.show_page(PageId.RECURRING)
+    window.toast("Copia guardada.")
+    window.toast("Se omitió Internet.", "Deshacer", lambda: None)
+    shots.save(window, "toast")
+    for toast in list(window.toasts.toasts):
+        toast.dismiss()
+
+
+def capture_moments(shots: Shots) -> None:
+    """Undoing, a charge seen, an empty group and a form left with changes."""
+    window = shots.window
+    services = shots.services
+    capture_undo(shots.app, window, shots.out, shots.mode)
+    capture_seen(shots.app, window, shots.out, shots.mode)
+    capture_empty_group(shots.app, window, shots.out, shots.mode)
+    capture_discard(shots.app, services, shots.event_bus, window, shots.out, shots.mode)
+
+
+def capture_dialogs(shots: Shots) -> None:
+    """Each form of ``DIALOGS``, the popups and the color wheel."""
+    window = shots.window
+    services = shots.services
+    for name, build_dialog in DIALOGS.items():
+        dialog = build_dialog(services, shots.event_bus, window)
+        dialog.show()
+        shots.settle()
+        shots.save(dialog, name)
+        discard(dialog)
+    capture_popups(shots.app, services, shots.event_bus, window, shots.out, shots.mode)
+    # The color wheel, opened from the category dialog's «+» swatch.
+    dialog = CategoryDialog(services, shots.event_bus, parent=window)
+    dialog.show()
+    dialog.color_input.open_wheel()
+    dialog.color_input.wheel_popup.set_color("#2a9d8f")
+    shots.settle()
+    shots.save(dialog.color_input.wheel_popup, "color-wheel")
+    discard(dialog)
+
+
+def capture_whole_pages(shots: Shots) -> None:
+    """Inicio and Recurrentes whole. The window stays that tall until the analysis is captured."""
+    window = shots.window
+    # The whole dashboard, below the fold too.
+    window.resize(window.width(), FULL_DASHBOARD_HEIGHT)
+    window.show_page(PageId.DASHBOARD)
+    shots.settle()
+    shots.save(window, "dashboard-full")
+    # Recurrentes, whole: the purchases in installments come after the charges.
+    window.show_page(PageId.RECURRING)
+    shots.settle()
+    shots.save(window, "recurring-full")
+
+
+def capture_details(shots: Shots) -> None:
+    """The pages of one record, in the usual and the narrowest window."""
+    window = shots.window
+    services = shots.services
+    # The page of one account: the demo investment, with its value updates.
+    investment = next(
+        a
+        for a in services.accounts.list_accounts()
+        if a.type.changes_value and a.currency is Currency.ARS
+    )
+    window.show_detail(DetailId.ACCOUNT, investment.id)
+    shots.settle()
+    shots.save(window, "account-detail")
+    # The sidebar with a group folded down to its total, on the page of groups.
+    banks = services.account_groups.list_groups()[0]
+    window.sidebar.toggle_group(banks.id)
+    window.show_page(PageId.ACCOUNTS)
+    shots.settle()
+    shots.save(window, "accounts-groups")
+    window.sidebar.toggle_group(banks.id)
+    # The page of one goal: the trip, filled by the dollar savings, on track.
+    window.show_detail(DetailId.GOAL, services.goals.list_goals()[0].id)
+    shots.settle()
+    shots.save(window, "goal-detail")
+    # The same page in the narrowest window: the figures wrap instead of being cut.
+    wide = window.size()
+    window.resize(window.minimumWidth(), wide.height())
+    shots.settle()
+    shots.save(window, "goal-detail-narrow")
+    window.show_detail(DetailId.ACCOUNT, services.goals.list_goals()[0].shares[0].account_id)
+    shots.settle()
+    shots.save(window, "account-detail-narrow")
+    window.resize(wide)
+    shots.settle()
+    # The card with the purchase in installments: what is still to pay.
+    card = next(a for a in services.accounts.list_accounts() if a.name == "Visa")
+    window.show_detail(DetailId.ACCOUNT, card.id)
+    shots.settle()
+    shots.save(window, "card-detail")
+    # The page of the most used payee.
+    payee = services.payees.summaries()[0].payee
+    window.show_detail(DetailId.PAYEE, payee.id)
+    shots.settle()
+    shots.save(window, "payee-detail")
+
+
+def capture_empty_searches(shots: Shots) -> None:
+    """Searches that match nothing."""
+    window = shots.window
+    # Empty states: a search that matches nothing offers to clear it.
+    for page_id in (PageId.TRANSACTIONS, PageId.PAYEES):
+        window.show_page(page_id)
+        window.page(page_id).search_input.setText("zzz")
+        shots.settle()
+        shots.save(window, f"{page_id.name.lower()}-empty")
+        window.page(page_id).search_input.clear()
+
+
+def capture_settings_and_analysis(shots: Shots) -> None:
+    """Ajustes and each analysis report, whole; then the window goes back to its height."""
+    window = shots.window
+    # Settings, whole: the data and about cards are below the fold.
+    window.resize(window.width(), FULL_SETTINGS_HEIGHT)
+    window.show_page(PageId.SETTINGS)
+    shots.settle()
+    shots.save(window, "settings-full")
+    window.resize(window.width(), FULL_DASHBOARD_HEIGHT)
+    # Each analysis report, whole.
+    window.show_page(PageId.ANALYSIS)
+    analysis = window.page(PageId.ANALYSIS)
+    for index, name in enumerate(ANALYSIS_TABS):
+        analysis.tabs.set_index(index)
+        # A table that grows to fit its rows resizes its card on a second pass.
+        shots.settle()
+        shots.settle()
+        shots.save(window, f"analysis-{name}")
+    analysis.tabs.set_index(0)
+    window.resize(window.width(), shots.height)
+
+
+def capture_controls(shots: Shots) -> None:
+    """The sidebar folded, amounts hidden and the category filter open."""
+    window = shots.window
+    # The sidebar collapsed to its icons.
+    window.sidebar.set_collapsed(True)
+    shots.settle()
+    shots.save(window, "sidebar-collapsed")
+    window.sidebar.set_collapsed(False)
+    # Balances and the net worth hidden with the eye.
+    window.show_page(PageId.DASHBOARD)
+    window.toggle_amounts_hidden()
+    shots.settle()
+    shots.save(window, "amounts-hidden")
+    window.toggle_amounts_hidden()
+    # The category filter open, with its expense and income sections.
+    window.show_page(PageId.TRANSACTIONS)
+    category_filter = window.page(PageId.TRANSACTIONS).category_filter
+    category_filter.showPopup()
+    shots.settle()
+    shots.save(category_filter.view().window(), "category-filter")
+    # Its end, with the «Editar» row that leads to Categorías.
+    category_filter.view().scrollToBottom()
+    shots.settle()
+    shots.save(category_filter.view().window(), "category-filter-end")
+    category_filter.hidePopup()
+
+
+def capture_rows(shots: Shots) -> None:
+    """A row's menu, a row under the mouse and a selection."""
+    window = shots.window
+    # A row's «⋯» menu, on an investment account, which offers every kind of action.
+    window.show_page(PageId.ACCOUNTS)
+    shots.settle()
+    accounts = window.page(PageId.ACCOUNTS)
+    # Rebuilt lists leave hidden rows waiting to be deleted; only a shown one counts.
+    row = next(r for r in accounts.findChildren(AccountRow) if r.isVisible() and r.can_update_value)
+    row.more_button.open_menu()
+    shots.settle()
+    shots.save(row.more_button.menu, "row-menu")
+    row.more_button.menu.close()
+    # A row lights up under the mouse.
+    # Offscreen there is no real pointer, so the row is told it is under the mouse.
+    row.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, True)
+    row.repaint()
+    shots.save(window, "accounts-hover")
+    row.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, False)
+    # Several transactions chosen: the selection bar takes the header.
+    window.show_page(PageId.TRANSACTIONS)
+    transactions = window.page(PageId.TRANSACTIONS)
+    for row in (1, 2, 3):
+        transactions.table.toggle_row(row)
+    transactions.table.hovered_row = 5  # under the mouse, not chosen
+    shots.settle()
+    shots.save(window, "transactions-selection")
+    transactions.table.clearSelection()
+    transactions.table.hovered_row = -1
+
+
+def capture_messages(shots: Shots) -> None:
+    """The notifications, an update on its way and an error."""
+    window = shots.window
+    services = shots.services
+    # The notifications panel, with a new version announced and the last notice
+    # already opened, gray and without its dot.
+    window.show_page(PageId.DASHBOARD)
+    news = Release("9.9.0", "")
+    window._show_release(news)
+    notices = window.notices()
+    services.notifications.mark_seen(notices[-1])
+    window.open_notifications()
+    shots.settle()
+    shots.save(window.notification_panel, "notifications")
+    window.notification_panel.hide()
+    services.settings.set_seen_notices(set())
+    window._show_release(None)
+    # Updating from Nodus, halfway through the download (never started: no network).
+    size = 24_578_342
+    release = Release("9.9.0", "", installer=Installer("", size, ""))
+    update = UpdateDialog(services.updates, release, parent=window)
+    update.progressed.emit(size // 2)
+    update.show()
+    shots.settle()
+    shots.save(update, "update-dialog")
+    update.close()
+    # An error that says what to do, with the system's text unfolded.
+    error = UserErrorDialog(
+        "Copia fuera de la PC",
+        "No se pudo guardar la copia.",
+        r"Revisa que la carpeta E:\Nodus exista y que el pendrive o el disco sigan"
+        " conectados y con lugar libre. Después vuelve a intentarlo.",
+        r"[Errno 28] No space left on device: 'E:\Nodus\nodus-2026-11-14.db'",
+        parent=window,
+    )
+    error.detail.toggle()
+    error.show()
+    shots.settle()
+    shots.save(error, "user-error")
+    error.close()
+
+
+# In order: some leave the window as the next one expects it (taller, on a page).
+CAPTURES = [
+    capture_pages,
+    capture_tour_and_help,
+    capture_toasts,
+    capture_moments,
+    capture_dialogs,
+    capture_whole_pages,
+    capture_details,
+    capture_empty_searches,
+    capture_settings_and_analysis,
+    capture_controls,
+    capture_rows,
+    capture_messages,
+]
 
 
 def capture_popups(

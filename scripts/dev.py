@@ -18,6 +18,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
+from _common import ROOT
 from demo_data import load_demo_data
 from PySide6.QtCore import QCoreApplication
 
@@ -26,7 +27,7 @@ from nodus.config.paths import AppPaths
 from nodus.database.database import Database
 from nodus.services.container import Services
 
-DEV_DATA_DIR = Path(__file__).resolve().parent.parent / "dev-data"
+DEV_DATA_DIR = ROOT / "dev-data"
 
 
 def real_database() -> Path:

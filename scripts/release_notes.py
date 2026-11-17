@@ -14,9 +14,10 @@ import argparse
 import sys
 from pathlib import Path
 
+from _common import ROOT
+
 from nodus.services.app.changelog import ChangelogEntry, parse_changelog
 
-ROOT = Path(__file__).resolve().parent.parent
 CHANGELOG = ROOT / "CHANGELOG.md"
 FOOTER = "Para actualizar, instala esta versión encima de la anterior: tus datos se conservan."
 

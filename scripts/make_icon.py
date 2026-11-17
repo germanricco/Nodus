@@ -9,11 +9,11 @@ Usage: .venv/Scripts/python scripts/make_icon.py
 from __future__ import annotations
 
 import io
-import os
 import sys
-from pathlib import Path
 
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+from _common import ROOT, use_offscreen_qt
+
+use_offscreen_qt()
 
 from PIL import Image  # noqa: E402
 from PySide6.QtCore import QBuffer, QIODevice  # noqa: E402
@@ -21,7 +21,7 @@ from PySide6.QtGui import QGuiApplication  # noqa: E402
 
 from nodus.ui.theme.icons import APP_ICON_SIZES, logo_svg, render_svg  # noqa: E402
 
-ICON_PATH = Path(__file__).resolve().parent.parent / "packaging" / "nodus.ico"
+ICON_PATH = ROOT / "packaging" / "nodus.ico"
 
 
 def logo_image(size: int) -> Image.Image:
