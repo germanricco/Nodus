@@ -233,7 +233,7 @@ class RecurringPage(Page):
             event_bus.categories_changed,
             event_bus.exchange_rates_changed,
         ):
-            signal.connect(self.refresh)
+            signal.connect(self.request_refresh)
 
     def refresh(self, today: date | None = None) -> None:
         today = today or date.today()

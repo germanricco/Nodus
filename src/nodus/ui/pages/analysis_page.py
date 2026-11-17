@@ -65,7 +65,7 @@ class AnalysisPage(Page):
             event_bus.exchange_rates_changed,
             event_bus.accounts_changed,
         ):
-            signal.connect(self._data_changed)
+            signal.connect(self.request_refresh)
 
     @property
     def current_view(self) -> AnalysisView:
@@ -77,8 +77,3 @@ class AnalysisPage(Page):
     def _show_tab(self, index: int) -> None:
         self._stack.setCurrentIndex(index)
         self.refresh()
-
-    def _data_changed(self) -> None:
-        # Hidden pages are refreshed by the main window when shown.
-        if self.isVisible():
-            self.refresh()

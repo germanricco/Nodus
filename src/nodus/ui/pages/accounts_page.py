@@ -280,7 +280,7 @@ class AccountsPage(Page):
             event_bus.amounts_hidden_changed,
             event_bus.net_worth_currency_changed,
         ):
-            signal.connect(self.refresh)
+            signal.connect(self.request_refresh)
 
     def refresh(self) -> None:
         clear_layout(self._sections)

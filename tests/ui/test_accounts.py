@@ -286,6 +286,7 @@ class TestOrder:
     ):
         services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("0"))
         event_bus.accounts_changed.emit()
+        window.show_page(PageId.ACCOUNTS)  # dragged where the user sees it
         page = window.page(PageId.ACCOUNTS)
         assert [row.account.name for row in rows(page)] == ["Banco", "Ahorro", "Efectivo"]
 
@@ -293,7 +294,8 @@ class TestOrder:
             page.account_list.move(2, 0)  # «Efectivo» to the top
 
         new_order = ["Efectivo", "Banco", "Ahorro"]
-        assert [row.account.name for row in rows(page)] == new_order
+        # Rows added to a page in view show on the next pass of the event loop.
+        qtbot.waitUntil(lambda: [row.account.name for row in rows(page)] == new_order)
         # Qt lays out the rebuilt sidebar on the next pass of the event loop.
         qtbot.waitUntil(lambda: sidebar_accounts(window, services) == new_order)
         account_filter = window.page(PageId.TRANSACTIONS).account_filter

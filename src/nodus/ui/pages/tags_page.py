@@ -76,7 +76,7 @@ class TagsPage(SummaryPage[TagSummary]):
             event_bus.transactions_changed,
             event_bus.exchange_rates_changed,
         ):
-            signal.connect(self.refresh)
+            signal.connect(self.request_refresh)
 
     def load_summaries(self) -> list[TagSummary]:
         return self._services.tags.summaries()

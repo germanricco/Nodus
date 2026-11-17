@@ -1,8 +1,11 @@
-"""Downloads from the internet, shared by the services that consult an online source."""
+"""Downloads from the internet, shared by the services that consult an online source.
+
+``urllib.request`` is imported where a download starts, not here: it takes a noticeable
+part of the app's startup and is only needed once the window is open.
+"""
 
 from __future__ import annotations
 
-import urllib.request
 from collections.abc import Callable, Iterator
 
 TIMEOUT_SECONDS = 5
@@ -24,6 +27,8 @@ def downloader(user_agent: str, accept: str = "application/json") -> Fetch:
     """
 
     def fetch(url: str) -> bytes:
+        import urllib.request
+
         request = urllib.request.Request(url, headers={"User-Agent": user_agent, "Accept": accept})
         with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
             return response.read()
@@ -36,6 +41,8 @@ def streamer(user_agent: str) -> Stream:
     chunk instead of for the whole download, so a slow but steady connection finishes."""
 
     def stream(url: str) -> Iterator[bytes]:
+        import urllib.request
+
         request = urllib.request.Request(url, headers={"User-Agent": user_agent})
         with urllib.request.urlopen(request, timeout=STREAM_TIMEOUT_SECONDS) as response:
             while chunk := response.read(CHUNK_BYTES):

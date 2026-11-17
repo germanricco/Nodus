@@ -140,7 +140,7 @@ class GoalDetailPage(DetailPage):
             event_bus.transactions_changed,
             event_bus.exchange_rates_changed,
         ):
-            signal.connect(self._data_changed)
+            signal.connect(self.request_refresh)
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
     def refresh(self) -> None:
@@ -239,14 +239,9 @@ class GoalDetailPage(DetailPage):
             self._account_rows.addWidget(row)
             self.account_rows.append(row)
 
-    def _data_changed(self) -> None:
-        # Hidden, it is refreshed when shown again.
-        if self.isVisible():
-            self.refresh()
-
     def _set_amounts_hidden(self, hidden: bool) -> None:
         self._hidden = hidden
-        self._data_changed()
+        self.request_refresh()
 
     def _format_value(self, cents: float) -> str:
         currency = self.goal.currency if self.goal else None

@@ -150,7 +150,7 @@ def test_every_empty_list_offers_a_way_out(window, services, pesos):
 
 def test_an_empty_account_adds_a_movement_to_itself(window, pesos, opened):
     window.show_detail(DetailId.ACCOUNT, pesos.id)
-    detail = window._details[DetailId.ACCOUNT]
+    detail = window.detail(DetailId.ACCOUNT)
 
     detail.list_view.empty_state.action_button.click()
 
@@ -161,7 +161,7 @@ def test_an_empty_payee_adds_a_movement_with_it(window, services, pesos, opened)
     payee = services.payees.create("Verdulería")
     window.show_detail(DetailId.PAYEE, payee.id)
 
-    window._details[DetailId.PAYEE].list_view.empty_state.action_button.click()
+    window.detail(DetailId.PAYEE).list_view.empty_state.action_button.click()
 
     assert opened[0].payee_input.text() == "Verdulería"
 
@@ -170,7 +170,7 @@ def test_an_empty_tag_adds_a_movement_with_it(window, services, pesos, opened):
     tag = services.tags.create("Viaje")
     window.show_detail(DetailId.TAG, tag.id)
 
-    window._details[DetailId.TAG].list_view.empty_state.action_button.click()
+    window.detail(DetailId.TAG).list_view.empty_state.action_button.click()
 
     assert opened[0].tag_input.names() == ("Viaje",)
 
@@ -179,4 +179,4 @@ def test_an_archived_account_offers_nothing(window, services, pesos):
     services.accounts.set_archived(pesos.id, True)
     window.show_detail(DetailId.ACCOUNT, pesos.id)
 
-    assert window._details[DetailId.ACCOUNT].list_view.empty_state.action_button.isHidden()
+    assert window.detail(DetailId.ACCOUNT).list_view.empty_state.action_button.isHidden()

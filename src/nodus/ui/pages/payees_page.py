@@ -97,7 +97,7 @@ class PayeesPage(SummaryPage[PayeeSummary]):
             event_bus.categories_changed,
             event_bus.exchange_rates_changed,
         ):
-            signal.connect(self.refresh)
+            signal.connect(self.request_refresh)
 
     def load_summaries(self) -> list[PayeeSummary]:
         return self._services.payees.summaries()

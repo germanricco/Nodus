@@ -16,6 +16,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - La lista «Primeros pasos» deja el Inicio, que ahora muestra tus datos desde el primer día. Para empezar están el recorrido guiado, que Nodus ofrece después de tu primera cuenta y se repite desde Ajustes o la Ayuda, y la Ayuda con F1.
 - En Cuentas, una cuenta pasa a otro grupo arrastrándola a su tarjeta y al lugar que quieras, también a un grupo vacío o a «Sin grupo». El aviso ofrece «Deshacer», y «Mover a grupo…» sigue en el menú de la cuenta.
 - Los colores que eliges en la rueda para una categoría o una etiqueta quedan a mano: los últimos cinco aparecen después de la paleta, para usarlos de nuevo con un clic.
+- Nodus abre más rápido: arma cada página recién la primera vez que la abres, en lugar de todas al empezar. Y guardar un cambio ya no se vuelve más lento a medida que recorres páginas, porque las que no estás viendo se actualizan cuando vuelves a ellas.
 - Arreglo: la rueda del mouse mueve una sola cosa a la vez. En la página de una cuenta, la lista de movimientos ya no arrastra la página entera al llegar a su final, y una lista desplegable o una fecha no cambian de valor cuando la rueda pasa por encima mientras recorres la página: primero hay que hacer clic en ellas.
 - Arreglo: la pregunta «¿Te muestro cómo se usa Nodus?» perdía su botón «Ahora no», así que cerrarla con Esc o la ✕ empezaba el recorrido igual.
 - Arreglo: si la copia del día había fallado, «Hacer copia» seguía mostrando el error aunque la nueva saliera bien.

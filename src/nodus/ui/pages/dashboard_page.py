@@ -146,7 +146,7 @@ class DashboardPage(Page):
         self.content_layout.addWidget(self._stack)
 
         self.period_selector.period_changed.connect(self.refresh)
-        theme_manager.theme_changed.connect(self._data_changed)
+        theme_manager.theme_changed.connect(self.request_refresh)
         theme_manager.theme_changed.connect(self._remeasure)
         for signal in (
             event_bus.accounts_changed,
@@ -158,7 +158,7 @@ class DashboardPage(Page):
             event_bus.goals_changed,
             event_bus.backups_changed,
         ):
-            signal.connect(self._data_changed)
+            signal.connect(self.request_refresh)
 
     @property
     def see_all_button(self) -> QPushButton:
@@ -289,11 +289,6 @@ class DashboardPage(Page):
         self._grid.activate()
         self._scroll.widget().setMinimumHeight(self._grid.minimumSize().height())
         QCoreApplication.postEvent(self._scroll, QEvent(QEvent.Type.LayoutRequest))
-
-    def _data_changed(self) -> None:
-        # Hidden pages are refreshed by the main window when shown.
-        if self.isVisible():
-            self.refresh()
 
     def _welcome_card(self) -> Card:
         card = Card()

@@ -80,7 +80,7 @@ class SummaryDetailPage(DetailPage, Generic[S]):
             event_bus.tags_changed,
             event_bus.accounts_changed,
         ):
-            signal.connect(self._data_changed)
+            signal.connect(self.request_refresh)
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
     # To implement
@@ -163,11 +163,6 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         if self.delete_item(self.summary):
             self.back_requested.emit()
 
-    def _data_changed(self) -> None:
-        # Hidden, it is refreshed when shown again.
-        if self.isVisible():
-            self.refresh()
-
     def _set_amounts_hidden(self, hidden: bool) -> None:
         self._hidden = hidden
-        self._data_changed()
+        self.request_refresh()

@@ -118,7 +118,7 @@ class BudgetsPage(Page):
             event_bus.categories_changed,
             event_bus.exchange_rates_changed,
         ):
-            signal.connect(lambda: self.refresh(self._today))
+            signal.connect(self.request_refresh)
 
     @property
     def month(self) -> Month:
@@ -128,8 +128,9 @@ class BudgetsPage(Page):
         self.month_selector.set_period(Period.of_months(month))
 
     def refresh(self, today: date | None = None) -> None:
-        """``today`` is fixed by tests; otherwise the real date is used."""
-        self._today = today
+        """``today`` is fixed by tests, and kept by later refreshes; otherwise the
+        real date is used."""
+        self._today = today = today or self._today
         today = today or date.today()
         clear_layout(self._sections)
         self.rows, self.unbudgeted_rows = [], []

@@ -144,7 +144,7 @@ class SettingsPage(Page):
         scroll.setWidget(container)
         self.content_layout.addWidget(scroll)
 
-        event_bus.exchange_rates_changed.connect(self.refresh)
+        event_bus.exchange_rates_changed.connect(self.request_refresh)
         event_bus.backups_changed.connect(self._refresh_backup_status)
         self._rate_updater = RateUpdater(services, event_bus, parent=self)
         self._rate_updater.updated.connect(self._on_rate_updated)

@@ -194,7 +194,7 @@ class AccountDetailPage(DetailPage):
             event_bus.goals_changed,
             event_bus.recurring_changed,
         ):
-            signal.connect(self._data_changed)
+            signal.connect(self.request_refresh)
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
     def refresh(self) -> None:
@@ -391,14 +391,9 @@ class AccountDetailPage(DetailPage):
         if self.account is not None:
             self._show_chart(self.account, self.today or date.today())
 
-    def _data_changed(self) -> None:
-        # Hidden, it is refreshed when shown again.
-        if self.isVisible():
-            self.refresh()
-
     def _set_amounts_hidden(self, hidden: bool) -> None:
         self._hidden = hidden
-        self._data_changed()
+        self.request_refresh()
 
     def _currency(self) -> Currency:
         return self.account.currency if self.account else HOME_CURRENCY

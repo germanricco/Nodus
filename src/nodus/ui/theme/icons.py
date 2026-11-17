@@ -35,8 +35,10 @@ def render_svg(svg: str, size: int, scale: int = 1) -> QPixmap:
     return pixmap
 
 
+@cache
 def tinted_pixmap(name: str, color: str) -> QPixmap:
-    """The icon ``name`` drawn with ``color`` instead of ``currentColor``."""
+    """The icon ``name`` drawn with ``color`` instead of ``currentColor``; drawn once
+    per color, since every row's menu and each theme change asks for the same ones."""
     return render_svg(_svg(name).replace("currentColor", color), _ICON_SIZE, _RENDER_SCALE)
 
 

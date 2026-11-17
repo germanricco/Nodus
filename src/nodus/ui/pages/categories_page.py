@@ -127,7 +127,7 @@ class CategoriesPage(Page):
         scroll.setWidget(container)
         self.content_layout.addWidget(scroll)
 
-        event_bus.categories_changed.connect(self.refresh)
+        event_bus.categories_changed.connect(self.request_refresh)
 
     def refresh(self) -> None:
         clear_layout(self._sections)

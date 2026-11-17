@@ -257,3 +257,40 @@ class TestSidebarGroups:
         window.page(PageId.DASHBOARD).net_worth_card.currency_input.buttons[1].click()
 
         qtbot.waitUntil(lambda: "≈ US$ 600,00" in sidebar_texts(window))
+
+
+class TestPagesOnDemand:
+    """Opening the window pays for Inicio only; other pages wait until they are shown."""
+
+    def test_only_inicio_is_built_on_opening(self, window):
+        assert list(window._pages) == [PageId.DASHBOARD]
+        assert window._details == {}
+
+    def test_a_page_is_built_and_filled_when_first_asked_for(self, window, pesos):
+        accounts = window.page(PageId.ACCOUNTS)
+
+        assert window.page(PageId.ACCOUNTS) is accounts
+        assert "Banco" in [label.text() for label in accounts.findChildren(QLabel)]
+
+    def test_a_page_put_aside_waits_until_shown(self, monkeypatch, window, event_bus, pesos):
+        window.show_page(PageId.ACCOUNTS)
+        window.show_page(PageId.DASHBOARD)
+        accounts = window.page(PageId.ACCOUNTS)
+        refreshed = []
+        monkeypatch.setattr(accounts, "refresh", lambda: refreshed.append(True))
+
+        event_bus.accounts_changed.emit()
+        assert refreshed == []
+
+        window.show_page(PageId.ACCOUNTS)
+        assert refreshed == [True]
+
+    def test_the_page_in_view_follows_the_data(self, monkeypatch, window, event_bus, pesos):
+        window.show_page(PageId.ACCOUNTS)
+        accounts = window.page(PageId.ACCOUNTS)
+        refreshed = []
+        monkeypatch.setattr(accounts, "refresh", lambda: refreshed.append(True))
+
+        event_bus.accounts_changed.emit()
+
+        assert refreshed == [True]

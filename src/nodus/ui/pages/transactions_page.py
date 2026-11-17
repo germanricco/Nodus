@@ -132,7 +132,7 @@ class TransactionsPage(Page):
             event_bus.tags_changed,
             event_bus.exchange_rates_changed,
         ):
-            signal.connect(self.refresh)
+            signal.connect(self.request_refresh)
 
     def refresh(self) -> None:
         """Reloads the filter choices (keeping the selection) and then the movements."""

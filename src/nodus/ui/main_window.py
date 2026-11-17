@@ -88,67 +88,10 @@ class MainWindow(QMainWindow):
         self.notification_panel.news_requested.connect(self._show_release_news)
         self._stack = QStackedWidget()
         self._stack.setObjectName("PageStack")
-        dashboard = DashboardPage(services, event_bus, theme_manager)
-        dashboard.navigate_requested.connect(self.show_page)
-        accounts = AccountsPage(services, event_bus, theme_manager)
-        accounts.navigate_requested.connect(self.show_page)
-        accounts.transactions_requested.connect(self.show_transactions)
-        categories = CategoriesPage(services, event_bus)
-        categories.transactions_requested.connect(self.show_transactions)
-        dashboard.transactions_requested.connect(self.show_transactions)
-        budgets = BudgetsPage(services, event_bus, theme_manager)
-        budgets.transactions_requested.connect(self.show_transactions)
-        dashboard.budgets_requested.connect(self.show_budgets)
-        goals = GoalsPage(services, event_bus, theme_manager)
-        goals.navigate_requested.connect(self.show_page)
-        goals.detail_requested.connect(lambda i: self.show_detail(DetailId.GOAL, i))
-        analysis = AnalysisPage(services, event_bus, theme_manager)
-        analysis.transactions_requested.connect(self.show_transactions)
-        analysis.navigate_requested.connect(self.show_page)
-        payees = PayeesPage(services, event_bus, theme_manager)
-        payees.transactions_requested.connect(self.show_transactions)
-        tags = TagsPage(services, event_bus, theme_manager)
-        tags.transactions_requested.connect(self.show_transactions)
-        payees.detail_requested.connect(lambda i: self.show_detail(DetailId.PAYEE, i))
-        tags.detail_requested.connect(lambda i: self.show_detail(DetailId.TAG, i))
-        transactions = TransactionsPage(services, event_bus, theme_manager)
-        transactions.navigate_requested.connect(self.show_page)
-        transactions.new_transaction_requested.connect(self.open_new_transaction)
-        accounts.detail_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
-        self._details: dict[DetailId, DetailPage] = {
-            DetailId.ACCOUNT: AccountDetailPage(services, event_bus, theme_manager),
-            DetailId.PAYEE: PayeeDetailPage(services, event_bus, theme_manager),
-            DetailId.TAG: TagDetailPage(services, event_bus, theme_manager),
-            DetailId.GOAL: GoalDetailPage(services, event_bus, theme_manager),
-        }
-        self._details[DetailId.GOAL].account_requested.connect(
-            lambda i: self.show_detail(DetailId.ACCOUNT, i)
-        )
-        self._details[DetailId.ACCOUNT].goal_requested.connect(
-            lambda i: self.show_detail(DetailId.GOAL, i)
-        )
-        settings = SettingsPage(services, event_bus, theme_manager)
-        settings.tour_requested.connect(self.start_tour)
-        settings.help_requested.connect(self.toggle_help)
-        self._pages: dict[PageId, Page] = {
-            PageId.DASHBOARD: dashboard,
-            PageId.ACCOUNTS: accounts,
-            PageId.TRANSACTIONS: transactions,
-            PageId.RECURRING: RecurringPage(services, event_bus, theme_manager),
-            PageId.BUDGETS: budgets,
-            PageId.GOALS: goals,
-            PageId.ANALYSIS: analysis,
-            PageId.CATEGORIES: categories,
-            PageId.PAYEES: payees,
-            PageId.TAGS: tags,
-            PageId.SETTINGS: settings,
-        }
-        for page in self._pages.values():
-            self._stack.addWidget(page)
-        for detail in self._details.values():
-            self._stack.addWidget(detail)
-            detail.back_requested.connect(partial(self.show_page, detail.detail_id.list_page))
-            detail.new_transaction_requested.connect(self.open_new_transaction)
+        # Built the first time each one is shown (``page``, ``detail``): opening the
+        # window only pays for Inicio.
+        self._pages: dict[PageId, Page] = {}
+        self._details: dict[DetailId, DetailPage] = {}
 
         content = QWidget()
         content.setObjectName("ContentArea")
@@ -168,9 +111,8 @@ class MainWindow(QMainWindow):
         layout.setSpacing(0)
         layout.addWidget(self.sidebar)
         layout.addWidget(content, stretch=1)
-        self.help_panel = HelpPanel(theme_manager)
-        self.help_panel.hide()
-        layout.addWidget(self.help_panel)
+        self._central_layout = layout
+        self._help_panel: HelpPanel | None = None  # built the first time it opens
         self.setCentralWidget(central)
 
         self.sidebar.page_requested.connect(self.show_page)
@@ -179,11 +121,6 @@ class MainWindow(QMainWindow):
         self.top_bar.help_requested.connect(self.toggle_help)
         QShortcut(QKeySequence(HELP.label), self, self.toggle_help)
         QShortcut(QKeySequence(UNDO.label), self, self.undo_last)
-        self.help_panel.page_requested.connect(self.show_page)
-        self.help_panel.spotlight_changed.connect(self.sidebar.spotlight)
-        self.help_panel.tour_requested.connect(self._tour_from_help)
-        # The panel had the focus; Qt would hand it to the sidebar's first button.
-        self.help_panel.closed.connect(self._content.setFocus)
         self.top_bar.notifications_requested.connect(self.open_notifications)
         self.top_bar.feedback_requested.connect(lambda: open_url(feedback_url()))
         self.top_bar.set_amounts_hidden(services.settings.amounts_hidden())
@@ -251,6 +188,21 @@ class MainWindow(QMainWindow):
         if entries:
             NewsDialog.for_entries(entries, parent=self).exec()
         self.offer_tour()
+
+    @property
+    def help_panel(self) -> HelpPanel:
+        """Ayuda, beside the page; built and wired the first time it is asked for."""
+        if self._help_panel is None:
+            panel = HelpPanel(self.theme_manager)
+            panel.hide()
+            self._central_layout.addWidget(panel)
+            panel.page_requested.connect(self.show_page)
+            panel.spotlight_changed.connect(self.sidebar.spotlight)
+            panel.tour_requested.connect(self._tour_from_help)
+            # The panel had the focus; Qt would hand it to the sidebar's first button.
+            panel.closed.connect(self._content.setFocus)
+            self._help_panel = panel
+        return self._help_panel
 
     def toggle_help(self) -> None:
         """F1, the «?» of the top bar and Ajustes open Ayuda, or close it when open."""
@@ -399,20 +351,88 @@ class MainWindow(QMainWindow):
         return self._stack.currentWidget()
 
     def page(self, page_id: PageId) -> Page:
+        """The page ``page_id``, built, wired and filled the first time it is asked for."""
+        if page_id not in self._pages:
+            page = self._build_page(page_id)
+            self._pages[page_id] = page
+            self._stack.addWidget(page)
+            page.refresh()
         return self._pages[page_id]
 
+    def _build_page(self, page_id: PageId) -> Page:
+        """A new page ``page_id`` with its requests connected to the window."""
+        services, bus, theme = self._services, self._event_bus, self.theme_manager
+        if page_id is PageId.DASHBOARD:
+            page = DashboardPage(services, bus, theme)
+            page.budgets_requested.connect(self.show_budgets)
+        elif page_id is PageId.ACCOUNTS:
+            page = AccountsPage(services, bus, theme)
+            page.detail_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
+        elif page_id is PageId.TRANSACTIONS:
+            page = TransactionsPage(services, bus, theme)
+            page.new_transaction_requested.connect(self.open_new_transaction)
+        elif page_id is PageId.RECURRING:
+            page = RecurringPage(services, bus, theme)
+        elif page_id is PageId.BUDGETS:
+            page = BudgetsPage(services, bus, theme)
+        elif page_id is PageId.GOALS:
+            page = GoalsPage(services, bus, theme)
+            page.detail_requested.connect(lambda i: self.show_detail(DetailId.GOAL, i))
+        elif page_id is PageId.ANALYSIS:
+            page = AnalysisPage(services, bus, theme)
+        elif page_id is PageId.CATEGORIES:
+            page = CategoriesPage(services, bus)
+        elif page_id is PageId.PAYEES:
+            page = PayeesPage(services, bus, theme)
+            page.detail_requested.connect(lambda i: self.show_detail(DetailId.PAYEE, i))
+        elif page_id is PageId.TAGS:
+            page = TagsPage(services, bus, theme)
+            page.detail_requested.connect(lambda i: self.show_detail(DetailId.TAG, i))
+        else:
+            page = SettingsPage(services, bus, theme)
+            page.tour_requested.connect(self.start_tour)
+            page.help_requested.connect(self.toggle_help)
+        # The requests pages share, where a page has them.
+        for name, slot in (
+            ("navigate_requested", self.show_page),
+            ("transactions_requested", self.show_transactions),
+        ):
+            signal = getattr(page, name, None)
+            if signal is not None:
+                signal.connect(slot)
+        return page
+
     def show_page(self, page_id: PageId) -> None:
-        page = self._pages[page_id]
-        page.refresh()
+        built = page_id in self._pages
+        page = self.page(page_id)
+        if built:  # a page just built was filled already
+            page.refresh()
         self._stack.setCurrentWidget(page)
         self.sidebar.select(page_id)
 
     def detail(self, detail_id: DetailId) -> DetailPage:
+        """The detail page ``detail_id``, built and wired the first time it is asked for."""
+        if detail_id not in self._details:
+            services, bus, theme = self._services, self._event_bus, self.theme_manager
+            if detail_id is DetailId.ACCOUNT:
+                detail = AccountDetailPage(services, bus, theme)
+                detail.goal_requested.connect(lambda i: self.show_detail(DetailId.GOAL, i))
+            elif detail_id is DetailId.PAYEE:
+                detail = PayeeDetailPage(services, bus, theme)
+            elif detail_id is DetailId.TAG:
+                detail = TagDetailPage(services, bus, theme)
+            else:
+                detail = GoalDetailPage(services, bus, theme)
+                detail.account_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
+            detail.back_requested.connect(partial(self.show_page, detail_id.list_page))
+            detail.new_transaction_requested.connect(self.open_new_transaction)
+            self._details[detail_id] = detail
+            self._stack.addWidget(detail)
         return self._details[detail_id]
 
     def show_detail(self, detail_id: DetailId, item_id: int) -> None:
         """Opens the page about one item, with its list page selected in the sidebar."""
-        page = self._details[detail_id]
+        page = self.detail(detail_id)
         page.show_item(item_id)
         self._stack.setCurrentWidget(page)
         self.sidebar.select(detail_id.list_page)
@@ -420,12 +440,12 @@ class MainWindow(QMainWindow):
 
     def show_transactions(self, focus: TransactionFocus) -> None:
         """Opens the transactions page on what ``focus`` asks for."""
-        self._pages[PageId.TRANSACTIONS].focus(focus)
+        self.page(PageId.TRANSACTIONS).focus(focus)
         self.show_page(PageId.TRANSACTIONS)
 
     def show_budgets(self, month: Month) -> None:
         """Opens the budgets page on ``month``."""
-        self._pages[PageId.BUDGETS].show_month(month)
+        self.page(PageId.BUDGETS).show_month(month)
         self.show_page(PageId.BUDGETS)
 
     def open_new_transaction(self, start: TransactionStart | None = None) -> None:

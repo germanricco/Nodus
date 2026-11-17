@@ -11,6 +11,9 @@ class Page(QWidget):
     """A main section: a title and a content area that subclasses fill.
 
     ``refresh`` runs every time the page is shown, so it always reflects current data.
+    Data changes call ``request_refresh``, which leaves a hidden page alone: refreshing
+    every page opened before, on each change, made each save slower the more pages the
+    user had visited.
     """
 
     HEADER_HEIGHT = Layout.HEADER_HEIGHT
@@ -36,6 +39,14 @@ class Page(QWidget):
         self.content_layout = QVBoxLayout()
         self.content_layout.setSpacing(Space.L)
         layout.addLayout(self.content_layout, stretch=1)
+
+    def request_refresh(self, *_args: object) -> None:
+        """Refreshes the page, unless the window put it aside: hidden in its stack, it
+        is refreshed when shown again (``MainWindow.show_page``, or ``show_item`` for a
+        detail page). Takes and ignores what the signal carries."""
+        if self.parentWidget() is not None and self.isHidden():
+            return
+        self.refresh()
 
     def add_header_button(self, text: str, primary: bool = False) -> QPushButton:
         """Adds a button to the right of the title, for the page's main actions."""
