@@ -8,7 +8,6 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -210,10 +209,7 @@ class AccountsPage(Page):
         self.create_group_button = self.add_header_button("Agregar grupo")
         self.create_group_button.clicked.connect(lambda: self.open_group_dialog())
 
-        container = QWidget()
-        page_layout = QVBoxLayout(container)
-        page_layout.setContentsMargins(0, 0, 0, 0)
-        page_layout.setSpacing(Space.L)
+        page_layout = self.scrolling_body()
         # The net worth card lives as long as the page, so its figures count to new values.
         self.net_worth_card = NetWorthCard(services, theme_manager, compact=True)
         self.net_worth_card.set_amounts_hidden(services.settings.amounts_hidden())
@@ -231,10 +227,6 @@ class AccountsPage(Page):
         self._group_ids: list[int] = []
         page_layout.addLayout(self._sections)
         page_layout.addStretch()
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(container)
-        self.content_layout.addWidget(scroll)
 
         for signal in (
             event_bus.accounts_changed,

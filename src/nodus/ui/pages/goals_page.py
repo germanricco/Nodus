@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -146,14 +145,7 @@ class GoalsPage(Page):
         self.create_button = self.add_header_button("Agregar meta", primary=True)
         self.create_button.clicked.connect(lambda: self.open_goal_dialog())
 
-        container = QWidget()
-        self._sections = QVBoxLayout(container)
-        self._sections.setContentsMargins(0, 0, 0, 0)
-        self._sections.setSpacing(Space.L)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(container)
-        self.content_layout.addWidget(scroll)
+        self._sections = self.scrolling_body()
         self.rows: list[GoalRow] = []
         self.section_titles: list[str] = []
 

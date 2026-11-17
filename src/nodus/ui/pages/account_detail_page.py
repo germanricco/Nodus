@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -95,14 +94,7 @@ class AccountDetailPage(DetailPage):
         self.add_header_widget(self.more_button)
 
         # The page scrolls, so the movements keep room below everything else.
-        container = QWidget()
-        body = QVBoxLayout(container)
-        body.setContentsMargins(0, 0, 0, 0)
-        body.setSpacing(Space.L)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(container)
-        self.content_layout.addWidget(scroll)
+        body = self.scrolling_body()
 
         # What the account is, in one quiet line under its name: type, currency, group.
         self.context_label = muted_label("")

@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import QCoreApplication, QEvent, Qt, QTimer, Signal
+from PySide6.QtCore import QCoreApplication, QEvent, QTimer, Signal
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollArea,
     QStackedWidget,
     QWidget,
 )
@@ -42,7 +41,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.inputs.period_selector import PeriodSelector
 from nodus.ui.widgets.net_worth_card import NetWorthCard
-from nodus.ui.widgets.style import muted_label
+from nodus.ui.widgets.style import muted_label, scrolling
 
 # Below this page width, the cards go one per row.
 
@@ -129,10 +128,7 @@ class DashboardPage(Page):
         # payments without charges) never becomes a window of its own when shown.
         for card in self._cards():
             card.setParent(grid_page)
-        scroll = self._scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setWidget(grid_page)
+        scroll = self._scroll = scrolling(grid_page, horizontal=False)
 
         self._stack = QStackedWidget()
         self._welcome = self._welcome_card()

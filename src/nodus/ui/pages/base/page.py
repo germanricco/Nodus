@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWi
 
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.inputs.segmented import TabBar
-from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.style import scrolling, set_style_property
 
 
 class Page(QWidget):
@@ -39,6 +39,15 @@ class Page(QWidget):
         self.content_layout = QVBoxLayout()
         self.content_layout.setSpacing(Space.L)
         layout.addLayout(self.content_layout, stretch=1)
+
+    def scrolling_body(self) -> QVBoxLayout:
+        """A column under the header that scrolls as a whole, for the page to fill."""
+        container = QWidget()
+        body = QVBoxLayout(container)
+        body.setContentsMargins(0, 0, 0, 0)
+        body.setSpacing(Space.L)
+        self.content_layout.addWidget(scrolling(container))
+        return body
 
     def request_refresh(self, *_args: object) -> None:
         """Refreshes the page, unless the window put it aside: hidden in its stack, it

@@ -2,7 +2,7 @@
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QGraphicsDropShadowEffect, QLabel, QLayout, QWidget
+from PySide6.QtWidgets import QGraphicsDropShadowEffect, QLabel, QLayout, QScrollArea, QWidget
 
 from nodus.ui.theme.design import Elevation, Opacity
 from nodus.ui.theme.theme import Theme
@@ -66,3 +66,14 @@ def muted_label(text: str) -> QLabel:
     label = QLabel(text)
     set_style_property(label, "muted", True)
     return label
+
+
+def scrolling(widget: QWidget, horizontal: bool = True) -> QScrollArea:
+    """``widget`` in a scroll area that follows its width; with ``horizontal`` off, the
+    content is never wider than the area, so only a vertical bar ever shows."""
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
+    if not horizontal:
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    scroll.setWidget(widget)
+    return scroll

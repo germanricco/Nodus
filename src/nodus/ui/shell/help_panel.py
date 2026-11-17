@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
-    QScrollArea,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -32,7 +31,7 @@ from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.style import scrolling, set_style_property
 
 INDEX, TOPIC, SHORTCUTS_VIEW = range(3)
 SHORTCUTS_TITLE = "Atajos de teclado"
@@ -52,14 +51,6 @@ def matches(topic: HelpTopic, words: str) -> bool:
     """Whether every word typed is in the topic's title or text, ignoring case."""
     text = " ".join((topic.title, topic.intro, *topic.paragraphs)).casefold()
     return all(word in text for word in words.casefold().split())
-
-
-def scrolling(widget: QWidget) -> QScrollArea:
-    scroll = QScrollArea()
-    scroll.setWidgetResizable(True)
-    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    scroll.setWidget(widget)
-    return scroll
 
 
 class HelpPanel(QFrame):
@@ -197,7 +188,7 @@ class HelpPanel(QFrame):
         self.no_results.hide()
         self._topics_layout.addWidget(self.no_results)
         self._topics_layout.addStretch()
-        layout.addWidget(scrolling(topics), stretch=1)
+        layout.addWidget(scrolling(topics, horizontal=False), stretch=1)
 
         foot = QHBoxLayout()
         foot.setSpacing(Space.S)
@@ -287,7 +278,7 @@ class HelpPanel(QFrame):
         self._related_buttons: list[QPushButton] = []
         column.addLayout(self._related_layout)
         column.addStretch()
-        layout.addWidget(scrolling(body), stretch=1)
+        layout.addWidget(scrolling(body, horizontal=False), stretch=1)
         return view
 
     def _go(self) -> None:
@@ -329,7 +320,7 @@ class HelpPanel(QFrame):
                 row += 1
         grid.setColumnStretch(1, 1)
         grid.setRowStretch(row, 1)
-        layout.addWidget(scrolling(table), stretch=1)
+        layout.addWidget(scrolling(table, horizontal=False), stretch=1)
         return view
 
     @staticmethod

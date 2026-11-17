@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -129,19 +128,12 @@ class SettingsPage(Page):
         self._event_bus = event_bus
         self._theme_manager = theme_manager
 
-        container = QWidget()
-        sections = QVBoxLayout(container)
-        sections.setContentsMargins(0, 0, 0, 0)
-        sections.setSpacing(Space.L)
+        sections = self.scrolling_body()
         sections.addWidget(self._appearance_card())
         sections.addWidget(self._rate_card())
         sections.addWidget(self._data_card())
         sections.addWidget(self._about_card())
         sections.addStretch()
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(container)
-        self.content_layout.addWidget(scroll)
 
         event_bus.exchange_rates_changed.connect(self.request_refresh)
         event_bus.backups_changed.connect(self._refresh_backup_status)

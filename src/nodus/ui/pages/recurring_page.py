@@ -8,9 +8,6 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
 )
 
 from nodus.models.category import Category
@@ -200,14 +197,7 @@ class RecurringPage(Page):
         self.content_layout.addWidget(
             muted_label("Pagos que se repiten: servicios, suscripciones, alquiler.")
         )
-        container = QWidget()
-        self._sections = QVBoxLayout(container)
-        self._sections.setContentsMargins(0, 0, 0, 0)
-        self._sections.setSpacing(Space.L)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(container)
-        self.content_layout.addWidget(scroll)
+        self._sections = self.scrolling_body()
         self.rows: list[RecurringChargeRow] = []
         self.installment_rows: list[InstallmentPlanRow] = []
         self.monthly_label = QLabel()

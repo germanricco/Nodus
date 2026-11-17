@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from nodus.models.category import Category
 from nodus.models.transaction import TransactionType
@@ -119,14 +119,7 @@ class CategoriesPage(Page):
         self.create_button = self.add_header_button("Agregar categoría", primary=True)
         self.create_button.clicked.connect(lambda: self.open_category_dialog())
 
-        container = QWidget()
-        self._sections = QVBoxLayout(container)
-        self._sections.setContentsMargins(0, 0, 0, 0)
-        self._sections.setSpacing(Space.L)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(container)
-        self.content_layout.addWidget(scroll)
+        self._sections = self.scrolling_body()
 
         event_bus.categories_changed.connect(self.request_refresh)
 

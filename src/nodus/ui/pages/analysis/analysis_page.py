@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QScrollArea, QStackedWidget
 
 from nodus.models.period import Period
@@ -18,6 +18,7 @@ from nodus.ui.pages.analysis.trends_view import TrendsView
 from nodus.ui.pages.base.page import Page
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.inputs.period_selector import PeriodSelector
+from nodus.ui.widgets.style import scrolling
 
 DEFAULT_MONTHS = 12
 
@@ -51,11 +52,8 @@ class AnalysisPage(Page):
         self._stack = QStackedWidget()
         for view in self.views:
             view.transactions_requested.connect(self.transactions_requested)
-            scroll = QScrollArea()
-            scroll.setWidgetResizable(True)
-            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            scroll = scrolling(view, horizontal=False)
             scroll.setFrameShape(QScrollArea.Shape.NoFrame)
-            scroll.setWidget(view)
             self._stack.addWidget(scroll)
         self.content_layout.addWidget(self._stack, stretch=1)
 

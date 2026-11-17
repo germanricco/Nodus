@@ -9,9 +9,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
 )
 
 from nodus.models.budget import Budget, BudgetState
@@ -97,14 +94,7 @@ class BudgetsPage(Page):
         self.create_button = self.add_header_button("Agregar presupuesto", primary=True)
         self.create_button.clicked.connect(lambda: self.open_budget_dialog())
 
-        container = QWidget()
-        self._sections = QVBoxLayout(container)
-        self._sections.setContentsMargins(0, 0, 0, 0)
-        self._sections.setSpacing(Space.L)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(container)
-        self.content_layout.addWidget(scroll)
+        self._sections = self.scrolling_body()
         self.rows: list[BudgetPageRow] = []
         self.unbudgeted_rows: list[CategoryLine] = []
         self.limit_label = QLabel()

@@ -32,7 +32,7 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.money_label import MoneyLabel, total_text
-from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
+from nodus.ui.widgets.style import clear_layout, make_hoverable, scrolling, set_style_property
 
 
 def keep_whole(label: QLabel) -> None:
@@ -303,11 +303,8 @@ class Sidebar(QFrame):
         self._accounts_layout = QVBoxLayout(container)
         self._accounts_layout.setContentsMargins(0, 0, 0, 0)
         self._accounts_layout.setSpacing(Space.S)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll = scrolling(container, horizontal=False)
         scroll.viewport().setObjectName("SidebarAccounts")
-        scroll.setWidget(container)
         return scroll
 
     def _apply_theme(self, theme: Theme) -> None:
