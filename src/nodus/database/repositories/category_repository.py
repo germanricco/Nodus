@@ -11,6 +11,8 @@ from nodus.models.transaction import TransactionType
 
 
 class CategoryRepository(Repository):
+    TABLE = "categories"
+
     def add(self, category: Category) -> Category:
         category_id = self._insert(
             "INSERT INTO categories (name, kind, color, parent_id, is_system)"
@@ -32,8 +34,7 @@ class CategoryRepository(Repository):
         )
 
     def get(self, category_id: int) -> Category | None:
-        row = self._fetch_one("SELECT * FROM categories WHERE id = ?", (category_id,))
-        return self._from_row(row) if row else None
+        return self._one_where("id", category_id)
 
     def list(self, kind: TransactionType | None = None) -> list[Category]:
         sql = "SELECT * FROM categories"
@@ -76,7 +77,7 @@ class CategoryRepository(Repository):
             )
 
     def delete(self, category_id: int) -> None:
-        self._execute("DELETE FROM categories WHERE id = ?", (category_id,))
+        self._delete_id(category_id)
 
     @staticmethod
     def _from_row(row: sqlite3.Row) -> Category:

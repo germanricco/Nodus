@@ -13,6 +13,8 @@ from nodus.models.value_adjustment import ValueAdjustment
 
 
 class ValueAdjustmentRepository(Repository):
+    TABLE = "value_adjustments"
+
     def add(self, adjustment: ValueAdjustment) -> ValueAdjustment:
         adjustment_id = self._insert(
             "INSERT INTO value_adjustments (account_id, occurred_on, amount_cents, note)"
@@ -31,7 +33,7 @@ class ValueAdjustmentRepository(Repository):
         return self._from_row(row) if row else None
 
     def delete(self, adjustment_id: int) -> None:
-        self._execute("DELETE FROM value_adjustments WHERE id = ?", (adjustment_id,))
+        self._delete_id(adjustment_id)
 
     def list(
         self, account_id: int | None = None, start: date | None = None, end: date | None = None

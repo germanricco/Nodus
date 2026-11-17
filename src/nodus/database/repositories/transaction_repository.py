@@ -25,6 +25,8 @@ _SELECT = f"SELECT t.*, a.currency, ip.count AS installment_count {_FROM}"
 
 
 class TransactionRepository(Repository):
+    TABLE = "transactions"
+
     def add(self, transaction: Transaction) -> Transaction:
         transaction_id = self._insert(
             "INSERT INTO transactions"
@@ -113,7 +115,7 @@ class TransactionRepository(Repository):
         )
 
     def delete(self, transaction_id: int) -> None:
-        self._execute("DELETE FROM transactions WHERE id = ?", (transaction_id,))
+        self._delete_id(transaction_id)
 
     def delete_transfer(self, transfer_id: str) -> None:
         self._execute("DELETE FROM transactions WHERE transfer_id = ?", (transfer_id,))

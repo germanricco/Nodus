@@ -10,6 +10,8 @@ from nodus.models.account_group import AccountGroup
 
 
 class AccountGroupRepository(Repository):
+    TABLE = "account_groups"
+
     def add(self, group: AccountGroup) -> AccountGroup:
         group_id = self._insert(
             "INSERT INTO account_groups (name, normalized_name, position) VALUES (?, ?, ?)",
@@ -24,32 +26,23 @@ class AccountGroupRepository(Repository):
         )
 
     def get(self, group_id: int) -> AccountGroup | None:
-        row = self._fetch_one("SELECT * FROM account_groups WHERE id = ?", (group_id,))
-        return self._from_row(row) if row else None
+        return self._one_where("id", group_id)
 
     def find_by_normalized(self, normalized: str) -> AccountGroup | None:
-        row = self._fetch_one(
-            "SELECT * FROM account_groups WHERE normalized_name = ?", (normalized,)
-        )
-        return self._from_row(row) if row else None
+        return self._one_where("normalized_name", normalized)
 
     def list(self) -> list[AccountGroup]:
         return [self._from_row(row) for row in self._fetch_all("SELECT * FROM account_groups")]
 
     def next_position(self) -> int:
-        """The position after the last group, so a new one goes at the end."""
-        row = self._fetch_one("SELECT COALESCE(MAX(position), -1) + 1 AS next FROM account_groups")
-        return row["next"]
+        return self._next_position()
 
     def set_positions(self, positions: dict[int, int]) -> None:
-        self._database.connection.executemany(
-            "UPDATE account_groups SET position = ? WHERE id = ?",
-            [(position, group_id) for group_id, position in positions.items()],
-        )
+        self._set_positions(positions)
 
     def delete(self, group_id: int) -> None:
         """Deletes the group; its accounts are left without one by the foreign key."""
-        self._execute("DELETE FROM account_groups WHERE id = ?", (group_id,))
+        self._delete_id(group_id)
 
     @staticmethod
     def _from_row(row: sqlite3.Row) -> AccountGroup:

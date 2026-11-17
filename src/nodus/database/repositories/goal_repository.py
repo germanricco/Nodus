@@ -5,15 +5,16 @@ from __future__ import annotations
 import dataclasses
 import sqlite3
 from collections import defaultdict
-from datetime import date
 
-from nodus.database.repositories.base import Repository
+from nodus.database.repositories.base import Repository, day_or_none, iso_or_none
 from nodus.models.currency import Currency
 from nodus.models.goal import Goal, GoalShare
 from nodus.models.money import Money
 
 
 class GoalRepository(Repository):
+    TABLE = "goals"
+
     def add(self, goal: Goal) -> Goal:
         goal_id = self._insert(
             "INSERT INTO goals (name, target_cents, currency, target_date, reached_on,"
@@ -43,11 +44,10 @@ class GoalRepository(Repository):
         ]
 
     def next_position(self) -> int:
-        row = self._fetch_one("SELECT COALESCE(MAX(position), -1) + 1 AS next FROM goals")
-        return row["next"]
+        return self._next_position()
 
     def delete(self, goal_id: int) -> None:
-        self._execute("DELETE FROM goals WHERE id = ?", (goal_id,))
+        self._delete_id(goal_id)
 
     def _set_shares(self, goal_id: int, shares: tuple[GoalShare, ...]) -> None:
         self._execute("DELETE FROM goal_accounts WHERE goal_id = ?", (goal_id,))
@@ -71,8 +71,8 @@ class GoalRepository(Repository):
             goal.name,
             goal.target.cents,
             goal.currency.value,
-            goal.target_date.isoformat() if goal.target_date else None,
-            goal.reached_on.isoformat() if goal.reached_on else None,
+            iso_or_none(goal.target_date),
+            iso_or_none(goal.reached_on),
             goal.reached_seen,
             goal.is_archived,
             goal.position,
@@ -85,9 +85,9 @@ class GoalRepository(Repository):
             id=row["id"],
             name=row["name"],
             target=Money(row["target_cents"], currency),
-            target_date=date.fromisoformat(row["target_date"]) if row["target_date"] else None,
+            target_date=day_or_none(row["target_date"]),
             shares=shares,
-            reached_on=date.fromisoformat(row["reached_on"]) if row["reached_on"] else None,
+            reached_on=day_or_none(row["reached_on"]),
             reached_seen=bool(row["reached_seen"]),
             is_archived=bool(row["is_archived"]),
             position=row["position"],

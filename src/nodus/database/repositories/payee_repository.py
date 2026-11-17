@@ -12,6 +12,8 @@ from nodus.models.transaction import TransactionType
 
 
 class PayeeRepository(Repository):
+    TABLE = "payees"
+
     def add(self, payee: Payee) -> Payee:
         payee_id = self._insert(
             "INSERT INTO payees (name, normalized_name, default_category_id) VALUES (?, ?, ?)",
@@ -26,12 +28,10 @@ class PayeeRepository(Repository):
         )
 
     def get(self, payee_id: int) -> Payee | None:
-        row = self._fetch_one("SELECT * FROM payees WHERE id = ?", (payee_id,))
-        return self._from_row(row) if row else None
+        return self._one_where("id", payee_id)
 
     def find_by_normalized(self, normalized: str) -> Payee | None:
-        row = self._fetch_one("SELECT * FROM payees WHERE normalized_name = ?", (normalized,))
-        return self._from_row(row) if row else None
+        return self._one_where("normalized_name", normalized)
 
     def list(self) -> list[Payee]:
         return [self._from_row(row) for row in self._fetch_all("SELECT * FROM payees")]
@@ -74,7 +74,7 @@ class PayeeRepository(Repository):
         )
 
     def delete(self, payee_id: int) -> None:
-        self._execute("DELETE FROM payees WHERE id = ?", (payee_id,))
+        self._delete_id(payee_id)
 
     def row(self, payee_id: int) -> dict | None:
         """The payee as stored, for ``put_back`` (undoing a merge)."""

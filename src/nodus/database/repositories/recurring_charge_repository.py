@@ -16,6 +16,8 @@ _SELECT = "SELECT * FROM recurring_charges"
 
 
 class RecurringChargeRepository(Repository):
+    TABLE = "recurring_charges"
+
     def add(self, charge: RecurringCharge) -> RecurringCharge:
         charge_id = self._insert(
             "INSERT INTO recurring_charges (name, amount_cents, account_id, category_id,"
@@ -48,7 +50,7 @@ class RecurringChargeRepository(Repository):
         return row["charges"]
 
     def delete(self, charge_id: int) -> None:
-        self._execute("DELETE FROM recurring_charges WHERE id = ?", (charge_id,))
+        self._delete_id(charge_id)
 
     @staticmethod
     def _values(charge: RecurringCharge) -> tuple:

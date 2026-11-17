@@ -13,6 +13,8 @@ from nodus.models.exchange_rate import ExchangeRate
 
 
 class ExchangeRateRepository(Repository):
+    TABLE = "exchange_rates"
+
     def save(self, rate: ExchangeRate) -> ExchangeRate:
         """Stores the rate, replacing any previous one for the same date and pair."""
         key = (rate.rate_date.isoformat(), rate.base.value, rate.quote.value)
@@ -63,7 +65,7 @@ class ExchangeRateRepository(Repository):
         return [self._from_row(row) for row in rows]
 
     def delete(self, rate_id: int) -> None:
-        self._execute("DELETE FROM exchange_rates WHERE id = ?", (rate_id,))
+        self._delete_id(rate_id)
 
     @staticmethod
     def _from_row(row: sqlite3.Row) -> ExchangeRate:

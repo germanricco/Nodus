@@ -31,6 +31,8 @@ _BALANCES_SQL = """
 
 
 class AccountRepository(Repository):
+    TABLE = "accounts"
+
     def add(self, account: Account) -> Account:
         account_id = self._insert(
             "INSERT INTO accounts"
@@ -65,8 +67,7 @@ class AccountRepository(Repository):
         )
 
     def get(self, account_id: int) -> Account | None:
-        row = self._fetch_one("SELECT * FROM accounts WHERE id = ?", (account_id,))
-        return self._from_row(row) if row else None
+        return self._one_where("id", account_id)
 
     def list(self, include_archived: bool = False) -> list[Account]:
         sql = "SELECT * FROM accounts"
@@ -76,9 +77,7 @@ class AccountRepository(Repository):
         return [self._from_row(row) for row in rows]
 
     def next_position(self) -> int:
-        """The position after the last account, so a new one goes at the end."""
-        row = self._fetch_one("SELECT COALESCE(MAX(position), -1) + 1 AS next FROM accounts")
-        return row["next"]
+        return self._next_position()
 
     def first_created_on(self) -> date | None:
         """The day the oldest account was created: since when there are data to lose."""
@@ -98,11 +97,7 @@ class AccountRepository(Repository):
         return {row["id"]: date.fromisoformat(row["since"]) for row in rows}
 
     def set_positions(self, positions: dict[int, int]) -> None:
-        """Saves the position of each account id in ``positions``."""
-        self._database.connection.executemany(
-            "UPDATE accounts SET position = ? WHERE id = ?",
-            [(position, account_id) for account_id, position in positions.items()],
-        )
+        self._set_positions(positions)
 
     def count_transactions(self, account_id: int) -> tuple[int, int]:
         """(movements, transfers) recorded in the account; a transfer counts in both."""

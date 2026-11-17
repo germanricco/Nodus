@@ -6,7 +6,7 @@ import dataclasses
 import sqlite3
 from datetime import date
 
-from nodus.database.repositories.base import Repository
+from nodus.database.repositories.base import Repository, day_or_none, iso_or_none
 from nodus.models.currency import Currency
 from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.money import Money
@@ -21,6 +21,8 @@ _SELECT = (
 
 
 class InstallmentPlanRepository(Repository):
+    TABLE = "installment_plans"
+
     def add(self, plan: InstallmentPlan) -> InstallmentPlan:
         plan_id = self._insert(
             "INSERT INTO installment_plans (count, total_cents, first_due_on, settled_on)"
@@ -45,7 +47,7 @@ class InstallmentPlanRepository(Repository):
 
     def delete(self, plan_id: int) -> None:
         """Deletes the plan and, by cascade, its installments."""
-        self._execute("DELETE FROM installment_plans WHERE id = ?", (plan_id,))
+        self._delete_id(plan_id)
 
     @staticmethod
     def _values(plan: InstallmentPlan) -> tuple:
@@ -53,7 +55,7 @@ class InstallmentPlanRepository(Repository):
             plan.count,
             plan.total.cents,
             plan.first_due_on.isoformat(),
-            plan.settled_on.isoformat() if plan.settled_on else None,
+            iso_or_none(plan.settled_on),
         )
 
     @staticmethod
@@ -63,5 +65,5 @@ class InstallmentPlanRepository(Repository):
             count=row["count"],
             total=Money(row["total_cents"], Currency(row["currency"])),
             first_due_on=date.fromisoformat(row["first_due_on"]),
-            settled_on=date.fromisoformat(row["settled_on"]) if row["settled_on"] else None,
+            settled_on=day_or_none(row["settled_on"]),
         )

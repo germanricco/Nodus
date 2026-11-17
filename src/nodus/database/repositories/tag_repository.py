@@ -13,6 +13,8 @@ from nodus.models.tag import Tag
 
 
 class TagRepository(Repository):
+    TABLE = "tags"
+
     def add(self, tag: Tag) -> Tag:
         tag_id = self._insert(
             "INSERT INTO tags (name, normalized_name, color) VALUES (?, ?, ?)",
@@ -27,12 +29,10 @@ class TagRepository(Repository):
         )
 
     def get(self, tag_id: int) -> Tag | None:
-        row = self._fetch_one("SELECT * FROM tags WHERE id = ?", (tag_id,))
-        return self._from_row(row) if row else None
+        return self._one_where("id", tag_id)
 
     def find_by_normalized(self, normalized: str) -> Tag | None:
-        row = self._fetch_one("SELECT * FROM tags WHERE normalized_name = ?", (normalized,))
-        return self._from_row(row) if row else None
+        return self._one_where("normalized_name", normalized)
 
     def list(self) -> list[Tag]:
         return [self._from_row(row) for row in self._fetch_all("SELECT * FROM tags")]
@@ -42,7 +42,7 @@ class TagRepository(Repository):
         return palette_color(self._fetch_one("SELECT COUNT(*) FROM tags")[0])
 
     def delete(self, tag_id: int) -> None:
-        self._execute("DELETE FROM tags WHERE id = ?", (tag_id,))
+        self._delete_id(tag_id)
 
     def row(self, tag_id: int) -> dict | None:
         """The tag as stored, for ``put_back`` (undoing a merge)."""

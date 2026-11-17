@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Sequence
+from datetime import date
 from typing import Any
 
 from nodus.database.database import Database
@@ -13,6 +14,16 @@ _IN_CHUNK = 500
 
 # ``LIKE`` with a backslash as escape character, for ``contains`` patterns.
 LIKE = "LIKE ? ESCAPE '\\'"
+
+
+def iso_or_none(day: date | None) -> str | None:
+    """How an optional date is stored: ISO text, or NULL."""
+    return day.isoformat() if day else None
+
+
+def day_or_none(text: str | None) -> date | None:
+    """An optional date as stored, read back."""
+    return date.fromisoformat(text) if text else None
 
 
 def contains(text: str) -> str:
@@ -29,8 +40,31 @@ class Repository:
     transaction boundaries with ``Database.transaction()``.
     """
 
+    # The table a subclass keeps its records in, for the helpers below.
+    TABLE = ""
+
     def __init__(self, database: Database) -> None:
         self._database = database
+
+    def _one_where(self, column: str, value: Any) -> Any:
+        """The record whose ``column`` is ``value``, built by ``_from_row``, or None."""
+        row = self._fetch_one(f"SELECT * FROM {self.TABLE} WHERE {column} = ?", (value,))
+        return self._from_row(row) if row else None
+
+    def _delete_id(self, row_id: int) -> None:
+        self._execute(f"DELETE FROM {self.TABLE} WHERE id = ?", (row_id,))
+
+    def _next_position(self) -> int:
+        """The position after the last record, so a new one goes at the end."""
+        row = self._fetch_one(f"SELECT COALESCE(MAX(position), -1) + 1 AS next FROM {self.TABLE}")
+        return row["next"]
+
+    def _set_positions(self, positions: dict[int, int]) -> None:
+        """Saves the position of each record id in ``positions``."""
+        self._database.connection.executemany(
+            f"UPDATE {self.TABLE} SET position = ? WHERE id = ?",
+            [(position, row_id) for row_id, position in positions.items()],
+        )
 
     def _execute(self, sql: str, params: Sequence[Any] = ()) -> sqlite3.Cursor:
         return self._database.connection.execute(sql, params)
