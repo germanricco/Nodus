@@ -131,6 +131,7 @@ class Services:
                 accounts,
                 exchange_rates,
                 settings,
+                undo,
             ),
             categories=categories,
             transactions=transactions,

@@ -1,9 +1,10 @@
 """Reordering rows by dragging their handle."""
 
 import pytest
-from PySide6.QtCore import QMimeData, QPointF, Qt
-from PySide6.QtGui import QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent
-from PySide6.QtWidgets import QApplication, QFrame, QLabel
+from dragging import send_drop
+from PySide6.QtCore import QMimeData
+from PySide6.QtGui import QDrag
+from PySide6.QtWidgets import QFrame, QLabel
 
 from nodus.ui.widgets.reorderable_list import ROW_MIME_TYPE, ReorderableList, drag_pixmap
 
@@ -26,19 +27,6 @@ def rows(qtbot) -> ReorderableList:
 
 def middle_of(rows: ReorderableList, index: int) -> int:
     return rows.rows()[index].geometry().center().y()
-
-
-def send_drop(rows: ReorderableList, mime: QMimeData, y: float) -> bool:
-    """Drags ``mime`` over ``rows`` and drops it at height ``y``, as the mouse would;
-    returns whether the list took the drop."""
-    point = QPointF(20, y)
-    args = (Qt.DropAction.MoveAction, mime, Qt.MouseButton.LeftButton, Qt.KeyboardModifier(0))
-    enter = QDragEnterEvent(point, *args)
-    QApplication.sendEvent(rows, enter)
-    QApplication.sendEvent(rows, QDragMoveEvent(point, *args))
-    drop = QDropEvent(point, *args)
-    QApplication.sendEvent(rows, drop)
-    return drop.isAccepted()
 
 
 def test_insertion_index_follows_the_middle_of_each_row(rows):
@@ -107,3 +95,58 @@ def test_the_row_fades_while_dragged_and_comes_back(rows, monkeypatch):
 
     assert seen[0] < 1
     assert row.graphicsEffect() is None
+
+
+class TestFamily:
+    """Lists of one family take each other's rows; an empty one is a place to drop."""
+
+    def family_list(self, qtbot, keys: list[str], family: str | None = "accounts"):
+        widget = ReorderableList(family=family)
+        for key in keys:
+            label = QLabel(key)
+            label.setFixedHeight(40)
+            widget.add_row(key, label)
+        qtbot.addWidget(widget)
+        widget.resize(300, 120)
+        widget.show()
+        return widget
+
+    def test_a_row_from_the_family_is_received_at_its_gap(self, qtbot):
+        source = self.family_list(qtbot, ["a", "b"])
+        target = self.family_list(qtbot, ["x", "y"])
+
+        with (
+            qtbot.assertNotEmitted(target.order_changed),
+            qtbot.waitSignal(target.row_received) as signal,
+        ):
+            assert send_drop(target, source.mime_data(1), middle_of(target, 1) - 1)
+
+        assert signal.args == ["b", 1]
+
+    @pytest.mark.parametrize("family", ["categories", None])
+    def test_another_family_or_none_is_refused(self, qtbot, family):
+        source = self.family_list(qtbot, ["a"])
+        target = self.family_list(qtbot, ["x"], family)
+
+        with qtbot.assertNotEmitted(target.row_received):
+            assert not send_drop(target, source.mime_data(0), 0)
+
+    def test_an_empty_list_shows_its_place_and_takes_a_row(self, qtbot):
+        source = self.family_list(qtbot, ["a"])
+        empty = self.family_list(qtbot, [])
+        empty.set_placeholder("Arrastra una aquí")
+        assert not empty.placeholder.isHidden()
+
+        with qtbot.waitSignal(empty.row_received) as signal:
+            assert send_drop(empty, source.mime_data(0), 10)
+
+        assert signal.args == ["a", 0]
+        assert not empty.placeholder.property("active")  # lit only while over it
+
+    def test_the_place_goes_once_there_are_rows(self, qtbot):
+        widget = self.family_list(qtbot, [])
+        widget.set_placeholder("Arrastra una aquí")
+
+        widget.add_row("a", QLabel("a"))
+
+        assert widget.placeholder.isHidden()

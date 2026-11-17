@@ -178,3 +178,79 @@ class TestTotal:
 
     def test_an_empty_group_adds_up_to_zero(self, services, groups):
         assert groups.total([], {}, TODAY).amount == ars("0")
+
+
+class TestPlace:
+    """An account dragged to a group lands where it was dropped, and can be undone."""
+
+    def order(self, services) -> list[list[str]]:
+        sections = services.account_groups.sections(services.accounts.list_accounts())
+        return [[a.name for a in s.accounts] for s in sections]
+
+    @pytest.fixture
+    def two_groups(self, services, groups):
+        bancos = groups.create("Bancos")
+        efectivo = groups.create("Efectivo")
+        for name in ("Galicia", "Nación", "Santander"):
+            groups.move_account(add_account(services, name).id, bancos.id)
+        groups.move_account(add_account(services, "Billetera").id, efectivo.id)
+        add_account(services, "Suelta")
+        return bancos, efectivo
+
+    def account(self, services, name):
+        return next(a for a in services.accounts.list_accounts() if a.name == name)
+
+    @pytest.mark.parametrize(
+        ("gap", "expected"),
+        [
+            (0, ["Galicia", "Billetera"]),
+            (1, ["Billetera", "Galicia"]),
+            (9, ["Billetera", "Galicia"]),
+        ],
+    )
+    def test_it_lands_at_its_gap(self, services, groups, two_groups, gap, expected):
+        _, efectivo = two_groups
+
+        groups.place_account(self.account(services, "Galicia").id, efectivo.id, gap)
+
+        assert self.order(services) == [["Nación", "Santander"], expected, ["Suelta"]]
+
+    def test_into_an_empty_group_and_out_of_every_group(self, services, groups, two_groups):
+        vacio = groups.create("Vacío")
+
+        groups.place_account(self.account(services, "Nación").id, vacio.id, 0)
+        groups.place_account(self.account(services, "Billetera").id, None, 0)
+
+        assert self.order(services) == [
+            ["Galicia", "Santander"],
+            [],
+            ["Nación"],
+            ["Billetera", "Suelta"],
+        ]
+
+    def test_it_is_undone_with_the_order_it_had(self, services, groups, two_groups):
+        _, efectivo = two_groups
+        before = self.order(services)
+
+        groups.place_account(self.account(services, "Nación").id, efectivo.id, 0)
+        assert services.undo.last.description == "Nación ahora está en Efectivo."
+        services.undo.undo()
+
+        assert self.order(services) == before
+
+    def test_it_is_not_undone_over_a_later_move(self, services, groups, two_groups):
+        _, efectivo = two_groups
+        nacion = self.account(services, "Nación")
+        groups.place_account(nacion.id, efectivo.id, 0)
+        record = services.undo.last
+
+        groups.move_account(nacion.id, None)
+
+        with pytest.raises(ValidationError, match="ya no se puede deshacer"):
+            services.undo.undo(record)
+        assert services.accounts.get(nacion.id).group_id is None
+
+    def test_out_of_a_group_says_so(self, services, groups, two_groups):
+        groups.place_account(self.account(services, "Galicia").id, None, 0)
+
+        assert services.undo.last.description == "Galicia quedó sin grupo."

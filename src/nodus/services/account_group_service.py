@@ -18,6 +18,7 @@ from nodus.services.errors import ValidationError, clean_name, require_found
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.settings_service import SettingsService
 from nodus.services.sorting import name_sort_key
+from nodus.services.undo_service import UndoService, changed_since
 
 
 @dataclass(frozen=True)
@@ -51,8 +52,10 @@ class AccountGroupService:
         accounts: AccountService,
         exchange_rates: ExchangeRateService,
         settings: SettingsService,
+        undo: UndoService,
     ) -> None:
         self._database = database
+        self._undo = undo
         self._groups = groups
         self._account_repository = account_repository
         self._accounts = accounts
@@ -113,6 +116,46 @@ class AccountGroupService:
             self._account_repository.update(
                 dataclasses.replace(account, group_id=group_id, position=position)
             )
+
+    def place_account(self, account_id: int, group_id: int | None, index: int) -> None:
+        """Puts the account in ``group_id`` (or in none) at gap ``index`` among the
+        group's active accounts, as when it is dragged there; it can be undone.
+
+        Positions are one order across every account, so the account goes right before
+        the one now at ``index`` in the group, or right after the group's last one."""
+        account = self._accounts.get(account_id)
+        group_name = self.get(group_id).name if group_id is not None else None
+        before = self._accounts.list_accounts(include_archived=True)
+        order = [a for a in before if a.id != account_id]
+        members = [i for i, a in enumerate(order) if a.group_id == group_id and not a.is_archived]
+        after_last = members[-1] + 1 if members else len(order)
+        at = members[index] if index < len(members) else after_last
+        order.insert(at, dataclasses.replace(account, group_id=group_id))
+        with self._database.transaction():
+            self._account_repository.set_positions({a.id: i for i, a in enumerate(order)})
+            self._account_repository.update(
+                dataclasses.replace(account, group_id=group_id, position=at)
+            )
+        where = f"ahora está en {group_name}" if group_name else "quedó sin grupo"
+        self._undo.offer(
+            f"{account.name} {where}.",
+            lambda: self._put_back(before, [a.id for a in order], account_id, group_id),
+        )
+
+    def _put_back(
+        self, before: list[Account], after: list[int], account_id: int, group_id: int | None
+    ) -> None:
+        """Undoes ``place_account``: every account where it was, if the order and the
+        account's group are still as the drag left them."""
+        now = self._accounts.list_accounts(include_archived=True)
+        moved = self._accounts.get(account_id)
+        if [a.id for a in now] != after or moved.group_id != group_id:
+            raise changed_since(f"El orden de «{moved.name}»")
+        original = next(a for a in before if a.id == account_id)
+        self._account_repository.set_positions({a.id: a.position for a in before})
+        self._account_repository.update(
+            dataclasses.replace(moved, group_id=original.group_id, position=original.position)
+        )
 
     def sections(self, accounts: list[Account]) -> list[AccountSection]:
         """``accounts`` by group: every group in order, even an empty one, then the

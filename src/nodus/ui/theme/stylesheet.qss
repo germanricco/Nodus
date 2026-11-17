@@ -158,6 +158,19 @@ QMainWindow, #ContentArea, #PageStack {
     border-radius: 1px; /* geometry: half its height */
 }
 
+/* An empty ReorderableList: where a row from another list can be dropped. */
+#DropZone {
+    color: $text_muted;
+    border: $line_thin dashed $text_muted;
+    border-radius: $radius_m;
+    padding: $space_m;
+}
+
+#DropZone[active="true"] {
+    color: $accent;
+    border-color: $accent;
+}
+
 #Badge {
     background: $accent_soft;
     color: $accent_text;

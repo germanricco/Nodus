@@ -21,7 +21,7 @@ if sys.platform == "win32":
     os.environ.setdefault("QT_QPA_FONTDIR", str(Path(os.environ["WINDIR"]) / "Fonts"))
 
 from PySide6.QtCore import Qt, QTimer  # noqa: E402
-from PySide6.QtWidgets import QApplication, QDialog, QWidget  # noqa: E402
+from PySide6.QtWidgets import QApplication, QDialog, QScrollArea, QWidget  # noqa: E402
 
 from nodus.database.database import Database  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
@@ -210,6 +210,7 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
             toast.dismiss()
         capture_undo(app, window, args.out, mode)
         capture_seen(app, window, args.out, mode)
+        capture_empty_group(app, window, args.out, mode)
         capture_discard(app, services, event_bus, window, args.out, mode)
         for name, build_dialog in DIALOGS.items():
             dialog = build_dialog(services, event_bus, window)
@@ -471,6 +472,22 @@ def capture_seen(app: QApplication, window: MainWindow, out: Path, mode: ThemeMo
     window._event_bus.recurring_changed.emit()
     for toast in list(window.toasts.toasts):
         toast.dismiss()
+
+
+def capture_empty_group(app: QApplication, window: MainWindow, out: Path, mode: ThemeMode) -> None:
+    """Cuentas with an empty group: where an account can be dragged. Deleted after."""
+    services = window._services
+    group = services.account_groups.create("Para más adelante")
+    window._event_bus.accounts_changed.emit()
+    window.show_page(PageId.ACCOUNTS)
+    page = window.page(PageId.ACCOUNTS)
+    app.processEvents()
+    zone = page.account_lists[group.id].placeholder
+    page.findChild(QScrollArea).ensureWidgetVisible(zone)
+    app.processEvents()
+    save(window, out / f"accounts-empty-group-{mode.value}.png")
+    services.account_groups.delete(group.id)
+    window._event_bus.accounts_changed.emit()
 
 
 def capture_discard(

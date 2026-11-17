@@ -1,7 +1,9 @@
-"""A vertical list whose rows the user reorders by dragging a handle."""
+"""A vertical list whose rows the user reorders by dragging a handle, and drags to
+another list of the same family (an account to another group)."""
 
 from __future__ import annotations
 
+import weakref
 from collections.abc import Hashable
 
 from PySide6.QtCore import QByteArray, QMimeData, QPoint, QRect, QRectF, Qt, Signal
@@ -21,14 +23,19 @@ from PySide6.QtWidgets import (
     QFrame,
     QGraphicsOpacityEffect,
     QHBoxLayout,
+    QLabel,
     QVBoxLayout,
     QWidget,
 )
 
 from nodus.ui.theme.design import Line, Opacity, Radius, Space
 
-# What a dragged row carries: "<list id>:<row index>", so a list only accepts its own rows.
+# What a dragged row carries: "<list id>:<row index>". A list accepts its own rows, and
+# those of the lists of its family.
 ROW_MIME_TYPE = "application/x-nodus-row"
+
+# Every list alive, by id, to find where a dragged row comes from.
+_LISTS: weakref.WeakValueDictionary[int, ReorderableList] = weakref.WeakValueDictionary()
 
 
 class DragHandle(QWidget):
@@ -103,12 +110,6 @@ def drag_pixmap(row: QWidget) -> QPixmap:
     return pixmap
 
 
-def handle_indent() -> int:
-    """How far a list's handle pushes its rows to the right, so a row outside a list (the
-    only one of its group) lines up with those inside one."""
-    return DragHandle.width_for() + _ListRow.SPACING
-
-
 class _ListRow(QWidget):
     """A handle beside the caller's widget; knows its list to start a drag from it."""
 
@@ -147,20 +148,28 @@ class ReorderableList(QWidget):
     """Rows identified by a key, in order; dragging one by its handle to another place
     emits ``order_changed`` with every key in the new order. The list does not reorder
     itself: whoever saves the order rebuilds it, so what is shown is always what is saved.
+
+    Lists that share a ``family`` take each other's rows: a row dropped here from another
+    one emits ``row_received`` with its key and the gap where it lands. Without a family,
+    a list only takes its own rows.
     """
 
     order_changed = Signal(list)
+    row_received = Signal(object, int)  # key, gap
 
     SPACING = Space.S  # as between the rows of a Card, so a reorderable list looks the same
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, family: str | None = None) -> None:
         super().__init__(parent)
+        self.family = family
+        _LISTS[id(self)] = self
         self.setAcceptDrops(True)
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(self.SPACING)
         self._keys: list[Hashable] = []
         self._rows: list[_ListRow] = []
+        self._placeholder: QLabel | None = None
         # A line across the gap where the dragged row would land.
         self._indicator = QFrame(self)
         self._indicator.setObjectName("DropIndicator")
@@ -172,6 +181,23 @@ class ReorderableList(QWidget):
         self._keys.append(key)
         self._rows.append(row)
         self._layout.addWidget(row)
+        if self._placeholder is not None:
+            self._placeholder.hide()
+
+    def set_placeholder(self, text: str) -> None:
+        """What an empty list shows, framed as the place to drop a row."""
+        if self._placeholder is None:
+            self._placeholder = QLabel()
+            self._placeholder.setObjectName("DropZone")
+            self._placeholder.setWordWrap(True)
+            self._placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self._layout.insertWidget(0, self._placeholder)
+        self._placeholder.setText(text)
+        self._placeholder.setVisible(not self._rows)
+
+    @property
+    def placeholder(self) -> QLabel | None:
+        return self._placeholder
 
     def keys(self) -> list[Hashable]:
         return list(self._keys)
@@ -203,17 +229,14 @@ class ReorderableList(QWidget):
         mime.setData(ROW_MIME_TYPE, QByteArray(f"{id(self)}:{index}".encode()))
         return mime
 
-    def hide_indicator(self) -> None:
-        self._indicator.hide()
-
     # Drag and drop
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:  # noqa: N802
-        if self._source_index(event) is not None:
+        if self._source(event) is not None:
             event.acceptProposedAction()
 
     def dragMoveEvent(self, event: QDragMoveEvent) -> None:  # noqa: N802
-        if self._source_index(event) is None:
+        if self._source(event) is None:
             return
         event.acceptProposedAction()
         self._show_indicator(self.insertion_index(event.position().toPoint().y()))
@@ -223,22 +246,49 @@ class ReorderableList(QWidget):
 
     def dropEvent(self, event: QDropEvent) -> None:  # noqa: N802
         self.hide_indicator()
-        source = self._source_index(event)
+        source = self._source(event)
         if source is None:
             return
         event.acceptProposedAction()
-        self.move(source, self.insertion_index(event.position().toPoint().y()))
+        owner, index = source
+        gap = self.insertion_index(event.position().toPoint().y())
+        if owner is self:
+            self.move(index, gap)
+        else:
+            self.row_received.emit(owner.keys()[index], gap)
 
-    def _source_index(self, event: QDropEvent) -> int | None:
-        """The index of the row being dragged, if it comes from this list."""
+    def hide_indicator(self) -> None:
+        self._indicator.hide()
+        self._set_drop_zone_active(False)
+
+    def _source(self, event: QDropEvent) -> tuple[ReorderableList, int] | None:
+        """The list and index of the row being dragged, if this list takes it: its own,
+        or one of its family's."""
         mime = event.mimeData()
         if not mime.hasFormat(ROW_MIME_TYPE):
             return None
-        owner, _, index = bytes(mime.data(ROW_MIME_TYPE)).decode().partition(":")
-        return int(index) if owner == str(id(self)) else None
+        owner_id, _, index = bytes(mime.data(ROW_MIME_TYPE)).decode().partition(":")
+        owner = _LISTS.get(int(owner_id))
+        if owner is None:
+            return None
+        if owner is self or (self.family is not None and owner.family == self.family):
+            return owner, int(index)
+        return None
+
+    def _set_drop_zone_active(self, active: bool) -> None:
+        """Lights the empty list's frame while a row is over it."""
+        zone = self._placeholder
+        if zone is not None and zone.property("active") != active:
+            zone.setProperty("active", active)
+            zone.style().unpolish(zone)
+            zone.style().polish(zone)
 
     def _show_indicator(self, gap: int) -> None:
-        """Draws the line in the middle of the space before row ``gap``, or after the last."""
+        """Draws the line in the middle of the space before row ``gap``, or after the last;
+        an empty list lights its frame instead."""
+        if not self._rows:
+            self._set_drop_zone_active(True)
+            return
         if gap < len(self._rows):
             y = self._rows[gap].geometry().top() - self.SPACING // 2
         else:

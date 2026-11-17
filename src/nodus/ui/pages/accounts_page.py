@@ -29,13 +29,17 @@ from nodus.ui.navigation import PageId, history_focus
 from nodus.ui.pages.page import Page
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
 from nodus.ui.widgets.money_label import MoneyLabel, masked, total_text
 from nodus.ui.widgets.net_worth_card import NetWorthCard, signed
-from nodus.ui.widgets.reorderable_list import ReorderableList, handle_indent
+from nodus.ui.widgets.reorderable_list import ReorderableList
 from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
+
+# The lists of the groups' cards, which take each other's accounts.
+ACCOUNTS_FAMILY = "accounts"
 
 
 def account_delete_warning(services: Services, account: Account) -> str:
@@ -224,7 +228,8 @@ class AccountsPage(Page):
 
     Active accounts are reordered by dragging their handle; the order is saved and shows
     in the sidebar and in every account list. Once there are groups, each one has its card
-    with its subtotal, and the accounts in no group come last.
+    with its subtotal, and the accounts in no group come last; dragging an account to
+    another group's card moves it there, with «Deshacer».
     """
 
     navigate_requested = Signal(object)  # PageId
@@ -335,7 +340,7 @@ class AccountsPage(Page):
 
     def _group_card(self, section: AccountSection, balances: dict[int, Money]) -> Card:
         """A group's card: its name, its subtotal and its menu, then its accounts, which
-        are reordered among themselves."""
+        are reordered among themselves and dragged to other groups."""
         group = section.group
         card = Card()
         header = QHBoxLayout()
@@ -362,13 +367,13 @@ class AccountsPage(Page):
         header.addWidget(chevron)
         chevron.hide()
         card.body.addLayout(header)
-        if not section.accounts:
-            card.body.addWidget(
-                EmptyState("Sin cuentas. Usa «Mover a grupo…» en una cuenta.", compact=True)
-            )
-        list_key = group.id if group else None
-        self._add_rows(
-            card, section.accounts, balances, reorderable=True, key=list_key, aligned=True
+        group_id = group.id if group else None
+        rows = self._add_rows(
+            card, section.accounts, balances, reorderable=True, key=group_id, family=ACCOUNTS_FAMILY
+        )
+        rows.set_placeholder("Sin cuentas. Arrastra una aquí o usa «Mover a grupo…».")
+        rows.row_received.connect(
+            lambda account_id, gap: self._place_account(account_id, group_id, gap)
         )
         return card
 
@@ -420,14 +425,14 @@ class AccountsPage(Page):
         balances: dict[int, Money],
         reorderable: bool,
         key: int | None = None,
-        aligned: bool = False,
-    ) -> None:
-        """A row per account; ``reorderable`` gives each a drag handle once there is more
-        than one, in a list kept in ``account_lists`` under ``key``. An ``aligned`` row
-        without a handle keeps its room, to line up with the other groups' rows."""
+        family: str | None = None,
+    ) -> ReorderableList | None:
+        """A row per account. ``reorderable`` gives each a drag handle, in a list kept in
+        ``account_lists`` under ``key``, once there is more than one account; with a
+        ``family`` (a group's card) always, since its rows also go to the other groups."""
         rows = None
-        if reorderable and len(accounts) > 1:
-            rows = ReorderableList()
+        if reorderable and (len(accounts) > 1 or family is not None):
+            rows = ReorderableList(family=family)
             rows.order_changed.connect(self._save_order)
             self.account_lists[key] = rows
             self.account_list = self.account_list or rows
@@ -457,17 +462,20 @@ class AccountsPage(Page):
             row.archive_toggled.connect(self._toggle_archived)
             row.delete_requested.connect(self.delete_account)
             if rows is None:
-                if aligned:
-                    margins = row.layout().contentsMargins()
-                    margins.setLeft(margins.left() + handle_indent())
-                    row.layout().setContentsMargins(margins)
                 card.body.addWidget(row)
             else:
                 rows.add_row(account.id, row)
+        return rows
 
     def _save_order(self, account_ids: list[int]) -> None:
         self._services.accounts.reorder(account_ids)
         self._event_bus.accounts_changed.emit()
+
+    def _place_account(self, account_id: int, group_id: int | None, gap: int) -> None:
+        """An account dropped on another group's card, at ``gap``."""
+        self._services.account_groups.place_account(account_id, group_id, gap)
+        self._event_bus.accounts_changed.emit()
+        offer_undo(self, self._services, self._event_bus.accounts_changed)
 
     def _toggle_archived(self, account: Account) -> None:
         self._services.accounts.set_archived(account.id, not account.is_archived)

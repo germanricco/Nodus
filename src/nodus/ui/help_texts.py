@@ -86,8 +86,9 @@ HELP_TOPICS = [
             "En Cuentas, «Agregar cuenta» te pide el nombre, el tipo, la moneda y el saldo"
             " de hoy. Desde ahí, el saldo se calcula solo a partir de los movimientos.",
             "Para ordenarlas, arrástralas: el panel lateral sigue ese orden. Si tienes muchas,"
-            " «Agregar grupo» las junta en grupos como Bancos o Billeteras, y «Mover a grupo…»,"
-            " en el menú de cada cuenta, las pasa de uno a otro. Un clic en el nombre de un"
+            " «Agregar grupo» las junta en grupos como Bancos o Billeteras. Para pasar una"
+            " cuenta a otro grupo, arrástrala a su tarjeta, aunque esté vacía, o usa «Mover a"
+            " grupo…» en su menú; el aviso ofrece «Deshacer». Un clic en el nombre de un"
             " grupo, en el panel lateral, lo pliega y deja a la vista solo su total.",
             "Un clic en una cuenta abre su página: cuánto entró y salió este mes, cómo cambió"
             " su saldo y todos sus movimientos. Una cuenta que ya no usas se archiva desde su"

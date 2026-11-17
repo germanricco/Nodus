@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 import pytest
+from dragging import send_drop
 from factories import TODAY, ars, eur, expense_draft, usd
 from menus import run_action
 from PySide6.QtCore import Qt
@@ -391,7 +392,7 @@ class TestGroups:
 
         assert self.card_titles(page)[-3:] == ["BANCOS", "INVERSIONES", "SIN GRUPO"]
         assert self.subtotals(page) == ["$ 100.000,00", "$ 0,00", "US$ 500,00"]
-        assert "Sin cuentas. Usa «Mover a grupo…» en una cuenta." in texts(page)
+        assert "Sin cuentas. Arrastra una aquí o usa «Mover a grupo…»." in texts(page)
 
     def test_a_mixed_group_is_approximate_and_hides_with_the_amounts(
         self, services, page, pesos, dollars
@@ -460,6 +461,41 @@ class TestGroups:
         assert services.account_groups.list_groups() == []
         assert len(services.accounts.list_accounts()) == 2
         assert self.card_titles(page)[-1] == "CUENTAS ACTIVAS"
+
+    def test_an_account_dragged_to_another_group_moves_there(
+        self, qtbot, monkeypatch, services, event_bus, page, pesos, dollars
+    ):
+        bancos = services.account_groups.create("Bancos")
+        vacio = services.account_groups.create("Vacío")
+        services.account_groups.move_account(pesos.id, bancos.id)
+        page.refresh()
+        toasts = []
+        monkeypatch.setattr("nodus.ui.undo.toast_host", lambda _widget: page)
+        monkeypatch.setattr("nodus.ui.undo.show_toast", lambda *args: toasts.append(args))
+        loose = page.account_lists[None]
+        target = page.account_lists[vacio.id]
+        assert not target.placeholder.isHidden()
+
+        with qtbot.waitSignal(event_bus.accounts_changed):
+            assert send_drop(target, loose.mime_data(0), 10)
+
+        assert services.accounts.get(dollars.id).group_id == vacio.id
+        assert self.card_titles(page)[-2:] == ["BANCOS", "VACÍO"]
+        [(_host, text, action, undo)] = toasts
+        assert (text, action) == ("Ahorro ahora está en Vacío.", "Deshacer")
+
+        with qtbot.waitSignal(event_bus.accounts_changed):
+            undo()
+        assert services.accounts.get(dollars.id).group_id is None
+
+    def test_a_lone_account_in_a_group_can_be_dragged(self, services, page, pesos, dollars):
+        bancos = services.account_groups.create("Bancos")
+        services.account_groups.move_account(pesos.id, bancos.id)
+
+        page.refresh()
+
+        assert page.account_lists[bancos.id].keys() == [pesos.id]
+        assert page.account_lists[None].family == page.account_lists[bancos.id].family
 
     def test_accounts_are_reordered_within_their_group(
         self, qtbot, services, event_bus, page, pesos, dollars
