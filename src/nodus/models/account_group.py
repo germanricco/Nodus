@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from nodus.models.payee import normalize_name
+from nodus.models.names import normalize_name
 
 
 @dataclass(frozen=True)

@@ -23,9 +23,9 @@ from nodus.services.reports.dashboard_service import CategoryTotal
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import TransactionFocus
+from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.base.page import Page
-from nodus.ui.text.labels import days_left_text, unconverted_note
+from nodus.ui.text.labels import days_left_text, plural, unconverted_note
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -88,7 +88,7 @@ class BudgetsPage(Page):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__("Presupuestos")
+        super().__init__(PageId.BUDGETS.label)
         self._services = services
         self._event_bus = event_bus
         self._theme_manager = theme_manager
@@ -196,7 +196,7 @@ class BudgetsPage(Page):
         over = sum(1 for b in month.budgets if b.state is BudgetState.OVER)
         title = f"Presupuestos ({len(month.budgets)})"
         if over:
-            title += f" · {over} excedido" + ("s" if over > 1 else "")
+            title += f" · {plural(over, 'excedido', 'excedidos')}"
         card = Card(title)
         theme = self._theme_manager.theme
         for budget in month.budgets:

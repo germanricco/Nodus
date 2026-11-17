@@ -12,7 +12,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from nodus.models.category import Category
-from nodus.models.currency import Currency
+from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
 from nodus.models.period import Month, Period
 from nodus.models.transaction import Transaction, TransactionType
@@ -23,7 +23,6 @@ from nodus.services.transactions.transaction_service import TransactionService
 
 # A single month shows the trend of the months leading to it.
 TREND_MONTHS = 6
-SUMMARY_CURRENCY = Currency.ARS
 
 
 def relative_change(current: Money, previous: Money) -> float | None:
@@ -98,9 +97,7 @@ def convert_movements(
     for transaction in listed:
         if transaction.is_transfer:
             continue
-        amount = exchange_rates.convert(
-            transaction.amount, SUMMARY_CURRENCY, transaction.occurred_on
-        )
+        amount = exchange_rates.convert(transaction.amount, HOME_CURRENCY, transaction.occurred_on)
         if amount is None:
             unconverted += 1
         elif transaction.refund_of_id is None:
@@ -124,11 +121,11 @@ def net_in_pesos(
 ) -> tuple[Money, int]:
     """Income minus expenses of ``transactions`` in pesos, each at the rate of its day, and
     how many could not be converted for lack of a rate."""
-    net = Money.zero(SUMMARY_CURRENCY)
+    net = Money.zero(HOME_CURRENCY)
     unconverted = 0
     for transaction in transactions:
         amount = exchange_rates.convert(
-            transaction.signed_amount, SUMMARY_CURRENCY, transaction.occurred_on
+            transaction.signed_amount, HOME_CURRENCY, transaction.occurred_on
         )
         if amount is None:
             unconverted += 1
@@ -236,7 +233,7 @@ class MonthFlow:
 
 def month_flows(movements: list[ConvertedMovement], months: list[Month]) -> list[MonthFlow]:
     """Income and expenses of each of ``months``, from movements already in pesos."""
-    zero = Money.zero(SUMMARY_CURRENCY)
+    zero = Money.zero(HOME_CURRENCY)
     totals = {month: {kind: zero for kind in TransactionType} for month in months}
     for movement in movements:
         month = Month.of(movement.transaction.occurred_on)
@@ -251,8 +248,6 @@ def month_flows(movements: list[ConvertedMovement], months: list[Month]) -> list
 
 
 class DashboardService:
-    CURRENCY = SUMMARY_CURRENCY
-
     def __init__(
         self,
         transactions: TransactionService,
@@ -265,8 +260,8 @@ class DashboardService:
 
     def summary(self, period: Period) -> PeriodSummary:
         categories = {c.id: c for c in self._categories.list_categories()}
-        totals = {kind: Money.zero(self.CURRENCY) for kind in TransactionType}
-        by_category: dict[int, Money] = defaultdict(lambda: Money.zero(self.CURRENCY))
+        totals = {kind: Money.zero(HOME_CURRENCY) for kind in TransactionType}
+        by_category: dict[int, Money] = defaultdict(lambda: Money.zero(HOME_CURRENCY))
         converted = self._converted(period)
         for movement in converted.movements:
             totals[movement.kind] += movement.amount
@@ -286,7 +281,7 @@ class DashboardService:
         current = self.summary(period)
         previous = self.summary(period.previous())
         before = {t.category.id: t.total for t in previous.expenses_by_category}
-        zero = Money.zero(self.CURRENCY)
+        zero = Money.zero(HOME_CURRENCY)
         changes = [
             CategoryChange(t.category, t.total, before.get(t.category.id, zero))
             for t in current.expenses_by_category
@@ -313,7 +308,7 @@ class DashboardService:
         )
 
     def _totals(self, converted: ConvertedMovements) -> FilteredTotals:
-        totals = {kind: Money.zero(self.CURRENCY) for kind in TransactionType}
+        totals = {kind: Money.zero(HOME_CURRENCY) for kind in TransactionType}
         for movement in converted.movements:
             totals[movement.kind] += movement.amount
         return FilteredTotals(

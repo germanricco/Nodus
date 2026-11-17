@@ -23,6 +23,7 @@ if sys.platform == "win32":
 from PySide6.QtCore import Qt, QTimer  # noqa: E402
 from PySide6.QtWidgets import QApplication, QDialog, QScrollArea, QWidget  # noqa: E402
 
+from nodus.config.paths import AppPaths  # noqa: E402
 from nodus.database.database import Database  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
 from nodus.models.money import Money  # noqa: E402
@@ -565,9 +566,10 @@ def main() -> int:
     set_reduced_motion(True)
     app = QApplication(sys.argv)
     with tempfile.TemporaryDirectory() as data_dir:
-        database = Database.open(Path(data_dir) / "nodus.db")
+        paths = AppPaths(Path(data_dir))
+        database = Database.open(paths.database_path)
         try:
-            render_pages(app, Services.create(database), args)
+            render_pages(app, Services.create(database, paths.backups_dir), args)
         finally:
             database.close()
     return 0

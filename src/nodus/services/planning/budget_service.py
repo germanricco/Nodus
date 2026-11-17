@@ -10,7 +10,7 @@ from nodus.database.database import Database
 from nodus.database.repositories.budget_repository import BudgetRepository
 from nodus.models.budget import Budget, BudgetState, month_elapsed
 from nodus.models.category import Category
-from nodus.models.currency import Currency
+from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
@@ -19,8 +19,6 @@ from nodus.services.errors import ValidationError, require_storable
 from nodus.services.reports.dashboard_service import CategoryTotal, DashboardService
 from nodus.services.transactions.transaction_service import TransactionService
 
-# Budgets are kept in pesos, the currency of the dashboard's totals.
-CURRENCY = Currency.ARS
 # The limit suggested for a new budget is the average spending of this many months before.
 SUGGESTION_MONTHS = 3
 # Suggestions are rounded to whole thousands of pesos (in cents), as people set limits.
@@ -53,11 +51,11 @@ class MonthBudgets:
 
     @property
     def limit(self) -> Money:
-        return sum((b.limit for b in self.budgets), Money.zero(CURRENCY))
+        return sum((b.limit for b in self.budgets), Money.zero(HOME_CURRENCY))
 
     @property
     def spent(self) -> Money:
-        return sum((b.spent for b in self.budgets), Money.zero(CURRENCY))
+        return sum((b.spent for b in self.budgets), Money.zero(HOME_CURRENCY))
 
     @property
     def remaining(self) -> Money:
@@ -85,7 +83,7 @@ class BudgetService:
     def set_limit(self, category_id: int, month: Month, amount: Money) -> None:
         """Sets the limit from ``month`` on; earlier months keep the one they had."""
         self._require_budgetable(category_id)
-        if amount.currency is not CURRENCY:
+        if amount.currency is not HOME_CURRENCY:
             raise ValidationError("El límite del presupuesto va en pesos.", field="limit")
         if amount.cents <= 0:
             raise ValidationError("El límite tiene que ser mayor que cero.", field="limit")
@@ -112,7 +110,7 @@ class BudgetService:
         limits = self._budgets.limits_on(month)
         categories = {c.id: c for c in self._categories.list_categories(TransactionType.EXPENSE)}
         elapsed = month_elapsed(month, today)
-        zero = Money.zero(CURRENCY)
+        zero = Money.zero(HOME_CURRENCY)
         budgets = sorted(
             (
                 Budget(categories[i], limit, spent.get(i, zero), elapsed)
@@ -144,7 +142,7 @@ class BudgetService:
             return None
         average = total / len(months)
         rounded = max(1, round(average / SUGGESTION_ROUNDING)) * SUGGESTION_ROUNDING
-        return BudgetSuggestion(Money(rounded, CURRENCY), len(months))
+        return BudgetSuggestion(Money(rounded, HOME_CURRENCY), len(months))
 
     def _require_budgetable(self, category_id: int) -> Category:
         category = self._categories.get(category_id)

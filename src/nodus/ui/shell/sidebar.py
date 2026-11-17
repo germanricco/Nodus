@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus import __version__
+from nodus import APP_NAME, __version__
 from nodus.models.account import Account
 from nodus.models.money import Money
 from nodus.services.container import Services
@@ -260,7 +260,7 @@ class Sidebar(QFrame):
         image.setPixmap(logo_pixmap(self.LOGO_SIZE))
         image.setAlignment(Qt.AlignmentFlag.AlignCenter)
         row.addWidget(image)
-        self._logo_name = QLabel("Nodus")
+        self._logo_name = QLabel(APP_NAME)
         self._logo_name.setObjectName("SidebarLogo")
         row.addWidget(self._logo_name, stretch=1)
         self._logo_row = row

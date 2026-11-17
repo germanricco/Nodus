@@ -4,6 +4,8 @@ from datetime import date
 
 from PySide6.QtWidgets import QApplication
 
+from nodus.config.paths import AppPaths
+from nodus.database.database import Database
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.recurring_charge import Frequency
@@ -118,3 +120,8 @@ def table_rows(database, *tables: str) -> dict[str, list[tuple]]:
         kept = [i for i, column in enumerate(cursor.description) if column[0] != "updated_at"]
         rows[table] = sorted((tuple(row[i] for i in kept) for row in cursor.fetchall()), key=repr)
     return rows
+
+
+def services_for(database: Database) -> Services:
+    """The services on ``database``, with their copies in a folder next to it, as in the app."""
+    return Services.create(database, AppPaths(database.path.parent).backups_dir)

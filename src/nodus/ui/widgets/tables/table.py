@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QTableView,
 )
 
+from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme_manager import active_theme
 
 
@@ -36,7 +37,7 @@ def configure_record_table(
     table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
     table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
     table.verticalHeader().hide()
-    table.verticalHeader().setDefaultSectionSize(40)
+    table.verticalHeader().setDefaultSectionSize(ControlSize.TABLE_ROW)
     header = table.horizontalHeader()
     header.setHighlightSections(False)
     header.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)

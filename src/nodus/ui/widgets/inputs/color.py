@@ -20,13 +20,13 @@ from nodus.ui.widgets.color_dot import paint_dot
 from nodus.ui.widgets.inputs.color_wheel import ColorWheelPopup, hue_ring_gradient
 
 
-def color_icon(color: str, size: int = 12) -> QIcon:
+def color_icon(color: str, size: int = ControlSize.DOT) -> QIcon:
     """A filled circle in ``color``, for item views and combo boxes that take icons.
     Like ``ColorDot``, it is ringed when the color would fade into the surface."""
     return colors_icon([color], size)
 
 
-def colors_icon(colors: list[str], size: int = 12) -> QIcon:
+def colors_icon(colors: list[str], size: int = ControlSize.DOT) -> QIcon:
     """Filled circles in ``colors``, side by side, as a cell with several tags shows them."""
     gap = size // 3
     pixmap = QPixmap(len(colors) * (size + gap) - gap, size)

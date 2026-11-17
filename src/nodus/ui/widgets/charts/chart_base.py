@@ -24,7 +24,7 @@ from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.ui.theme.design import Easing, Motion, Radius, TextRole, motion_ms, role_font
+from nodus.ui.theme.design import Easing, Motion, Radius, TextRole, Tooltip, motion_ms, role_font
 from nodus.ui.theme.theme import Theme
 
 K = TypeVar("K", bound=Hashable)
@@ -148,7 +148,7 @@ class AnimatedChart(QWidget):
         line_font = role_font(TextRole.BODY)
         line_font.setWeight(QFont.Weight.DemiBold)
         title_metrics, line_metrics = QFontMetricsF(title_font), QFontMetricsF(line_font)
-        padding, spacing = 10.0, 3.0
+        padding, spacing, margin = Tooltip.PADDING, Tooltip.LINE_SPACING, Tooltip.MARGIN
         width = max(
             [title_metrics.horizontalAdvance(title)]
             + [line_metrics.horizontalAdvance(line) for line in lines]
@@ -157,11 +157,11 @@ class AnimatedChart(QWidget):
         height = (
             2 * padding + title_metrics.height() + len(lines) * (line_metrics.height() + spacing)
         )
-        x = anchor.x() + 12
-        if x + width > self.width() - 2:
-            x = anchor.x() - 12 - width
-        y = max(2.0, min(anchor.y() - height / 2, self.height() - height - 2))
-        box = QRectF(max(2.0, x), y, width, height)
+        x = anchor.x() + Tooltip.OFFSET
+        if x + width > self.width() - margin:
+            x = anchor.x() - Tooltip.OFFSET - width
+        y = max(margin, min(anchor.y() - height / 2, self.height() - height - margin))
+        box = QRectF(max(margin, x), y, width, height)
 
         painter.save()
         painter.setPen(QColor(self._theme.border))

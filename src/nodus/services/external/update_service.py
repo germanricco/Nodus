@@ -6,17 +6,17 @@ import hashlib
 import json
 import shutil
 import subprocess
-import sys
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from nodus.links import REPOSITORY
+from nodus import APP_NAME, USER_AGENT, is_installed
+from nodus.links import LATEST_RELEASE_API
+from nodus.models.version import parse_version
 from nodus.services.errors import UpdateError
 from nodus.services.external.http import Fetch, Stream, downloader, streamer
 
-LATEST_RELEASE_API = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
 GITHUB_JSON = "application/vnd.github+json"
 # The installer runs without questions, keeps the choices of the previous installation
 # and opens Nodus again when it finishes (see [Run] in packaging/nodus.iss).
@@ -41,14 +41,6 @@ class Release:
     url: str
     notes: str = ""
     installer: Installer | None = None
-
-
-def parse_version(text: str) -> tuple[int, ...]:
-    """ "v0.2.0" or "0.2.0" as (0, 2, 0), so versions compare as numbers ("0.10" > "0.9").
-
-    Raises ValueError if ``text`` is not dot-separated numbers.
-    """
-    return tuple(int(part) for part in text.strip().removeprefix("v").split("."))
 
 
 def installer_name(version: str) -> str:
@@ -86,18 +78,16 @@ class UpdateService:
         launch: Callable[[list[str]], None] | None = None,
     ) -> None:
         self.current_version = current_version
-        user_agent = f"Nodus/{current_version}"
-        self._fetch = fetch or downloader(user_agent, GITHUB_JSON)
-        self._stream = stream or streamer(user_agent)
-        self.downloads_dir = downloads_dir or Path(tempfile.gettempdir()) / "Nodus" / "updates"
+        self._fetch = fetch or downloader(USER_AGENT, GITHUB_JSON)
+        self._stream = stream or streamer(USER_AGENT)
+        self.downloads_dir = downloads_dir or Path(tempfile.gettempdir()) / APP_NAME / "updates"
         self._launch = launch
 
     @classmethod
     def for_this_program(cls, current_version: str) -> UpdateService:
         """Installs updates only when running as the installed program on Windows; run
         from the source code there is nothing to replace, so the release page opens."""
-        installed = getattr(sys, "frozen", False) and sys.platform == "win32"
-        return cls(current_version, launch=_launch_detached if installed else None)
+        return cls(current_version, launch=_launch_detached if is_installed() else None)
 
     def check(self) -> Release | None:
         """The latest release if it is newer than the running version, otherwise None.

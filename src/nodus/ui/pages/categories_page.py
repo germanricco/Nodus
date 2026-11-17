@@ -11,7 +11,7 @@ from nodus.services.container import Services
 from nodus.ui.dialogs.category_dialog import CategoryDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import history_focus
+from nodus.ui.navigation import PageId, history_focus
 from nodus.ui.pages.base.page import Page
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.card import Card
@@ -113,7 +113,7 @@ class CategoriesPage(Page):
     transactions_requested = Signal(object)  # TransactionFocus
 
     def __init__(self, services: Services, event_bus: EventBus) -> None:
-        super().__init__("Categorías")
+        super().__init__(PageId.CATEGORIES.label)
         self._services = services
         self._event_bus = event_bus
         self.create_button = self.add_header_button("Agregar categoría", primary=True)

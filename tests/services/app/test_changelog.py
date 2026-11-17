@@ -5,13 +5,13 @@ import pytest
 import release_notes
 
 from nodus import __version__
+from nodus.models.version import parse_version
 from nodus.services.app.changelog import (
     ChangelogEntry,
     entries_between,
     load_changelog,
     parse_changelog,
 )
-from nodus.services.external.update_service import parse_version
 
 SAMPLE = """# Novedades de Nodus
 

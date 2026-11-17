@@ -11,7 +11,7 @@ from nodus.models.period import Period
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.ui.text.formatting import format_date
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_rows import (
     TransactionListBuilder,
@@ -47,7 +47,9 @@ class LatestTransactionRow(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
         layout.setSpacing(Space.S)
-        layout.addWidget(ColorDot(item.category_color or transfer_color, size=10))
+        layout.addWidget(
+            ColorDot(item.category_color or transfer_color, size=ControlSize.DOT_SMALL)
+        )
         texts = QVBoxLayout()
         texts.setSpacing(0)
         title = ElidedLabel(item.description)

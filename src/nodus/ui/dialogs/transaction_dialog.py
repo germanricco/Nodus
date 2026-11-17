@@ -8,7 +8,7 @@ from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from nodus.models.account import Account
-from nodus.models.currency import Currency
+from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.exchange_rate import ImpliedRate, implied_rate
 from nodus.models.payee import Payee
 from nodus.models.transaction import Transaction, TransactionType
@@ -100,7 +100,7 @@ class TransactionDialog(FormDialog):
         self.account_input.set_placeholder(ACCOUNT_PLACEHOLDER)
         self.to_account_input = AccountComboBox()
         self.to_account_input.set_placeholder(ACCOUNT_PLACEHOLDER)
-        self.amount_input = AmountInput(Currency.ARS)
+        self.amount_input = AmountInput(HOME_CURRENCY)
         self.amount_in_input = AmountInput(Currency.USD)
         self.installment_fields = InstallmentFields()
         self.installments_hint = QLabel()

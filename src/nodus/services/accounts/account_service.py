@@ -11,7 +11,7 @@ from nodus.database.repositories.value_adjustment_repository import ValueAdjustm
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.models.payee import normalize_name
+from nodus.models.names import normalize_name
 from nodus.models.period import Period
 from nodus.models.value_adjustment import ValueAdjustment
 from nodus.services.errors import (

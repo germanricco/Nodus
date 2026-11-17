@@ -4,7 +4,7 @@ import unicodedata
 from collections.abc import Callable
 from typing import Any, Protocol, TypeVar
 
-from nodus.models.payee import normalize_name
+from nodus.models.names import normalize_name
 
 
 def name_sort_key(name: str) -> str:

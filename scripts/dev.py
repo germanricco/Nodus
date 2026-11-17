@@ -59,7 +59,7 @@ def copy_real_data(source: Path, target: Path) -> None:
 def create_demo_data(target: Path) -> None:
     database = Database.open(target)
     try:
-        load_demo_data(Services.create(database), date.today())
+        load_demo_data(Services.create(database, AppPaths(target.parent).backups_dir), date.today())
     finally:
         database.close()
 

@@ -7,6 +7,10 @@ from nodus import __version__
 REPOSITORY = "germanricco/Nodus"
 REPOSITORY_URL = f"https://github.com/{REPOSITORY}"
 DONATE_URL = "https://cafecito.app/germanricco"
+# What Nodus asks for by itself: the newest version, and the exchange rates.
+LATEST_RELEASE_API = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
+DOLARAPI_URL = "https://dolarapi.com/v1/dolares"
+QUOTES_URL = "https://dolarapi.com/v1/cotizaciones"
 
 # A Google Form, which asks for no account. Its "Versión" field comes filled in, so
 # every comment says which Nodus it is about.

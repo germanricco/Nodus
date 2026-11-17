@@ -10,7 +10,7 @@ from nodus.config.paths import visible_path
 from nodus.config.system import windows_animations_on
 from nodus.database.database import Database
 from nodus.database.repositories.settings_repository import SettingsRepository
-from nodus.models.currency import TOTAL_CURRENCIES, Currency
+from nodus.models.currency import HOME_CURRENCY, TOTAL_CURRENCIES, Currency
 from nodus.models.palette import PALETTE
 
 # How many recent colors the picker offers: one row with the «+».
@@ -189,7 +189,7 @@ class SettingsService:
     def net_worth_currency(self) -> Currency:
         """The currency the dashboard shows the net worth in; pesos until chosen."""
         value = self._settings.get(self.NET_WORTH_CURRENCY_KEY)
-        return next((c for c in TOTAL_CURRENCIES if c.value == value), Currency.ARS)
+        return next((c for c in TOTAL_CURRENCIES if c.value == value), HOME_CURRENCY)
 
     def set_net_worth_currency(self, currency: Currency) -> None:
         with self._database.transaction():

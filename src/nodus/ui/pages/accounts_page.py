@@ -202,7 +202,7 @@ class AccountsPage(Page):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__("Cuentas")
+        super().__init__(PageId.ACCOUNTS.label)
         self._services = services
         self._event_bus = event_bus
         self.create_button = self.add_header_button("Agregar cuenta", primary=True)

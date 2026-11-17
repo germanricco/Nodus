@@ -5,7 +5,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.models.category import Category
-from nodus.models.currency import Currency
+from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
 from nodus.models.period import Month, format_month
 from nodus.services.classification.category_service import CategoryNode
@@ -57,7 +57,7 @@ class BudgetDialog(FormDialog):
         candidates = [category] if category else self._free_categories(limits)
         self.category_input.set_categories([(None, [CategoryNode(c, []) for c in candidates])])
         self.category_input.setEnabled(category is None)
-        self.amount_input = AmountInput(Currency.ARS)
+        self.amount_input = AmountInput(HOME_CURRENCY)
         self.suggestion_hint = QLabel()
         self.suggestion_hint.setObjectName("FieldHint")
         self.suggestion_hint.setWordWrap(True)

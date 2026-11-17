@@ -7,6 +7,7 @@ from datetime import date
 from enum import Enum
 
 from nodus.models.currency import Currency
+from nodus.models.period import format_date
 from nodus.services.accounts.account_service import AccountService
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.seen_service import SeenService
@@ -50,14 +51,6 @@ def _rate_key(currency: Currency, rate_date: date | None) -> str:
 
 def _budget_key(today: date, category_id: int) -> str:
     return f"budget:{today:%Y-%m}:{category_id}"
-
-
-# How the notices name each foreign currency: singular and plural.
-_CURRENCY_NAMES = {
-    Currency.USD: ("dólar", "dólares"),
-    Currency.EUR: ("euro", "euros"),
-    Currency.CLP: ("peso chileno", "pesos chilenos"),
-}
 
 
 class NoticeKind(Enum):
@@ -206,7 +199,9 @@ class NotificationService:
         if not self._backups.reminder_due(today, self._accounts.first_created_on()):
             return None
         last = self._backups.last_external_backup()
-        since = f"La última es del {last:%d/%m/%Y}." if last else "Todavía no guardaste ninguna."
+        since = (
+            f"La última es del {format_date(last)}." if last else "Todavía no guardaste ninguna."
+        )
         return Notice(
             NoticeKind.BACKUP_REMINDER,
             "Guarda una copia fuera de esta computadora",
@@ -223,7 +218,7 @@ class NotificationService:
         return [notice for notice in notices if notice]
 
     def _rate_notice(self, currency: Currency, today: date) -> Notice | None:
-        name, plural = _CURRENCY_NAMES[currency]
+        name, plural = currency.name_singular, currency.name_plural
         rate = self._exchange_rates.rate_on(today, currency)
         if rate is None:
             return Notice(
@@ -238,7 +233,7 @@ class NotificationService:
         return Notice(
             NoticeKind.STALE_RATE,
             f"Sin cotización del {name} desde hace {days} días",
-            f"La última es del {rate.rate_date:%d/%m/%Y}.",
+            f"La última es del {format_date(rate.rate_date)}.",
             items=(_rate_key(currency, rate.rate_date),),
         )
 

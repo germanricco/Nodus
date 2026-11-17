@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
 from nodus.models.goal import Goal, GoalProgress, GoalState
 from nodus.models.money import Money
 from nodus.models.period import MONTH_NAMES, Month, format_date
+from nodus.ui.text.labels import NO_RATE_TEXT, plural
 from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.charts.budget_bar import paint_progress
@@ -25,7 +26,7 @@ STATE_LABELS = {
     GoalState.OVERDUE: ("Vencida", "bad"),
     GoalState.NO_HISTORY: ("Sin historia", "neutral"),
     GoalState.NO_DATE: ("Sin fecha", "neutral"),
-    GoalState.NO_RATE: ("Sin cotización", "neutral"),
+    GoalState.NO_RATE: (NO_RATE_TEXT, "neutral"),
 }
 NO_RATE_TEXT = "Falta la cotización para sumar las cuentas en otras monedas."
 
@@ -74,7 +75,7 @@ def goal_sentence(goal: Goal, progress: GoalProgress, hidden: bool = False) -> s
         assert goal.target_date is not None  # behind means behind its date
         due = Month.of(goal.target_date)
         late = (progress.eta.year - due.year) * 12 + progress.eta.month - due.month
-        return f"{arrives}, {late} {'mes' if late == 1 else 'meses'} tarde." + needed
+        return f"{arrives}, {plural(late, 'mes', 'meses')} tarde." + needed
     return f"{arrives}."
 
 

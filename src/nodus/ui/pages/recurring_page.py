@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.models.category import Category
-from nodus.models.recurring_charge import DueStatus, RecurringCharge
+from nodus.models.recurring_charge import SOON_DAYS, DueStatus, RecurringCharge
 from nodus.services.container import Services
 from nodus.services.transactions.installment_service import InstallmentSummary
 from nodus.services.transactions.recurring_charge_service import RecurringSummary
@@ -41,7 +41,7 @@ from nodus.ui.widgets.tables.schedule_row import ScheduleRow
 
 GROUP_TITLES = {
     DueStatus.OVERDUE: "Vencidos",
-    DueStatus.SOON: "Próximos 7 días",
+    DueStatus.SOON: f"Próximos {SOON_DAYS} días",
     DueStatus.LATER: "Más adelante",
 }
 PAUSED_TITLE = "En pausa"

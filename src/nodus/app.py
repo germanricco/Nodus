@@ -7,7 +7,7 @@ from datetime import date
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from nodus import APP_USER_MODEL_ID
+from nodus import APP_NAME, APP_USER_MODEL_ID
 from nodus.config.paths import AppPaths
 from nodus.database.database import Database, DatabaseError
 from nodus.services.container import Services
@@ -22,7 +22,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 class NodusApp:
     """Starts Nodus: makes sure the local database is usable, then opens the main window."""
 
-    APPLICATION_NAME = "Nodus"
+    APPLICATION_NAME = APP_NAME
 
     def __init__(self, argv: list[str]) -> None:
         # Must be set before AppPaths, which derives the data folder from it.
@@ -43,7 +43,7 @@ class NodusApp:
             )
             return 1
         try:
-            services = Services.create(database)
+            services = Services.create(database, self._paths.backups_dir)
             services.backups.create_if_due(date.today())
             services.startup.repair()
             services.updates.clean()

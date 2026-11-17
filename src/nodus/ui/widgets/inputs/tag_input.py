@@ -5,10 +5,10 @@ from __future__ import annotations
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
 
+from nodus.models.names import normalize_name
 from nodus.models.palette import NEW_TAG_COLOR
-from nodus.models.payee import normalize_name
 from nodus.services.classification.tag_service import TagService
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.widgets.inputs.color import color_icon
 from nodus.ui.widgets.inputs.name_completer import NameCompleter
 
@@ -127,7 +127,7 @@ class TagInput(QWidget):
             chip = QToolButton()
             chip.setObjectName("TagChip")
             chip.setText(f"{name}  ✕")
-            chip.setIcon(color_icon(tag.color if tag else NEW_TAG_COLOR, 10))
+            chip.setIcon(color_icon(tag.color if tag else NEW_TAG_COLOR, ControlSize.DOT_SMALL))
             chip.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
             chip.setToolTip("Quitar")
             chip.setCursor(Qt.CursorShape.PointingHandCursor)

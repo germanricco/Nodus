@@ -1,9 +1,9 @@
 import pytest
+from factories import services_for
 
 from nodus.database.database import Database
 from nodus.services.app.changelog import ChangelogEntry
 from nodus.services.app.news_service import VERSION_BEFORE_NEWS, NewsService
-from nodus.services.container import Services
 
 CHANGELOG = [
     ChangelogEntry(version, None, f"Novedades de {version}")
@@ -76,7 +76,7 @@ def test_the_app_knows_whether_this_run_created_the_data_file(tmp_path, reopen, 
 
 
 def test_a_new_data_file_starts_with_the_news_already_seen(database):
-    services = Services.create(database)
+    services = services_for(database)
 
     assert services.news.take_unseen() == []
     assert services.settings.last_seen_version() is not None

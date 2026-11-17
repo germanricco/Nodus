@@ -11,7 +11,14 @@ from nodus.services.container import Services
 from nodus.services.reports.analysis_service import CashFlowReport
 from nodus.services.reports.dashboard_service import MonthFlow, relative_change
 from nodus.ui.navigation import TransactionFocus
-from nodus.ui.pages.analysis.common import MONTH, RIGHT, AnalysisView, ModelIndex, chart_card
+from nodus.ui.pages.analysis.common import (
+    MONTH,
+    RIGHT,
+    VERSUS_PREVIOUS_TEXT,
+    AnalysisView,
+    ModelIndex,
+    chart_card,
+)
 from nodus.ui.text.formatting import percent
 from nodus.ui.text.labels import unconverted_note
 from nodus.ui.theme.design import Chart, Space
@@ -126,7 +133,7 @@ class CashFlowView(AnalysisView):
             ("Ahorro", self.savings_label, self.savings_badge),
             ("Tasa de ahorro", self.rate_label, self.rate_badge),
         ):
-            badge.setToolTip(badge.toolTip() or "Frente al período anterior, del mismo largo")
+            badge.setToolTip(badge.toolTip() or VERSUS_PREVIOUS_TEXT)
             tiles.addWidget(FigureTile(caption, value, badge, large=True), stretch=1)
         layout.addLayout(tiles)
 

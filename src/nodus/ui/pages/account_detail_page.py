@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 from nodus.models.account import Account
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.money import Money
-from nodus.models.period import Month
+from nodus.models.period import Month, format_day_month
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
@@ -33,7 +33,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.base.detail_page import DetailPage, danger_zone
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
-from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, estimate_text
+from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, estimate_text, plural
 from nodus.ui.theme.design import Chart, Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
@@ -301,7 +301,7 @@ class AccountDetailPage(DetailPage):
         if pending is not None:
             self.pending_label.setText(amount_text(pending, hidden))
             left, last = installments.installments_left(account.id, today)
-            count = "1 cuota" if left == 1 else f"{left} cuotas"
+            count = plural(left, "cuota", "cuotas")
             self.pending_note.setText(f"{count} · hasta {month_phrase(Month.of(last))}")
         self.figures.relayout()
 
@@ -401,4 +401,4 @@ class AccountDetailPage(DetailPage):
         return "" if self._hidden else format_compact(cents, self._currency())
 
     def _format_day(self, day: date) -> str:
-        return f"{day:%d/%m}" if self._daily else Month.of(day).short_name
+        return format_day_month(day) if self._daily else Month.of(day).short_name

@@ -10,9 +10,9 @@ from datetime import date, timedelta
 from nodus.database.database import Database
 from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.models.category import Category
-from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.models.payee import Payee, PayeeUsage, normalize_name
+from nodus.models.names import normalize_name
+from nodus.models.payee import Payee, PayeeUsage
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
@@ -44,7 +44,6 @@ class PayeeSummary:
 
 
 class PayeeService:
-    CURRENCY = Currency.ARS
     # How far back use orders the suggestions while typing, and before typing anything:
     # the latter shows only what is used now, a few of them.
     MATCHES_DAYS = 365

@@ -6,7 +6,7 @@ from datetime import date
 
 from PySide6.QtWidgets import QCheckBox, QLabel, QLineEdit, QWidget
 
-from nodus.models.currency import Currency
+from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.money import Money
 from nodus.models.period import format_date
 from nodus.models.recurring_charge import Frequency, RecurringCharge
@@ -73,7 +73,7 @@ class RecurringChargeDialog(FormDialog):
 
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText("Por ejemplo, Netflix o Alquiler")
-        self.amount_input = AmountInput(Currency.ARS)
+        self.amount_input = AmountInput(HOME_CURRENCY)
         self.account_input = account_input_for(
             services, self.amount_input, [charge.account_id] if charge else []
         )
@@ -119,11 +119,11 @@ class RecurringChargeDialog(FormDialog):
     def _follow_currency(self) -> None:
         """Only a peso account offers dollars; the amount is in the currency chosen."""
         account = self.account_input.current_account()
-        in_pesos = account is not None and account.currency is Currency.ARS
+        in_pesos = account is not None and account.currency is HOME_CURRENCY
         self.form.setRowVisible(self.dollars_input, in_pesos)
         if in_pesos:
             dollars = self.dollars_input.isChecked()
-            self.amount_input.set_currency(Currency.USD if dollars else Currency.ARS)
+            self.amount_input.set_currency(Currency.USD if dollars else HOME_CURRENCY)
         elif account is not None:
             self.amount_input.set_currency(account.currency)
 

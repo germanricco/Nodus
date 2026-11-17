@@ -12,6 +12,8 @@ from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
 from nodus.ui.widgets.style import muted_label
 
 RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+# What the change badges of Analysis compare against.
+VERSUS_PREVIOUS_TEXT = "Frente al período anterior, del mismo largo"
 ModelIndex = QModelIndex | QPersistentModelIndex
 # The first column of every table.
 MONTH = 0

@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus import APP_NAME
 from nodus.links import feedback_url
 from nodus.models.period import Month
 from nodus.services.app.notification_service import Notice
@@ -60,6 +61,7 @@ from nodus.ui.shell.sidebar import Sidebar
 from nodus.ui.shell.top_bar import TopBar
 from nodus.ui.shell.tour import TOUR_STEPS
 from nodus.ui.text.help_texts import HelpTopic, topic_for_page
+from nodus.ui.text.labels import TOUR_LABEL
 from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.undo import undo
@@ -75,7 +77,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._services = services
         self._event_bus = event_bus
-        self.setWindowTitle("Nodus")
+        self.setWindowTitle(APP_NAME)
         self.setMinimumSize(*Layout.WINDOW_MIN_SIZE)
         self.resize(*Layout.WINDOW_SIZE)
 
@@ -253,7 +255,7 @@ class MainWindow(QMainWindow):
             self,
             "Recorrido guiado",
             "¿Te muestro cómo se usa Nodus? Es un minuto.",
-            "Ver el recorrido",
+            TOUR_LABEL,
             "Ahora no",
         ):
             self.start_tour()

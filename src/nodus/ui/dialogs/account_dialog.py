@@ -5,7 +5,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import QLineEdit, QWidget
 
 from nodus.models.account import Account, AccountType
-from nodus.models.currency import Currency
+from nodus.models.currency import HOME_CURRENCY
 from nodus.services.container import Services
 from nodus.ui.dialogs.account_group_dialogs import GroupPicker
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
@@ -46,7 +46,7 @@ class AccountDialog(FormDialog):
         self.currency_input = ComboBox()
         for currency, label in CURRENCY_LABELS.items():
             self.currency_input.addItem(label, currency)
-        self.balance_input = AmountInput(Currency.ARS)
+        self.balance_input = AmountInput(HOME_CURRENCY)
         self.currency_input.currentIndexChanged.connect(
             lambda: self.balance_input.set_currency(self.currency_input.currentData())
         )

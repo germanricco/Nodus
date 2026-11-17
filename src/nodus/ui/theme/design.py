@@ -102,6 +102,9 @@ class ControlSize:
     TOGGLE_WIDTH = 40
     TOGGLE_HEIGHT = 22
     PROGRESS_HEIGHT = 8  # a progress bar: an update's download, a budget
+    DOT = 12  # a category's color beside its name
+    DOT_SMALL = 10  # the same in a dense row, and a tag's chip
+    TABLE_ROW = 40  # a row of a table
     SCROLL_BAR_WIDTH = 10
     SCROLL_HANDLE_MIN_LENGTH = 24
     SLIDER_GROOVE = 6
@@ -182,6 +185,15 @@ def set_reduced_motion(reduced: bool) -> None:
 def motion_ms(step: Motion) -> int:
     """How long ``step`` lasts now: 0 when motion is reduced."""
     return 0 if _MotionPreference.reduced else int(step)
+
+
+class Tooltip:
+    """The box a chart shows under the mouse, in pixels."""
+
+    PADDING = 10
+    LINE_SPACING = 3
+    OFFSET = 12  # from the point it describes
+    MARGIN = 2  # from the chart's edges
 
 
 class Layout:

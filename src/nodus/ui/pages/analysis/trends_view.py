@@ -4,12 +4,19 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout
 
+from nodus.models.currency import HOME_CURRENCY
 from nodus.models.period import Period, format_month
 from nodus.services.container import Services
 from nodus.services.reports.analysis_service import Metric, MonthTrend, Trends
-from nodus.services.reports.dashboard_service import SUMMARY_CURRENCY, CategoryTotal
+from nodus.services.reports.dashboard_service import CategoryTotal
 from nodus.ui.navigation import TransactionFocus
-from nodus.ui.pages.analysis.common import AnalysisView, amount_label, chart_card, rows_card
+from nodus.ui.pages.analysis.common import (
+    VERSUS_PREVIOUS_TEXT,
+    AnalysisView,
+    amount_label,
+    chart_card,
+    rows_card,
+)
 from nodus.ui.text.formatting import percent
 from nodus.ui.text.labels import movements_text, unconverted_note
 from nodus.ui.theme.design import Space
@@ -60,7 +67,7 @@ class TrendsView(AnalysisView):
         self.total_label = AnimatedMoneyLabel()
         # Without a previous period the badge steps aside: its tile already says so.
         self.change_badge = ChangeBadge()
-        self.change_badge.setToolTip("Frente al período anterior, del mismo largo")
+        self.change_badge.setToolTip(VERSUS_PREVIOUS_TEXT)
         self.previous_label = QLabel()
         self.average_label = QLabel()
         self.total_tile = FigureTile("Total", self.total_label, self.change_badge, large=True)
@@ -73,7 +80,7 @@ class TrendsView(AnalysisView):
         layout.addLayout(tiles)
 
         self.chart = StackedBarChart(
-            self._theme, lambda cents: format_compact(cents, SUMMARY_CURRENCY)
+            self._theme, lambda cents: format_compact(cents, HOME_CURRENCY)
         )
         self.chart.clicked.connect(self._bar_clicked)
         card, self.empty_label, self.unconverted_label = chart_card("Mes a mes", self.chart)

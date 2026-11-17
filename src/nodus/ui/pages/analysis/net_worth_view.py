@@ -8,14 +8,14 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QVBoxLayout
 
-from nodus.models.currency import Currency
+from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.money import Money
 from nodus.models.period import Month, Period, format_month
 from nodus.services.container import Services
 from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint
 from nodus.ui.pages.analysis.common import MONTH, RIGHT, AnalysisView, ModelIndex
 from nodus.ui.text.formatting import format_date
-from nodus.ui.text.labels import HELD_IN_LABELS
+from nodus.ui.text.labels import HELD_IN_LABELS, NO_RATE_TEXT
 from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -28,8 +28,6 @@ from nodus.ui.widgets.net_worth_card import (
     signed,
 )
 from nodus.ui.widgets.tables.table import fit_rows, record_table
-
-NO_RATE_TEXT = "sin cotización"
 
 
 class NetWorthTableModel(QAbstractTableModel):
@@ -44,7 +42,7 @@ class NetWorthTableModel(QAbstractTableModel):
         self._points: list[NetWorthPoint] = []
         self._rate_effects: list[Money | None] = []
         self._opening: NetWorth | None = None
-        self._currency = Currency.ARS
+        self._currency = HOME_CURRENCY
         self._held: list[Currency] = []
         self._theme = theme
 
@@ -103,7 +101,7 @@ class NetWorthTableModel(QAbstractTableModel):
             return [
                 self._month_text(point.day),
                 *(by_currency[currency].format() for currency in self._held),
-                total.format() if total is not None else NO_RATE_TEXT,
+                total.format() if total is not None else NO_RATE_TEXT.lower(),
                 signed(change) if change is not None else "—",
             ][column]
         is_change = column == self.change_column

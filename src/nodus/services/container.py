@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
-from nodus import __version__
+from nodus import USER_AGENT, __version__
 from nodus.database.database import Database
 from nodus.database.repositories.account_group_repository import AccountGroupRepository
 from nodus.database.repositories.account_repository import AccountRepository
@@ -81,7 +82,7 @@ class Services:
     undo: UndoService
 
     @classmethod
-    def create(cls, database: Database) -> Services:
+    def create(cls, database: Database, backups_dir: Path) -> Services:
         account_repository = AccountRepository(database)
         category_repository = CategoryRepository(database)
         accounts = AccountService(database, account_repository, ValueAdjustmentRepository(database))
@@ -115,7 +116,7 @@ class Services:
             undo,
             seen,
         )
-        backups = BackupService(database, database.path.parent / "backups", settings)
+        backups = BackupService(database, backups_dir, settings)
         dashboard = DashboardService(transactions, categories, exchange_rates)
         budgets = BudgetService(
             database, BudgetRepository(database), categories, dashboard, transactions
@@ -142,9 +143,7 @@ class Services:
             updates=UpdateService.for_this_program(__version__),
             backups=backups,
             export=ExportService(accounts, categories, payees, transactions),
-            rate_feed=RateFeedService(
-                exchange_rates, settings, accounts, downloader(f"Nodus/{__version__}")
-            ),
+            rate_feed=RateFeedService(exchange_rates, settings, accounts, downloader(USER_AGENT)),
             notifications=NotificationService(
                 settings, seen, accounts, exchange_rates, backups, recurring, budgets, goals
             ),

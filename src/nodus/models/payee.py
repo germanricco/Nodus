@@ -2,23 +2,10 @@
 
 from __future__ import annotations
 
-import re
-import unicodedata
 from dataclasses import dataclass, field
 from datetime import date
 
-_NOT_ALPHANUMERIC = re.compile(r"[^0-9a-z]+")
-
-
-def normalize_name(name: str) -> str:
-    """The form two names must share to be the same payee.
-
-    Lowercase, without accents, with any sign turned into a space and spaces collapsed, so
-    "Café  Martínez" and "cafe-martinez" match.
-    """
-    decomposed = unicodedata.normalize("NFKD", name.casefold())
-    plain = "".join(char for char in decomposed if not unicodedata.combining(char))
-    return _NOT_ALPHANUMERIC.sub(" ", plain).strip()
+from nodus.models.names import normalize_name
 
 
 @dataclass(frozen=True)

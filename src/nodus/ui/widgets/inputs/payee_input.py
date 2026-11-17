@@ -7,7 +7,7 @@ from collections.abc import Callable
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QLabel, QLineEdit, QVBoxLayout, QWidget
 
-from nodus.models.payee import normalize_name
+from nodus.models.names import normalize_name
 from nodus.models.transaction import TransactionType
 from nodus.services.classification.payee_service import PayeeService
 from nodus.ui.theme.design import Space

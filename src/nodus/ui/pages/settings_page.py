@@ -32,15 +32,16 @@ from nodus.services.errors import BackupError, ValidationError
 from nodus.services.external.rate_feed_service import SOURCES
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.confirm import confirm
-from nodus.ui.dialogs.export import export_transactions
+from nodus.ui.dialogs.export import all_transactions_filename, export_transactions
 from nodus.ui.dialogs.external_backup import save_copy_outside
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.user_error import user_error
 from nodus.ui.event_bus import EventBus
+from nodus.ui.navigation import PageId
 from nodus.ui.pages.base.page import Page
 from nodus.ui.rate_updater import RateUpdater, updated_text
 from nodus.ui.text.formatting import format_date
-from nodus.ui.text.labels import rate_text
+from nodus.ui.text.labels import NO_RATE_TEXT, TOUR_LABEL, rate_text
 from nodus.ui.theme.design import Layout, Line, Space, set_reduced_motion
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -60,12 +61,10 @@ from nodus.ui.widgets.toast import show_toast
 THEME_MODES = [ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM]
 THEME_LABELS = ["Claro", "Oscuro", "Según el sistema"]
 # Segments of the rate currency selector, one per FOREIGN_CURRENCIES entry.
-RATE_CURRENCY_LABELS = ["Dólar", "Euro", "Peso chileno"]
+RATE_CURRENCY_LABELS = [c.name_singular.capitalize() for c in FOREIGN_CURRENCIES]
 # What the rate form asks for, per currency.
 RATE_PLACEHOLDERS = {
-    Currency.USD: "Pesos por dólar",
-    Currency.EUR: "Pesos por euro",
-    Currency.CLP: "Pesos por peso chileno",
+    c: f"{HOME_CURRENCY.name_plural.capitalize()} por {c.name_singular}" for c in FOREIGN_CURRENCIES
 }
 
 
@@ -125,7 +124,7 @@ class SettingsPage(Page):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__("Ajustes")
+        super().__init__(PageId.SETTINGS.label)
         self._services = services
         self._event_bus = event_bus
         self._theme_manager = theme_manager
@@ -247,7 +246,7 @@ class SettingsPage(Page):
         card.body.addSpacing(Space.XS)
 
         self.rate_date_input = DateInput()
-        self.rate_value_input = AmountInput(Currency.ARS)
+        self.rate_value_input = AmountInput(HOME_CURRENCY)
         self.rate_value_input.setFixedWidth(Layout.NUMBER_FIELD_WIDTH)
         self.save_rate_button = QPushButton("Guardar cotización")
         self.save_rate_button.setObjectName("PrimaryButton")
@@ -354,7 +353,7 @@ class SettingsPage(Page):
             currency is not Currency.USD and self._services.rate_feed.is_automatic()
         )
         current = self._services.exchange_rates.rate_on(today, currency)
-        self.current_rate_label.setText(format_rate(current) if current else "Sin cotización")
+        self.current_rate_label.setText(format_rate(current) if current else NO_RATE_TEXT)
         self.current_rate_date_label.setText(format_date(current.rate_date) if current else "")
         clear_layout(self._history)
         history = self._services.exchange_rates.history(currency)
@@ -490,7 +489,7 @@ class SettingsPage(Page):
             self.window(),
             self._services,
             self._services.transactions.list_transactions(TransactionFilter()),
-            f"nodus-transacciones-{date.today():%Y-%m-%d}.csv",
+            all_transactions_filename(date.today()),
             button=self.export_all_button,
         )
 
@@ -544,7 +543,7 @@ class SettingsPage(Page):
         news_row = SettingRow("Novedades", "Lo que trajo cada versión.")
         news_row.add(secondary_button("Ver novedades", self.show_news))
         tour_row = SettingRow("Recorrido guiado", "Dónde está cada cosa, en un minuto.")
-        tour_row.add(secondary_button("Ver el recorrido", self.tour_requested.emit))
+        tour_row.add(secondary_button(TOUR_LABEL, self.tour_requested.emit))
         help_row = SettingRow("Ayuda", "Cómo se hace cada cosa y los atajos. También con F1.")
         help_row.add(secondary_button("Abrir la ayuda", self.help_requested.emit))
         feedback_row = SettingRow("Comentarios", "Una idea o un error, sin crear una cuenta.")

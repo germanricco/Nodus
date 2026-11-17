@@ -10,7 +10,7 @@ from nodus.database.repositories.base import LIKE, Repository, contains
 from nodus.models.currency import Currency
 from nodus.models.installment_plan import Installment
 from nodus.models.money import Money
-from nodus.models.payee import normalize_name
+from nodus.models.names import normalize_name
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 

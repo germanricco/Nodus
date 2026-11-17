@@ -13,7 +13,15 @@ from nodus.database.database import Database, DatabaseError, latest_schema_versi
 from nodus.services.app.settings_service import SettingsService
 from nodus.services.errors import BackupError, ValidationError
 
+# A copy is named after its day; ``_DAILY_NAME`` reads the day back, for the old ones.
 _DAILY_NAME = re.compile(r"^nodus-(\d{4}-\d{2}-\d{2})\.db$")
+
+
+def daily_name(day: date) -> str:
+    """ "nodus-2026-11-17.db": the copy of ``day``, in the computer or outside it."""
+    return f"nodus-{day.isoformat()}.db"
+
+
 # The reminder to save a copy outside the computer opens on the last days of each month.
 REMINDER_DAYS = 3
 
@@ -52,7 +60,7 @@ class BackupService:
 
         Raises ``BackupError`` if the copy cannot be written.
         """
-        destination = self.backups_dir / f"nodus-{today.isoformat()}.db"
+        destination = self.backups_dir / daily_name(today)
         try:
             self._copy_to(destination)
             self._prune()
@@ -90,7 +98,7 @@ class BackupService:
 
         Raises ``BackupError`` if the copy cannot be written (a pen drive taken out).
         """
-        destination = folder / f"nodus-{today.isoformat()}.db"
+        destination = folder / daily_name(today)
         try:
             self._database.backup_to(destination)
         except (OSError, sqlite3.Error) as error:

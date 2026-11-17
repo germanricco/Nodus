@@ -10,7 +10,7 @@ from datetime import date
 from typing import TypeVar
 
 from nodus.models.money import Money
-from nodus.models.payee import normalize_name
+from nodus.models.names import normalize_name
 from nodus.models.period import FIRST_DAY, LAST_DAY
 
 T = TypeVar("T")

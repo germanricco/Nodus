@@ -13,6 +13,7 @@ from datetime import date
 from enum import Enum
 
 from nodus.models.category import Category
+from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
 from nodus.models.payee import Payee
 from nodus.models.period import Month, Period
@@ -22,7 +23,6 @@ from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.classification.category_service import CategoryService
 from nodus.services.classification.payee_service import PayeeService
 from nodus.services.reports.dashboard_service import (
-    SUMMARY_CURRENCY,
     CategoryTotal,
     ConvertedMovement,
     MonthFlow,
@@ -108,8 +108,8 @@ class Trends:
         that month, not that month spread over the whole period."""
         counted = [m.total for m in self.months if m.month in self.history]
         if not counted:
-            return Money.zero(SUMMARY_CURRENCY)
-        return Money(round(_sum(counted).cents / len(counted)), SUMMARY_CURRENCY)
+            return Money.zero(HOME_CURRENCY)
+        return Money(round(_sum(counted).cents / len(counted)), HOME_CURRENCY)
 
 
 @dataclass(frozen=True)
@@ -143,7 +143,7 @@ class CashFlowReport:
 
 
 def _sum(amounts) -> Money:
-    return sum(amounts, Money.zero(SUMMARY_CURRENCY))
+    return sum(amounts, Money.zero(HOME_CURRENCY))
 
 
 class AnalysisService:
@@ -217,7 +217,7 @@ class AnalysisService:
         movements: list[ConvertedMovement], categories: dict[int, Category]
     ) -> list[CategoryTotal]:
         """Totals by top-level category, subcategories included, largest first."""
-        totals: dict[int, Money] = defaultdict(lambda: Money.zero(SUMMARY_CURRENCY))
+        totals: dict[int, Money] = defaultdict(lambda: Money.zero(HOME_CURRENCY))
         for movement in movements:
             category = categories[movement.category_id]
             totals[category.parent_id or category.id] += movement.amount
@@ -225,7 +225,7 @@ class AnalysisService:
 
     def _by_payee(self, movements: list[ConvertedMovement]) -> list[PayeeTotal]:
         payees = {p.id: p for p in self._payees.list_payees()}
-        totals: dict[int | None, Money] = defaultdict(lambda: Money.zero(SUMMARY_CURRENCY))
+        totals: dict[int | None, Money] = defaultdict(lambda: Money.zero(HOME_CURRENCY))
         counts: dict[int | None, int] = defaultdict(int)
         for movement in movements:
             totals[movement.transaction.payee_id] += movement.amount
@@ -242,7 +242,7 @@ class AnalysisService:
     def _by_tag(self, movements: list[ConvertedMovement]) -> list[TagTotal]:
         tags_by_transaction = self._transactions.tags_for([m.transaction.id for m in movements])
         tags: dict[int, Tag] = {}
-        totals: dict[int, Money] = defaultdict(lambda: Money.zero(SUMMARY_CURRENCY))
+        totals: dict[int, Money] = defaultdict(lambda: Money.zero(HOME_CURRENCY))
         counts: dict[int, int] = defaultdict(int)
         for movement in movements:
             for tag in tags_by_transaction.get(movement.transaction.id, []):

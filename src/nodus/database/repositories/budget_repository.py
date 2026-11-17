@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from nodus.database.repositories.base import Repository
-from nodus.models.currency import Currency
+from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
 from nodus.models.period import Month
 
@@ -15,8 +15,6 @@ def month_key(month: Month) -> str:
 
 class BudgetRepository(Repository):
     """Limits are always in pesos, so only their cents are stored."""
-
-    CURRENCY = Currency.ARS
 
     def set(self, category_id: int, month: Month, amount: Money | None) -> None:
         """Sets the limit of ``category_id`` from ``month`` on; None removes it from then."""
@@ -36,4 +34,4 @@ class BudgetRepository(Repository):
             " AND b.amount_cents IS NOT NULL",
             (month_key(month),),
         )
-        return {row["category_id"]: Money(row["amount_cents"], self.CURRENCY) for row in rows}
+        return {row["category_id"]: Money(row["amount_cents"], HOME_CURRENCY) for row in rows}

@@ -6,15 +6,14 @@ import json
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from nodus.links import DOLARAPI_URL, QUOTES_URL
 from nodus.models.currency import Currency
 from nodus.services.accounts.account_service import AccountService
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.settings_service import SettingsService
 from nodus.services.external.http import Fetch
 
-DOLARAPI_URL = "https://dolarapi.com/v1/dolares"
-# Official rates of the other currencies DolarApi publishes, keyed by "moneda".
-QUOTES_URL = "https://dolarapi.com/v1/cotizaciones"
+# QUOTES_URL lists the official rates of the other currencies, keyed by "moneda".
 MANUAL = "manual"
 # Where the dollar rate comes from, in the order the settings show them. Keys are
 # DolarApi's "casa" codes; MEP is listed there as "bolsa".

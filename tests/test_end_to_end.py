@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from factories import ars, light_theme, usd
+from factories import ars, light_theme, services_for, usd
 from PySide6.QtWidgets import QLabel
 
 from nodus.database.database import Database
@@ -10,7 +10,6 @@ from nodus.models.currency import Currency
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.services.container import Services
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.transaction_dialog import (
     EXPENSE_MODE,
@@ -57,7 +56,7 @@ def record(qtbot, services, event_bus, mode: int, **fields) -> None:
 def test_first_month_with_nodus(qtbot, qapp, tmp_path):
     today = date.today()
     database = Database.open(tmp_path / "nodus.db")
-    services, event_bus = Services.create(database), EventBus()
+    services, event_bus = services_for(database), EventBus()
     services.settings.set_tour_offered(True)  # its offer is a question of its own test
     theme_manager = ThemeManager(qapp, ThemeMode.LIGHT)
     window = MainWindow(services, event_bus, theme_manager)
@@ -91,7 +90,7 @@ def test_first_month_with_nodus(qtbot, qapp, tmp_path):
     # Everything is still there after reopening the file.
     reopened = Database.open(tmp_path / "nodus.db")
     try:
-        again = Services.create(reopened)
+        again = services_for(reopened)
         assert again.accounts.balances() == balances
         assert again.net_worth.net_worth(today).total_in[Currency.ARS] == ars("1514999.50")
         assert again.settings.theme_preference() == "dark"

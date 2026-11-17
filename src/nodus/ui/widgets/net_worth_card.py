@@ -9,13 +9,13 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWi
 
 from nodus.models.currency import TOTAL_CURRENCIES, Currency
 from nodus.models.money import Money
-from nodus.models.period import Month, Period
+from nodus.models.period import Month, Period, format_day_month
 from nodus.services.container import Services
 from nodus.services.reports.dashboard_service import relative_change
 from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint
 from nodus.ui.text.formatting import format_date
-from nodus.ui.text.labels import HELD_IN_LABELS, rate_text
-from nodus.ui.theme.design import Space
+from nodus.ui.text.labels import HELD_IN_LABELS, NO_RATE_TEXT, rate_text
+from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
@@ -33,7 +33,7 @@ from nodus.ui.widgets.style import set_style_property
 CURRENCIES = list(TOTAL_CURRENCIES)
 CURRENCY_LABELS = [currency.symbol for currency in CURRENCIES]
 # Which chart series each currency takes, so a currency keeps its color everywhere.
-SERIES_ORDER = (Currency.ARS, Currency.USD, Currency.EUR, Currency.CLP)
+SERIES_ORDER = tuple(Currency)
 CHANGE_CAPTION = "vs. inicio del período"
 
 
@@ -66,7 +66,7 @@ class CurrencyLegend(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.S)
-        self.dot = ColorDot(size=10)
+        self.dot = ColorDot(size=ControlSize.DOT_SMALL)
         name = QLabel(HELD_IN_LABELS[currency])
         set_style_property(name, "muted", True)
         self.amount = AnimatedMoneyLabel()
@@ -273,11 +273,13 @@ class NetWorthCard(Card):
                 continue
             rate = self._services.exchange_rates.rate_on(day, held)
             if rate is not None:
-                texts.append(f"{rate_text(held, rate.quote, rate.rate)} · {rate.rate_date:%d/%m}")
+                texts.append(
+                    f"{rate_text(held, rate.quote, rate.rate)} · {format_day_month(rate.rate_date)}"
+                )
             elif held is Currency.USD:
-                texts.append("Sin cotización")
+                texts.append(NO_RATE_TEXT)
             else:
-                texts.append(f"{held.symbol} sin cotización")
+                texts.append(f"{held.symbol} {NO_RATE_TEXT.lower()}")
         self.rate_label.setText("    ".join(texts))
 
     def _show_trend(
@@ -358,7 +360,7 @@ class NetWorthCard(Card):
         return "" if self._hidden else format_compact(cents, self.currency())
 
     def _format_axis_day(self, day: date) -> str:
-        return f"{day:%d/%m}" if self._daily else Month.of(day).short_name
+        return format_day_month(day) if self._daily else Month.of(day).short_name
 
     # Reactions
 

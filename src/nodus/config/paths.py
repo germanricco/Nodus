@@ -47,6 +47,11 @@ class AppPaths:
     def database_path(self) -> Path:
         return self.data_dir / self.DATABASE_FILENAME
 
+    @property
+    def backups_dir(self) -> Path:
+        """Where the daily copies are kept, next to the data."""
+        return self.data_dir / "backups"
+
     def ensure_data_dir(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)
 

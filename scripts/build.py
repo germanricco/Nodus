@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 from nodus import APP_USER_MODEL_ID, __version__
+from nodus.links import REPOSITORY_URL
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGING = ROOT / "packaging"
@@ -64,6 +65,7 @@ def build_installer(iscc: Path) -> Path:
             str(iscc),
             f"/DAppVersion={__version__}",
             f"/DAppUserModelID={APP_USER_MODEL_ID}",
+            f"/DRepositoryURL={REPOSITORY_URL}",
             f"/O{DIST}",
             str(PACKAGING / "nodus.iss"),
         ],

@@ -12,7 +12,7 @@ from datetime import date
 from importlib import resources
 from pathlib import Path
 
-from nodus.services.external.update_service import parse_version
+from nodus.models.version import parse_version
 
 CHANGELOG_NAME = "CHANGELOG.md"
 # "## 1.1.0 — 2026-11-07"; the date is optional while a version is being written.

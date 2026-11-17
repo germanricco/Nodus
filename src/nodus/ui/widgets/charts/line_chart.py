@@ -17,6 +17,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QWidget
 
+from nodus.models.period import format_date
 from nodus.ui.theme.design import Chart, Line, Opacity, Space, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.charts.chart_base import (
@@ -380,12 +381,8 @@ class LineChart(ColumnHoverChart):
         painter.drawEllipse(point, 6, 6)
         hovered = self._points[self.hover_index]
         self.paint_tooltip(
-            painter, point, self._format_day_long(hovered.day), [self._format_value(hovered.value)]
+            painter, point, format_date(hovered.day), [self._format_value(hovered.value)]
         )
-
-    @staticmethod
-    def _format_day_long(day: date) -> str:
-        return day.strftime("%d/%m/%Y")
 
     # Mouse
 

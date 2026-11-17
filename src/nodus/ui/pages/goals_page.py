@@ -138,7 +138,7 @@ class GoalsPage(Page):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__("Metas")
+        super().__init__(PageId.GOALS.label)
         self._services = services
         self._event_bus = event_bus
         self._theme_manager = theme_manager

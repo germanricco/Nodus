@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 
 from nodus.ui.shell.shortcuts import SHORTCUT_GROUPS, SHORTCUTS
 from nodus.ui.text.help_texts import HELP_SECTIONS, HELP_TOPICS, TOPICS_BY_KEY, HelpTopic
+from nodus.ui.text.labels import TOUR_LABEL
 from nodus.ui.theme.design import IconSize, Layout, Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
@@ -200,7 +201,7 @@ class HelpPanel(QFrame):
 
         foot = QHBoxLayout()
         foot.setSpacing(Space.S)
-        self.tour_button = self._foot_button("Ver el recorrido", self.tour_requested)
+        self.tour_button = self._foot_button(TOUR_LABEL, self.tour_requested)
         foot.addWidget(self.tour_button)
         foot.addStretch()
         layout.addLayout(foot)

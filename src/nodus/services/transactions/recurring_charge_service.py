@@ -11,7 +11,7 @@ from nodus.database.database import Database
 from nodus.database.repositories.recurring_charge_repository import RecurringChargeRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
 from nodus.models.account import Account
-from nodus.models.currency import Currency
+from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.money import Money
 from nodus.models.recurring_charge import Frequency, RecurringCharge
 from nodus.models.transaction import Transaction, TransactionType
@@ -68,8 +68,6 @@ def _times_twelve(money: Money) -> Money:
 
 
 class RecurringChargeService:
-    CURRENCY = Currency.ARS
-
     def __init__(
         self,
         database: Database,
@@ -216,12 +214,12 @@ class RecurringChargeService:
         self._charges.update(before)
 
     def summary(self, today: date) -> RecurringSummary:
-        monthly = Money.zero(self.CURRENCY)
+        monthly = Money.zero(HOME_CURRENCY)
         unconverted = {currency: Money.zero(currency) for currency in Currency}
         active = [c for c in self._charges.list() if c.is_active]
         for charge in active:
             amount = charge.monthly_amount(self.estimated_payment(charge, today))
-            converted = self._exchange_rates.convert(amount, self.CURRENCY, today)
+            converted = self._exchange_rates.convert(amount, HOME_CURRENCY, today)
             if converted is None:
                 unconverted[amount.currency] += amount
             else:
@@ -244,7 +242,7 @@ class RecurringChargeService:
 
     @staticmethod
     def _require_dollars_from_pesos(amount: Money, account: Account) -> None:
-        if (amount.currency, account.currency) != (Currency.USD, Currency.ARS):
+        if (amount.currency, account.currency) != (Currency.USD, HOME_CURRENCY):
             raise ValidationError(
                 f"Un cargo en {amount.currency.value} se paga desde una cuenta en"
                 f" {amount.currency.value}; solo los cargos en dólares pueden pagarse en pesos."

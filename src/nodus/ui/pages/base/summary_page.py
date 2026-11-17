@@ -17,7 +17,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QLineEdit
 
 from nodus.models.money import Money
-from nodus.models.payee import normalize_name
+from nodus.models.names import normalize_name
 from nodus.services.sorting import name_sort_key
 from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.base.page import Page

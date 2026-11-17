@@ -5,8 +5,10 @@ from __future__ import annotations
 import sys
 from typing import Protocol
 
+from nodus import APP_NAME, is_installed
+
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-VALUE_NAME = "Nodus"
+VALUE_NAME = APP_NAME
 
 
 class StartupRegistry(Protocol):
@@ -73,8 +75,7 @@ class StartupService:
     @classmethod
     def for_this_program(cls) -> StartupService:
         """Available only when running as the installed program on Windows."""
-        installed = getattr(sys, "frozen", False) and sys.platform == "win32"
-        return cls(WindowsRunKey() if installed else None, sys.executable)
+        return cls(WindowsRunKey() if is_installed() else None, sys.executable)
 
     def is_available(self) -> bool:
         return self._registry is not None

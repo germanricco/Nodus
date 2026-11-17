@@ -11,11 +11,10 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-from nodus.models.period import Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
-from nodus.ui.dialogs.export import export_transactions
+from nodus.ui.dialogs.export import export_filename, export_transactions
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.base.page import Page
@@ -42,13 +41,6 @@ TYPE_FILTERS = {
 }
 
 
-def export_filename(period: Period) -> str:
-    """ "nodus-transacciones-2026-11.csv" for a month, start and end dates otherwise."""
-    if period.is_whole_months and period.first_month == period.last_month:
-        return f"nodus-transacciones-{period.start:%Y-%m}.csv"
-    return f"nodus-transacciones-{period.start:%Y-%m-%d}_{period.end:%Y-%m-%d}.csv"
-
-
 class TransactionsPage(Page):
     """The movements of a period, newest first, narrowed by account, category, payee, tag,
     type or text, with what they add up to at the foot.
@@ -63,7 +55,7 @@ class TransactionsPage(Page):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__("Transacciones")
+        super().__init__(PageId.TRANSACTIONS.label)
         self._services = services
         self._event_bus = event_bus
         self._theme_manager = theme_manager

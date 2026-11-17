@@ -3,23 +3,8 @@ from datetime import date
 import pytest
 from factories import ars
 
-from nodus.models.payee import Payee, normalize_name
+from nodus.models.payee import Payee
 from nodus.models.transaction import Transaction, TransactionType
-
-
-@pytest.mark.parametrize(
-    ("name", "expected"),
-    [
-        ("Coto", "coto"),
-        ("Café  Martínez", "cafe martinez"),
-        ("  Verdulería «Don José»! ", "verduleria don jose"),
-        ("Mercado-Libre S.A.", "mercado libre s a"),
-        ("ÑANDÚ", "nandu"),
-        ("¡¿!?", ""),
-    ],
-)
-def test_normalize_name(name, expected):
-    assert normalize_name(name) == expected
 
 
 def test_payee_exposes_its_normalized_name():

@@ -17,8 +17,9 @@ from nodus.services.reports.dashboard_service import MonthFlow
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.analysis.analysis_page import AnalysisPage
 from nodus.ui.pages.analysis.cash_flow_view import CashFlowView, months_to_list
-from nodus.ui.pages.analysis.net_worth_view import NO_RATE_TEXT, NetWorthView
+from nodus.ui.pages.analysis.net_worth_view import NetWorthView
 from nodus.ui.pages.analysis.trends_view import NO_PAYEE_LABEL, TrendsView
+from nodus.ui.text.labels import NO_RATE_TEXT
 
 EXPENSE = TransactionType.EXPENSE
 SEP_NOV = Period.of_months(Month(2026, 9), Month(2026, 11))
@@ -279,7 +280,7 @@ def test_net_worth_table_follows_the_currency(services, dollars, filled):
     view.card.currency_input.set_index(1)
 
     assert view.model.headerData(3, Qt.Orientation.Horizontal) == "Total en US$"
-    assert table_row(view, 0)[3] == NO_RATE_TEXT  # no exchange rate loaded
+    assert table_row(view, 0)[3] == NO_RATE_TEXT.lower()  # no exchange rate loaded
     assert table_row(view, 0)[4] == "—"
 
 

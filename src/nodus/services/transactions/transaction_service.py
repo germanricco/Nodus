@@ -19,8 +19,8 @@ from nodus.database.repositories.transaction_repository import (
 from nodus.models.account import Account
 from nodus.models.bulk_changes import BulkChanges
 from nodus.models.money import Money
-from nodus.models.palette import palette_color
-from nodus.models.payee import Payee, normalize_name
+from nodus.models.names import normalize_name
+from nodus.models.payee import Payee
 from nodus.models.period import Month, Period
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction, TransactionType, Transfer
@@ -454,8 +454,7 @@ class TransactionService:
                 continue
             tag = self._tags.find_by_normalized(normalized)
             if tag is None:
-                color = palette_color(len(self._tags.list()))
-                tag = self._tags.add(Tag(None, name.strip(), color))
+                tag = self._tags.add(Tag(None, name.strip(), self._tags.next_color()))
             tag_ids.append(tag.id)
         return tag_ids
 

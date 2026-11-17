@@ -8,6 +8,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 
 from nodus.database.repositories.base import Repository
+from nodus.models.palette import palette_color
 from nodus.models.tag import Tag
 
 
@@ -35,6 +36,10 @@ class TagRepository(Repository):
 
     def list(self) -> list[Tag]:
         return [self._from_row(row) for row in self._fetch_all("SELECT * FROM tags")]
+
+    def next_color(self) -> str:
+        """The preset color for a new tag: the palette, in order, one per tag stored."""
+        return palette_color(self._fetch_one("SELECT COUNT(*) FROM tags")[0])
 
     def delete(self, tag_id: int) -> None:
         self._execute("DELETE FROM tags WHERE id = ?", (tag_id,))

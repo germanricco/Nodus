@@ -10,8 +10,7 @@ from datetime import date
 from nodus.database.database import Database
 from nodus.database.repositories.tag_repository import TagRepository
 from nodus.models.money import Money
-from nodus.models.palette import palette_color
-from nodus.models.payee import normalize_name
+from nodus.models.names import normalize_name
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction
 from nodus.models.transaction_filter import TransactionFilter
@@ -69,9 +68,13 @@ class TagService:
         """Tags whose name contains ``text``, those starting with it first."""
         return rank_matches(self._tags.list(), text)
 
+    def next_color(self) -> str:
+        """The color a new tag starts with, unless one is chosen."""
+        return self._tags.next_color()
+
     def create(self, name: str, color: str | None = None) -> Tag:
         """A new tag; without ``color``, the next preset one."""
-        color = color or palette_color(len(self._tags.list()))
+        color = color or self.next_color()
         tag = self._checked(Tag(None, clean_name(name), color))
         with self._database.transaction():
             return self._tags.add(tag)

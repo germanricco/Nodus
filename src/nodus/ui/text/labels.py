@@ -19,20 +19,15 @@ ACCOUNT_TYPE_LABELS = {
     AccountType.INVESTMENT: "Inversión",
 }
 
-CURRENCY_LABELS = {
-    Currency.ARS: "Pesos (ARS)",
-    Currency.USD: "Dólares (USD)",
-    Currency.EUR: "Euros (EUR)",
-    Currency.CLP: "Pesos chilenos (CLP)",
-}
+CURRENCY_LABELS = {c: f"{c.name_plural.capitalize()} ({c.value})" for c in Currency}
 
 # Where each part of the net worth is held, as the net worth card names it.
-HELD_IN_LABELS = {
-    Currency.ARS: "En pesos",
-    Currency.USD: "En dólares",
-    Currency.EUR: "En euros",
-    Currency.CLP: "En pesos chilenos",
-}
+HELD_IN_LABELS = {c: f"En {c.name_plural}" for c in Currency}
+
+# Shown where an amount cannot be converted for lack of an exchange rate.
+NO_RATE_TEXT = "Sin cotización"
+# The button that starts the guided tour, wherever it is offered.
+TOUR_LABEL = "Ver el recorrido"
 
 TRANSACTION_TYPE_LABELS = {
     TransactionType.EXPENSE: "Gasto",
@@ -83,12 +78,12 @@ def rate_text(base: Currency, quote: Currency, value: Decimal) -> str:
 
 def movements_text(count: int) -> str:
     """ "1 movimiento", "3 movimientos"."""
-    return "1 movimiento" if count == 1 else f"{count} movimientos"
+    return plural(count, "movimiento", "movimientos")
 
 
 def transactions_text(count: int) -> str:
     """ "1 transacción", "3 transacciones"."""
-    return "1 transacción" if count == 1 else f"{count} transacciones"
+    return plural(count, "transacción", "transacciones")
 
 
 def unconverted_note(count: int) -> str:
@@ -104,4 +99,9 @@ def days_left_text(month: Month, today: date) -> str | None:
     days = month.end.day - today.day
     if days == 0:
         return "Último día"
-    return "1 día restante" if days == 1 else f"{days} días restantes"
+    return plural(days, "día restante", "días restantes")
+
+
+def plural(count: int, one: str, many: str) -> str:
+    """``count`` and the word that agrees with it: "1 cuota", "3 cuotas"."""
+    return f"{count} {one if count == 1 else many}"

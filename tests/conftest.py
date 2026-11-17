@@ -10,9 +10,10 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 if sys.platform == "win32":
     os.environ.setdefault("QT_QPA_FONTDIR", os.path.join(os.environ["WINDIR"], "Fonts"))
 
-from factories import ars, eur, usd  # noqa: E402
+from factories import ars, eur, services_for, usd  # noqa: E402
 from qt_cleanup import flush_deleted  # noqa: E402
 
+from nodus.config.paths import AppPaths
 from nodus.database.database import Database  # noqa: E402
 from nodus.models.account import Account, AccountType  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
@@ -48,14 +49,14 @@ def animations():
 @pytest.fixture
 def database(tmp_path):
     """A freshly migrated database in a temporary folder."""
-    db = Database.open(tmp_path / "nodus.db")
+    db = Database.open(AppPaths(tmp_path).database_path)
     yield db
     db.close()
 
 
 @pytest.fixture
 def services(database) -> Services:
-    return Services.create(database)
+    return services_for(database)
 
 
 @pytest.fixture

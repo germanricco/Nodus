@@ -18,7 +18,7 @@ QMainWindow, #ContentArea, #PageStack {
 
 #Sidebar {
     background: $sidebar;
-    border-right: 1px solid $border;
+    border-right: $line_thin solid $border;
 }
 
 #SidebarLogo {
@@ -29,7 +29,7 @@ QMainWindow, #ContentArea, #PageStack {
 #NavButton {
     text-align: left;
     padding: $space_s $space_m;
-    border: 1px solid transparent;
+    border: $line_thin solid transparent;
     border-radius: $radius_l;
     background: transparent;
 }
@@ -102,7 +102,7 @@ QMainWindow, #ContentArea, #PageStack {
 
 #TopBar {
     background: $background;
-    border-bottom: 1px solid $border;
+    border-bottom: $line_thin solid $border;
 }
 
 #PageTitle {
@@ -112,14 +112,14 @@ QMainWindow, #ContentArea, #PageStack {
 
 #Card {
     background: $surface;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: $radius_xl;
 }
 
 /* The guided tour's bubble (widgets/coach_marks.py), a card raised over the page. */
 #CoachBubble {
     background: $surface;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: $radius_xl;
 }
 
@@ -229,7 +229,7 @@ QMainWindow, #ContentArea, #PageStack {
 
 QPushButton#IconButton {
     background: $surface;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: $radius_l;
 }
 
@@ -260,7 +260,7 @@ QFrame#NotificationPanel,
 QFrame#ColorWheelPopup,
 QFrame#Toast {
     background: $surface;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: $radius_xl;
 }
 
@@ -285,7 +285,7 @@ QPushButton#PrimaryButton:hover {
 
 QPushButton#SecondaryButton, QPushButton#SmallButton {
     background: $surface;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: $radius_l;
     padding: $space_s $space_l;
 }
@@ -299,7 +299,7 @@ QPushButton#SmallButton {
 QPushButton#DangerButton {
     background: $surface;
     color: $expense;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: $radius_l;
     padding: $space_s $space_l;
 }
@@ -380,7 +380,7 @@ QPushButton#MoreButton:hover, QPushButton#MoreButton:pressed {
 /* Where an item is deleted, apart from its everyday actions. */
 #DangerZone {
     background: $surface;
-    border: 1px solid $expense;
+    border: $line_thin solid $expense;
     border-radius: $radius_xl;
 }
 
@@ -417,7 +417,7 @@ QTextBrowser#NewsText {
    with their page's icon, and each shortcut's keys drawn as keys. */
 #HelpPanel {
     background: $surface;
-    border-left: 1px solid $border;
+    border-left: $line_thin solid $border;
 }
 
 /* Its scrolling bodies show the panel's surface, not the viewport's own color. */
@@ -458,7 +458,7 @@ QPushButton#HelpTopic {
 
 #KeyCap {
     background: $background;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-bottom-width: $line_thick; /* a key stands up from the page */
     border-radius: $radius_s;
     padding: $space_xxs $space_s;
@@ -467,7 +467,7 @@ QPushButton#HelpTopic {
 
 /* A page the open help topic talks about, lit up in the sidebar. */
 #NavButton[spotlight="true"] {
-    border: 1px solid $accent;
+    border: $line_thin solid $accent;
 }
 
 #ErrorLabel {
@@ -494,20 +494,20 @@ QPushButton#HelpTopic {
 
 QLineEdit, QComboBox, QDateEdit {
     background: $background;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: $radius_m;
     padding: $space_xs $space_s;
     min-height: $field_height;
 }
 
 QLineEdit:focus, QComboBox:focus, QDateEdit:focus {
-    border: 1px solid $accent;
+    border: $line_thin solid $accent;
 }
 
 /* After :focus, so a field in error keeps its red border while it is being fixed. */
 QLineEdit[error="true"], QComboBox[error="true"], QDateEdit[error="true"],
 QLineEdit[error="true"]:focus, QComboBox[error="true"]:focus, QDateEdit[error="true"]:focus {
-    border: 1px solid $expense;
+    border: $line_thin solid $expense;
 }
 
 QLineEdit:disabled, QComboBox:disabled {
@@ -537,7 +537,7 @@ QComboBox[filter="idle"] {
 }
 
 QComboBox[filter="active"] {
-    border: 1px solid $accent;
+    border: $line_thin solid $accent;
 }
 
 QComboBox[filter] QAbstractItemView#ListPopup {
@@ -559,7 +559,7 @@ QComboBox[empty="true"] QAbstractItemView#ListPopup {
    menus, so the first and last options never touch the frame. */
 QAbstractItemView#ListPopup {
     background: $surface;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     padding: $popup_padding;
     outline: none;
     selection-background-color: $accent_soft;
@@ -590,23 +590,23 @@ QCheckBox:disabled {
 QCheckBox::indicator {
     width: $icon_m;
     height: $icon_m;
-    border: 1px solid $text_muted;
+    border: $line_thin solid $text_muted;
     border-radius: $radius_s;
     background: $background;
 }
 
 QCheckBox::indicator:hover {
-    border: 1px solid $accent;
+    border: $line_thin solid $accent;
 }
 
 QCheckBox::indicator:checked {
-    border: 1px solid $accent;
+    border: $line_thin solid $accent;
     background: $accent;
     image: url($icons/check.svg);
 }
 
 QCheckBox::indicator:disabled {
-    border: 1px solid $border;
+    border: $line_thin solid $border;
 }
 
 /* Progress bar (downloading an update) */
@@ -627,7 +627,7 @@ QProgressBar::chunk {
 
 #SegmentedControl {
     background: $background;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: $radius_l;
 }
 
@@ -664,7 +664,7 @@ QPushButton#Segment:focus {
 QFrame#TabBar {
     background: transparent;
     border: none;
-    border-bottom: 1px solid $border;
+    border-bottom: $line_thin solid $border;
 }
 
 QPushButton#Tab {
@@ -696,7 +696,7 @@ QPushButton#Tab:focus {
 
 QPushButton#PeriodButton {
     background: transparent;
-    border: 1px solid transparent;
+    border: $line_thin solid transparent;
     border-radius: $radius_l;
     padding: $space_xs $space_xxl $space_xs $space_m;
     font-weight: $strong_weight;
@@ -719,7 +719,7 @@ QPushButton#PeriodButton::menu-indicator {
 
 QMenu {
     background: $surface;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: $popup_radius;
     padding: $popup_padding;
 }
@@ -762,14 +762,14 @@ QTableView {
 
 QTableView::item {
     padding: 0 $space_s;
-    border-bottom: 1px solid $border;
+    border-bottom: $line_thin solid $border;
 }
 
 QHeaderView::section {
     background: $surface;
     color: $text_muted;
     border: none;
-    border-bottom: 1px solid $border;
+    border-bottom: $line_thin solid $border;
     padding: $space_s;
     font-size: $label_size;
     font-weight: $label_weight;
@@ -795,7 +795,7 @@ QCalendarWidget QTableView::item {
 /* A date field's calendar opens over the page like a list (widgets/date_input.py): the
    same frame, and the chosen day in the colors of a list's chosen option. */
 QCalendarWidget {
-    border: 1px solid $border;
+    border: $line_thin solid $border;
 }
 
 QCalendarWidget QTableView {
@@ -877,7 +877,7 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 QToolTip {
     background: $surface;
     color: $text;
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     padding: $space_xs;
 }
 
@@ -921,7 +921,7 @@ QLabel#ChangeBadge[tone="neutral"] {
 /* The «✓» that pays a charge from its row (PayButton), as the «⋯» beside it in size. */
 QPushButton#PayButton {
     background: $income_soft;
-    border: 1px solid transparent;
+    border: $line_thin solid transparent;
     border-radius: $radius_m;
 }
 
@@ -944,14 +944,14 @@ QPushButton#PayButton:hover {
 /* Boxed figures */
 
 QFrame#FigureTile {
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: $radius_l;
 }
 
 /* Tag chips (TagInput, tags column) */
 
 QToolButton#TagChip {
-    border: 1px solid $border;
+    border: $line_thin solid $border;
     border-radius: 10px; /* geometry: half its height */
     padding: $space_xxs $space_s;
     background: $hover;
@@ -960,7 +960,7 @@ QToolButton#TagChip {
 }
 
 QToolButton#TagChip:hover {
-    border: 1px solid $expense;
+    border: $line_thin solid $expense;
 }
 
 QSlider::groove:horizontal {

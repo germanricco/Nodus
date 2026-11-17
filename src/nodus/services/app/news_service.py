@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from nodus.models.version import parse_version
 from nodus.services.app.changelog import ChangelogEntry, entries_between, load_changelog
 from nodus.services.app.settings_service import SettingsService
-from nodus.services.external.update_service import parse_version
 
 # The last version that did not record which news the user saw. An existing data file
 # without that record comes from it (or an older one), so it is shown what came after.

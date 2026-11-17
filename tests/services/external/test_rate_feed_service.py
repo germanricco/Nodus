@@ -5,14 +5,10 @@ from decimal import Decimal
 import pytest
 from factories import clp, eur
 
+from nodus.links import DOLARAPI_URL, QUOTES_URL
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
-from nodus.services.external.rate_feed_service import (
-    DOLARAPI_URL,
-    MANUAL,
-    QUOTES_URL,
-    RateFeedService,
-)
+from nodus.services.external.rate_feed_service import MANUAL, RateFeedService
 
 TODAY = date(2026, 11, 6)
 QUOTES = [

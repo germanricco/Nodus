@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QLineEdit, QWidget
 
-from nodus.models.palette import palette_color
 from nodus.models.tag import Tag
 from nodus.services.container import Services
 from nodus.ui.dialogs.color_choice import color_picker, remember_color
@@ -50,7 +49,7 @@ class TagDialog(FormDialog):
             self.name_input.setText(tag.name)
             self.color_input.set_color(tag.color)
         else:
-            self.color_input.set_color(palette_color(len(services.tags.list_tags())))
+            self.color_input.set_color(services.tags.next_color())
 
     def missing(self) -> dict[QWidget, str]:
         return self.required((self.name_input, TYPE_NAME))

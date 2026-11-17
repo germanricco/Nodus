@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
 from nodus.ui.theme.contrast import outline_for
-from nodus.ui.theme.design import Line
+from nodus.ui.theme.design import ControlSize, Line
 from nodus.ui.theme.theme_manager import active_theme
 
 
@@ -30,7 +30,9 @@ class ColorDot(QWidget):
     """A small filled circle in a category's color, painted rather than styled, so the
     user's color never becomes part of a stylesheet. Without a color it is empty."""
 
-    def __init__(self, color: str = "", size: int = 12, parent: QWidget | None = None) -> None:
+    def __init__(
+        self, color: str = "", size: int = ControlSize.DOT, parent: QWidget | None = None
+    ) -> None:
         super().__init__(parent)
         self._color = color
         self.setFixedSize(size, size)

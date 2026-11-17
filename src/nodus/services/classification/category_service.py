@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from nodus.database.database import Database
 from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.models.category import Category
-from nodus.models.payee import normalize_name
+from nodus.models.names import normalize_name
 from nodus.models.transaction import TransactionType
 from nodus.services.errors import (
     ValidationError,

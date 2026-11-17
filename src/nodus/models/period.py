@@ -19,9 +19,19 @@ FIRST_DAY = date(1900, 1, 1)
 LAST_DAY = date(2100, 12, 31)
 
 
+# Day/month/year, as dates are written in Argentina. DateInput writes it as Qt does.
+DATE_FORMAT = "%d/%m/%Y"
+QT_DATE_FORMAT = "dd/MM/yyyy"
+
+
 def format_date(day: date) -> str:
-    """Day/month/year, as dates are written in Argentina: "05/11/2026"."""
-    return day.strftime("%d/%m/%Y")
+    """The whole date: "05/11/2026"."""
+    return day.strftime(DATE_FORMAT)
+
+
+def format_day_month(day: date) -> str:
+    """Day and month, where the year goes without saying: "05/11"."""
+    return day.strftime("%d/%m")
 
 
 def format_month(month: Month) -> str:

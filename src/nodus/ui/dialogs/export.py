@@ -2,18 +2,36 @@
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 from PySide6.QtCore import QStandardPaths
 from PySide6.QtWidgets import QFileDialog, QPushButton, QWidget
 
+from nodus.models.period import Period
 from nodus.models.transaction import Transaction
 from nodus.services.container import Services
 from nodus.ui.dialogs.user_error import user_error
+from nodus.ui.text.labels import transactions_text
 from nodus.ui.widgets.busy import busy
 from nodus.ui.widgets.toast import show_toast
 
 TITLE = "Exportar transacciones"
+
+# Every exported file starts so, and says which movements it holds.
+_EXPORT_PREFIX = "nodus-transacciones"
+
+
+def export_filename(period: Period) -> str:
+    """ "nodus-transacciones-2026-11.csv" for a month, start and end dates otherwise."""
+    if period.is_whole_months and period.first_month == period.last_month:
+        return f"{_EXPORT_PREFIX}-{period.start:%Y-%m}.csv"
+    return f"{_EXPORT_PREFIX}-{period.start:%Y-%m-%d}_{period.end:%Y-%m-%d}.csv"
+
+
+def all_transactions_filename(today: date) -> str:
+    """ "nodus-transacciones-2026-11-17.csv": everything, as of ``today``."""
+    return f"{_EXPORT_PREFIX}-{today:%Y-%m-%d}.csv"
 
 
 def export_transactions(
@@ -48,5 +66,5 @@ def export_transactions(
         )
         return None
     count = len(transactions)
-    show_toast(parent, f"Exportación lista: {count} transacción{'' if count == 1 else 'es'}.")
+    show_toast(parent, f"Exportación lista: {transactions_text(count)}.")
     return path

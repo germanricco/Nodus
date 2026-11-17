@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QEnterEvent, QMouseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
 
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.style import set_style_property
@@ -29,7 +29,7 @@ class CategoryLine(QFrame):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
         layout.setSpacing(Space.S)
-        layout.addWidget(ColorDot(color, size=10))
+        layout.addWidget(ColorDot(color, size=ControlSize.DOT_SMALL))
         texts = QVBoxLayout()
         texts.setSpacing(0)
         texts.addWidget(ElidedLabel(name))
