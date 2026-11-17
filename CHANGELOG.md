@@ -13,6 +13,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Los botones se oscurecen al presionarlos. Al moverte con Tab, un anillo marca dónde estás, y no aparece al usar el mouse. Los formularios se abren en su primer campo, listos para escribir.
 - Los botones que tardan dicen que están trabajando mientras tanto: «Actualizando…» la cotización, «Guardando…» una copia, «Restaurando…» y «Exportando…». Un segundo clic ya no repite la consulta de la cotización.
 - La campana cuenta solo lo que todavía no miraste, y cada aviso nuevo lleva un punto. Un clic en un aviso te lleva adonde está el problema, como Presupuestos o Recurrentes, y lo marca como visto: queda en la lista, en gris, mientras siga pasando, pero ya no suma en la campana. Si hay algo nuevo, como otro presupuesto excedido o un pago que se vence, vuelve a contar; pagar uno de varios pagos, o volver a estar dentro de un presupuesto, no hace que el resto cuente de nuevo. «Descartar» una versión o «Ahora no» para la copia pasan al clic derecho.
+- Arreglo: la rueda del mouse mueve una sola cosa a la vez. En la página de una cuenta, la lista de movimientos ya no arrastra la página entera al llegar a su final, y una lista desplegable o una fecha no cambian de valor cuando la rueda pasa por encima mientras recorres la página: primero hay que hacer clic en ellas.
 - Arreglo: si la copia del día había fallado, «Hacer copia» seguía mostrando el error aunque la nueva saliera bien.
 
 ## 1.7.0 — 2026-11-14

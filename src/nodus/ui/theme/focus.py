@@ -10,16 +10,24 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QProxyStyle, QPushButton, QWidget
 
+from nodus.ui.theme.wheel import WheelGuard
+
 
 class KeyboardFocusStyle(QProxyStyle):
     """Fusion, with every push button that takes the focus on a click taking it only
-    from Tab. A style sees each widget once, as it gets its look (``polish``), which is
-    far cheaper than watching every event of the application."""
+    from Tab, and the mouse wheel guarded (``WheelGuard``). A style sees each widget
+    once, as it gets its look (``polish``), which is far cheaper than watching every
+    event of the application."""
+
+    def __init__(self, key: str) -> None:
+        super().__init__(key)
+        self._wheel = WheelGuard(self)
 
     def polish(self, widget: QWidget) -> None:  # type: ignore[override]
         super().polish(widget)
         if isinstance(widget, QPushButton) and widget.focusPolicy() == Qt.FocusPolicy.StrongFocus:
             widget.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self._wheel.guard(widget)
 
 
 _style: KeyboardFocusStyle | None = None
