@@ -248,7 +248,7 @@ class TestPayingOff:
 
 class TestDelete:
     def test_deleting_one_installment_deletes_the_purchase(self, services, pesos, purchase):
-        services.transactions.delete(installments(services, purchase.id)[3].id)
+        services.transactions.delete_many([installments(services, purchase.id)[3].id])
 
         assert database_counts(services) == (0, 0)
 
@@ -277,7 +277,7 @@ class TestDelete:
             )
         )  # fmt: skip
 
-        services.transactions.delete(first.id)
+        services.transactions.delete_many([first.id])
 
         assert services.transactions.get(refund.id).refund_of_id is None
 

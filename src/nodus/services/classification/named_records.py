@@ -40,10 +40,6 @@ class NamedRecordService(Generic[R]):
         normalized = normalize_name(name)
         return self._records.find_by_normalized(normalized) if normalized else None
 
-    def delete(self, record_id: int) -> int:
-        """Deletes the record and returns how many movements pointed to it."""
-        return self.delete_many([record_id])
-
     def delete_many(self, record_ids: list[int]) -> int:
         """Deletes every one of ``record_ids`` together, or none if one is missing, and
         returns how many movements pointed to any of them."""
@@ -54,10 +50,6 @@ class NamedRecordService(Generic[R]):
             for record_id in record_ids:
                 self._records.delete(record_id)
         return count
-
-    def merge(self, source_id: int, target_id: int) -> None:
-        """Merges ``source_id`` into ``target_id``, as ``merge_many`` does."""
-        self.merge_many([source_id], target_id)
 
     def merge_many(self, source_ids: list[int], target_id: int) -> None:
         raise NotImplementedError

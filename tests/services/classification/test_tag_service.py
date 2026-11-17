@@ -73,19 +73,19 @@ def test_merge_moves_the_movements(services, pesos):
     both = tagged_expense(services, pesos, ars("20"), "Viaje", "Vacaciones")
     viaje, vacaciones = services.tags.find("Viaje"), services.tags.find("Vacaciones")
 
-    services.tags.merge(viaje.id, vacaciones.id)
+    services.tags.merge_many([viaje.id], vacaciones.id)
 
     assert services.tags.find("Viaje") is None
     assert services.tags.transaction_count(vacaciones.id) == 2
     assert tag_names(services, both) == ["Vacaciones"]
     with pytest.raises(ValidationError):
-        services.tags.merge(vacaciones.id, vacaciones.id)
+        services.tags.merge_many([vacaciones.id], vacaciones.id)
 
 
 def test_delete_keeps_the_movements(services, pesos):
     expense = tagged_expense(services, pesos, ars("10"), "Viaje")
 
-    assert services.tags.delete(services.tags.find("Viaje").id) == 1
+    assert services.tags.delete_many([services.tags.find("Viaje").id]) == 1
 
     assert services.transactions.get(expense.id).amount == ars("10")
     assert services.transactions.tags_for([expense.id]) == {}

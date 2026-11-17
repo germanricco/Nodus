@@ -105,7 +105,7 @@ def test_expense_cannot_shrink_below_its_refunds(services, pesos, purchase):
 def test_deleting_the_expense_turns_refunds_into_income(services, pesos, purchase):
     refund = services.transactions.create(refund_draft(services, pesos.id, ars("400"), purchase))
 
-    services.transactions.delete(purchase.id)
+    services.transactions.delete_many([purchase.id])
 
     assert services.transactions.get(refund.id).refund_of_id is None
     assert summary(services, NOVEMBER).income == ars("400")

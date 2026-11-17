@@ -332,7 +332,7 @@ class TestSeen:
             services.notifications.notices(TODAY), key=lambda n: n.kind.value
         )
         self.open(services, budget_notice)
-        services.transactions.delete(expense.id)
+        services.transactions.delete_many([expense.id])
 
         self.open(services, rate_notice)
         services.notifications.notices(TODAY)

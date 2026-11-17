@@ -159,10 +159,6 @@ class TransactionService:
             self._transactions.unlink_refunds_of(transaction.id)
         return self.stage(transaction, draft)
 
-    def delete(self, transaction_id: int) -> None:
-        """Deletes a transaction. Deleting either leg of a transfer deletes the whole transfer."""
-        self.delete_many([transaction_id])
-
     def delete_many(self, transaction_ids: list[int]) -> None:
         """Deletes every one of ``transaction_ids`` together, or none if one is missing.
 

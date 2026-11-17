@@ -150,7 +150,7 @@ class TestDeleteAndMerge:
         coto = services.payees.find("Coto")
 
         assert services.payees.transaction_count(coto.id) == 2
-        assert services.payees.delete(coto.id) == 2
+        assert services.payees.delete_many([coto.id]) == 2
 
         assert payee_names(services) == []
         assert [t.payee_id for t in listed(services)] == [None, None]
@@ -165,7 +165,7 @@ class TestDeleteAndMerge:
         services.payees.update(source.id, source.name, groceries)
         target = services.payees.create("Coto")
 
-        services.payees.merge(source.id, target.id)
+        services.payees.merge_many([source.id], target.id)
 
         assert payee_names(services) == ["Coto"]
         assert services.payees.get(target.id).default_category_id == groceries
@@ -175,7 +175,7 @@ class TestDeleteAndMerge:
         source = services.payees.create("A", groceries)
         target = services.payees.create("B", services_category)
 
-        services.payees.merge(source.id, target.id)
+        services.payees.merge_many([source.id], target.id)
 
         assert services.payees.get(target.id).default_category_id == services_category
 
@@ -211,7 +211,7 @@ class TestDeleteAndMerge:
         coto = services.payees.create("Coto")
 
         with pytest.raises(ValidationError):
-            services.payees.merge(coto.id, coto.id)
+            services.payees.merge_many([coto.id], coto.id)
 
     def test_deleting_the_default_category_clears_it(self, services):
         category = services.categories.create("Mascotas", TransactionType.EXPENSE, "#888888")

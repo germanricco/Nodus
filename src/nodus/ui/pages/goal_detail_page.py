@@ -113,8 +113,6 @@ class GoalDetailPage(DetailPage):
         self._status.setSpacing(Space.S)
         self.content_layout.addLayout(self._status)
         self.pill: QLabel | None = None
-        self.sentence_label = muted_label("")
-        self.sentence_label.setWordWrap(True)
 
         chart_card = Card("Lo ahorrado en el tiempo")
         self.chart = LineChart(

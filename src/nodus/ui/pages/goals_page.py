@@ -61,7 +61,6 @@ class GoalRow(QWidget):
     ) -> None:
         super().__init__()
         self.goal = goal
-        self.goal_progress = progress
         layout = QVBoxLayout(self)
         layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
         layout.setSpacing(Space.XS)

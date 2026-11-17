@@ -66,7 +66,7 @@ class TestIncomeAndExpenses:
     def test_delete(self, services, pesos):
         created = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
 
-        services.transactions.delete(created.id)
+        services.transactions.delete_many([created.id])
 
         with pytest.raises(NotFoundError):
             services.transactions.get(created.id)
@@ -243,7 +243,7 @@ class TestTransfers:
             TransferDraft(pesos.id, dollars.id, ars("120000"), TODAY, amount_in=usd("100"))
         )
 
-        services.transactions.delete(transfer.incoming.id)
+        services.transactions.delete_many([transfer.incoming.id])
 
         with pytest.raises(ValidationError):
             services.transfers.get(transfer.id)
