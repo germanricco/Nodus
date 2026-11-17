@@ -13,6 +13,9 @@ from nodus.models.exchange_rate import ExchangeRate
 
 
 class ExchangeRateRepository(Repository):
+    """Reads and writes the ``exchange_rates`` table, one rate per currency and day; the rules live
+    in ``ExchangeRateService``."""
+
     TABLE = "exchange_rates"
 
     def save(self, rate: ExchangeRate) -> ExchangeRate:

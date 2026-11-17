@@ -17,6 +17,8 @@ from nodus.services.transactions.labels import MovementLabels
 
 
 class BulkEditService:
+    """Applies the same change to several movements in one go, and undoes it whole."""
+
     def __init__(
         self,
         database: Database,

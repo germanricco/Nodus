@@ -11,6 +11,8 @@ from nodus.models.transaction import TransactionType
 
 
 class CategoryRepository(Repository):
+    """Reads and writes the ``categories`` table; the rules live in ``CategoryService``."""
+
     TABLE = "categories"
 
     def add(self, category: Category) -> Category:

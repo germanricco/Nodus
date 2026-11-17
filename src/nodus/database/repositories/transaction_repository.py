@@ -25,6 +25,9 @@ _SELECT = f"SELECT t.*, a.currency, ip.count AS installment_count {_FROM}"
 
 
 class TransactionRepository(Repository):
+    """Reads and writes the ``transactions`` table, income, expenses and both legs of transfers
+    alike; the rules live in the services of ``services/transactions``."""
+
     TABLE = "transactions"
 
     def add(self, transaction: Transaction) -> Transaction:

@@ -121,6 +121,8 @@ class Period:
 
     @property
     def is_whole_months(self) -> bool:
+        """Whether it runs from a 1st to a month's last day, so it can be compared month by
+        month."""
         return self.start.day == 1 and self.end == Month.of(self.end).end
 
     @property
@@ -193,6 +195,7 @@ class QuickPeriod(Enum):
     PREVIOUS_YEAR = "Año anterior"
 
     def period(self, today: date) -> Period:
+        """The days this choice covers as seen from ``today``."""
         if self is QuickPeriod.THIS_YEAR:
             return Period.year(today.year)
         if self is QuickPeriod.PREVIOUS_YEAR:

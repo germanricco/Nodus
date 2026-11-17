@@ -150,6 +150,9 @@ def _sum(amounts: Iterable[Money]) -> Money:
 
 
 class AnalysisService:
+    """The figures of Análisis, in pesos: month by month trends and the breakdowns by
+    category, payee and tag."""
+
     def __init__(
         self,
         transactions: TransactionService,

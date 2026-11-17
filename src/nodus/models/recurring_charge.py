@@ -46,6 +46,8 @@ class Frequency(Enum):
 
 
 class DueStatus(Enum):
+    """When a charge is due: already late, within ``SOON_DAYS``, or later."""
+
     OVERDUE = "overdue"
     SOON = "soon"
     LATER = "later"

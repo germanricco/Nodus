@@ -13,6 +13,9 @@ from nodus.models.tag import Tag
 
 
 class TagRepository(Repository):
+    """Reads and writes the ``tags`` table and which transactions carry each one; the rules live in
+    ``TagService``."""
+
     TABLE = "tags"
 
     def add(self, tag: Tag) -> Tag:

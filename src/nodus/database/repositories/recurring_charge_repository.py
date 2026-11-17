@@ -16,6 +16,9 @@ _SELECT = "SELECT * FROM recurring_charges"
 
 
 class RecurringChargeRepository(Repository):
+    """Reads and writes the ``recurring_charges`` table; the rules live in
+    ``RecurringChargeService``."""
+
     TABLE = "recurring_charges"
 
     def add(self, charge: RecurringCharge) -> RecurringCharge:

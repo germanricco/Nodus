@@ -35,6 +35,8 @@ class TransferDraft:
 
 
 class TransferService:
+    """Saves, edits and reads a transfer as one, keeping its two legs in step."""
+
     def __init__(
         self, database: Database, transactions: TransactionRepository, accounts: AccountRepository
     ) -> None:

@@ -75,6 +75,8 @@ class RateRow(QWidget):
 
 
 class RatesCard(Card):
+    """The exchange rates: the source, today's rate, typing one in and the history."""
+
     def __init__(self, services: Services, event_bus: EventBus) -> None:
         super().__init__("Cotizaciones")
         self._services = services

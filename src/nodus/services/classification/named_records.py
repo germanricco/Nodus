@@ -13,6 +13,8 @@ from nodus.services.sorting import name_sort_key
 
 
 class NamedRecord(Protocol):
+    """What a payee and a tag have in common for ``NamedRecordService``."""
+
     id: int | None
     name: str
 

@@ -16,6 +16,8 @@ PACE_FLOOR = 0.70
 
 
 class BudgetState(Enum):
+    """How a category's spending goes against its limit this month."""
+
     ON_TRACK = "on_track"
     AHEAD = "ahead"  # spending faster than the month goes by
     OVER = "over"
@@ -57,6 +59,7 @@ class Budget:
 
     @property
     def used(self) -> float:
+        """The share of the limit spent so far: 1.0 is all of it, and more is over."""
         return self.spent.cents / self.limit.cents
 
     @property
@@ -66,6 +69,7 @@ class Budget:
 
     @property
     def state(self) -> BudgetState:
+        """Over the limit, ahead when spending outruns the days gone by, or on track."""
         if self.spent.cents > self.limit.cents:
             return BudgetState.OVER
         if self.used > max(PACE_FLOOR, self.elapsed):

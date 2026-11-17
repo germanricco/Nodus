@@ -68,11 +68,13 @@ class RateFeedService:
         return default
 
     def set_source(self, source: str) -> None:
+        """Where rates come from from now on: one of ``SOURCES``."""
         if source not in SOURCES:
             raise ValueError(f"Unknown rate source: {source}")
         self._settings.set_rate_source(source)
 
     def is_automatic(self) -> bool:
+        """Whether Nodus fetches the rates itself, rather than the user typing them in."""
         return self.source() != MANUAL
 
     def currencies(self) -> list[Currency]:
@@ -133,6 +135,7 @@ class RateFeedService:
         return rates
 
     def save(self, value: Decimal, today: date, currency: Currency = Currency.USD) -> None:
+        """Keeps a fetched rate as today's, replacing the one there was."""
         self._exchange_rates.set_rate(today, value, currency)
 
 

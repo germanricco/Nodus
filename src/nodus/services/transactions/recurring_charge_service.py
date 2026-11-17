@@ -68,6 +68,9 @@ def _times_twelve(money: Money) -> Money:
 
 
 class RecurringChargeService:
+    """Recurring charges: what is due, paying or skipping a due date, and what they
+    cost together each month."""
+
     def __init__(
         self,
         database: Database,
@@ -89,6 +92,7 @@ class RecurringChargeService:
         self._undo = undo
 
     def create(self, draft: RecurringChargeDraft) -> RecurringCharge:
+        """Adds the charge, anchored on the day of its first due date."""
         charge = self._build(None, draft, anchor_day=draft.next_due_on.day)
         with self._database.transaction():
             return self._charges.add(charge)
@@ -129,6 +133,8 @@ class RecurringChargeService:
         return [c for c in self.list_charges() if c.is_active and c.account_id == account_id]
 
     def count_for_account(self, account_id: int) -> int:
+        """How many charges, active or paused, the account pays: deleting the account
+        deletes them too, and the question says so."""
         return self._charges.count_for_account(account_id)
 
     def estimated_payment(self, charge: RecurringCharge, today: date) -> Money | None:
@@ -218,6 +224,7 @@ class RecurringChargeService:
         self._charges.update(before)
 
     def summary(self, today: date) -> RecurringSummary:
+        """What the active charges cost together each month and each year."""
         monthly = Money.zero(HOME_CURRENCY)
         unconverted = {currency: Money.zero(currency) for currency in Currency}
         active = [c for c in self._charges.list() if c.is_active]

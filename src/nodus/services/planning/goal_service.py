@@ -78,6 +78,7 @@ class GoalService:
         return require_found(self._goals.get(goal_id), "La meta no existe.")
 
     def create(self, draft: GoalDraft, today: date) -> Goal:
+        """Adds the goal last in the user's order."""
         goal = self._checked(draft, None, today)
         with self._database.transaction():
             position = self._goals.next_position()
@@ -141,6 +142,7 @@ class GoalService:
     # Progress
 
     def progress(self, goal: Goal, today: date) -> GoalProgress:
+        """How far the goal is, and at what pace it goes, from the last months' savings."""
         month_ends = [saved for _day, saved in self.month_ends(goal, today, PACE_CHANGES + 1)]
         return goal_progress(goal, self.saved_on(goal, today, today), month_ends, today)
 
@@ -228,6 +230,7 @@ class GoalService:
         ]
 
     def mark_seen(self, goal_id: int) -> None:
+        """The user saw the goal reached, so it is not announced again."""
         goal = self.get(goal_id)
         with self._database.transaction():
             self._goals.update(dataclasses.replace(goal, reached_seen=True))

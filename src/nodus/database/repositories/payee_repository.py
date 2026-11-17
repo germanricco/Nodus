@@ -12,6 +12,8 @@ from nodus.models.transaction import TransactionType
 
 
 class PayeeRepository(Repository):
+    """Reads and writes the ``payees`` table; the rules live in ``PayeeService``."""
+
     TABLE = "payees"
 
     def add(self, payee: Payee) -> Payee:

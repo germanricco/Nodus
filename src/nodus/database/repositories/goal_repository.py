@@ -13,6 +13,9 @@ from nodus.models.money import Money
 
 
 class GoalRepository(Repository):
+    """Reads and writes the ``goals`` table and the share of each account that counts for a goal;
+    the rules live in ``GoalService``."""
+
     TABLE = "goals"
 
     def add(self, goal: Goal) -> Goal:

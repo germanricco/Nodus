@@ -21,6 +21,9 @@ _SELECT = (
 
 
 class InstallmentPlanRepository(Repository):
+    """Reads and writes the ``installment_plans`` table; the rules live in
+    ``InstallmentService``."""
+
     TABLE = "installment_plans"
 
     def add(self, plan: InstallmentPlan) -> InstallmentPlan:

@@ -39,8 +39,8 @@ class MonthBudgets:
     """A month against its budgets.
 
     ``budgets`` go from the most to the least used. ``unbudgeted`` is the spending in
-    categories without a limit, the largest first. ``unconverted`` counts dollar expenses
-    left out for lack of an exchange rate, as on the dashboard.
+    categories without a limit, the largest first. ``unconverted`` counts expenses in another
+    currency left out for lack of an exchange rate, as on the dashboard.
     """
 
     month: Month
@@ -102,9 +102,12 @@ class BudgetService:
         return [node.category for node in self._categories.category_tree(TransactionType.EXPENSE)]
 
     def limits_on(self, month: Month) -> dict[int, Money]:
+        """The limit of each category in ``month``, by category id."""
         return self._budgets.limits_on(month)
 
     def month_budgets(self, month: Month, today: date) -> MonthBudgets:
+        """Each budgeted category's limit against what it spent in ``month``, and what was
+        spent in categories without one."""
         summary = self._dashboard.summary(Period.of_months(month))
         spent = {t.category.id: t.total for t in summary.expenses_by_category}
         limits = self._budgets.limits_on(month)

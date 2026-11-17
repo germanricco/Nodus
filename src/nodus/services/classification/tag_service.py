@@ -40,6 +40,8 @@ class TagSummary:
 
 
 class TagService(NamedRecordService[Tag]):
+    """Tags: their colors, suggestions while typing, and what each one adds up to."""
+
     NOT_FOUND_TEXT = "La etiqueta no existe."
     NO_OTHER_TEXT = "Elige otra etiqueta para unir."
     NAME_TAKEN_TEXT = "Ya hay otra etiqueta «{name}», así que no se puede deshacer."

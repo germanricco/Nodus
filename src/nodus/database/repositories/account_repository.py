@@ -31,6 +31,9 @@ _BALANCES_SQL = """
 
 
 class AccountRepository(Repository):
+    """Reads and writes the ``accounts`` table, and adds up each account's balance in SQL; the rules
+    live in ``AccountService``."""
+
     TABLE = "accounts"
 
     def add(self, account: Account) -> Account:

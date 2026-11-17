@@ -63,6 +63,9 @@ class AccountActivity:
 
 
 class TransactionService:
+    """Income and expenses: their checks, saving them with payee and tags, and reading
+    them back for lists and figures."""
+
     def __init__(
         self,
         database: Database,

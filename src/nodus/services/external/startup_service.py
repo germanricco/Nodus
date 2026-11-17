@@ -78,9 +78,12 @@ class StartupService:
         return cls(WindowsRunKey() if is_installed() else None, sys.executable)
 
     def is_available(self) -> bool:
+        """Only the installed program can open with Windows: a copy run from the code has
+        no fixed place to start from."""
         return self._registry is not None
 
     def is_enabled(self) -> bool:
+        """Whether Windows opens Nodus when the user signs in."""
         return self._registry is not None and self._registry.read() is not None
 
     def set_enabled(self, enabled: bool) -> None:

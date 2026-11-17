@@ -45,6 +45,9 @@ class PayeeSummary:
 
 
 class PayeeService(NamedRecordService[Payee]):
+    """Payees: suggestions while typing, the category each one usually takes, and what
+    the user spent or received with each."""
+
     NOT_FOUND_TEXT = "El beneficiario no existe."
     NO_OTHER_TEXT = "Elige otro beneficiario para unir."
     NAME_TAKEN_TEXT = "Ya hay otro beneficiario «{name}», así que no se puede deshacer."

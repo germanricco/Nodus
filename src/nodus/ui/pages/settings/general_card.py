@@ -17,6 +17,8 @@ THEME_LABELS = ["Claro", "Oscuro", "Según el sistema"]
 
 
 class GeneralCard(Card):
+    """The preferences of how Nodus looks and opens."""
+
     def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
         super().__init__("General")
         self._services = services

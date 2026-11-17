@@ -34,6 +34,8 @@ class CategoryNode:
 
 
 class CategoryService:
+    """Income and expense categories, with their subcategories and colors."""
+
     def __init__(self, database: Database, categories: CategoryRepository) -> None:
         self._database = database
         self._categories = categories

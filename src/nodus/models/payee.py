@@ -33,4 +33,5 @@ class PayeeUsage:
     uses_by_category: dict[int, int] = field(default_factory=dict)
 
     def uses_with(self, category_id: int | None) -> int:
+        """How many of the payee's movements took ``category_id``; none without one."""
         return self.uses_by_category.get(category_id, 0) if category_id is not None else 0

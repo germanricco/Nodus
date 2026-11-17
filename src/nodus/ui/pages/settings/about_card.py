@@ -17,6 +17,8 @@ from nodus.ui.widgets.style import secondary_button
 
 
 class AboutCard(Card):
+    """Nodus itself: the version, updates, news, help, the tour and the project."""
+
     tour_requested = Signal()
     help_requested = Signal()
 

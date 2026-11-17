@@ -13,6 +13,8 @@ from nodus.models.value_adjustment import ValueAdjustment
 
 
 class ValueAdjustmentRepository(Repository):
+    """Reads and writes the ``value_adjustments`` table; the rules live in ``AccountService``."""
+
     TABLE = "value_adjustments"
 
     def add(self, adjustment: ValueAdjustment) -> ValueAdjustment:

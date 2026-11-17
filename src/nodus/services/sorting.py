@@ -17,6 +17,8 @@ def name_sort_key(name: str) -> str:
 
 
 class Named(Protocol):
+    """Anything sorted and searched by its name, such as an account or a payee."""
+
     name: str
 
     @property

@@ -34,6 +34,8 @@ class RefundSummary:
 
 
 class RefundService:
+    """Reads the refunds of each expense; ``TransactionService`` uses it to cap them."""
+
     def __init__(self, transactions: TransactionRepository) -> None:
         self._transactions = transactions
 

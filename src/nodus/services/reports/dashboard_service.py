@@ -122,6 +122,8 @@ def month_flows(movements: list[ConvertedMovement], months: list[Month]) -> list
 
 
 class DashboardService:
+    """The figures of Inicio for a period, and the same for the period before to compare."""
+
     def __init__(
         self,
         transactions: TransactionService,

@@ -54,6 +54,8 @@ def _budget_key(today: date, category_id: int) -> str:
 
 
 class NoticeKind(Enum):
+    """What a notification is about; the panel picks the button it offers by it."""
+
     UPDATE = "update"
     STALE_RATE = "stale_rate"
     BACKUP_FAILED = "backup_failed"
@@ -117,6 +119,7 @@ class NotificationService:
         return self._release
 
     def set_release(self, release: Release | None) -> None:
+        """The latest published version, found in the background, for the notice of an update."""
         self._release = release
 
     def notices(self, today: date) -> list[Notice]:

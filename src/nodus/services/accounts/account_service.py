@@ -36,6 +36,9 @@ class ValueGain:
 
 
 class AccountService:
+    """Accounts and their balances: unique names, archiving, the user's order and the
+    adjustments of value of investments."""
+
     def __init__(
         self,
         database: Database,
@@ -49,6 +52,7 @@ class AccountService:
     def create(
         self, name: str, account_type: AccountType, currency: Currency, initial_balance: Money
     ) -> Account:
+        """Adds the account last in the user's order; its name must be free."""
         require_storable(initial_balance, "initial_balance")
         account = Account(None, clean_name(name), account_type, currency, initial_balance)
         self._require_new_name(account)

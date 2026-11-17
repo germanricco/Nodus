@@ -89,6 +89,7 @@ class BackupService:
         return backup
 
     def last_backup(self) -> date | None:
+        """The day of the newest daily copy, if there is one."""
         days = self._daily_backups()
         return days[-1][0] if days else None
 
@@ -107,6 +108,7 @@ class BackupService:
         return destination
 
     def last_external_backup(self) -> date | None:
+        """The day of the last copy saved outside the computer, if any."""
         return self._settings.last_external_backup()
 
     def external_folder(self) -> Path | None:

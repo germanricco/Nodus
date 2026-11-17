@@ -75,4 +75,5 @@ class Transfer:
 
     @property
     def id(self) -> str:
+        """The id both legs share."""
         return self.outgoing.transfer_id

@@ -29,6 +29,9 @@ def mark_target(widget: QWidget, target: str) -> None:
 
 @dataclass(frozen=True)
 class CoachStep:
+    """One stop of the tour: the control it points at (its ``COACH_TARGET``), a title
+    and what it says."""
+
     target: str
     title: str
     text: str

@@ -10,6 +10,8 @@ from nodus.models.account_group import AccountGroup
 
 
 class AccountGroupRepository(Repository):
+    """Reads and writes the ``account_groups`` table; the rules live in ``AccountGroupService``."""
+
     TABLE = "account_groups"
 
     def add(self, group: AccountGroup) -> AccountGroup:
