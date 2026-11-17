@@ -82,10 +82,21 @@ class ErrorDetail(QWidget):
 
 class UserErrorDialog(QDialog):
     """What went wrong, as a title-like sentence; what to do, under it; the technical
-    detail folded away; and a single «Cerrar», since there is nothing to choose."""
+    detail folded away; and «Cerrar».
+
+    An error with one way out names it in ``action``: that button is then the main one
+    and accepts, and «Cerrar» rejects.
+    """
 
     def __init__(
-        self, title: str, what: str, how: str, detail: str = "", parent: QWidget | None = None
+        self,
+        title: str,
+        what: str,
+        how: str,
+        detail: str = "",
+        parent: QWidget | None = None,
+        *,
+        action: str | None = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
@@ -106,21 +117,41 @@ class UserErrorDialog(QDialog):
         self.buttons = QHBoxLayout()
         self.buttons.addStretch()
         self.close_button = QPushButton("Cerrar")
-        self.close_button.setObjectName("PrimaryButton")
-        self.close_button.setDefault(True)
-        self.close_button.clicked.connect(self.accept)
         self.buttons.addWidget(self.close_button)
+        main_button = self.close_button
+        if action is None:
+            self.close_button.clicked.connect(self.accept)
+        else:
+            self.close_button.setObjectName("SecondaryButton")
+            self.close_button.clicked.connect(self.reject)
+            self.action_button = main_button = QPushButton(action)
+            self.action_button.clicked.connect(self.accept)
+            self.buttons.addWidget(self.action_button)
+        main_button.setObjectName("PrimaryButton")
+        main_button.setDefault(True)
         layout.addLayout(self.buttons)
 
 
 class UnexpectedErrorDialog(UserErrorDialog):
     """An error Nodus did not expect, which is a fault of Nodus and not of the user:
     besides what to do, it offers «Enviar reporte», the comments form filled in with
-    what failed and where, and «Abrir registros», the folder of the log."""
+    what failed and where, and «Abrir registros», the folder of the log.
 
-    def __init__(self, error: BaseException, logs_dir: Path, parent: QWidget | None = None):
+    ``what`` and ``how`` default to an error in the middle of the work; one known to
+    happen at a given moment, like updating the data, says it its own way.
+    """
+
+    def __init__(
+        self,
+        error: BaseException,
+        logs_dir: Path,
+        parent: QWidget | None = None,
+        *,
+        what: str = UNEXPECTED_WHAT,
+        how: str = UNEXPECTED_HOW,
+    ) -> None:
         detail = "\n".join(error_lines(error))
-        super().__init__(APP_NAME, UNEXPECTED_WHAT, UNEXPECTED_HOW, detail, parent)
+        super().__init__(APP_NAME, what, how, detail, parent)
         self.logs_button = secondary_button("Abrir registros", lambda: open_folder(logs_dir))
         self.logs_button.setToolTip("La carpeta donde Nodus anota lo que pasó")
         self.buttons.insertWidget(0, self.logs_button)

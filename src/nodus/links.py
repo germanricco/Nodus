@@ -6,6 +6,8 @@ from nodus import __version__
 
 REPOSITORY = "germanricco/Nodus"
 REPOSITORY_URL = f"https://github.com/{REPOSITORY}"
+# The page of the newest release, with its installer.
+DOWNLOAD_URL = f"{REPOSITORY_URL}/releases/latest"
 DONATE_URL = "https://cafecito.app/germanricco"
 # What Nodus asks for by itself: the newest version, and the exchange rates.
 LATEST_RELEASE_API = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"

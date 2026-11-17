@@ -328,6 +328,8 @@ HELP_TOPICS = [
             "Esas copias quedan en el mismo disco, así que una vez al mes conviene guardar una"
             " afuera con «Guardar copia en…», en un pendrive o en una carpeta de Drive. A fin de"
             " mes, Nodus te lo recuerda.",
+            "Si el archivo de tus datos se daña, al abrirse Nodus te ofrece volver a la última"
+            " copia sana, y guarda aparte el archivo dañado.",
         ),
         ("privacy",),
     ),

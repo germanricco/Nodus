@@ -1,6 +1,7 @@
 """Errors say what happened and what to do; the system's text waits behind «Ver detalle»."""
 
 from PySide6.QtGui import QGuiApplication
+from PySide6.QtWidgets import QDialog
 
 from nodus.ui.dialogs import export
 from nodus.ui.dialogs.user_error import UserErrorDialog
@@ -46,3 +47,16 @@ def test_failed_export_says_what_to_do(services, monkeypatch, tmp_path):
     assert what == "No se pudo guardar el archivo."
     assert "Excel" in how
     assert "Permission denied" in detail
+
+
+def test_an_error_with_a_way_out_makes_it_the_main_button(qtbot):
+    dialog = UserErrorDialog("Nodus", "Está dañado.", "Restaura.", action="Restaurar la copia")
+    qtbot.addWidget(dialog)
+
+    assert dialog.action_button.isDefault()
+    assert not dialog.close_button.isDefault()
+    assert dialog.close_button.objectName() == "SecondaryButton"
+    dialog.close_button.click()
+    assert dialog.result() == QDialog.DialogCode.Rejected
+    dialog.action_button.click()
+    assert dialog.result() == QDialog.DialogCode.Accepted

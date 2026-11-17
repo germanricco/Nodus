@@ -158,6 +158,15 @@ class MainWindow(QMainWindow):
         if self.focusWidget() is None or isinstance(self.focusWidget(), QPushButton):
             self._content.setFocus()
 
+    def bring_to_front(self) -> None:
+        """Opening Nodus again lands here: the window comes back from the taskbar, if it
+        was minimized, and to the front."""
+        if self.isMinimized():
+            self.setWindowState(self.windowState() & ~Qt.WindowState.WindowMinimized)
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
     def undo_last(self) -> None:
         """Ctrl+Z: undoes the last action that offered «Deshacer». A text field takes
         Ctrl+Z for its own text first. Every page refreshes, since it may be any action."""

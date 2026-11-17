@@ -6,11 +6,19 @@ from __future__ import annotations
 import calendar
 import logging
 import re
+import shutil
 import sqlite3
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from nodus.database.database import Database, DatabaseError, latest_schema_version
+from nodus.config.paths import AppPaths
+from nodus.database.database import (
+    Database,
+    DatabaseError,
+    backup_path_for,
+    latest_schema_version,
+)
 from nodus.services.app.settings_service import SettingsService
 from nodus.services.errors import BackupError, ValidationError
 
@@ -23,6 +31,22 @@ _DAILY_NAME = re.compile(r"^nodus-(\d{4}-\d{2}-\d{2})\.db$")
 def daily_name(day: date) -> str:
     """ "nodus-2026-11-17.db": the copy of ``day``, in the computer or outside it."""
     return f"nodus-{day.isoformat()}.db"
+
+
+def daily_backups(folder: Path) -> list[tuple[date, Path]]:
+    """The daily copies in ``folder``, oldest first. A name that is not a real day, like
+    a copy renamed by hand to «nodus-2026-02-30.db», is not one of them."""
+    if not folder.is_dir():
+        return []
+    found = []
+    for path in folder.iterdir():
+        match = _DAILY_NAME.match(path.name)
+        if match:
+            try:
+                found.append((date.fromisoformat(match.group(1)), path))
+            except ValueError:
+                continue
+    return sorted(found)
 
 
 # The reminder to save a copy outside the computer opens on the last days of each month.
@@ -66,11 +90,11 @@ class BackupService:
         destination = self.backups_dir / daily_name(today)
         try:
             self._copy_to(destination)
-            self._prune()
         except (OSError, sqlite3.Error) as error:
             logger.warning("Backup failed", exc_info=error)
             raise BackupError(str(error)) from error
         logger.info("Backup saved")
+        self._prune()
         self.last_error = None  # a copy made by hand mends the day's failed one
         return destination
 
@@ -171,15 +195,68 @@ class BackupService:
 
     def _daily_backups(self) -> list[tuple[date, Path]]:
         """Daily backups, oldest first. Copies taken before a restore are not counted."""
-        if not self.backups_dir.is_dir():
-            return []
-        found = []
-        for path in self.backups_dir.iterdir():
-            match = _DAILY_NAME.match(path.name)
-            if match:
-                found.append((date.fromisoformat(match.group(1)), path))
-        return sorted(found)
+        return daily_backups(self.backups_dir)
 
     def _prune(self) -> None:
+        """Deletes the oldest daily copies. One that cannot be deleted (an antivirus is
+        reading it) stays until next time: the new copy is saved all the same."""
         for _day, path in self._daily_backups()[: -self.KEEP]:
-            path.unlink()
+            try:
+                path.unlink()
+            except OSError as error:
+                logger.warning("An old backup could not be deleted", exc_info=error)
+
+
+@dataclass(frozen=True)
+class RecoveryCopy:
+    """A copy whole enough to bring the data back from, and when it was saved."""
+
+    path: Path
+    saved: datetime
+
+
+class DataRecovery:
+    """Brings the data back from the newest whole copy when the data file is damaged.
+
+    Works on paths, before any ``Database`` is open, since the damaged file cannot be
+    opened. The damaged file is moved aside, never deleted: what it still holds may be
+    rescued by hand.
+    """
+
+    def __init__(self, paths: AppPaths) -> None:
+        self._paths = paths
+
+    def newest_copy(self) -> RecoveryCopy | None:
+        """The newest copy that opens whole in this Nodus: a daily one, one taken before a
+        restore, or the one taken before updating the data."""
+        candidates = [*self._paths.backups_dir.glob("*.db")]
+        before_update = backup_path_for(self._paths.database_path)
+        if before_update.exists():
+            candidates.append(before_update)
+        for path in sorted(candidates, key=lambda p: p.stat().st_mtime, reverse=True):
+            if _is_whole(path):
+                return RecoveryCopy(path, datetime.fromtimestamp(path.stat().st_mtime))
+        return None
+
+    def recover(self, copy: RecoveryCopy, now: datetime) -> Path:
+        """Moves the damaged file aside, with its WAL, and puts ``copy`` in its place.
+
+        Returns where the damaged file went.
+        """
+        database_path = self._paths.database_path
+        damaged = database_path.with_name(f"nodus-dañado-{now:%Y-%m-%d-%H%M%S}.db")
+        for suffix in ("", "-wal", "-shm"):
+            source = database_path.with_name(database_path.name + suffix)
+            if source.exists():
+                source.replace(damaged.with_name(damaged.name + suffix))
+        shutil.copyfile(copy.path, database_path)
+        logger.info("Data recovered from a copy; the damaged file was moved aside")
+        return damaged
+
+
+def _is_whole(path: Path) -> bool:
+    try:
+        version = Database.inspect(path)
+    except DatabaseError:
+        return False
+    return 0 < version <= latest_schema_version()

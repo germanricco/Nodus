@@ -3,7 +3,7 @@
 import ctypes
 import logging
 import sys
-from datetime import date
+from datetime import date, datetime
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
@@ -11,12 +11,23 @@ from PySide6.QtWidgets import QApplication
 from nodus import APP_NAME, APP_USER_MODEL_ID
 from nodus.config.logs import RunLog, system_line
 from nodus.config.paths import AppPaths, visible_path
-from nodus.database.database import Database, DatabaseError
+from nodus.database.database import (
+    DamagedDatabaseError,
+    Database,
+    DatabaseError,
+    MigrationError,
+    NewerDatabaseError,
+)
+from nodus.links import DOWNLOAD_URL
+from nodus.services.backup_service import DataRecovery
 from nodus.services.container import Services
-from nodus.ui.dialogs.user_error import user_error
+from nodus.ui.browser import open_url
+from nodus.ui.dialogs.recovery_dialog import offer_recovery
+from nodus.ui.dialogs.user_error import UnexpectedErrorDialog, UserErrorDialog, user_error
 from nodus.ui.error_reporter import ErrorReporter
 from nodus.ui.event_bus import EventBus
 from nodus.ui.shell.main_window import MainWindow
+from nodus.ui.shell.single_instance import SingleInstance
 from nodus.ui.theme.design import set_reduced_motion
 from nodus.ui.theme.icons import app_icon
 from nodus.ui.theme.theme import ThemeMode
@@ -30,6 +41,24 @@ OPEN_FAILED_HOW = (
     " sincronización, y vuelve a abrir Nodus. Tus copias de seguridad están en la carpeta"
     " «backups», junto a tus datos."
 )
+NEWER_DATA = "Tus datos son de una versión más nueva de Nodus."
+NEWER_DATA_HOW = (
+    "Esta versión no conoce todo lo que guardaste con la nueva, así que no los abre para no"
+    " dañarlos. Instala la última versión de Nodus; tus datos siguen intactos."
+)
+DOWNLOAD = "Descargar Nodus"
+UPDATE_FAILED = "No se pudieron actualizar tus datos a esta versión de Nodus."
+UPDATE_FAILED_HOW = (
+    "Tus datos siguen como estaban, y Nodus guardó una copia de antes de actualizarlos."
+    " Envía el reporte para que lo arreglemos; mientras tanto, puedes volver a instalar la"
+    " versión que usabas."
+)
+ALREADY_OPEN = "Nodus ya está abierto."
+ALREADY_OPEN_HOW = (
+    "Búscalo en la barra de tareas. Si no responde, ciérralo desde el Administrador de"
+    " tareas y vuelve a abrirlo."
+)
+ASFW_ANY = -1  # lets any process, here the open Nodus, take the foreground
 
 
 class NodusApp:
@@ -44,32 +73,46 @@ class NodusApp:
         self._qt_app.setWindowIcon(app_icon())
         self._set_taskbar_identity()
         self._paths = AppPaths.from_environment()
+        self._window: MainWindow | None = None
 
     def run(self) -> int:
         """Runs the event loop and returns the process exit code.
 
-        The log and the error reporter cover the whole run, opening the data included,
-        so nothing that fails, even before the window, goes unseen.
+        A Nodus already open over the same data is brought forward instead. The log and
+        the error reporter cover the whole run, opening the data included, so nothing
+        that fails, even before the window, goes unseen.
         """
         self._paths.ensure_data_dir()
+        instance = SingleInstance(self._paths.data_dir)
+        if not instance.acquire():
+            return self._show_the_open_one(instance)
         run_log = RunLog(self._paths.logs_dir)
         run_log.start()
         reporter = ErrorReporter(visible_path(self._paths.logs_dir))
         reporter.install()
         logger.info("Starting: %s", system_line())
         try:
-            return self._open_and_run(reporter)
+            return self._open_and_run(reporter, instance)
         finally:
             logger.info("Closed")
             reporter.uninstall()
             run_log.stop()
+            instance.release()
 
-    def _open_and_run(self, reporter: ErrorReporter) -> int:
-        try:
-            database = Database.open(self._paths.database_path)
-        except DatabaseError as error:
-            logger.error("The data could not be opened", exc_info=error)
-            user_error(None, self.APPLICATION_NAME, OPEN_FAILED, OPEN_FAILED_HOW, str(error))
+    def _show_the_open_one(self, instance: SingleInstance) -> int:
+        """This run ends here: the Nodus that is open comes to the front, or, if it does
+        not answer, the user hears where to find it."""
+        if sys.platform == "win32":
+            # Windows lets only the foreground process hand the foreground over.
+            ctypes.windll.user32.AllowSetForegroundWindow(ASFW_ANY)
+        if instance.ask_first_to_show():
+            return 0
+        user_error(None, self.APPLICATION_NAME, ALREADY_OPEN, ALREADY_OPEN_HOW)
+        return 1
+
+    def _open_and_run(self, reporter: ErrorReporter, instance: SingleInstance) -> int:
+        database = self._open_data()
+        if database is None:
             return 1
         try:
             try:
@@ -78,9 +121,60 @@ class NodusApp:
                 logger.error("Nodus could not start", exc_info=error)
                 reporter.show(error)
                 return 1
+            assert self._window is not None
+            instance.show_requested.connect(self._window.bring_to_front)
             return self._qt_app.exec()
         finally:
             database.close()
+
+    def _open_data(self) -> Database | None:
+        """The data, opened; or None, after telling the user why it could not be, in the
+        way each failure needs."""
+        try:
+            return Database.open(self._paths.database_path)
+        except NewerDatabaseError as error:
+            logger.error("The data comes from a newer Nodus", exc_info=error)
+            self._ask_to_update(error)
+        except DamagedDatabaseError as error:
+            logger.error("The data is damaged", exc_info=error)
+            return self._recover(error)
+        except MigrationError as error:
+            logger.error("The data could not be updated", exc_info=error)
+            UnexpectedErrorDialog(
+                error,
+                visible_path(self._paths.logs_dir),
+                what=UPDATE_FAILED,
+                how=UPDATE_FAILED_HOW,
+            ).exec()
+        except DatabaseError as error:
+            logger.error("The data could not be opened", exc_info=error)
+            self._tell_open_failed(error)
+        return None
+
+    def _ask_to_update(self, error: DatabaseError) -> None:
+        dialog = UserErrorDialog(
+            self.APPLICATION_NAME, NEWER_DATA, NEWER_DATA_HOW, str(error), action=DOWNLOAD
+        )
+        if dialog.exec():
+            open_url(DOWNLOAD_URL)
+
+    def _recover(self, error: DatabaseError) -> Database | None:
+        """Offers to bring the data back from the newest whole copy, and opens it."""
+        recovery = DataRecovery(self._paths)
+        copy = recovery.newest_copy()
+        if not offer_recovery(copy, visible_path(self._paths.backups_dir), str(error)):
+            return None
+        assert copy is not None
+        try:
+            recovery.recover(copy, datetime.now())
+            return Database.open(self._paths.database_path)
+        except (OSError, DatabaseError) as again:
+            logger.error("The data could not be recovered", exc_info=again)
+            self._tell_open_failed(again)
+            return None
+
+    def _tell_open_failed(self, error: Exception) -> None:
+        user_error(None, self.APPLICATION_NAME, OPEN_FAILED, OPEN_FAILED_HOW, str(error))
 
     def _open_window(self, services: Services) -> None:
         """Tidies the data up, opens the window and starts what runs behind it."""
@@ -90,7 +184,7 @@ class NodusApp:
         set_reduced_motion(services.settings.reduce_motion())
         theme_mode = ThemeMode.from_setting(services.settings.theme_preference())
         theme_manager = ThemeManager(self._qt_app, theme_mode)
-        window = MainWindow(services, EventBus(), theme_manager)
+        self._window = window = MainWindow(services, EventBus(), theme_manager)
         window.show()
         window.check_for_updates()
         window.update_exchange_rate()

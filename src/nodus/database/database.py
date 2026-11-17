@@ -18,7 +18,21 @@ _MIGRATION_FILENAME = re.compile(r"^(\d+)_(\w+)\.sql$")
 
 
 class DatabaseError(Exception):
-    """The database file could not be opened, verified or migrated."""
+    """The database file could not be opened, verified or migrated. Raised as such when
+    the file could not be reached at all (locked by another program, no permission)."""
+
+
+class DamagedDatabaseError(DatabaseError):
+    """The file is not a whole SQLite database: its data can only come back from a copy."""
+
+
+class NewerDatabaseError(DatabaseError):
+    """The file was written by a newer Nodus, whose tables this one does not know."""
+
+
+class MigrationError(DatabaseError):
+    """Updating the file to this version of Nodus failed. The file stays at the last
+    version that succeeded; it is a fault of Nodus, not of the file."""
 
 
 @dataclass(frozen=True)
@@ -49,14 +63,23 @@ class Database:
         """Opens (or creates) the database at ``path``, verifies it and migrates it.
 
         ``migrations`` defaults to the SQL files packaged in ``nodus.database.migrations``.
+        Each way of failing raises its own ``DatabaseError``, since each asks the user for
+        something different, and leaves the file closed, so it can be moved aside.
         """
+        migrations = migrations if migrations is not None else load_packaged_migrations()
         try:
             database = cls(path, cls._connect(path))
-            database.check_integrity()
-            database.created = database.schema_version == 0
-            database.migrate(migrations if migrations is not None else load_packaged_migrations())
         except sqlite3.DatabaseError as error:
-            raise DatabaseError(f"{path}: {error}") from error
+            raise _opening_error(path, error) from error
+        try:
+            database._verify(migrations)
+            try:
+                database.migrate(migrations)
+            except (sqlite3.Error, DatabaseError, OSError) as error:
+                raise MigrationError(f"{path}: {error}") from error
+        except BaseException:
+            database.close()
+            raise
         logger.info(
             "Data opened: schema %d%s", database.schema_version, ", new" if database.created else ""
         )
@@ -65,11 +88,26 @@ class Database:
     @staticmethod
     def _connect(path: Path) -> sqlite3.Connection:
         connection = sqlite3.connect(path)
-        connection.row_factory = sqlite3.Row
-        connection.execute("PRAGMA foreign_keys = ON")
-        # WAL keeps the file consistent if the app or the OS crashes mid-write.
-        connection.execute("PRAGMA journal_mode = WAL")
+        try:
+            connection.row_factory = sqlite3.Row
+            connection.execute("PRAGMA foreign_keys = ON")
+            # WAL keeps the file consistent if the app or the OS crashes mid-write.
+            connection.execute("PRAGMA journal_mode = WAL")
+        except sqlite3.Error:
+            connection.close()
+            raise
         return connection
+
+    def _verify(self, migrations: list[Migration]) -> None:
+        try:
+            self.check_integrity()
+            version = self.schema_version
+        except sqlite3.DatabaseError as error:
+            raise _opening_error(self.path, error) from error
+        newest = max((migration.version for migration in migrations), default=0)
+        if version > newest:
+            raise NewerDatabaseError(f"{self.path}: schema {version}, this Nodus knows {newest}")
+        self.created = version == 0
 
     @property
     def connection(self) -> sqlite3.Connection:
@@ -92,7 +130,7 @@ class Database:
     def check_integrity(self) -> None:
         result = self._connection.execute("PRAGMA integrity_check").fetchone()[0]
         if result != "ok":
-            raise DatabaseError(f"{self.path}: integrity check failed: {result}")
+            raise DamagedDatabaseError(f"{self.path}: integrity check failed: {result}")
 
     def migrate(self, migrations: list[Migration]) -> None:
         """Applies, in order, every migration newer than the current schema version.
@@ -116,7 +154,7 @@ class Database:
 
     @property
     def backup_path(self) -> Path:
-        return self.path.with_name(self.path.name + ".bak")
+        return backup_path_for(self.path)
 
     def backup_to(self, destination: Path) -> None:
         """Copies the whole database, including changes still in the WAL file."""
@@ -181,7 +219,27 @@ class Database:
             connection.execute("PRAGMA foreign_keys = ON")
 
     def close(self) -> None:
+        """Closes the file, with every change moved from the WAL into it, so ``nodus.db``
+        is whole by itself when the user copies it."""
+        try:
+            self._connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        except sqlite3.Error as error:  # another reader: the WAL is kept, nothing is lost
+            logger.warning("The data was closed with changes still in the WAL", exc_info=error)
         self._connection.close()
+
+
+def backup_path_for(database_path: Path) -> Path:
+    """Where ``migrate`` keeps the copy taken before updating the file at ``database_path``."""
+    return database_path.with_name(database_path.name + ".bak")
+
+
+def _opening_error(path: Path, error: sqlite3.DatabaseError) -> DatabaseError:
+    """What an SQLite error while opening means: ``OperationalError`` is the file being out
+    of reach (locked, no permission); the rest («file is not a database», «malformed»)
+    is the file being damaged."""
+    if isinstance(error, sqlite3.OperationalError):
+        return DatabaseError(f"{path}: {error}")
+    return DamagedDatabaseError(f"{path}: {error}")
 
 
 def load_packaged_migrations() -> list[Migration]:

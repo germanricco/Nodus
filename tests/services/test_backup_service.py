@@ -1,13 +1,16 @@
+import os
 import sqlite3
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 import pytest
-from factories import ars
+from factories import ars, services_for
 
+from nodus.config.paths import AppPaths
 from nodus.database.database import Database, Migration, latest_schema_version
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
-from nodus.services.backup_service import BackupService, reminder_start
+from nodus.services.backup_service import BackupService, DataRecovery, reminder_start
 from nodus.services.errors import BackupError, ValidationError
 
 # Not factories.TODAY: the copies below are named after this day.
@@ -188,3 +191,92 @@ class TestCopyOutside:
 )
 def test_reminder_starts_three_days_before_the_month_ends(today, start):
     assert reminder_start(today) == start
+
+
+def test_a_copy_named_after_an_impossible_day_is_not_a_daily_copy(services):
+    services.backups.backups_dir.mkdir(parents=True)
+    (services.backups.backups_dir / "nodus-2026-02-30.db").write_bytes(b"")
+
+    assert services.backups.last_backup() is None
+    assert services.backups.create_if_due(TODAY) is not None
+    assert services.backups.last_backup() == TODAY
+
+
+def test_an_old_copy_that_cannot_be_deleted_does_not_fail_the_new_one(services, monkeypatch):
+    for days in range(BackupService.KEEP):
+        services.backups.create(TODAY - timedelta(days=days + 1))
+    real_unlink = Path.unlink
+
+    def held_by_antivirus(path, *args, **kwargs):
+        if path.parent == services.backups.backups_dir:
+            raise PermissionError("in use")
+        real_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", held_by_antivirus)
+
+    assert services.backups.create_if_due(TODAY) is not None
+    assert services.backups.last_error is None
+    assert services.backups.last_backup() == TODAY
+
+
+class TestDataRecovery:
+    """Bringing damaged data back from the newest copy that is whole."""
+
+    @pytest.fixture
+    def paths(self, tmp_path) -> AppPaths:
+        paths = AppPaths(tmp_path / "Nodus")
+        paths.ensure_data_dir()
+        paths.backups_dir.mkdir()
+        return paths
+
+    def copy_with(self, path: Path, account: str, age: int) -> Path:
+        """A copy at ``path`` holding ``account``, saved ``age`` hours ago."""
+        database = Database.open(path)
+        add_account(services_for(database), account)
+        database.close()
+        saved = NOW.timestamp() - age * 3600
+        os.utime(path, (saved, saved))
+        return path
+
+    def test_the_newest_whole_copy_is_chosen(self, paths):
+        self.copy_with(paths.backups_dir / "nodus-2026-11-04.db", "Vieja", age=48)
+        newest = self.copy_with(paths.backups_dir / "nodus-2026-11-05.db", "Nueva", age=24)
+
+        copy = DataRecovery(paths).newest_copy()
+
+        assert copy.path == newest
+        assert copy.saved == NOW - timedelta(hours=24)
+
+    def test_a_damaged_or_newer_copy_is_skipped(self, paths):
+        whole = self.copy_with(paths.backups_dir / "nodus-2026-11-03.db", "Sana", age=72)
+        damaged = paths.backups_dir / "nodus-2026-11-05.db"
+        damaged.write_bytes(b"not a database" * 100)
+        newer = self.copy_with(paths.backups_dir / "nodus-2026-11-04.db", "Nueva", age=48)
+        raw = sqlite3.connect(newer)
+        raw.execute(f"PRAGMA user_version = {latest_schema_version() + 1}")
+        raw.close()
+
+        assert DataRecovery(paths).newest_copy().path == whole
+
+    def test_the_copy_taken_before_updating_counts(self, paths):
+        before_update = paths.database_path.with_name("nodus.db.bak")
+        self.copy_with(before_update, "Antes de actualizar", age=1)
+
+        assert DataRecovery(paths).newest_copy().path == before_update
+
+    def test_without_copies_there_is_nothing_to_recover(self, paths):
+        assert DataRecovery(paths).newest_copy() is None
+
+    def test_recovering_moves_the_damaged_file_aside_with_its_wal(self, paths):
+        copy = self.copy_with(paths.backups_dir / "nodus-2026-11-05.db", "Nueva", age=1)
+        paths.database_path.write_bytes(b"damaged")
+        paths.database_path.with_name("nodus.db-wal").write_bytes(b"wal")
+        recovery = DataRecovery(paths)
+
+        aside = recovery.recover(recovery.newest_copy(), NOW)
+
+        assert aside.name == "nodus-dañado-2026-11-06-213000.db"
+        assert aside.read_bytes() == b"damaged"
+        assert aside.with_name(aside.name + "-wal").read_bytes() == b"wal"
+        assert not paths.database_path.with_name("nodus.db-wal").exists()
+        assert paths.database_path.read_bytes() == copy.read_bytes()

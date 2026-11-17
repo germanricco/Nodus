@@ -1,11 +1,15 @@
+import functools
 import sqlite3
 
 import pytest
 
 from nodus.database.database import (
+    DamagedDatabaseError,
     Database,
     DatabaseError,
     Migration,
+    MigrationError,
+    NewerDatabaseError,
     latest_schema_version,
     load_packaged_migrations,
 )
@@ -126,7 +130,7 @@ class TestMigrations:
     def test_failed_migration_is_rolled_back(self, db_path):
         Database.open(db_path, [CREATE_NOTES]).close()
 
-        with pytest.raises(DatabaseError):
+        with pytest.raises(MigrationError):
             Database.open(db_path, [CREATE_NOTES, BROKEN])
 
         database = Database.open(db_path, [CREATE_NOTES])
@@ -135,11 +139,65 @@ class TestMigrations:
         database.close()
 
 
-def test_corrupt_file_raises_database_error(db_path):
+def test_corrupt_file_is_damaged_and_left_closed(db_path):
     db_path.write_bytes(b"this is not a sqlite database" * 100)
 
-    with pytest.raises(DatabaseError):
+    with pytest.raises(DamagedDatabaseError):
         Database.open(db_path)
+    # Closed: Windows refuses to move a file that is still open.
+    db_path.rename(db_path.with_name("aside.db"))
+
+
+def test_file_with_a_damaged_page_is_damaged(db_path):
+    database = Database.open(db_path, [CREATE_NOTES])
+    with database.transaction():
+        database.connection.executemany(
+            "INSERT INTO notes (text) VALUES (?)", [("x" * 500,) for _ in range(200)]
+        )
+    database.close()
+    data = bytearray(db_path.read_bytes())
+    data[4096 * 2 : 4096 * 2 + 200] = bytes([255]) * 200
+    db_path.write_bytes(bytes(data))
+
+    with pytest.raises(DamagedDatabaseError):
+        Database.open(db_path, [CREATE_NOTES])
+
+
+def test_file_from_a_newer_nodus_is_refused_untouched(db_path):
+    Database.open(db_path, [CREATE_NOTES, ADD_TAGS]).close()
+    before = db_path.read_bytes()
+
+    with pytest.raises(NewerDatabaseError):
+        Database.open(db_path, [CREATE_NOTES])
+    assert db_path.read_bytes() == before
+
+
+def test_file_another_program_holds_is_neither_damaged_nor_newer(db_path, monkeypatch):
+    Database.open(db_path, [CREATE_NOTES]).close()
+    holder = sqlite3.connect(db_path)
+    # Without SQLite's five seconds of retrying, which the app keeps.
+    monkeypatch.setattr(sqlite3, "connect", functools.partial(sqlite3.connect, timeout=0))
+    holder.execute("PRAGMA locking_mode = EXCLUSIVE")
+    holder.execute("BEGIN EXCLUSIVE")
+    try:
+        with pytest.raises(DatabaseError) as raised:
+            Database.open(db_path, [CREATE_NOTES])
+        assert type(raised.value) is DatabaseError
+    finally:
+        holder.rollback()
+        holder.close()
+
+
+def test_closing_leaves_the_file_whole_by_itself(db_path):
+    database = Database.open(db_path, [CREATE_NOTES])
+    with database.transaction():
+        database.connection.execute("INSERT INTO notes (text) VALUES ('kept')")
+    database.close()
+
+    assert not db_path.with_name(db_path.name + "-wal").exists()
+    copy = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro&immutable=1", uri=True)
+    assert copy.execute("SELECT text FROM notes").fetchone()[0] == "kept"
+    copy.close()
 
 
 @pytest.mark.parametrize("released", [1, 2, 3, 4, 5, 6, 7, 8, 9])
