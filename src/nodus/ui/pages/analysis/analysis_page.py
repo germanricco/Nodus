@@ -16,8 +16,8 @@ from nodus.ui.pages.analysis.common import AnalysisView
 from nodus.ui.pages.analysis.net_worth_view import NetWorthView
 from nodus.ui.pages.analysis.trends_view import TrendsView
 from nodus.ui.pages.base.page import Page
+from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.inputs.period_selector import PeriodSelector
 from nodus.ui.widgets.style import scrolling
 
 DEFAULT_MONTHS = 12

@@ -13,7 +13,7 @@ from nodus.models.period import Period, format_day_month
 from nodus.services.container import Services
 from nodus.services.conversion import relative_change
 from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint, trend_change
-from nodus.ui.text.formatting import format_date
+from nodus.ui.text.formatting import format_date, signed
 from nodus.ui.text.labels import HELD_IN_LABELS, NO_RATE_TEXT, rate_text
 from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.theme.theme import Theme
@@ -34,11 +34,6 @@ CURRENCY_LABELS = [currency.symbol for currency in CURRENCIES]
 # Which chart series each currency takes, so a currency keeps its color everywhere.
 SERIES_ORDER = tuple(Currency)
 CHANGE_CAPTION = "vs. inicio del período"
-
-
-def signed(money: Money) -> str:
-    """ "+$ 118.400,00" or "-$ 2.000,00": a change always shows its sign."""
-    return money.format() if money.is_negative else f"+{money.format()}"
 
 
 def rate_effect_text(effect: Money | None, start: Money | None) -> str:

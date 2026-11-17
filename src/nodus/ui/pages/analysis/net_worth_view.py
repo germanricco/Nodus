@@ -14,19 +14,18 @@ from nodus.models.period import Month, Period, format_month
 from nodus.services.container import Services
 from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint
 from nodus.ui.pages.analysis.common import MONTH, AnalysisView, ModelIndex
-from nodus.ui.text.formatting import format_date
+from nodus.ui.pages.base.net_worth_card import (
+    CURRENCIES,
+    CURRENCY_LABELS,
+    NetWorthCard,
+    rate_effect_text,
+)
+from nodus.ui.text.formatting import format_date, signed
 from nodus.ui.text.labels import HELD_IN_LABELS, NO_RATE_TEXT
 from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
-from nodus.ui.widgets.net_worth_card import (
-    CURRENCIES,
-    CURRENCY_LABELS,
-    NetWorthCard,
-    rate_effect_text,
-    signed,
-)
 from nodus.ui.widgets.style import RIGHT_ALIGNED
 from nodus.ui.widgets.tables.table import fit_rows, record_table
 

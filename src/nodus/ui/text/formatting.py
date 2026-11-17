@@ -7,6 +7,11 @@ from nodus.models.period import format_date, format_month
 __all__ = ["format_date", "format_month"]
 
 
+def signed(money: Money) -> str:
+    """ "+$ 118.400,00" or "-$ 2.000,00": a change always shows its sign."""
+    return money.format() if money.is_negative else f"+{money.format()}"
+
+
 def percent(part: Money, whole: Money) -> str:
     """Share of ``whole``, rounded to a whole percent; "—" when ``whole`` is not positive."""
     return rate_text(part.cents / whole.cents if whole.cents > 0 else None)

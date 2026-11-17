@@ -18,10 +18,10 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.base.page import Page
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
+from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.inputs.combo_box import ComboBox
-from nodus.ui.widgets.inputs.period_selector import PeriodSelector
 from nodus.ui.widgets.inputs.selectors import (
     AccountComboBox,
     CategoryComboBox,

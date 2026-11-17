@@ -22,6 +22,7 @@ from nodus.ui.actions.recurring import pay_charge, skip_charge, toggle_seen
 from nodus.ui.actions.transactions import delete_transactions, edit_transaction
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
+from nodus.ui.pages.base.net_worth_card import NetWorthCard
 from nodus.ui.pages.base.page import Page
 from nodus.ui.pages.dashboard.budgets_card import BudgetsCard
 from nodus.ui.pages.dashboard.cash_flow_card import CashFlowCard
@@ -33,13 +34,12 @@ from nodus.ui.pages.dashboard.latest_transactions_card import (
     LatestTransactionsCard,
 )
 from nodus.ui.pages.dashboard.upcoming_payments_card import UpcomingPaymentsCard
+from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.shell import tour
 from nodus.ui.shell.coach_marks import mark_target
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.inputs.period_selector import PeriodSelector
-from nodus.ui.widgets.net_worth_card import NetWorthCard
 from nodus.ui.widgets.style import muted_label, scrolling
 
 # Below this page width, the cards go one per row.
