@@ -31,6 +31,7 @@ from nodus.ui.widgets.inputs.amount_input import AmountInput
 from nodus.ui.widgets.inputs.combo_box import ComboBox
 from nodus.ui.widgets.inputs.date_input import DateInput
 from nodus.ui.widgets.inputs.selectors import AccountComboBox, CategoryComboBox
+from nodus.ui.widgets.style import hint_label
 
 
 def account_input_for(
@@ -194,16 +195,14 @@ class PayChargeDialog(FormDialog):
         self.account_input = account_input_for(services, self.amount_input, [charge.account_id])
         self.account_input.select(charge.account_id)
         self.charge_label = QLabel(charge.amount.format())
-        self.rate_hint = QLabel()
-        self.rate_hint.setObjectName("FieldHint")
+        self.rate_hint = hint_label()
         self.rate_hint.setWordWrap(True)
         self.date_input = DateInput()
         self.date_input.set_day(self._today)
-        self.next_hint = QLabel(
+        self.next_hint = hint_label(
             f"Se registra como gasto y el próximo cobro pasa al "
             f"{format_date(charge.following_due())}."
         )
-        self.next_hint.setObjectName("FieldHint")
         self.next_hint.setWordWrap(True)
 
         self.form.addRow("Cargo", self.charge_label)

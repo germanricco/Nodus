@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLabel, QWidget
+from PySide6.QtWidgets import QWidget
 
 from nodus.models.category import Category
 from nodus.models.currency import HOME_CURRENCY
@@ -21,6 +21,7 @@ from nodus.ui.dialogs.form_dialog import (
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.inputs.amount_input import AmountInput
 from nodus.ui.widgets.inputs.selectors import CategoryComboBox
+from nodus.ui.widgets.style import hint_label
 
 
 class BudgetDialog(FormDialog):
@@ -58,14 +59,12 @@ class BudgetDialog(FormDialog):
         self.category_input.set_categories([(None, [CategoryNode(c, []) for c in candidates])])
         self.category_input.setEnabled(category is None)
         self.amount_input = AmountInput(HOME_CURRENCY)
-        self.suggestion_hint = QLabel()
-        self.suggestion_hint.setObjectName("FieldHint")
+        self.suggestion_hint = hint_label()
         self.suggestion_hint.setWordWrap(True)
-        scope_hint = QLabel(
+        scope_hint = hint_label(
             f"Rige desde {format_month(month).lower()} en adelante; "
             "los meses anteriores conservan su límite."
         )
-        scope_hint.setObjectName("FieldHint")
         scope_hint.setWordWrap(True)
 
         self.form.addRow("Categoría", self.category_input)

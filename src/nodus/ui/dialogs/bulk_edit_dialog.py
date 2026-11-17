@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QLineEdit, QWidget
 
 from nodus.models.bulk_changes import BulkChanges
 from nodus.models.transaction import Transaction, TransactionType
@@ -14,6 +14,7 @@ from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.inputs.payee_input import PayeeInput
 from nodus.ui.widgets.inputs.selectors import CategoryComboBox
 from nodus.ui.widgets.inputs.tag_input import TagInput
+from nodus.ui.widgets.style import hint_label
 
 UNCHANGED = "Sin cambios"
 MIXED_KINDS_HINT = "La categoría cambia solo si todas son gastos o todas son ingresos."
@@ -75,8 +76,7 @@ class BulkEditDialog(FormDialog):
         self.form.addRow("Nota", self.note_input)
         self.form.addRow("Agregar etiquetas", self.add_tags_input)
         self.form.addRow("Quitar etiquetas", self.remove_tags_input)
-        hint = QLabel(self._hint(transactions, kind))
-        hint.setObjectName("FieldHint")
+        hint = hint_label(self._hint(transactions, kind))
         hint.setWordWrap(True)
         self.form.addRow("", hint)
 

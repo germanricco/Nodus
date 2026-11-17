@@ -26,7 +26,7 @@ from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.flow_layout import FlowLayout
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
-from nodus.ui.widgets.style import muted_label
+from nodus.ui.widgets.style import hint_label, muted_label
 
 # The net worth can be shown in these; the parts held in any currency are listed apart.
 CURRENCIES = list(TOTAL_CURRENCIES)
@@ -123,8 +123,7 @@ class NetWorthCard(Card):
         header.addWidget(self.currency_input)
         header.addStretch()
         self.change_badge = ChangeBadge()
-        self.change_caption = QLabel(CHANGE_CAPTION)
-        self.change_caption.setObjectName("FieldHint")
+        self.change_caption = hint_label(CHANGE_CAPTION)
         change = QVBoxLayout()
         change.setSpacing(Space.XXS)
         change.addWidget(self.change_badge, alignment=Qt.AlignmentFlag.AlignRight)
@@ -183,8 +182,7 @@ class NetWorthCard(Card):
         self.legends = {currency: CurrencyLegend(currency) for currency in Currency}
         for item in self.legends.values():
             legend.addWidget(item)
-        self.rate_label = QLabel()
-        self.rate_label.setObjectName("FieldHint")
+        self.rate_label = hint_label()
         legend.addWidget(self.rate_label)
         self.body.addLayout(legend)
 

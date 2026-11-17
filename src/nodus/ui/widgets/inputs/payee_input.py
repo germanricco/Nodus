@@ -5,13 +5,14 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QLabel, QLineEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLineEdit, QVBoxLayout, QWidget
 
 from nodus.models.names import normalize_name
 from nodus.models.transaction import TransactionType
 from nodus.services.classification.payee_service import PayeeService
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.inputs.name_completer import NameCompleter
+from nodus.ui.widgets.style import hint_label
 
 # The kind of transaction a form is for, and its chosen category, or None for either.
 PayeeContext = Callable[[], tuple[TransactionType | None, int | None]]
@@ -51,8 +52,7 @@ class PayeeInput(QWidget):
             self.line_edit, self._suggestions, suggest_on_focus=context is not None
         )
         self.completer = self.names.completer
-        self.hint = QLabel()
-        self.hint.setObjectName("FieldHint")
+        self.hint = hint_label()
         self.hint.hide()
         layout.addWidget(self.line_edit)
         layout.addWidget(self.hint)

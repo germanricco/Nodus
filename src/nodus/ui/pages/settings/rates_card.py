@@ -81,7 +81,23 @@ class RatesCard(Card):
         super().__init__("Cotizaciones")
         self._services = services
         self._event_bus = event_bus
+        self._add_choices()
+        self._add_current_rate()
+        self._add_rate_form()
 
+        history_title = card_title("Historial")
+        self.body.addSpacing(Space.S)
+        self.body.addWidget(history_title)
+        self._history = QVBoxLayout()
+        self._history.setSpacing(0)
+        self.body.addLayout(self._history)
+
+        self._rate_updater = RateUpdater(services, event_bus, parent=self)
+        self._rate_updater.updated.connect(self._on_rate_updated)
+        self._rate_updater.failed.connect(self._on_rate_failed)
+
+    def _add_choices(self) -> None:
+        """Which currency the card shows and where its rates come from."""
         self.rate_currency_row = SettingRow("Moneda", "La cotización que se ve y se carga debajo.")
         self.rate_currency_input = self.rate_currency_row.add(
             SegmentedControl(RATE_CURRENCY_LABELS)
@@ -102,6 +118,7 @@ class RatesCard(Card):
         )
         self.body.addWidget(self.rate_source_row)
 
+    def _add_current_rate(self) -> None:
         self.current_rate_label = QLabel()
         self.current_rate_label.setObjectName("StatValueLarge")
         self.current_rate_date_label = muted_label("")
@@ -117,6 +134,8 @@ class RatesCard(Card):
         self.body.addLayout(current)
         self.body.addSpacing(Space.XS)
 
+    def _add_rate_form(self) -> None:
+        """Typing a rate in, for a day, with its error under it."""
         self.rate_date_input = DateInput()
         self.rate_value_input = AmountInput(HOME_CURRENCY)
         self.rate_value_input.setFixedWidth(Layout.NUMBER_FIELD_WIDTH)
@@ -139,17 +158,6 @@ class RatesCard(Card):
         self.rate_error_label.setObjectName("ErrorLabel")
         self.rate_error_label.hide()
         self.body.addWidget(self.rate_error_label)
-
-        history_title = card_title("Historial")
-        self.body.addSpacing(Space.S)
-        self.body.addWidget(history_title)
-        self._history = QVBoxLayout()
-        self._history.setSpacing(0)
-        self.body.addLayout(self._history)
-
-        self._rate_updater = RateUpdater(services, event_bus, parent=self)
-        self._rate_updater.updated.connect(self._on_rate_updated)
-        self._rate_updater.failed.connect(self._on_rate_failed)
 
     def refresh(self) -> None:
         self._refresh_rate_currencies()

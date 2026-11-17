@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from html import escape
 
-from PySide6.QtWidgets import QHeaderView, QLabel
+from PySide6.QtWidgets import QHeaderView
 
 from nodus.models.money import Money
 from nodus.models.transaction_filter import TransactionFilter
@@ -26,6 +26,7 @@ from nodus.ui.transaction_rows import (
 )
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import EmptyState
+from nodus.ui.widgets.style import hint_label
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
 from nodus.ui.widgets.tables.selectable_table import SelectableTable
 from nodus.ui.widgets.tables.selection_bar import SelectionBar
@@ -124,8 +125,7 @@ class TransactionListView(Card):
         bind_delete_key(self.table, self.delete_selected)
         self.table.selection_changed.connect(self._update_actions)
         self.empty_state = EmptyState()
-        self.totals_label = QLabel()
-        self.totals_label.setObjectName("FieldHint")
+        self.totals_label = hint_label()
         self.totals_label.setContentsMargins(Space.S, Space.XS, Space.S, 0)
         self.body.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
         self.body.addWidget(self.table)

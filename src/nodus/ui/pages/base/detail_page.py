@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import QFrame, QPushButton, QVBoxLayout
 
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.base.page import Page
@@ -16,6 +16,7 @@ from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import card_title
+from nodus.ui.widgets.style import hint_label
 
 
 class DetailPage(Page):
@@ -74,8 +75,7 @@ def danger_zone(text: str, action: str, run: Callable[[], object]) -> tuple[QFra
     layout.setContentsMargins(Space.XL, Space.L, Space.XL, Space.L)
     layout.setSpacing(Space.S)
     title = card_title("Zona de peligro")
-    explanation = QLabel(text)
-    explanation.setObjectName("FieldHint")
+    explanation = hint_label(text)
     explanation.setWordWrap(True)
     button = QPushButton(action)
     button.setObjectName("DangerButton")

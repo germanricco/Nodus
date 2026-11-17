@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QVBoxLayout, QWidget
 
 from nodus.models.names import normalize_name
 from nodus.models.palette import NEW_TAG_COLOR
@@ -11,7 +11,7 @@ from nodus.services.classification.tag_service import TagService
 from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.widgets.inputs.color import color_icon
 from nodus.ui.widgets.inputs.name_completer import NameCompleter
-from nodus.ui.widgets.style import clear_layout
+from nodus.ui.widgets.style import clear_layout, hint_label
 
 
 def new_names_hint(names: list[str]) -> str:
@@ -50,8 +50,7 @@ class TagInput(QWidget):
             self.line_edit,
             lambda text: [t.name for t in tags.matches(text) if not self._has(t.name)],
         )
-        self.hint = QLabel()
-        self.hint.setObjectName("FieldHint")
+        self.hint = hint_label()
         layout.addWidget(self.chips)
         layout.addWidget(self.line_edit)
         layout.addWidget(self.hint)

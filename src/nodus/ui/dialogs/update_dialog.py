@@ -20,7 +20,7 @@ from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.user_error import ErrorDetail
 from nodus.ui.theme.design import Layout, Space
-from nodus.ui.widgets.style import secondary_button, set_style_name
+from nodus.ui.widgets.style import hint_label, secondary_button, set_style_name
 
 MEBIBYTE = 1024 * 1024  # what Windows calls a MB
 
@@ -60,8 +60,7 @@ class UpdateDialog(QDialog):
         self.progress_bar = QProgressBar()
         self.progress_bar.setTextVisible(False)
         layout.addWidget(self.progress_bar)
-        self.detail_label = QLabel()
-        self.detail_label.setObjectName("FieldHint")
+        self.detail_label = hint_label()
         self.detail_label.setWordWrap(True)
         layout.addWidget(self.detail_label)
         self.error_detail = ErrorDetail()

@@ -5,7 +5,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from nodus.ui.theme.design import Space
-from nodus.ui.widgets.style import set_style_name
+from nodus.ui.widgets.style import hint_label, set_style_name
 
 
 class SettingRow(QWidget):
@@ -24,8 +24,7 @@ class SettingRow(QWidget):
         texts.setSpacing(Space.XXS)
         self.title = QLabel(title)
         self.title.setObjectName("RowTitle")
-        self.detail = QLabel(detail)
-        self.detail.setObjectName("FieldHint")
+        self.detail = hint_label(detail)
         self.detail.setWordWrap(True)
         texts.addWidget(self.title)
         texts.addWidget(self.detail)

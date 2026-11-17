@@ -15,7 +15,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.text.formatting import format_date, signed
 from nodus.ui.widgets.inputs.amount_input import AmountInput
 from nodus.ui.widgets.inputs.date_input import DateInput
-from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.style import hint_label, set_style_property
 
 
 class ValueAdjustmentDialog(FormDialog):
@@ -43,12 +43,11 @@ class ValueAdjustmentDialog(FormDialog):
         self.balance_label = QLabel()
         self.value_input = AmountInput(account.currency)
         self.difference_label = QLabel()
-        hint = QLabel(
+        hint = hint_label(
             "Escribe lo que vale hoy, como lo muestra su app o resumen. La diferencia cuenta"
             " como rendimiento: cambia el saldo y el patrimonio neto, no los ingresos ni los"
             " gastos."
         )
-        hint.setObjectName("FieldHint")
         hint.setWordWrap(True)
 
         self.form.addRow("Fecha", self.date_input)

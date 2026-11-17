@@ -82,6 +82,13 @@ def muted_label(text: str) -> QLabel:
     return label
 
 
+def hint_label(text: str = "") -> QLabel:
+    """A small line that explains a field or a figure next to it."""
+    label = QLabel(text)
+    label.setObjectName("FieldHint")
+    return label
+
+
 def scrolling(widget: QWidget, horizontal: bool = True) -> QScrollArea:
     """``widget`` in a scroll area that follows its width; with ``horizontal`` off, the
     content is never wider than the area, so only a vertical bar ever shows."""

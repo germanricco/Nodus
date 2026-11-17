@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtGui import QShowEvent
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 
 from nodus.models.account import Account
 from nodus.models.currency import HOME_CURRENCY, Currency
@@ -39,6 +39,7 @@ from nodus.ui.widgets.inputs.payee_input import PayeeInput
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.inputs.selectors import AccountComboBox, CategoryComboBox
 from nodus.ui.widgets.inputs.tag_input import TagInput
+from nodus.ui.widgets.style import hint_label
 
 # Segment order of the mode selector.
 EXPENSE_MODE, INCOME_MODE, TRANSFER_MODE = range(3)
@@ -92,7 +93,19 @@ class TransactionDialog(FormDialog):
         self._event_bus = event_bus
         self._transaction = transaction
         self._category_picked = transaction is not None
+        self._create_fields(services, theme_manager, transaction)
+        self._lay_out()
+        self._connect()
+        self._load_accounts()
+        if transaction:
+            self._load(transaction)
+        else:
+            self._start(start or TransactionStart())
+        self._update_mode()
 
+    def _create_fields(
+        self, services: Services, theme_manager: ThemeManager, transaction: Transaction | None
+    ) -> None:
         self.mode_input = SegmentedControl(MODE_LABELS)
         self.add_above_form(self.mode_input)
         # Nothing stands chosen that the user did not choose: only the account comes
@@ -104,12 +117,10 @@ class TransactionDialog(FormDialog):
         self.amount_input = AmountInput(HOME_CURRENCY)
         self.amount_in_input = AmountInput(Currency.USD)
         self.installment_fields = InstallmentFields()
-        self.installments_hint = QLabel()
-        self.installments_hint.setObjectName("FieldHint")
+        self.installments_hint = hint_label()
         self.installments_hint.setWordWrap(True)  # a long hint wraps; it never widens
         self.installments_hint.hide()
-        self.rate_hint = QLabel()
-        self.rate_hint.setObjectName("FieldHint")
+        self.rate_hint = hint_label()
         self.payee_input = PayeeInput(services.payees, self._payee_context)
         self.category_input = CategoryComboBox()
         self.category_input.set_placeholder(CATEGORY_PLACEHOLDER)
@@ -120,9 +131,9 @@ class TransactionDialog(FormDialog):
         self.refund_input = RefundField(
             services, theme_manager, transaction.id if transaction else None
         )
-        self.refunded_hint = QLabel()
-        self.refunded_hint.setObjectName("FieldHint")
+        self.refunded_hint = hint_label()
 
+    def _lay_out(self) -> None:
         self.form.addRow("Cuenta", self.account_input)
         self.form.addRow("Hacia", self.to_account_input)
         # How it is paid before how much: the amount then reads as the total or as one
@@ -158,7 +169,7 @@ class TransactionDialog(FormDialog):
         self.bind_field(self.amount_in_input, "amount_in")
         self.bind_field(self.category_input, "category_id")
 
-        self._load_accounts()
+    def _connect(self) -> None:
         self.mode_input.changed.connect(self._update_mode)
         self.account_input.currentIndexChanged.connect(self._update_currencies)
         self.to_account_input.currentIndexChanged.connect(self._update_currencies)
@@ -171,12 +182,6 @@ class TransactionDialog(FormDialog):
         self.installment_fields.changed.connect(self._update_installments)
         self.amount_input.line_edit.textChanged.connect(self._update_installments)
         self.date_input.dateChanged.connect(self._update_installments)
-
-        if transaction:
-            self._load(transaction)
-        else:
-            self._start(start or TransactionStart())
-        self._update_mode()
 
     def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
         """Sizes the dialog for its widest look, so it keeps its width while installments

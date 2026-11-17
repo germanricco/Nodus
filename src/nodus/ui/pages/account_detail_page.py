@@ -84,7 +84,46 @@ class AccountDetailPage(DetailPage):
         self.today: date | None = None  # fixed by tests; otherwise the real date
         self._hidden = services.settings.amounts_hidden()
         self._daily = True
+        self._add_header_buttons()
 
+        # The page scrolls, so the movements keep room below everything else.
+        body = self.scrolling_body()
+        # What the account is, in one quiet line under its name: type, currency, group.
+        self.context_label = muted_label("")
+        body.addWidget(self.context_label)
+        body.addWidget(self._figures())
+        self.goals_line = QWidget()
+        self._goals_layout = QHBoxLayout(self.goals_line)
+        self._goals_layout.setContentsMargins(0, 0, 0, 0)
+        self._goals_layout.setSpacing(Space.S)
+        body.addWidget(self.goals_line)
+        body.addWidget(self._payments_card())
+        body.addWidget(self._chart_card(services, theme_manager))
+
+        self.list_view = TransactionListView(services, event_bus, theme_manager, self)
+        # Every row would repeat the account.
+        self.list_view.table.setColumnHidden(ACCOUNT, True)
+        self.list_view.setMinimumHeight(Layout.DETAIL_LIST_MIN_HEIGHT)
+        body.addWidget(self.list_view, stretch=1)
+
+        self.danger_card, self.delete_button = danger_zone("", "Eliminar cuenta", self.delete)
+        self._danger_text = self.danger_card.findChild(QLabel, "FieldHint")
+        body.addWidget(self.danger_card)
+
+        for signal in (
+            event_bus.accounts_changed,
+            event_bus.transactions_changed,
+            event_bus.exchange_rates_changed,
+            event_bus.categories_changed,
+            event_bus.payees_changed,
+            event_bus.tags_changed,
+            event_bus.goals_changed,
+            event_bus.recurring_changed,
+        ):
+            signal.connect(self.request_refresh)
+        event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
+
+    def _add_header_buttons(self) -> None:
         self.value_button = self.add_header_button("Actualizar valor")
         self.value_button.setToolTip(
             "Anota lo que vale hoy; la diferencia es rendimiento, no un ingreso"
@@ -95,14 +134,8 @@ class AccountDetailPage(DetailPage):
         self.more_button = MoreButton(self.more_actions)
         self.add_header_widget(self.more_button)
 
-        # The page scrolls, so the movements keep room below everything else.
-        body = self.scrolling_body()
-
-        # What the account is, in one quiet line under its name: type, currency, group.
-        self.context_label = muted_label("")
-        body.addWidget(self.context_label)
-
-        # The figures; the ones that do not apply to this account hide.
+    def _figures(self) -> FigureRow:
+        """The figures; the ones that do not apply to this account hide."""
         self.figures = FigureRow()
         self.balance_label = MoneyLabel()
         self.balance_note = muted_label("")
@@ -131,22 +164,18 @@ class AccountDetailPage(DetailPage):
         )  # fmt: skip
         for tile in tiles:
             self.figures.add_tile(tile)
-        body.addWidget(self.figures)
+        return self.figures
 
-        self.goals_line = QWidget()
-        self._goals_layout = QHBoxLayout(self.goals_line)
-        self._goals_layout.setContentsMargins(0, 0, 0, 0)
-        self._goals_layout.setSpacing(Space.S)
-        body.addWidget(self.goals_line)
-
-        # The recurring charges paid from this account, each with its «Pagar».
+    def _payments_card(self) -> Card:
+        """The recurring charges paid from this account, each with its «Pagar»."""
         self.payments_card = Card("Próximos pagos")
         self._payment_rows = QVBoxLayout()
         self._payment_rows.setSpacing(0)
         self.payments_card.body.addLayout(self._payment_rows)
         self.payment_rows: list[UpcomingPaymentRow] = []
-        body.addWidget(self.payments_card)
+        return self.payments_card
 
+    def _chart_card(self, services: Services, theme_manager: ThemeManager) -> Card:
         chart_card = Card()
         header = card_header(chart_card, "Saldo en el tiempo")
         self.range_input = SegmentedControl([label for _months, label in CHART_RANGES])
@@ -163,30 +192,7 @@ class AccountDetailPage(DetailPage):
         self.chart.setFixedHeight(Chart.ACCOUNT_HEIGHT)
         chart_card.body.addWidget(self.chart)
         theme_manager.theme_changed.connect(self.chart.set_theme)
-        body.addWidget(chart_card)
-
-        self.list_view = TransactionListView(services, event_bus, theme_manager, self)
-        # Every row would repeat the account.
-        self.list_view.table.setColumnHidden(ACCOUNT, True)
-        self.list_view.setMinimumHeight(Layout.DETAIL_LIST_MIN_HEIGHT)
-        body.addWidget(self.list_view, stretch=1)
-
-        self.danger_card, self.delete_button = danger_zone("", "Eliminar cuenta", self.delete)
-        self._danger_text = self.danger_card.findChild(QLabel, "FieldHint")
-        body.addWidget(self.danger_card)
-
-        for signal in (
-            event_bus.accounts_changed,
-            event_bus.transactions_changed,
-            event_bus.exchange_rates_changed,
-            event_bus.categories_changed,
-            event_bus.payees_changed,
-            event_bus.tags_changed,
-            event_bus.goals_changed,
-            event_bus.recurring_changed,
-        ):
-            signal.connect(self.request_refresh)
-        event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
+        return chart_card
 
     def refresh(self) -> None:
         if self.item_id is None:

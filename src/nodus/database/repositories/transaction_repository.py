@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 import sqlite3
 from datetime import date
+from enum import Enum
 
 from nodus.database.repositories.base import LIKE, Repository, contains
 from nodus.models.currency import Currency
@@ -131,34 +132,11 @@ class TransactionRepository(Repository):
     def _where(criteria: TransactionFilter) -> tuple[list[str], list]:
         conditions: list[str] = []
         params: list = []
-        if criteria.start is not None:
-            conditions.append("t.occurred_on >= ?")
-            params.append(criteria.start.isoformat())
-        if criteria.end is not None:
-            conditions.append("t.occurred_on <= ?")
-            params.append(criteria.end.isoformat())
-        if criteria.account_id is not None:
-            conditions.append("t.account_id = ?")
-            params.append(criteria.account_id)
-        if criteria.category_id is not None:
-            conditions.append(
-                "t.category_id IN (SELECT id FROM categories WHERE id = ? OR parent_id = ?)"
-            )
-            params.extend([criteria.category_id, criteria.category_id])
-        if criteria.payee_id is not None:
-            conditions.append("t.payee_id = ?")
-            params.append(criteria.payee_id)
-        if criteria.tag_id is not None:
-            conditions.append(
-                "t.id IN (SELECT transaction_id FROM transaction_tags WHERE tag_id = ?)"
-            )
-            params.append(criteria.tag_id)
-        if criteria.installment_plan_id is not None:
-            conditions.append("t.installment_plan_id = ?")
-            params.append(criteria.installment_plan_id)
-        if criteria.type is not None:
-            conditions.append("t.type = ?")
-            params.append(criteria.type.value)
+        for attribute, condition in _MATCHES:
+            value = getattr(criteria, attribute)
+            if value is not None:
+                conditions.append(condition)
+                params.extend([_sql_value(value)] * condition.count("?"))
         if criteria.is_transfer is not None:
             conditions.append(
                 "t.transfer_id IS NOT NULL" if criteria.is_transfer else "t.transfer_id IS NULL"
@@ -170,17 +148,9 @@ class TransactionRepository(Repository):
             )
             conditions.append(linked if criteria.refund_linked else f"NOT {linked}")
         if criteria.text:
-            name_text = normalize_name(criteria.text)
-            if name_text:
-                conditions.append(
-                    f"(t.note {LIKE} OR p.normalized_name {LIKE} OR t.id IN ("
-                    "SELECT tt.transaction_id FROM transaction_tags tt"
-                    f" JOIN tags g ON g.id = tt.tag_id WHERE g.normalized_name {LIKE}))"
-                )
-                params.extend([contains(criteria.text)] + [contains(name_text)] * 2)
-            else:
-                conditions.append(f"t.note {LIKE}")
-                params.append(contains(criteria.text))
+            condition, values = _text_condition(criteria.text)
+            conditions.append(condition)
+            params.extend(values)
         return conditions, params
 
     @staticmethod
@@ -221,3 +191,40 @@ class TransactionRepository(Repository):
                 else None
             ),
         )
+
+
+# The filters that hold a value to compare with: the criteria's attribute, and the
+# condition it adds, with one ``?`` per time the value is used.
+_MATCHES = (
+    ("start", "t.occurred_on >= ?"),
+    ("end", "t.occurred_on <= ?"),
+    ("account_id", "t.account_id = ?"),
+    ("category_id", "t.category_id IN (SELECT id FROM categories WHERE id = ? OR parent_id = ?)"),
+    ("payee_id", "t.payee_id = ?"),
+    ("tag_id", "t.id IN (SELECT transaction_id FROM transaction_tags WHERE tag_id = ?)"),
+    ("installment_plan_id", "t.installment_plan_id = ?"),
+    ("type", "t.type = ?"),
+)
+
+
+def _sql_value(value: object) -> object:
+    """``value`` as SQLite stores it: days as ISO text, and enums by their value."""
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, Enum):
+        return value.value
+    return value
+
+
+def _text_condition(text: str) -> tuple[str, list[str]]:
+    """The search box: the note, and the payee and tag names however they are written;
+    only the note when the text is all signs, which names drop."""
+    name_text = normalize_name(text)
+    if not name_text:
+        return f"t.note {LIKE}", [contains(text)]
+    return (
+        f"(t.note {LIKE} OR p.normalized_name {LIKE} OR t.id IN ("
+        "SELECT tt.transaction_id FROM transaction_tags tt"
+        f" JOIN tags g ON g.id = tt.tag_id WHERE g.normalized_name {LIKE}))",
+        [contains(text), contains(name_text), contains(name_text)],
+    )

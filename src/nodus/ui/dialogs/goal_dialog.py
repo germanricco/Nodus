@@ -33,6 +33,7 @@ from nodus.ui.widgets.inputs.combo_box import ComboBox
 from nodus.ui.widgets.inputs.date_input import DateInput
 from nodus.ui.widgets.inputs.input_error import InputError
 from nodus.ui.widgets.money_label import amount_text
+from nodus.ui.widgets.style import hint_label
 
 PERCENT_WIDTH = 48  # geometry: room for «100»
 DEFAULT_MONTHS = 12  # a new goal's date, when one is set: a year from now
@@ -58,8 +59,7 @@ class ShareRow(QWidget):
         self.percent_input.setFixedWidth(PERCENT_WIDTH)
         self.percent_input.setToolTip("La parte del saldo que cuenta para la meta")
         self.percent_sign = QLabel("%")
-        self.hint = QLabel()
-        self.hint.setObjectName("FieldHint")
+        self.hint = hint_label()
         layout.addWidget(self.check)
         layout.addStretch()
         layout.addWidget(self.hint)
@@ -189,8 +189,7 @@ class GoalDialog(FormDialog):
         date_layout.addWidget(self.date_input, stretch=1)
         self.dated_input.toggled.connect(self.date_input.setEnabled)
         self.shares_input = AccountShares(self._share_rows())
-        self.summary_label = QLabel()
-        self.summary_label.setObjectName("FieldHint")
+        self.summary_label = hint_label()
         self.summary_label.setWordWrap(True)
 
         self.form.addRow("Nombre", self.name_input)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QLineEdit, QWidget
 
 from nodus.models.payee import Payee
 from nodus.models.transaction import TransactionType
@@ -12,6 +12,7 @@ from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.inputs.selectors import CategoryComboBox
+from nodus.ui.widgets.style import hint_label
 
 NO_DEFAULT_CATEGORY = "Sin categoría predeterminada"
 
@@ -50,8 +51,7 @@ class PayeeDialog(FormDialog):
             ],
             NO_DEFAULT_CATEGORY,
         )
-        hint = QLabel("Se completa sola al elegir este beneficiario en un movimiento.")
-        hint.setObjectName("FieldHint")
+        hint = hint_label("Se completa sola al elegir este beneficiario en un movimiento.")
         hint.setWordWrap(True)
 
         self.form.addRow("Nombre", self.name_input)

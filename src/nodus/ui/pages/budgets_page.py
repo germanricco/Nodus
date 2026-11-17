@@ -31,7 +31,7 @@ from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.charts.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.figure_tile import FigureTile
-from nodus.ui.widgets.style import amount_label, clear_layout, muted_label
+from nodus.ui.widgets.style import amount_label, clear_layout, hint_label, muted_label
 from nodus.ui.widgets.tables.budget_row import BudgetRow
 from nodus.ui.widgets.tables.category_line import CategoryLine
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
@@ -177,8 +177,7 @@ class BudgetsPage(Page):
             tiles.addWidget(FigureTile(caption, value), stretch=1)
         card.body.addLayout(tiles)
         if month.unconverted:
-            note = QLabel(unconverted_note(month.unconverted))
-            note.setObjectName("FieldHint")
+            note = hint_label(unconverted_note(month.unconverted))
             card.body.addWidget(note)
         return card
 
@@ -201,8 +200,7 @@ class BudgetsPage(Page):
 
     def _unbudgeted_card(self, totals: list[CategoryTotal]) -> Card:
         card = Card("Sin presupuesto")
-        hint = QLabel("Lo gastado en el mes en categorías sin límite.")
-        hint.setObjectName("FieldHint")
+        hint = hint_label("Lo gastado en el mes en categorías sin límite.")
         card.body.addWidget(hint)
         for total in totals:
             category = total.category

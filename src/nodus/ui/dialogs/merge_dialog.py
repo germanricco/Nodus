@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtWidgets import QLabel, QWidget
+from PySide6.QtWidgets import QWidget
 
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.text.labels import movements_text
 from nodus.ui.widgets.inputs.combo_box import ComboBox
+from nodus.ui.widgets.style import hint_label
 
 
 @dataclass(frozen=True)
@@ -52,8 +53,7 @@ class MergeDialog(FormDialog):
         candidates = others if single else [(s.name, s.id) for s in sources]
         for name, item_id in candidates:
             self.target_input.addItem(name, item_id)
-        self.result_label = QLabel()
-        self.result_label.setObjectName("FieldHint")
+        self.result_label = hint_label()
         self.result_label.setWordWrap(True)
         self.form.addRow(field_label if single else "Queda", self.target_input)
         self.form.addRow("", self.result_label)
