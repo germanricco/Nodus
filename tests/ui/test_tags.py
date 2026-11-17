@@ -9,13 +9,13 @@ from PySide6.QtCore import Qt
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction_filter import TransactionFilter
+from nodus.ui.actions import tags as tag_actions
 from nodus.ui.dialogs.category_dialog import CategoryDialog
 from nodus.ui.dialogs.tag_dialogs import MergeTagDialog, TagDialog
 from nodus.ui.navigation import PageId, TransactionFocus
-from nodus.ui.pages import tags_page
 from nodus.ui.pages.base.summary_page import COUNT, NAME, TOTAL
+from nodus.ui.pages.base.transaction_list_view import totals_text
 from nodus.ui.pages.tags_page import NO_TAGS_TEXT, TagsPage
-from nodus.ui.pages.transaction_list_view import totals_text
 from nodus.ui.widgets.tables.transaction_table import AMOUNT, TAGS
 
 
@@ -87,7 +87,7 @@ def test_delete_several_counts_each_movement_once(
     page.refresh()
     warnings = []
     monkeypatch.setattr(
-        tags_page, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+        tag_actions, "confirm", lambda _parent, _title, text: warnings.append(text) or True
     )
     select(page, "Viaje")
     page.table.toggle_row(column(page, NAME).index("Trabajo"))
@@ -105,7 +105,7 @@ def test_delete_keeps_the_movements(monkeypatch, qtbot, services, event_bus, pag
     page.refresh()
     warnings = []
     monkeypatch.setattr(
-        tags_page, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+        tag_actions, "confirm", lambda _parent, _title, text: warnings.append(text) or True
     )
     select(page, "Viaje")
 

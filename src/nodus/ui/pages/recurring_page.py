@@ -18,31 +18,26 @@ from nodus.models.recurring_charge import DueStatus, RecurringCharge
 from nodus.services.container import Services
 from nodus.services.transactions.installment_service import InstallmentSummary
 from nodus.services.transactions.recurring_charge_service import RecurringSummary
+from nodus.ui.actions.recurring import skip_charge, toggle_seen
+from nodus.ui.actions.transactions import delete_transactions, edit_transaction, pay_off_actions
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.base.page import Page
-from nodus.ui.pages.transaction_list_view import (
-    delete_transactions,
-    edit_transaction,
-    pay_off_actions,
-)
 from nodus.ui.text.labels import FREQUENCY_LABELS, charge_amount_text, due_label
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_rows import TransactionListBuilder, TransactionListItem
-from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import status_pill
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.pay_button import PayButton
 from nodus.ui.widgets.style import clear_layout, muted_label, set_style_property
-from nodus.ui.widgets.tables.charge_row import due_status_label, reminder_day, seen_actions
+from nodus.ui.widgets.tables.charge_row import due_status_label, seen_actions
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
 from nodus.ui.widgets.tables.schedule_row import ScheduleRow
-from nodus.ui.widgets.toast import show_toast, toast_host
 
 GROUP_TITLES = {
     DueStatus.OVERDUE: "Vencidos",
@@ -375,31 +370,3 @@ class RecurringPage(Page):
     def _empty_state(self) -> Card:
         card, _state = empty_page_card("Todavía no hay cargos recurrentes", EMPTY_TEXT)
         return card
-
-
-def toggle_seen(
-    widget: QWidget, services: Services, event_bus: EventBus, charge: RecurringCharge
-) -> None:
-    """«Ya lo vi» on ``charge``, or «Volver a avisarme» when it is put off, told in a
-    toast with the day its warning comes back."""
-    today = date.today()
-    if services.recurring.is_quiet(charge, today):
-        services.recurring.remind_again(charge.id, today)
-        text = f"Te volvemos a avisar de {charge.name}."
-    else:
-        day = services.recurring.mark_seen(charge.id, today)
-        text = f"Te recordamos {charge.name} {reminder_day(day, today)}."
-    host = toast_host(widget)  # the row that asked is rebuilt by the refresh
-    event_bus.recurring_changed.emit()
-    if host is not None:
-        show_toast(host, text)
-
-
-def skip_charge(
-    widget: QWidget, services: Services, event_bus: EventBus, charge: RecurringCharge
-) -> None:
-    """Moves ``charge`` to its next due date without recording a payment, with
-    «Deshacer» in a toast."""
-    services.recurring.skip(charge.id)
-    event_bus.recurring_changed.emit()
-    offer_undo(widget, services, event_bus.recurring_changed)

@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QLabel
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.ui.actions import accounts as account_actions
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.navigation import PageId
@@ -191,7 +192,7 @@ class TestAccountsPage:
         page.refresh()
         warnings = []
         monkeypatch.setattr(
-            accounts_page, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+            account_actions, "confirm", lambda _parent, _title, text: warnings.append(text) or True
         )
 
         with qtbot.waitSignal(event_bus.accounts_changed):
@@ -207,7 +208,7 @@ class TestAccountsPage:
         self, qtbot, monkeypatch, services, page, pesos
     ):
         page.refresh()
-        monkeypatch.setattr(accounts_page, "confirm", lambda *_args: False)
+        monkeypatch.setattr(account_actions, "confirm", lambda *_args: False)
 
         run_action(rows(page)[0].actions(), "Eliminar")
 

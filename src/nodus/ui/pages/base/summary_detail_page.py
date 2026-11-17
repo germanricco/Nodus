@@ -14,7 +14,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.base.detail_page import DetailPage, danger_zone
 from nodus.ui.pages.base.summary_page import S
-from nodus.ui.pages.transaction_list_view import TransactionListView
+from nodus.ui.pages.base.transaction_list_view import TransactionListView
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import unconverted_note
 from nodus.ui.theme.theme_manager import ThemeManager

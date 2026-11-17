@@ -16,6 +16,7 @@ from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
+from nodus.ui.actions import transactions as transaction_actions
 from nodus.ui.dialogs.installment_fields import PER_INSTALLMENT, TOTAL
 from nodus.ui.dialogs.transaction_dialog import (
     EXPENSE_MODE,
@@ -24,7 +25,6 @@ from nodus.ui.dialogs.transaction_dialog import (
     TransactionDialog,
 )
 from nodus.ui.navigation import DetailId
-from nodus.ui.pages import transaction_list_view
 from nodus.ui.pages.dashboard.latest_transactions_card import (
     LatestTransactionRow,
     LatestTransactionsCard,
@@ -472,7 +472,7 @@ class TestTransactionsList:
     ):
         opened, asked = [], []
         monkeypatch.setattr(TransactionDialog, "exec", lambda dialog: opened.append(dialog))
-        monkeypatch.setattr(transaction_list_view, "confirm", lambda *args: asked.append(args))
+        monkeypatch.setattr(transaction_actions, "confirm", lambda *args: asked.append(args))
         page.show()
 
         double_click_row(page.list_view.table, row_of(page, "5/6"))
@@ -505,7 +505,7 @@ class TestTransactionsList:
     ):
         warnings = []
         monkeypatch.setattr(
-            transaction_list_view, "confirm", lambda _p, _t, text: warnings.append(text) or True
+            transaction_actions, "confirm", lambda _p, _t, text: warnings.append(text) or True
         )
 
         run_action(page.list_view.row_actions(row_of(page, "4/6")), "Eliminar compra")
@@ -521,14 +521,14 @@ class TestTransactionsList:
         page.refresh()
         warnings = []
         monkeypatch.setattr(
-            transaction_list_view, "confirm", lambda _p, _t, text: warnings.append(text) or True
+            transaction_actions, "confirm", lambda _p, _t, text: warnings.append(text) or True
         )
         items = [page.model.item(row_of(page, "2/6")), page.model.item(row_of(page, "3/6"))]
         plain = page.model.item(
             next(i for i, d in enumerate(column(page, DESCRIPTION)) if "/" not in d)
         )
 
-        transaction_list_view.delete_transactions(
+        transaction_actions.delete_transactions(
             services, page.list_view._event_bus, [*items, plain], page
         )
 

@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
 from nodus.models.period import Month, Period
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
+from nodus.ui.actions.recurring import skip_charge, toggle_seen
+from nodus.ui.actions.transactions import delete_transactions, edit_transaction
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
@@ -33,8 +35,6 @@ from nodus.ui.pages.dashboard.latest_transactions_card import (
     LatestTransactionsCard,
 )
 from nodus.ui.pages.dashboard.upcoming_payments_card import UpcomingPaymentsCard
-from nodus.ui.pages.recurring_page import skip_charge, toggle_seen
-from nodus.ui.pages.transaction_list_view import delete_transactions, edit_transaction
 from nodus.ui.shell import tour
 from nodus.ui.shell.coach_marks import mark_target
 from nodus.ui.theme.design import Layout, Space

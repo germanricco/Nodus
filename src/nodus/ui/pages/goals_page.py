@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 from nodus.models.account import Account
 from nodus.models.goal import Goal, GoalProgress, GoalState
 from nodus.services.container import Services
-from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.actions.goals import delete_goal
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
@@ -37,16 +37,6 @@ EMPTY_TEXT = (
     "Una meta junta el saldo de tus cuentas de ahorro hacia un monto, con fecha si quieres. "
     "Nodus te dice cuánto apartar por mes y si a tu ritmo llegas a tiempo."
 )
-DELETE_TEXT = "Se elimina la meta «{name}». Las cuentas y sus movimientos no se tocan."
-
-
-def delete_goal(parent: QWidget, services: Services, event_bus: EventBus, goal: Goal) -> bool:
-    """Deletes ``goal`` once the user confirms; True if it was deleted."""
-    if not confirm(parent, "Eliminar meta", DELETE_TEXT.format(name=goal.name)):
-        return False
-    services.goals.delete(goal.id)
-    event_bus.goals_changed.emit()
-    return True
 
 
 def accounts_text(services: Services, goal: Goal) -> str:

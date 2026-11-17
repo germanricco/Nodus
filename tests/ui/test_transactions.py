@@ -12,6 +12,7 @@ from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.transactions.transaction_service import TransferDraft
+from nodus.ui.actions import transactions as transaction_actions
 from nodus.ui.dialogs import export
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog
 from nodus.ui.dialogs.transaction_dialog import (
@@ -21,8 +22,8 @@ from nodus.ui.dialogs.transaction_dialog import (
     TransactionDialog,
 )
 from nodus.ui.navigation import PageId
-from nodus.ui.pages import transaction_list_view
 from nodus.ui.pages.accounts_page import AccountRow
+from nodus.ui.pages.base import transaction_list_view
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.shell import main_window as main_window_module
 from nodus.ui.theme.design import Layout
@@ -363,7 +364,7 @@ class TestTransactionsPage:
     ):
         populate(services, pesos, dollars)
         page.refresh()
-        monkeypatch.setattr(transaction_list_view, "confirm", lambda *_args: True)
+        monkeypatch.setattr(transaction_actions, "confirm", lambda *_args: True)
 
         qtbot.keyClick(page.table, Qt.Key.Key_Delete)  # nothing selected: nothing happens
         assert len(all_transactions(services)) == 5
@@ -378,7 +379,7 @@ class TestTransactionsPage:
     ):
         buy_dollars(services, pesos, dollars)
         page.refresh()
-        monkeypatch.setattr(transaction_list_view, "confirm", lambda *_args: True)
+        monkeypatch.setattr(transaction_actions, "confirm", lambda *_args: True)
 
         with qtbot.waitSignal(event_bus.transactions_changed):
             run_action(page.row_actions(0), "Eliminar")
@@ -471,7 +472,7 @@ class TestTransactionsPage:
         page.refresh()
         warnings = []
         monkeypatch.setattr(
-            transaction_list_view, "confirm", lambda _p, _t, text: warnings.append(text) or True
+            transaction_actions, "confirm", lambda _p, _t, text: warnings.append(text) or True
         )
         page.table.selectRow(0)
         page.table.toggle_row(1)

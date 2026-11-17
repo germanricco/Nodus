@@ -15,11 +15,11 @@ from nodus.models.period import Month
 from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
 from nodus.services.planning.goal_service import GoalContribution
+from nodus.ui.actions.goals import delete_goal
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.base.detail_page import DetailPage
-from nodus.ui.pages.goals_page import delete_goal
 from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card

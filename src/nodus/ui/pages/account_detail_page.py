@@ -23,16 +23,16 @@ from nodus.models.recurring_charge import RecurringCharge
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
+from nodus.ui.actions.accounts import account_delete_warning, delete_account
+from nodus.ui.actions.recurring import skip_charge, toggle_seen
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
-from nodus.ui.pages.accounts_page import account_delete_warning, delete_account
 from nodus.ui.pages.base.detail_page import DetailPage, danger_zone
-from nodus.ui.pages.recurring_page import skip_charge, toggle_seen
-from nodus.ui.pages.transaction_list_view import TransactionListView
+from nodus.ui.pages.base.transaction_list_view import TransactionListView
 from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, estimate_text
 from nodus.ui.theme.design import Chart, Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager

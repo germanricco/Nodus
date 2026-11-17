@@ -9,9 +9,9 @@ from PySide6.QtCore import Qt
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
+from nodus.ui.actions import payees as payee_actions
 from nodus.ui.dialogs.payee_dialogs import NO_DEFAULT_CATEGORY, MergePayeeDialog, PayeeDialog
 from nodus.ui.navigation import TransactionFocus
-from nodus.ui.pages import payees_page
 from nodus.ui.pages.base.summary_page import COUNT, NAME, TOTAL
 from nodus.ui.pages.payees_page import NO_PAYEES_TEXT, PayeesPage
 
@@ -103,7 +103,7 @@ def test_selection_bar_merges_and_deletes_several(
     page.show()
     warnings = []
     monkeypatch.setattr(
-        payees_page, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+        payee_actions, "confirm", lambda _parent, _title, text: warnings.append(text) or True
     )
     select(page, "Coto")
     page.table.toggle_row(column(page, NAME).index("Empresa"))
@@ -132,7 +132,7 @@ def test_delete_after_confirmation(monkeypatch, qtbot, services, event_bus, page
     page.refresh()
     warnings = []
     monkeypatch.setattr(
-        payees_page, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+        payee_actions, "confirm", lambda _parent, _title, text: warnings.append(text) or True
     )
     select(page, "Coto")
 
@@ -145,7 +145,7 @@ def test_delete_after_confirmation(monkeypatch, qtbot, services, event_bus, page
 
 def test_delete_is_cancelled_when_not_confirmed(monkeypatch, page, services, populated):
     page.refresh()
-    monkeypatch.setattr(payees_page, "confirm", lambda *_args: False)
+    monkeypatch.setattr(payee_actions, "confirm", lambda *_args: False)
     select(page, "Kiosco")
 
     page.delete_button.click()
@@ -155,7 +155,7 @@ def test_delete_is_cancelled_when_not_confirmed(monkeypatch, page, services, pop
 
 def test_delete_key_deletes_the_selected_payee(monkeypatch, qtbot, services, page, populated):
     page.refresh()
-    monkeypatch.setattr(payees_page, "confirm", lambda *_args: True)
+    monkeypatch.setattr(payee_actions, "confirm", lambda *_args: True)
     select(page, "Kiosco")
 
     qtbot.keyClick(page.table, Qt.Key.Key_Delete)
