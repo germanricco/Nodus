@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QEnterEvent, QMouseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
 
@@ -55,7 +55,7 @@ class CategoryLine(QFrame):
         super().enterEvent(event)
         self.hovered.emit(True)
 
-    def leaveEvent(self, event) -> None:  # noqa: N802
+    def leaveEvent(self, event: QEvent) -> None:  # noqa: N802
         super().leaveEvent(event)
         self.hovered.emit(False)
 

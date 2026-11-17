@@ -4,15 +4,15 @@ import random
 from datetime import date, timedelta
 from decimal import Decimal
 
-from nodus.models.account import AccountType
+from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.models.goal import GoalShare
 from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.money import Money
 from nodus.models.palette import PALETTE
 from nodus.models.period import Month
-from nodus.models.recurring_charge import Frequency
-from nodus.models.transaction import TransactionType
+from nodus.models.recurring_charge import Frequency, RecurringCharge
+from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 from nodus.services.planning.goal_service import GoalDraft
 from nodus.services.transactions.recurring_charge_service import RecurringChargeDraft
@@ -64,8 +64,18 @@ class DemoData:
         for color in ("#2a9d8f", "#c0587e"):
             self.services.settings.add_recent_color(color)
 
-    def record(self, account_id, kind, category, amount, day, note="", payee="", tags=(),
-               refund_of=None):  # fmt: skip
+    def record(
+        self,
+        account_id: int,
+        kind: TransactionType,
+        category: str,
+        amount: Money,
+        day: date,
+        note: str = "",
+        payee: str = "",
+        tags: tuple[str, ...] = (),
+        refund_of: Transaction | None = None,
+    ) -> Transaction:
         return self.services.transactions.create(
             TransactionDraft(account_id, kind, amount, day, self.categories[(kind, category)],
                              note, payee, refund_of_id=refund_of.id if refund_of else None,
@@ -186,7 +196,10 @@ class DemoData:
         """Recurring charges, due soon and later, one of them in dollars paid in pesos."""
         today, days_ago = self.today, self.days_ago
 
-        def charge(name, account, amount, category, frequency, due):
+        def charge(
+            name: str, account: Account, amount: Money, category: str, frequency: Frequency,
+            due: date,
+        ) -> RecurringCharge:  # fmt: skip
             return self.services.recurring.create(
                 RecurringChargeDraft(name, amount, account.id,
                                      self.categories[(EXPENSE, category)], frequency, due)

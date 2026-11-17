@@ -7,6 +7,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
+from typing import Any
 
 from nodus.database.database import Database
 from nodus.database.repositories.tag_repository import TagRepository
@@ -119,7 +120,7 @@ class TagService(NamedRecordService[Tag]):
         self,
         target: Tag,
         merged: Tag | None,
-        rows: list[dict],
+        rows: list[dict[str, Any]],
         tagged: list[set[int]],
         target_had: set[int],
     ) -> None:

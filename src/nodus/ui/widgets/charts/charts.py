@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
@@ -284,7 +284,7 @@ class DonutChart(AnimatedChart):
         if index is not None and event.button() == Qt.MouseButton.LeftButton:
             self.segment_clicked.emit(index)
 
-    def leaveEvent(self, event) -> None:  # noqa: N802
+    def leaveEvent(self, event: QEvent) -> None:  # noqa: N802
         super().leaveEvent(event)
         if self.hover_index is not None:
             self.set_highlight(None)

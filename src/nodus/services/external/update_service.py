@@ -10,6 +10,7 @@ import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from nodus import APP_NAME, USER_AGENT, is_installed
 from nodus.links import LATEST_RELEASE_API
@@ -47,7 +48,7 @@ def installer_name(version: str) -> str:
     return f"Nodus-Setup-{version}.exe"
 
 
-def _installer(version: str, assets: list[dict]) -> Installer | None:
+def _installer(version: str, assets: list[dict[str, Any]]) -> Installer | None:
     """The release's installer, if attached with a SHA-256 to check the download against."""
     for asset in assets:
         digest = asset.get("digest") or ""

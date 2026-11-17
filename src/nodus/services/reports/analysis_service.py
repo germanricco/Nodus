@@ -8,6 +8,7 @@ counted apart. The net worth trend comes from ``NetWorthService.history``.
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 from enum import Enum
@@ -144,7 +145,7 @@ class CashFlowReport:
         return None if None in rates else rates[0] - rates[1]
 
 
-def _sum(amounts) -> Money:
+def _sum(amounts: Iterable[Money]) -> Money:
     return sum(amounts, Money.zero(HOME_CURRENCY))
 
 
@@ -203,7 +204,7 @@ class AnalysisService:
             history=self._transactions.history_months(period, today),
         )
 
-    def _converted(self, period: Period):
+    def _converted(self, period: Period) -> list[ConvertedMovement]:
         return converted_movements(self._transactions, self._exchange_rates, period_filter(period))
 
     def _month_trend(

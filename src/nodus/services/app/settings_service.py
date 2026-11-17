@@ -104,7 +104,8 @@ class SettingsService:
         self._set_list(self.RECENT_COLORS_KEY, recent[:RECENT_COLORS])
 
     def seen_notices(self) -> set[str]:
-        """The keys of the notifications the user already opened (``Notice.key``)."""
+        """The keys of what the user already saw in the notifications (``Notice.items``),
+        kept by ``SeenService``."""
         return set(self._list(self.SEEN_NOTICES_KEY, "\n"))
 
     def set_seen_notices(self, keys: set[str]) -> None:

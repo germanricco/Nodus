@@ -1,4 +1,4 @@
-"""Category and tag colors: a dot to show one and a picker to choose one."""
+"""Choosing the color of a category or a tag: the swatches and the picker."""
 
 from __future__ import annotations
 

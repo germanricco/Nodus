@@ -42,9 +42,6 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.style import muted_label, scrolling
 
-# Below this page width, the cards go one per row.
-
-
 # A card's place in the grid: (card, row, column, rows spanned, columns spanned).
 Placement = tuple[QWidget, int, int, int, int]
 

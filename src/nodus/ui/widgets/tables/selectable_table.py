@@ -19,6 +19,7 @@ from PySide6.QtCore import (
     QPointF,
     QRect,
     QRectF,
+    QSize,
     Qt,
     Signal,
 )
@@ -138,7 +139,7 @@ class _RowControlsDelegate(QStyledItemDelegate):
                 pixmap,
             )
 
-    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex):  # noqa: N802
+    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex) -> QSize:  # noqa: N802
         size = super().sizeHint(option, index)
         first, last = self._table.edge_columns()
         if index.column() == first:
@@ -178,7 +179,7 @@ class _SelectionHeader(QHeaderView):
         if logical_index == first:
             paint_check_box(painter, self._table.check_rect(rect), self._table.check_state())
 
-    def sectionSizeFromContents(self, logical_index: int):  # noqa: N802
+    def sectionSizeFromContents(self, logical_index: int) -> QSize:  # noqa: N802
         size = super().sectionSizeFromContents(logical_index)
         first, last = self._table.edge_columns()
         if logical_index == first:

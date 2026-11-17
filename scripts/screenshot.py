@@ -620,7 +620,12 @@ def capture_empty_group(app: QApplication, window: MainWindow, out: Path, mode: 
 
 
 def capture_discard(
-    app: QApplication, services, event_bus: EventBus, window: MainWindow, out: Path, mode
+    app: QApplication,
+    services: Services,
+    event_bus: EventBus,
+    window: MainWindow,
+    out: Path,
+    mode: ThemeMode,
 ) -> None:
     """«¿Descartar los cambios?» over a category form with a name typed. The question
     waits for an answer, so a timer captures it and answers «Seguir editando»."""

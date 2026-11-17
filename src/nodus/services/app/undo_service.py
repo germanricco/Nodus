@@ -1,6 +1,6 @@
 """Undoing the actions that change data without asking first (principle 4, recovery).
 
-Deleting asks before and is never undone (decided 2026-11-09, kept on 2026-11-15).
+Deleting asks before and is never undone.
 What is undone is what runs on one click: skipping or paying a recurring charge,
 paying off installments, editing several transactions, merging payees or tags. Each
 of those actions leaves an ``UndoRecord`` here, built in the same database

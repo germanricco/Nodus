@@ -69,7 +69,12 @@ class NamedRecordService(Generic[R]):
         return sources, self.get(target_id)
 
     def _require_restorable(
-        self, target: R, merged: R | None, rows: list[dict], moved: list[set[int]], held: set[int]
+        self,
+        target: R,
+        merged: R | None,
+        rows: list[dict[str, Any]],
+        moved: list[set[int]],
+        held: set[int],
     ) -> None:
         """Before undoing a merge: the target is as the merge left it, no record took a
         merged name since, and the target still ``held`` every movement ``moved`` to it."""

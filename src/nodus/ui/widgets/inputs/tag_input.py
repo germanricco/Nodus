@@ -13,8 +13,6 @@ from nodus.ui.widgets.inputs.color import color_icon
 from nodus.ui.widgets.inputs.name_completer import NameCompleter
 from nodus.ui.widgets.style import clear_layout
 
-# Color of the chip of a tag that does not exist yet and is created on saving.
-
 
 def new_names_hint(names: list[str]) -> str:
     """ "Se creará «Viaje»", or "Se crearán «Viaje» y «Mudanza»"."""

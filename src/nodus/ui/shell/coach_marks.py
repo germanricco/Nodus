@@ -6,6 +6,7 @@ instead of a new object name, since object names are what the stylesheet selects
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from PySide6.QtCore import QEvent, QObject, QRect, QRectF, Qt, Signal
@@ -86,7 +87,7 @@ class CoachMarks(QWidget):
         self._fade_in = unit_animation(self, Easing.SETTLE, self._set_fade)
         window.installEventFilter(self)
 
-    def _button(self, text: str, style: str, slot) -> QPushButton:
+    def _button(self, text: str, style: str, slot: Callable[[], object]) -> QPushButton:
         button = QPushButton(text)
         button.setObjectName(style)
         button.setCursor(Qt.CursorShape.PointingHandCursor)

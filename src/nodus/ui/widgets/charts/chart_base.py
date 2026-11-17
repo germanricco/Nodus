@@ -1,4 +1,4 @@
-"""What the dashboard charts share: the transition between data, tooltips and scales.
+"""What every chart shares: the transition between data, tooltips and scales.
 
 Charts are painted with QPainter rather than QtCharts so they follow the theme tokens and
 can morph from the figures they showed to the new ones, which QtCharts cannot do because
@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Hashable, Mapping, Sequence
 from typing import Protocol, TypeVar
 
-from PySide6.QtCore import QPointF, QRectF, Qt
+from PySide6.QtCore import QEvent, QPointF, QRectF, Qt
 from PySide6.QtGui import (
     QColor,
     QFont,
@@ -219,7 +219,7 @@ class ColumnHoverChart(AnimatedChart):
             self.hover_index = index
             self.update()
 
-    def leaveEvent(self, event) -> None:  # noqa: N802
+    def leaveEvent(self, event: QEvent) -> None:  # noqa: N802
         super().leaveEvent(event)
         self.hover_index = None
         self.update()

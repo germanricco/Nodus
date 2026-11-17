@@ -10,10 +10,12 @@ from PySide6.QtCore import QByteArray, QMimeData, QPoint, QRect, QRectF, Qt, Sig
 from PySide6.QtGui import (
     QDrag,
     QDragEnterEvent,
+    QDragLeaveEvent,
     QDragMoveEvent,
     QDropEvent,
     QMouseEvent,
     QPainter,
+    QPaintEvent,
     QPalette,
     QPen,
     QPixmap,
@@ -57,7 +59,7 @@ class DragHandle(QWidget):
     def width_for(cls) -> int:
         return 2 * cls.DOT + cls.GAP + Space.S
 
-    def paintEvent(self, _event) -> None:  # noqa: N802
+    def paintEvent(self, _event: QPaintEvent) -> None:  # noqa: N802
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(Qt.PenStyle.NoPen)
@@ -242,7 +244,7 @@ class ReorderableList(QWidget):
         event.acceptProposedAction()
         self._show_indicator(self.insertion_index(event.position().toPoint().y()))
 
-    def dragLeaveEvent(self, _event) -> None:  # noqa: N802
+    def dragLeaveEvent(self, _event: QDragLeaveEvent) -> None:  # noqa: N802
         self.hide_indicator()
 
     def dropEvent(self, event: QDropEvent) -> None:  # noqa: N802

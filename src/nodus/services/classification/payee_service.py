@@ -6,6 +6,7 @@ import dataclasses
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import date, timedelta
+from typing import Any
 
 from nodus.database.database import Database
 from nodus.database.repositories.payee_repository import PayeeRepository
@@ -154,7 +155,11 @@ class PayeeService(NamedRecordService[Payee]):
         )
 
     def _unmerge(
-        self, target: Payee, merged: Payee | None, rows: list[dict], moved: list[list[int]]
+        self,
+        target: Payee,
+        merged: Payee | None,
+        rows: list[dict[str, Any]],
+        moved: list[list[int]],
     ) -> None:
         """Undoes ``merge_many``: the merged payees back, with their own id and their
         transactions, and the target's default category as it was."""
