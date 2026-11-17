@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 from nodus.models.money import Money
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.money_label import MoneyLabel
-from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.style import muted_label
 
 MISSING_RATE_TEXT = "Sin cotización"
 
@@ -29,8 +29,7 @@ class Stat(QWidget):
         caption_label.setObjectName("StatCaption")
         layout.addWidget(caption_label)
         if money is None:
-            value = QLabel(MISSING_RATE_TEXT)
-            set_style_property(value, "muted", True)
+            value = muted_label(MISSING_RATE_TEXT)
         else:
             value = MoneyLabel(money)
             value.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)

@@ -28,7 +28,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.charts.goal_bar import GoalBar, goal_pill, goal_sentence, saved_of_target
 from nodus.ui.widgets.empty_state import empty_page_card
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 
 EMPTY_TITLE = "Todavía no hay metas"
@@ -72,13 +72,11 @@ class GoalRow(QWidget):
         texts.setSpacing(0)
         name = QLabel(goal.name)
         name.setObjectName("RowTitle")
-        detail = QLabel(accounts)
-        set_style_property(detail, "muted", True)
+        detail = muted_label(accounts)
         texts.addWidget(name)
         texts.addWidget(detail)
         top.addLayout(texts, stretch=1)
-        self.figures_label = QLabel(saved_of_target(progress, hidden))
-        set_style_property(self.figures_label, "muted", True)
+        self.figures_label = muted_label(saved_of_target(progress, hidden))
         top.addWidget(self.figures_label)
         self.pill = goal_pill(progress)
         top.addWidget(self.pill)
@@ -89,9 +87,8 @@ class GoalRow(QWidget):
         self.bar = GoalBar(theme, progress)
         layout.addWidget(self.bar)
         bottom = QHBoxLayout()
-        self.sentence_label = QLabel(goal_sentence(goal, progress, hidden))
+        self.sentence_label = muted_label(goal_sentence(goal, progress, hidden))
         self.sentence_label.setWordWrap(True)
-        set_style_property(self.sentence_label, "muted", True)
         bottom.addWidget(self.sentence_label, stretch=1)
         if progress.state is GoalState.NO_RATE:
             self.rate_button = QPushButton("Cargar cotización")

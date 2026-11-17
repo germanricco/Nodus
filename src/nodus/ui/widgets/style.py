@@ -1,11 +1,24 @@
 """Small helpers shared by widgets."""
 
+from collections.abc import Callable
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QGraphicsDropShadowEffect, QLabel, QLayout, QScrollArea, QWidget
+from PySide6.QtWidgets import (
+    QGraphicsDropShadowEffect,
+    QLabel,
+    QLayout,
+    QPushButton,
+    QScrollArea,
+    QWidget,
+)
 
+from nodus.models.money import Money
 from nodus.ui.theme.design import Elevation, Opacity
 from nodus.ui.theme.theme import Theme
+
+# Figures line up at their right edge, centered in their row.
+RIGHT_ALIGNED = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 def set_style_property(widget: QWidget, name: str, value: object) -> None:
@@ -63,6 +76,7 @@ def elevate(widget: QWidget, theme: Theme) -> None:
 
 
 def muted_label(text: str) -> QLabel:
+    """A label in the quieter color, for what accompanies the main text."""
     label = QLabel(text)
     set_style_property(label, "muted", True)
     return label
@@ -77,3 +91,18 @@ def scrolling(widget: QWidget, horizontal: bool = True) -> QScrollArea:
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     scroll.setWidget(widget)
     return scroll
+
+
+def secondary_button(text: str, on_click: Callable[[], object]) -> QPushButton:
+    """A button for an action beside the main one, outlined rather than filled."""
+    button = QPushButton(text)
+    button.setObjectName("SecondaryButton")
+    button.clicked.connect(on_click)
+    return button
+
+
+def amount_label(money: Money) -> QLabel:
+    """``money`` written out, aligned with the amounts above and below it."""
+    label = QLabel(money.format())
+    label.setAlignment(RIGHT_ALIGNED)
+    return label

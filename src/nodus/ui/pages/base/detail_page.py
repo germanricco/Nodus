@@ -14,6 +14,7 @@ from nodus.ui.theme.design import ControlSize, IconSize, Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.card import card_title
 
 
 class DetailPage(Page):
@@ -71,8 +72,7 @@ def danger_zone(text: str, action: str, run: Callable[[], object]) -> tuple[QFra
     layout = QVBoxLayout(card)
     layout.setContentsMargins(Space.XL, Space.L, Space.XL, Space.L)
     layout.setSpacing(Space.S)
-    title = QLabel("ZONA DE PELIGRO")
-    title.setObjectName("CardTitle")
+    title = card_title("Zona de peligro")
     explanation = QLabel(text)
     explanation.setObjectName("FieldHint")
     explanation.setWordWrap(True)

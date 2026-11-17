@@ -17,6 +17,7 @@ from nodus.services.app.changelog import ChangelogEntry
 from nodus.services.external.update_service import Release
 from nodus.ui.text.formatting import format_date
 from nodus.ui.theme.design import Layout, Space
+from nodus.ui.widgets.style import secondary_button
 
 
 def entries_markdown(entries: list[ChangelogEntry]) -> str:
@@ -81,9 +82,7 @@ class NewsDialog(QDialog):
         buttons.addStretch()
         self.update_button: QPushButton | None = None
         if update:
-            close = QPushButton("Cerrar")
-            close.setObjectName("SecondaryButton")
-            close.clicked.connect(self.reject)
+            close = secondary_button("Cerrar", self.reject)
             buttons.addWidget(close)
             self.update_button = main_button = QPushButton("Actualizar")
         else:

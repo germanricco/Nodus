@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from nodus.ui.theme.design import ControlSize, Layout, Line, Popup, Space
 from nodus.ui.widgets.color_dot import ColorDot
+from nodus.ui.widgets.style import secondary_button
 
 # Positions of the brightness slider; enough steps for every value of a hex digit pair.
 VALUE_STEPS = 1000
@@ -163,9 +164,7 @@ class ColorWheelPopup(QFrame):
         code.addStretch()
         layout.addLayout(code)
 
-        cancel = QPushButton("Cancelar")
-        cancel.setObjectName("SecondaryButton")
-        cancel.clicked.connect(self.close)
+        cancel = secondary_button("Cancelar", self.close)
         self.accept_button = QPushButton("Usar color")
         self.accept_button.setObjectName("PrimaryButton")
         self.accept_button.clicked.connect(self._accept)

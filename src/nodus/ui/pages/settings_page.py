@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -45,14 +44,14 @@ from nodus.ui.theme.design import Layout, Line, Space, set_reduced_motion
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.busy import busy, start_busy, stop_busy
-from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.inputs.amount_input import AmountInput
 from nodus.ui.widgets.inputs.date_input import DateInput
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.inputs.toggle_switch import ToggleSwitch
 from nodus.ui.widgets.setting_row import SettingRow
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout, muted_label, secondary_button
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.toast import show_toast
 
@@ -76,13 +75,6 @@ def format_rate(rate: ExchangeRate) -> str:
     return rate_text(rate.base, HOME_CURRENCY, rate.rate)
 
 
-def secondary_button(text: str, on_click: Callable[[], object]) -> QPushButton:
-    button = QPushButton(text)
-    button.setObjectName("SecondaryButton")
-    button.clicked.connect(on_click)
-    return button
-
-
 class RateRow(QWidget):
     """One entry of the rate history, with its menu to delete it."""
 
@@ -93,8 +85,7 @@ class RateRow(QWidget):
         self.rate = rate
         layout = QHBoxLayout(self)
         layout.setContentsMargins(Space.S, Space.XXS, Space.S, Space.XXS)
-        day = QLabel(format_date(rate.rate_date))
-        set_style_property(day, "muted", True)
+        day = muted_label(format_date(rate.rate_date))
         day.setMinimumWidth(Layout.DAY_FIELD_MIN_WIDTH)
         layout.addWidget(day)
         layout.addWidget(QLabel(format_rate(rate)), stretch=1)
@@ -222,16 +213,14 @@ class SettingsPage(Page):
 
         self.current_rate_label = QLabel()
         self.current_rate_label.setObjectName("StatValueLarge")
-        self.current_rate_date_label = QLabel()
-        set_style_property(self.current_rate_date_label, "muted", True)
+        self.current_rate_date_label = muted_label("")
         current = QHBoxLayout()
         current.setSpacing(Space.M)
         current.addWidget(self.current_rate_label)
         current.addWidget(self.current_rate_date_label, alignment=Qt.AlignmentFlag.AlignBottom)
         current.addStretch()
         # The euro and the Chilean peso ignore the dollar's source.
-        self.official_rate_label = QLabel("Oficial, desde DolarApi")
-        set_style_property(self.official_rate_label, "muted", True)
+        self.official_rate_label = muted_label("Oficial, desde DolarApi")
         current.addWidget(self.official_rate_label, alignment=Qt.AlignmentFlag.AlignBottom)
         card.body.addSpacing(Space.XS)
         card.body.addLayout(current)
@@ -260,8 +249,7 @@ class SettingsPage(Page):
         self.rate_error_label.hide()
         card.body.addWidget(self.rate_error_label)
 
-        history_title = QLabel("HISTORIAL")
-        history_title.setObjectName("CardTitle")
+        history_title = card_title("Historial")
         card.body.addSpacing(Space.S)
         card.body.addWidget(history_title)
         self._history = QVBoxLayout()

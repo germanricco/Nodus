@@ -13,7 +13,6 @@ from nodus.services.reports.dashboard_service import MonthFlow, relative_change
 from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.analysis.common import (
     MONTH,
-    RIGHT,
     VERSUS_PREVIOUS_TEXT,
     AnalysisView,
     ModelIndex,
@@ -29,6 +28,7 @@ from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts.bar_chart import BarChart, flow_bar_groups
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
+from nodus.ui.widgets.style import RIGHT_ALIGNED
 from nodus.ui.widgets.tables.table import fit_rows, make_link_rows, record_table
 
 # Shown, without a pill, where there is no previous period to compare with.
@@ -68,7 +68,7 @@ class CashFlowTableModel(QAbstractTableModel):
         if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return FLOW_COLUMNS[section]
         if role == Qt.ItemDataRole.TextAlignmentRole and section != MONTH:
-            return RIGHT
+            return RIGHT_ALIGNED
         return None
 
     def data(self, index: ModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> object:
@@ -86,7 +86,7 @@ class CashFlowTableModel(QAbstractTableModel):
             amount = [flow.income, -flow.expenses, flow.savings][column - INCOME]
             return QColor(self._theme.amount_color(amount))
         if role == Qt.ItemDataRole.TextAlignmentRole and column != MONTH:
-            return RIGHT
+            return RIGHT_ALIGNED
         return None
 
 

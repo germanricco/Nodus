@@ -29,7 +29,7 @@ from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.inputs.input_error import InputError
 from nodus.ui.widgets.inputs.tag_input import TagInput
-from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.style import secondary_button, set_style_property
 
 # The main button of a dialog that edits something that already exists.
 SAVE_CHANGES = "Guardar cambios"
@@ -119,9 +119,7 @@ class FormDialog(QDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch()
-        cancel = QPushButton("Cancelar")
-        cancel.setObjectName("SecondaryButton")
-        cancel.clicked.connect(self.reject)
+        cancel = secondary_button("Cancelar", self.reject)
         self.save_button = QPushButton(action)
         self.save_button.setObjectName("PrimaryButton")
         self.save_button.setDefault(True)

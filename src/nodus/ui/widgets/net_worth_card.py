@@ -18,7 +18,7 @@ from nodus.ui.text.labels import HELD_IN_LABELS, NO_RATE_TEXT, rate_text
 from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.change_badge import ChangeBadge, format_signed_percent
 from nodus.ui.widgets.charts.chart_base import format_compact
 from nodus.ui.widgets.charts.charts import ProportionBar, Segment
@@ -27,7 +27,7 @@ from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.flow_layout import FlowLayout
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel, masked
-from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.style import muted_label
 
 # The net worth can be shown in these; the parts held in any currency are listed apart.
 CURRENCIES = list(TOTAL_CURRENCIES)
@@ -67,12 +67,10 @@ class CurrencyLegend(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.S)
         self.dot = ColorDot(size=ControlSize.DOT_SMALL)
-        name = QLabel(HELD_IN_LABELS[currency])
-        set_style_property(name, "muted", True)
+        name = muted_label(HELD_IN_LABELS[currency])
         self.amount = AnimatedMoneyLabel()
         self.amount.setObjectName("RowTitle")
-        self.share = QLabel()
-        set_style_property(self.share, "muted", True)
+        self.share = muted_label("")
         for widget in (self.dot, name, self.amount, self.share):
             layout.addWidget(widget)
 
@@ -121,8 +119,7 @@ class NetWorthCard(Card):
     def _build_header(self) -> None:
         header = QHBoxLayout()
         header.setSpacing(Space.M)
-        title = QLabel("PATRIMONIO NETO")
-        title.setObjectName("CardTitle")
+        title = card_title("Patrimonio neto")
         self.currency_input = SegmentedControl(CURRENCY_LABELS)
         self.currency_input.setToolTip("Ver el patrimonio neto en pesos o en dólares")
         self.currency_input.set_index(
@@ -150,8 +147,7 @@ class NetWorthCard(Card):
         self.total_label.setObjectName("StatValueHero")
         self.total_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         # Only past days are named, beside the amount; today's net worth needs no caption.
-        self.day_label = QLabel()
-        set_style_property(self.day_label, "muted", True)
+        self.day_label = muted_label("")
         row = QHBoxLayout()
         row.setSpacing(Space.S)
         row.addWidget(self.total_label)

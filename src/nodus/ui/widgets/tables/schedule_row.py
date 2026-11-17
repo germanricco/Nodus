@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.color_dot import ColorDot
-from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.style import muted_label
 from nodus.ui.widgets.tables.row_actions import ActionsFor, MoreButton, install_row_actions
 
 
@@ -41,8 +41,7 @@ class ScheduleRow(QWidget):
         texts.setSpacing(0)
         self.title_label = QLabel(title)
         self.title_label.setObjectName("RowTitle")
-        self.detail_label = QLabel(detail)
-        set_style_property(self.detail_label, "muted", True)
+        self.detail_label = muted_label(detail)
         texts.addWidget(self.title_label)
         texts.addWidget(self.detail_label)
         layout.addLayout(texts, stretch=1)

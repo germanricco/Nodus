@@ -9,9 +9,10 @@ from nodus.services.app.notification_service import Notice, NoticeKind
 from nodus.ui.shell.notices import NOTICES
 from nodus.ui.theme.design import Layout, Line, Popup, Space
 from nodus.ui.theme.theme_manager import active_theme
+from nodus.ui.widgets.card import card_title
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout, muted_label, set_style_property
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
 
 NEWS_LABEL = "Qué trae"
@@ -42,9 +43,8 @@ class NoticeRow(QWidget):
             set_style_property(title, "muted", True)
         else:
             title.setObjectName("RowTitle")
-        detail = QLabel(notice.detail)
+        detail = muted_label(notice.detail)
         detail.setWordWrap(True)
-        set_style_property(detail, "muted", True)
         texts.addWidget(title)
         texts.addWidget(detail)
         layout.addLayout(texts, stretch=1)
@@ -99,12 +99,10 @@ class NotificationPanel(QFrame):
         layout.setSpacing(0)
         header = QHBoxLayout()
         header.setContentsMargins(Space.S, 0, Space.S, Space.XS)
-        title = QLabel("NOTIFICACIONES")
-        title.setObjectName("CardTitle")
+        title = card_title("Notificaciones")
         header.addWidget(title)
         header.addStretch()
-        self.unseen_label = QLabel()
-        set_style_property(self.unseen_label, "muted", True)
+        self.unseen_label = muted_label("")
         header.addWidget(self.unseen_label)
         layout.addLayout(header)
         self._rows = QVBoxLayout()

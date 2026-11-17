@@ -14,7 +14,7 @@ from nodus.ui.text.labels import due_label
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.change_badge import status_pill
 from nodus.ui.widgets.pay_button import PayButton
-from nodus.ui.widgets.style import muted_label
+from nodus.ui.widgets.style import RIGHT_ALIGNED, amount_label, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
 
 DUE_TONES = {DueStatus.OVERDUE: "bad", DueStatus.SOON: "warning", DueStatus.LATER: "neutral"}
@@ -84,13 +84,12 @@ class UpcomingPaymentRow(QWidget):
         layout.addLayout(texts, stretch=1)
         amounts = QVBoxLayout()
         amounts.setSpacing(0)
-        amount = QLabel(charge.amount.format())
+        amount = amount_label(charge.amount)
         amount.setObjectName("RowAmount")
-        amount.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         amounts.addWidget(amount)
         if estimate:  # on a line of its own, so the narrow card keeps its width
             estimate_label = muted_label(estimate)
-            estimate_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            estimate_label.setAlignment(RIGHT_ALIGNED)
             amounts.addWidget(estimate_label)
         layout.addLayout(amounts)
         self.pay_button = PayButton()

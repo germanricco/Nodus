@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QBoxLayout, QVBoxLayout, QWidget
 
 from nodus.models.money import Money
 from nodus.services.reports.dashboard_service import CategoryTotal, PeriodSummary
@@ -13,7 +13,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts.charts import DonutChart, Segment
-from nodus.ui.widgets.style import clear_layout, muted_label
+from nodus.ui.widgets.style import amount_label, clear_layout, muted_label
 from nodus.ui.widgets.tables.category_line import CategoryLine
 
 # Categories listed beside the donut; the rest are added up as one line.
@@ -78,8 +78,7 @@ class ExpensesCard(Card):
         for index, (category_id, name, color, total) in enumerate(items):
             row = CategoryLine(color, name, clickable=category_id is not None)
             row.add(muted_label(percent(total, summary.expenses)))
-            amount = QLabel(total.format())
-            amount.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            amount = amount_label(total)
             row.add(amount)
             row.hovered.connect(lambda on, i=index: self._hover_row(i, on))
             row.clicked.connect(lambda i=index: self._click_item(i))

@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWi
 
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.inputs.segmented import TabBar
-from nodus.ui.widgets.style import scrolling, set_style_property
+from nodus.ui.widgets.style import muted_label, scrolling
 
 
 class Page(QWidget):
@@ -73,9 +73,8 @@ class Page(QWidget):
         """Puts tabs for the page's views under the title, each with a line that says
         what its view shows. The header stays for what affects the whole page."""
         tabs = TabBar(labels)
-        description = QLabel(descriptions[0])
+        description = muted_label(descriptions[0])
         description.setObjectName("TabDescription")
-        set_style_property(description, "muted", True)
         tabs.changed.connect(lambda index: description.setText(descriptions[index]))
         self.tab_description = description
         block = QVBoxLayout()

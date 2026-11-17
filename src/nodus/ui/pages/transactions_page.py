@@ -8,7 +8,6 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLineEdit,
-    QPushButton,
 )
 
 from nodus.models.transaction import TransactionType
@@ -29,7 +28,7 @@ from nodus.ui.widgets.inputs.selectors import (
     PayeeComboBox,
     TagComboBox,
 )
-from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.style import secondary_button, set_style_property
 
 # Type filter: label -> (transaction type, is_transfer, refund_linked) criteria.
 TYPE_FILTERS = {
@@ -87,9 +86,7 @@ class TransactionsPage(Page):
         )
         self.search_input.setMinimumWidth(Layout.SEARCH_MIN_WIDTH)
         self.search_input.setClearButtonEnabled(True)
-        self.clear_filters_button = QPushButton("Limpiar filtros")
-        self.clear_filters_button.setObjectName("SecondaryButton")
-        self.clear_filters_button.clicked.connect(self.clear_filters)
+        self.clear_filters_button = secondary_button("Limpiar filtros", self.clear_filters)
         filters = QHBoxLayout()
         filters.setSpacing(Space.S)
         for combo in self._filter_combos():

@@ -27,6 +27,7 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import EmptyState
+from nodus.ui.widgets.style import RIGHT_ALIGNED
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
 from nodus.ui.widgets.tables.selectable_table import SelectableTable
 from nodus.ui.widgets.tables.selection_bar import SelectionBar
@@ -39,7 +40,6 @@ NAME, COUNT, TOTAL = range(3)
 SORT_ROLE = Qt.ItemDataRole.UserRole
 
 _ModelIndex = QModelIndex | QPersistentModelIndex
-_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 class Summary(Protocol):
@@ -103,7 +103,7 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
         if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self.TITLES[section]
         if role == Qt.ItemDataRole.TextAlignmentRole and section in (COUNT, TOTAL):
-            return _RIGHT
+            return RIGHT_ALIGNED
         return None
 
     def data(self, index: _ModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> object:
@@ -120,7 +120,7 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
         if role == Qt.ItemDataRole.ToolTipRole and column == TOTAL and summary.unconverted:
             return unconverted_note(summary.unconverted)
         if role == Qt.ItemDataRole.TextAlignmentRole and column in (COUNT, TOTAL):
-            return _RIGHT
+            return RIGHT_ALIGNED
         return None
 
     def _text(self, summary: S, column: int) -> str:

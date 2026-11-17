@@ -30,11 +30,11 @@ from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.undo import offer_undo
-from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
 from nodus.ui.widgets.money_label import MoneyLabel, masked, total_text
 from nodus.ui.widgets.net_worth_card import NetWorthCard, signed
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.reorderable_list import ReorderableList
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 
@@ -85,8 +85,7 @@ class AccountRow(QWidget):
         if value_change is not None and not value_change.is_zero:
             change = masked(value_change) if hide_balance else signed(value_change)
             details.append(f"Rendimiento {change}")
-        subtitle = QLabel(" · ".join(details))
-        set_style_property(subtitle, "muted", True)
+        subtitle = muted_label(" · ".join(details))
         texts.addWidget(name)
         texts.addWidget(subtitle)
         layout.addLayout(texts, stretch=1)
@@ -99,8 +98,7 @@ class AccountRow(QWidget):
 
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
-        chevron = QLabel("›")
-        set_style_property(chevron, "muted", True)
+        chevron = muted_label("›")
         layout.addWidget(chevron)
         install_row_actions(self, self.actions, open_on_click="Abrir la cuenta")
 
@@ -301,8 +299,7 @@ class AccountsPage(Page):
         header = QHBoxLayout()
         header.setSpacing(Space.M)  # as in the rows, so the subtotal sits over their amounts
         header.setContentsMargins(0, 0, Space.S, 0)
-        title = QLabel((group.name if group else "Sin grupo").upper())
-        title.setObjectName("CardTitle")
+        title = card_title(group.name if group else "Sin grupo")
         header.addWidget(title, stretch=1)
         total = self._services.account_groups.total(section.accounts, balances, date.today())
         text, tooltip = total_text(total, self._services.settings.amounts_hidden())

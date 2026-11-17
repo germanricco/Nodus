@@ -10,13 +10,7 @@ from nodus.services.container import Services
 from nodus.services.reports.analysis_service import Metric, MonthTrend, Trends
 from nodus.services.reports.dashboard_service import CategoryTotal
 from nodus.ui.navigation import TransactionFocus
-from nodus.ui.pages.analysis.common import (
-    VERSUS_PREVIOUS_TEXT,
-    AnalysisView,
-    amount_label,
-    chart_card,
-    rows_card,
-)
+from nodus.ui.pages.analysis.common import VERSUS_PREVIOUS_TEXT, AnalysisView, chart_card, rows_card
 from nodus.ui.text.formatting import percent
 from nodus.ui.text.labels import movements_text, unconverted_note
 from nodus.ui.theme.design import Space
@@ -29,7 +23,7 @@ from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
-from nodus.ui.widgets.style import clear_layout, muted_label
+from nodus.ui.widgets.style import amount_label, clear_layout, muted_label
 from nodus.ui.widgets.tables.category_line import CategoryLine
 
 METRICS = list(Metric)

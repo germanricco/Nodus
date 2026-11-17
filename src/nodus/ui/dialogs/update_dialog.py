@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QProgressBar,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -21,7 +20,7 @@ from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.user_error import ErrorDetail
 from nodus.ui.theme.design import Layout, Space
-from nodus.ui.widgets.style import set_style_name
+from nodus.ui.widgets.style import secondary_button, set_style_name
 
 MEBIBYTE = 1024 * 1024  # what Windows calls a MB
 
@@ -70,14 +69,10 @@ class UpdateDialog(QDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch()
-        self.page_button = QPushButton("Abrir GitHub")
-        self.page_button.setObjectName("SecondaryButton")
-        self.page_button.clicked.connect(self._open_page)
+        self.page_button = secondary_button("Abrir GitHub", self._open_page)
         self.page_button.hide()
         buttons.addWidget(self.page_button)
-        self.cancel_button = QPushButton("Cancelar")
-        self.cancel_button.setObjectName("SecondaryButton")
-        self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button = secondary_button("Cancelar", self.reject)
         buttons.addWidget(self.cancel_button)
         layout.addLayout(buttons)
 

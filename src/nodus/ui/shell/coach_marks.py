@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLay
 
 from nodus.ui.theme.design import Easing, Layout, Line, Motion, Opacity, Radius, Space, motion_ms
 from nodus.ui.theme.theme import Theme
-from nodus.ui.widgets.style import elevate, set_style_property
+from nodus.ui.widgets.style import elevate, muted_label
 
 COACH_TARGET = "coach_target"
 
@@ -70,8 +70,7 @@ class CoachMarks(QWidget):
         layout.addSpacing(Space.XS)
         buttons = QHBoxLayout()
         buttons.setSpacing(Space.S)
-        self.count_label = QLabel()
-        set_style_property(self.count_label, "muted", True)
+        self.count_label = muted_label("")
         buttons.addWidget(self.count_label)
         buttons.addStretch()
         self.skip_button = self._button("Saltar", "LinkButton", self.finish)

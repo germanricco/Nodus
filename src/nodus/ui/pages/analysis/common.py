@@ -2,27 +2,19 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Qt, Signal
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Signal
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
-from nodus.models.money import Money
 from nodus.models.period import Period
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
 from nodus.ui.widgets.style import muted_label
 
-RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 # What the change badges of Analysis compare against.
 VERSUS_PREVIOUS_TEXT = "Frente al período anterior, del mismo largo"
 ModelIndex = QModelIndex | QPersistentModelIndex
 # The first column of every table.
 MONTH = 0
-
-
-def amount_label(money: Money) -> QLabel:
-    label = QLabel(money.format())
-    label.setAlignment(RIGHT)
-    return label
 
 
 def chart_card(title: str, chart: QWidget) -> tuple[Card, EmptyState, QLabel]:

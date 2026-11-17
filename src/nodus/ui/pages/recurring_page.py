@@ -31,7 +31,7 @@ from nodus.ui.widgets.change_badge import status_pill
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.pay_button import PayButton
-from nodus.ui.widgets.style import clear_layout, muted_label, set_style_property
+from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.charge_row import due_status_label, seen_actions
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
 from nodus.ui.widgets.tables.schedule_row import ScheduleRow
@@ -85,8 +85,7 @@ class RecurringChargeRow(ScheduleRow):
         if charge.is_active:
             status = due_status_label(charge, today, quiet)
         else:
-            status = QLabel(PAUSED_TITLE)
-            set_style_property(status, "muted", True)
+            status = muted_label(PAUSED_TITLE)
         pay_button = PayButton()
         super().__init__(
             category.color,

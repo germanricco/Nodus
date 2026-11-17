@@ -32,7 +32,13 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.money_label import MoneyLabel, total_text
-from nodus.ui.widgets.style import clear_layout, make_hoverable, scrolling, set_style_property
+from nodus.ui.widgets.style import (
+    clear_layout,
+    make_hoverable,
+    muted_label,
+    scrolling,
+    set_style_property,
+)
 
 
 def keep_whole(label: QLabel) -> None:
@@ -209,9 +215,8 @@ class Sidebar(QFrame):
         accounts = self._services.accounts.list_accounts()
         if not accounts:
             # An item of the list, styled as one, rather than an EmptyState.
-            empty = QLabel("Todavía no hay cuentas")  # list-item
+            empty = muted_label("Todavía no hay cuentas")  # list-item
             empty.setObjectName("SidebarItem")
-            set_style_property(empty, "muted", True)
             self._accounts_layout.addWidget(empty)
         balances = self._services.accounts.balances()
         groups = self._services.account_groups

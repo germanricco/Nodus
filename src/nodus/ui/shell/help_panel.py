@@ -31,7 +31,7 @@ from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.style import scrolling, set_style_property
+from nodus.ui.widgets.style import muted_label, scrolling, secondary_button
 
 INDEX, TOPIC, SHORTCUTS_VIEW = range(3)
 SHORTCUTS_TITLE = "Atajos de teclado"
@@ -225,9 +225,7 @@ class HelpPanel(QFrame):
         return button
 
     def _foot_button(self, text: str, signal: Signal) -> QPushButton:
-        button = QPushButton(text)
-        button.setObjectName("SecondaryButton")
-        button.clicked.connect(signal)
+        button = secondary_button(text, signal)
         return button
 
     # One topic
@@ -330,8 +328,7 @@ class HelpPanel(QFrame):
         row.setSpacing(Space.XS)
         for index, key in enumerate(keys):
             if index:
-                plus = QLabel("+")
-                set_style_property(plus, "muted", True)
+                plus = muted_label("+")
                 row.addWidget(plus)
             cap = QLabel(key)
             cap.setObjectName("KeyCap")

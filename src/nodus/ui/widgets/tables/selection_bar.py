@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
 from nodus.ui.theme.design import Space
-from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.style import muted_label
 
 
 class SelectionBar(QFrame):
@@ -28,8 +28,7 @@ class SelectionBar(QFrame):
         layout.setSpacing(Space.S)
         self.count_label = QLabel()
         self.count_label.setObjectName("RowTitle")
-        self.detail_label = QLabel()
-        set_style_property(self.detail_label, "muted", True)
+        self.detail_label = muted_label("")
         self.detail_label.hide()
         layout.addWidget(self.count_label)
         layout.addWidget(self.detail_label, stretch=1)

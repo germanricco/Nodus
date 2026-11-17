@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.ui.theme.design import Layout, Space
+from nodus.ui.widgets.style import secondary_button
 
 SHOW_DETAIL = "Ver detalle"
 HIDE_DETAIL = "Ocultar detalle"
@@ -45,9 +46,7 @@ class ErrorDetail(QWidget):
         self.text.setReadOnly(True)
         self.text.setMaximumHeight(Layout.ERROR_DETAIL_HEIGHT)
         layout.addWidget(self.text)
-        self.copy_button = QPushButton("Copiar")
-        self.copy_button.setObjectName("SecondaryButton")
-        self.copy_button.clicked.connect(self.copy)
+        self.copy_button = secondary_button("Copiar", self.copy)
         layout.addWidget(self.copy_button, alignment=Qt.AlignmentFlag.AlignLeft)
         self.set_detail("")
 

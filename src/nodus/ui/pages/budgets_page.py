@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -31,7 +31,7 @@ from nodus.ui.widgets.charts.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.inputs.period_selector import PeriodSelector
-from nodus.ui.widgets.style import clear_layout, muted_label
+from nodus.ui.widgets.style import amount_label, clear_layout, muted_label
 from nodus.ui.widgets.tables.budget_row import BudgetRow
 from nodus.ui.widgets.tables.category_line import CategoryLine
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
@@ -209,8 +209,7 @@ class BudgetsPage(Page):
             line = CategoryLine(category.color, category.name)
             line.hovered.connect(line.set_highlighted)
             line.clicked.connect(lambda c=category: self._show_transactions(c))
-            amount = QLabel(total.total.format())
-            amount.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            amount = amount_label(total.total)
             line.add(amount)
             button = QPushButton("Poner límite")
             button.setObjectName("SmallButton")

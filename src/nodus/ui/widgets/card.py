@@ -21,18 +21,21 @@ class Card(QFrame):
         self.body.setContentsMargins(Space.XL, Space.L, Space.XL, Space.L)
         self.body.setSpacing(Space.S)
         if title:
-            title_label = QLabel(title.upper())
-            title_label.setObjectName("CardTitle")
-            self.body.addWidget(title_label)
+            self.body.addWidget(card_title(title))
+
+
+def card_title(title: str) -> QLabel:
+    """A card's title, in small capitals like every other."""
+    label = QLabel(title.upper())
+    label.setObjectName("CardTitle")
+    return label
 
 
 def card_header(card: Card, title: str) -> QHBoxLayout:
     """A title on the left with room on the right, e.g. for a ``ChangeBadge``."""
     header = QHBoxLayout()
     header.setSpacing(Space.S)
-    label = QLabel(title.upper())
-    label.setObjectName("CardTitle")
-    header.addWidget(label)
+    header.addWidget(card_title(title))
     header.addStretch()
     card.body.addLayout(header)
     return header

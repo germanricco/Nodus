@@ -13,7 +13,7 @@ from nodus.models.money import Money
 from nodus.models.period import Month, Period, format_month
 from nodus.services.container import Services
 from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint
-from nodus.ui.pages.analysis.common import MONTH, RIGHT, AnalysisView, ModelIndex
+from nodus.ui.pages.analysis.common import MONTH, AnalysisView, ModelIndex
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import HELD_IN_LABELS, NO_RATE_TEXT
 from nodus.ui.theme.design import Chart, Space
@@ -27,6 +27,7 @@ from nodus.ui.widgets.net_worth_card import (
     rate_effect_text,
     signed,
 )
+from nodus.ui.widgets.style import RIGHT_ALIGNED
 from nodus.ui.widgets.tables.table import fit_rows, record_table
 
 
@@ -88,7 +89,7 @@ class NetWorthTableModel(QAbstractTableModel):
             held = [HELD_IN_LABELS[currency] for currency in self._held]
             return ["Mes", *held, "Total", "Variación"][section]
         if role == Qt.ItemDataRole.TextAlignmentRole and section != MONTH:
-            return RIGHT
+            return RIGHT_ALIGNED
         return None
 
     def data(self, index: ModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> object:
@@ -110,7 +111,7 @@ class NetWorthTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.ForegroundRole and is_change and change is not None:
             return QColor(self._theme.amount_color(change))
         if role == Qt.ItemDataRole.TextAlignmentRole and column != MONTH:
-            return RIGHT
+            return RIGHT_ALIGNED
         return None
 
     def _change(self, row: int) -> Money | None:

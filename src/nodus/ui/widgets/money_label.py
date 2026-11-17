@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QSize, Qt, QVariantAnimation
+from PySide6.QtCore import QSize, QVariantAnimation
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
@@ -10,7 +10,7 @@ from nodus.models.money import Money
 from nodus.services.accounts.account_group_service import GroupTotal
 from nodus.ui.theme.design import Easing, Motion, motion_ms
 from nodus.ui.widgets.charts import chart_base
-from nodus.ui.widgets.style import set_style_property
+from nodus.ui.widgets.style import RIGHT_ALIGNED, set_style_property
 
 
 def masked(money: Money) -> str:
@@ -61,7 +61,7 @@ class MoneyLabel(QLabel):
         self._highlight_positive = highlight_positive
         self._hidden = False
         self._value: Money | None = None
-        self.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.setAlignment(RIGHT_ALIGNED)
         if money is not None:
             self.set_money(money)
 
