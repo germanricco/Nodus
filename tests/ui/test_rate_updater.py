@@ -70,13 +70,13 @@ def test_choosing_a_source_in_settings_fetches_it(qtbot, offline_services, offli
     offline_services.rate_feed.set_source("manual")
     offline_window.show_page(PageId.SETTINGS)
     page = offline_window.page(PageId.SETTINGS)
-    assert not page.refresh_rate_button.isVisible()
+    assert not page.rates.refresh_rate_button.isVisible()
 
-    page.rate_source_input.set_index(list(SOURCES).index("bolsa"))
+    page.rates.rate_source_input.set_index(list(SOURCES).index("bolsa"))
 
     qtbot.waitUntil(lambda: todays_rate(offline_services) == Decimal("1588.5"))
     assert offline_services.rate_feed.source() == "bolsa"
-    assert page.refresh_rate_button.isVisible()
+    assert page.rates.refresh_rate_button.isVisible()
 
 
 def test_failed_fetch_is_reported_in_settings(qtbot, offline_services, answer, offline_window):
@@ -85,9 +85,9 @@ def test_failed_fetch_is_reported_in_settings(qtbot, offline_services, answer, o
     offline_window.show_page(PageId.SETTINGS)
     page = offline_window.page(PageId.SETTINGS)
 
-    page.refresh_rate_button.click()
+    page.rates.refresh_rate_button.click()
 
-    qtbot.waitUntil(lambda: page.rate_source_row.detail.text() == "Sin conexión")
+    qtbot.waitUntil(lambda: page.rates.rate_source_row.detail.text() == "Sin conexión")
     assert todays_rate(offline_services) is None
 
 
@@ -113,7 +113,7 @@ def test_updating_says_so_on_the_button_until_it_ends(qtbot, offline_services, o
     offline_services.rate_feed.set_source("blue")
     offline_window.show_page(PageId.SETTINGS)
     page = offline_window.page(PageId.SETTINGS)
-    button = page.refresh_rate_button
+    button = page.rates.refresh_rate_button
 
     button.click()
     assert not button.isEnabled()
@@ -132,10 +132,10 @@ def test_a_failed_update_gives_the_button_back(qtbot, offline_services, answer, 
     offline_window.show_page(PageId.SETTINGS)
     page = offline_window.page(PageId.SETTINGS)
 
-    page.refresh_rate_button.click()
+    page.rates.refresh_rate_button.click()
 
-    qtbot.waitUntil(page.refresh_rate_button.isEnabled)
-    assert page.refresh_rate_button.text() == "Actualizar"
+    qtbot.waitUntil(page.rates.refresh_rate_button.isEnabled)
+    assert page.rates.refresh_rate_button.text() == "Actualizar"
 
 
 def test_a_second_request_waits_for_the_first(qtbot, monkeypatch, offline_services, event_bus):

@@ -1,0 +1,68 @@
+"""The General card of Ajustes: theme, opening with Windows and motion."""
+
+from __future__ import annotations
+
+from nodus.services.container import Services
+from nodus.ui.theme.design import set_reduced_motion
+from nodus.ui.theme.theme import ThemeMode
+from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.inputs.segmented import SegmentedControl
+from nodus.ui.widgets.inputs.toggle_switch import ToggleSwitch
+from nodus.ui.widgets.setting_row import SettingRow
+
+# Segment order of the theme selector.
+THEME_MODES = [ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM]
+THEME_LABELS = ["Claro", "Oscuro", "Según el sistema"]
+
+
+class GeneralCard(Card):
+    def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
+        super().__init__("General")
+        self._services = services
+        self._theme_manager = theme_manager
+
+        theme_row = SettingRow(
+            "Tema", "«Según el sistema» sigue el modo claro u oscuro de Windows."
+        )
+        self.theme_input = theme_row.add(SegmentedControl(THEME_LABELS))
+        self.theme_input.changed.connect(self._set_theme)
+        self.body.addWidget(theme_row)
+
+        startup = services.startup
+        startup_row = SettingRow(
+            "Abrir Nodus al iniciar Windows",
+            "Te espera abierto al encender la computadora."
+            if startup.is_available()
+            else "Disponible en la versión instalada.",
+        )
+        self.startup_input = startup_row.add(ToggleSwitch())
+        self.startup_input.setEnabled(startup.is_available())
+        if not startup.is_available():
+            self.startup_input.setToolTip("Disponible en la versión instalada")
+        self.startup_input.clicked.connect(startup.set_enabled)
+        self.body.addWidget(startup_row)
+
+        motion_row = SettingRow(
+            "Reducir animaciones",
+            "Los gráficos y las cifras cambian de una vez, sin moverse.",
+        )
+        self.reduce_motion_input = motion_row.add(ToggleSwitch())
+        self.reduce_motion_input.clicked.connect(self._set_reduce_motion)
+        self.body.addWidget(motion_row)
+
+    def refresh(self) -> None:
+        self.theme_input.set_index(THEME_MODES.index(self._theme_manager.mode))
+        self.startup_input.setChecked(self._services.startup.is_enabled())
+        self.reduce_motion_input.setChecked(self._services.settings.reduce_motion())
+
+    def _set_reduce_motion(self, reduced: bool) -> None:
+        self._services.settings.set_reduce_motion(reduced)
+        set_reduced_motion(reduced)
+
+    def _set_theme(self, index: int) -> None:
+        mode = THEME_MODES[index]
+        if mode is self._theme_manager.mode:
+            return
+        self._theme_manager.set_mode(mode)
+        self._services.settings.set_theme_preference(mode.value)

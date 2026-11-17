@@ -19,7 +19,7 @@ from nodus.ui.dialogs.transaction_dialog import (
 )
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
-from nodus.ui.pages.settings_page import THEME_MODES
+from nodus.ui.pages.settings.general_card import THEME_MODES
 from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.theme.theme import ThemeMode
 
@@ -65,15 +65,15 @@ def test_first_month_with_nodus(qtbot, qapp, tmp_path):
     ahorro = create_account(qtbot, services, event_bus, "Ahorro", Currency.USD, "500")
     window.show_page(PageId.SETTINGS)
     settings = window.page(PageId.SETTINGS)
-    settings.rate_value_input.line_edit.setText("1.200")
-    settings.save_rate_button.click()
+    settings.rates.rate_value_input.line_edit.setText("1.200")
+    settings.rates.save_rate_button.click()
     record(qtbot, services, event_bus, INCOME_MODE, account=banco, amount="900.000",
            category="Sueldo")  # fmt: skip
     record(qtbot, services, event_bus, EXPENSE_MODE, account=banco, amount="85.000,50",
            category="Supermercado y comida")  # fmt: skip
     record(qtbot, services, event_bus, TRANSFER_MODE, account=banco, to_account=ahorro,
            amount="240.000", amount_in="200")  # fmt: skip
-    settings.theme_input.set_index(THEME_MODES.index(ThemeMode.DARK))
+    settings.general.theme_input.set_index(THEME_MODES.index(ThemeMode.DARK))
 
     balances = services.accounts.balances()
     assert balances[banco.id] == ars("674999.50")

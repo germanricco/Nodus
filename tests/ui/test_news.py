@@ -13,7 +13,7 @@ from nodus.services.external.update_service import Release, UpdateService
 from nodus.ui import browser
 from nodus.ui.dialogs.news_dialog import NewsDialog, entries_markdown
 from nodus.ui.navigation import PageId
-from nodus.ui.pages.settings_page import SettingsPage
+from nodus.ui.pages.settings.settings_page import SettingsPage
 from nodus.ui.shell.main_window import MainWindow
 
 ENTRIES = [
@@ -120,7 +120,7 @@ def test_settings_opens_every_version(qtbot, services, event_bus, theme_manager,
     page = SettingsPage(with_news(services, None), event_bus, theme_manager)
     qtbot.addWidget(page)
 
-    page.show_news()
+    page.about.show_news()
 
     text = opened[0].text.toPlainText()
     assert "Euros" in text and "Editar" in text

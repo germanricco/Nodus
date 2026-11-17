@@ -47,7 +47,7 @@ from nodus.ui.pages.goals_page import GoalsPage
 from nodus.ui.pages.payee_detail_page import PayeeDetailPage
 from nodus.ui.pages.payees_page import PayeesPage
 from nodus.ui.pages.recurring_page import RecurringPage
-from nodus.ui.pages.settings_page import SettingsPage
+from nodus.ui.pages.settings.settings_page import SettingsPage
 from nodus.ui.pages.tag_detail_page import TagDetailPage
 from nodus.ui.pages.tags_page import TagsPage
 from nodus.ui.pages.transactions_page import TransactionsPage
