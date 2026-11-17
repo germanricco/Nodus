@@ -23,14 +23,6 @@ from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringC
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.base.page import Page
-from nodus.ui.pages.dashboard.dashboard_cards import (
-    FigureTile,
-    due_status_label,
-    muted_label,
-    reminder_day,
-    seen_actions,
-    status_pill,
-)
 from nodus.ui.pages.transaction_list_view import (
     delete_transactions,
     edit_transaction,
@@ -42,9 +34,12 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_rows import TransactionListBuilder, TransactionListItem
 from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.change_badge import status_pill
 from nodus.ui.widgets.empty_state import empty_page_card
+from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.pay_button import PayButton
-from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.style import clear_layout, muted_label, set_style_property
+from nodus.ui.widgets.tables.charge_row import due_status_label, reminder_day, seen_actions
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
 from nodus.ui.widgets.tables.schedule_row import ScheduleRow
 from nodus.ui.widgets.toast import show_toast, toast_host

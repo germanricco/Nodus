@@ -25,7 +25,10 @@ from nodus.ui.dialogs.transaction_dialog import (
 )
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages import transaction_list_view
-from nodus.ui.pages.dashboard.dashboard_cards import LatestTransactionRow, LatestTransactionsCard
+from nodus.ui.pages.dashboard.latest_transactions_card import (
+    LatestTransactionRow,
+    LatestTransactionsCard,
+)
 from nodus.ui.pages.recurring_page import RecurringPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.text.formatting import format_date

@@ -1,0 +1,224 @@
+"""Análisis, Tendencias: a metric month by month and its breakdowns."""
+
+from __future__ import annotations
+
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout
+
+from nodus.models.period import Period, format_month
+from nodus.services.container import Services
+from nodus.services.reports.analysis_service import Metric, MonthTrend, Trends
+from nodus.services.reports.dashboard_service import SUMMARY_CURRENCY, CategoryTotal
+from nodus.ui.navigation import TransactionFocus
+from nodus.ui.pages.analysis.common import AnalysisView, amount_label, chart_card, rows_card
+from nodus.ui.text.formatting import percent
+from nodus.ui.text.labels import movements_text, unconverted_note
+from nodus.ui.theme.design import Space
+from nodus.ui.theme.theme import Theme
+from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.change_badge import ChangeBadge
+from nodus.ui.widgets.charts.chart_base import format_compact
+from nodus.ui.widgets.charts.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
+from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
+from nodus.ui.widgets.figure_tile import FigureTile
+from nodus.ui.widgets.inputs.segmented import SegmentedControl
+from nodus.ui.widgets.money_label import AnimatedMoneyLabel
+from nodus.ui.widgets.style import clear_layout, muted_label
+from nodus.ui.widgets.tables.category_line import CategoryLine
+
+METRICS = list(Metric)
+# Categories stacked in the bars, the largest of the period; the rest share one piece.
+STACKED_CATEGORIES = 7
+# Payees listed; the rest are left to the transactions page.
+PAYEES_SHOWN = 8
+NO_PAYEE_LABEL = "Sin beneficiario"
+TAGS_HINT = "Un movimiento con varias etiquetas suma en cada una."
+TOOLTIP_CATEGORIES = 3
+
+
+class TrendsView(AnalysisView):
+    """Expenses, income or savings month by month: totals against the previous period,
+    bars stacked by category with the monthly average, and the split by category, by
+    payee and by tag. Clicking a bar, a piece or a row opens those transactions."""
+
+    DESCRIPTION = "Lo que gastas, ganas y ahorras mes a mes, frente al período anterior."
+
+    def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
+        super().__init__()
+        self._services = services
+        self._theme = theme_manager.theme
+        self._trends: Trends | None = None
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(Space.L)
+
+        self.metric_input = SegmentedControl([metric.value for metric in METRICS])
+        metric_row = QHBoxLayout()
+        metric_row.addWidget(self.metric_input)
+        metric_row.addStretch()
+        layout.addLayout(metric_row)
+
+        self.total_label = AnimatedMoneyLabel()
+        # Without a previous period the badge steps aside: its tile already says so.
+        self.change_badge = ChangeBadge()
+        self.change_badge.setToolTip("Frente al período anterior, del mismo largo")
+        self.previous_label = QLabel()
+        self.average_label = QLabel()
+        self.total_tile = FigureTile("Total", self.total_label, self.change_badge, large=True)
+        self.previous_tile = FigureTile("Período anterior", self.previous_label, large=True)
+        tiles = QHBoxLayout()
+        tiles.setSpacing(Space.L)
+        for tile in (self.total_tile, self.previous_tile,
+                     FigureTile("Promedio mensual", self.average_label, large=True)):  # fmt: skip
+            tiles.addWidget(tile, stretch=1)
+        layout.addLayout(tiles)
+
+        self.chart = StackedBarChart(
+            self._theme, lambda cents: format_compact(cents, SUMMARY_CURRENCY)
+        )
+        self.chart.clicked.connect(self._bar_clicked)
+        card, self.empty_label, self.unconverted_label = chart_card("Mes a mes", self.chart)
+        layout.addWidget(card)
+
+        self.categories_card, self._category_rows = rows_card("Por categoría")
+        self.payees_card, self._payee_rows = rows_card("Por beneficiario")
+        breakdown = QHBoxLayout()
+        breakdown.setSpacing(Space.L)
+        breakdown.addWidget(self.categories_card, stretch=1)
+        breakdown.addWidget(self.payees_card, stretch=1)
+        layout.addLayout(breakdown)
+        self.tags_card, self._tag_rows = rows_card("Por etiqueta")
+        self.tags_card.setToolTip(TAGS_HINT)
+        layout.addWidget(self.tags_card)
+        layout.addStretch()
+
+        self.metric_input.changed.connect(lambda _index: self._reload())
+        theme_manager.theme_changed.connect(self._set_theme)
+
+    @property
+    def metric(self) -> Metric:
+        return METRICS[self.metric_input.index()]
+
+    def show_period(self, period: Period) -> None:
+        self._period = period
+        self._reload()
+
+    def _reload(self) -> None:
+        trends = self._trends = self._services.analysis.trends(self._period, self.metric)
+        expenses = trends.metric is Metric.EXPENSES
+        self.total_label.set_money(trends.total)
+        # More spending is bad news; more income or savings is good news.
+        self.change_badge.set_higher_is_better(not expenses)
+        self.change_badge.set_change(trends.change)
+        self.previous_label.setText(
+            "Sin datos" if trends.change is None else trends.previous_total.format()
+        )
+        self.average_label.setText(trends.average.format())
+
+        has_data = any(not month.total.is_zero for month in trends.months)
+        self.chart.setVisible(has_data)
+        self.empty_label.setVisible(not has_data)
+        stacked = self._stacked_categories(trends.categories)
+        self.chart.set_bars(
+            [self._bar(month, stacked) for month in trends.months],
+            trends.average.cents if has_data else None,
+        )
+        self.unconverted_label.setText(unconverted_note(trends.unconverted))
+        self.unconverted_label.setVisible(bool(trends.unconverted))
+
+        breakdown = trends.metric is not Metric.SAVINGS
+        self.categories_card.setVisible(breakdown)
+        self.payees_card.setVisible(breakdown)
+        self.tags_card.setVisible(breakdown and bool(trends.tags))
+        if breakdown:
+            self._fill_categories(trends)
+            self._fill_payees(trends)
+            self._fill_tags(trends)
+
+    # Bars
+
+    def _stacked_categories(self, categories: list[CategoryTotal]) -> list[int]:
+        return [total.category.id for total in categories[:STACKED_CATEGORIES]]
+
+    def _bar(self, month: MonthTrend, stacked: list[int]) -> StackedBar:
+        title = format_month(month.month)
+        if self.metric is Metric.SAVINGS:
+            color = self._theme.income if not month.total.is_negative else self._theme.expense
+            segments = (StackSegment(None, color, month.total.cents),)
+            return StackedBar(month.month.short_name, segments, title,
+                              (f"Ahorro {month.total.format()}",), month.month)  # fmt: skip
+        by_id = {total.category.id: total for total in month.by_category}
+        segments = [
+            StackSegment(category_id, by_id[category_id].category.color,
+                         by_id[category_id].total.cents)
+            for category_id in stacked
+            if category_id in by_id
+        ]  # fmt: skip
+        rest = sum(t.total.cents for t in month.by_category if t.category.id not in stacked)
+        if rest:
+            segments.append(StackSegment(None, self._theme.text_muted, rest))
+        lines = [f"Total {month.total.format()}"] + [
+            f"{total.category.name} {total.total.format()}"
+            for total in month.by_category[:TOOLTIP_CATEGORIES]
+        ]
+        return StackedBar(month.month.short_name, tuple(segments), title, tuple(lines), month.month)
+
+    def _bar_clicked(self, index: int, category_id: int | None) -> None:
+        month = self._trends.months[index].month
+        self.transactions_requested.emit(TransactionFocus(Period.of_months(month), category_id))
+
+    # Breakdown
+
+    def _fill_categories(self, trends: Trends) -> None:
+        clear_layout(self._category_rows)
+        if not trends.categories:
+            self._category_rows.addWidget(EmptyState(NO_MOVEMENTS_TEXT, compact=True))
+        for total in trends.categories:
+            row = CategoryLine(total.category.color, total.category.name)
+            row.add(muted_label(percent(total.total, trends.total)))
+            row.add(amount_label(total.total))
+            row.clicked.connect(
+                lambda category_id=total.category.id: self.transactions_requested.emit(
+                    TransactionFocus(self._period, category_id=category_id)
+                )
+            )
+            self._category_rows.addWidget(row)
+
+    def _fill_payees(self, trends: Trends) -> None:
+        clear_layout(self._payee_rows)
+        named = [p for p in trends.payees if p.payee is not None][:PAYEES_SHOWN]
+        without = [p for p in trends.payees if p.payee is None]
+        if not trends.payees:
+            self._payee_rows.addWidget(EmptyState(NO_MOVEMENTS_TEXT, compact=True))
+        for total in named + without:
+            name = total.payee.name if total.payee else NO_PAYEE_LABEL
+            color = self._theme.accent if total.payee else self._theme.border
+            row = CategoryLine(color, name, movements_text(total.count),
+                               clickable=total.payee is not None)  # fmt: skip
+            row.add(muted_label(percent(total.total, trends.total)))
+            row.add(amount_label(total.total))
+            if total.payee is not None:
+                row.clicked.connect(
+                    lambda payee_id=total.payee.id: self.transactions_requested.emit(
+                        TransactionFocus(self._period, payee_id=payee_id)
+                    )
+                )
+            self._payee_rows.addWidget(row)
+
+    def _fill_tags(self, trends: Trends) -> None:
+        clear_layout(self._tag_rows)
+        for total in trends.tags:
+            row = CategoryLine(total.tag.color, total.tag.name, movements_text(total.count))
+            row.add(muted_label(percent(total.total, trends.total)))
+            row.add(amount_label(total.total))
+            row.clicked.connect(
+                lambda tag_id=total.tag.id: self.transactions_requested.emit(
+                    TransactionFocus(self._period, tag_id=tag_id)
+                )
+            )
+            self._tag_rows.addWidget(row)
+
+    def _set_theme(self, theme: Theme) -> None:
+        self._theme = theme
+        self.chart.set_theme(theme)
+        if self._trends is not None:
+            self._reload()

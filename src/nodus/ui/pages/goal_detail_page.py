@@ -19,7 +19,6 @@ from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.base.detail_page import DetailPage
-from nodus.ui.pages.dashboard.dashboard_cards import FigureTile, muted_label
 from nodus.ui.pages.goals_page import delete_goal
 from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -28,8 +27,9 @@ from nodus.ui.widgets.charts.chart_base import format_compact
 from nodus.ui.widgets.charts.goal_bar import goal_pill, goal_sentence, month_phrase
 from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.figure_row import FigureRow
+from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.money_label import amount_text, month_change_text
-from nodus.ui.widgets.style import clear_layout, make_hoverable
+from nodus.ui.widgets.style import clear_layout, make_hoverable, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
 
 HISTORY_MONTHS = 12

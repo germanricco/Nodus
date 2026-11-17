@@ -25,12 +25,6 @@ from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.base.page import Page
-from nodus.ui.pages.dashboard.dashboard_cards import (
-    BudgetRow,
-    CategoryLine,
-    FigureTile,
-    muted_label,
-)
 from nodus.ui.text.labels import days_left_text, unconverted_note
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
@@ -38,8 +32,11 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.charts.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.empty_state import empty_page_card
+from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.inputs.period_selector import PeriodSelector
-from nodus.ui.widgets.style import clear_layout
+from nodus.ui.widgets.style import clear_layout, muted_label
+from nodus.ui.widgets.tables.budget_row import BudgetRow
+from nodus.ui.widgets.tables.category_line import CategoryLine
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 
 EMPTY_TEXT = (

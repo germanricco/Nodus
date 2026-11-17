@@ -1,6 +1,9 @@
 """Rounded panel that groups related content."""
 
-from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
+from collections.abc import Callable
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from nodus.ui.theme.design import Space
 
@@ -21,3 +24,26 @@ class Card(QFrame):
             title_label = QLabel(title.upper())
             title_label.setObjectName("CardTitle")
             self.body.addWidget(title_label)
+
+
+def card_header(card: Card, title: str) -> QHBoxLayout:
+    """A title on the left with room on the right, e.g. for a ``ChangeBadge``."""
+    header = QHBoxLayout()
+    header.setSpacing(Space.S)
+    label = QLabel(title.upper())
+    label.setObjectName("CardTitle")
+    header.addWidget(label)
+    header.addStretch()
+    card.body.addLayout(header)
+    return header
+
+
+def see_all_link(header: QHBoxLayout, text: str, slot: Callable[[], object]) -> QPushButton:
+    """A small link at the right of a card's header to the page with the whole list, in
+    the same place on every card and without taking a row of its own."""
+    button = QPushButton(f"{text} ›")
+    button.setObjectName("LinkButton")
+    button.setCursor(Qt.CursorShape.PointingHandCursor)
+    button.clicked.connect(slot)
+    header.addWidget(button)
+    return button

@@ -11,12 +11,10 @@ from nodus.models.period import Period
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
-from nodus.ui.pages.analysis.analysis_views import (
-    AnalysisView,
-    CashFlowView,
-    NetWorthView,
-    TrendsView,
-)
+from nodus.ui.pages.analysis.cash_flow_view import CashFlowView
+from nodus.ui.pages.analysis.common import AnalysisView
+from nodus.ui.pages.analysis.net_worth_view import NetWorthView
+from nodus.ui.pages.analysis.trends_view import TrendsView
 from nodus.ui.pages.base.page import Page
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.inputs.period_selector import PeriodSelector

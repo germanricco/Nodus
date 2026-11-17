@@ -69,3 +69,11 @@ class ChangeBadge(QLabel):
         # Re-polishing recolors the label but keeps the padding it had, and "empty" has
         # none. A new stylesheet of its own (a comment, one per tone) makes Qt recompute it.
         self.setStyleSheet(f"/* {tone} */")  # qss-refresh
+
+
+def status_pill(text: str, tone: str) -> QLabel:
+    """A small colored pill, as the change badges: "bad", "warning", "good" or "neutral"."""
+    label = QLabel(text)
+    label.setObjectName("ChangeBadge")
+    set_style_property(label, "tone", tone)
+    return label

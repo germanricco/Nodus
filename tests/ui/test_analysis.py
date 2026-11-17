@@ -16,14 +16,9 @@ from nodus.models.transaction import TransactionType
 from nodus.services.reports.dashboard_service import MonthFlow
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.analysis.analysis_page import AnalysisPage
-from nodus.ui.pages.analysis.analysis_views import (
-    NO_PAYEE_LABEL,
-    NO_RATE_TEXT,
-    CashFlowView,
-    NetWorthView,
-    TrendsView,
-    months_to_list,
-)
+from nodus.ui.pages.analysis.cash_flow_view import CashFlowView, months_to_list
+from nodus.ui.pages.analysis.net_worth_view import NO_RATE_TEXT, NetWorthView
+from nodus.ui.pages.analysis.trends_view import NO_PAYEE_LABEL, TrendsView
 
 EXPENSE = TransactionType.EXPENSE
 SEP_NOV = Period.of_months(Month(2026, 9), Month(2026, 11))

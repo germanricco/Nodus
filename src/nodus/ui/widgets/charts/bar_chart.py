@@ -9,6 +9,8 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
+from nodus.models.period import Month, format_month
+from nodus.services.reports.dashboard_service import MonthFlow
 from nodus.ui.theme.design import Chart, Line, Opacity, Radius, TextRole, role_font
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.charts.chart_base import (
@@ -147,3 +149,23 @@ class BarChart(ColumnHoverChart):
         index = self.index_at(event.position().x())
         if index is not None and event.button() is Qt.MouseButton.LeftButton:
             self.clicked.emit(index)
+
+
+def flow_bar_groups(flow: list[MonthFlow], selected: Month | None = None) -> list[BarGroup]:
+    """The income and expense bars of each month, with ``selected`` highlighted."""
+    return [
+        BarGroup(
+            month.month.short_name,
+            month.income.cents,
+            month.expenses.cents,
+            format_month(month.month),
+            (
+                f"Ingresos {month.income.format()}",
+                f"Gastos {month.expenses.format()}",
+                f"Ahorro {month.savings.format()}",
+            ),
+            selected=month.month == selected,
+            key=month.month,
+        )
+        for month in flow
+    ]

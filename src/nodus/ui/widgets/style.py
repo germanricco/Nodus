@@ -2,7 +2,7 @@
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QGraphicsDropShadowEffect, QLayout, QWidget
+from PySide6.QtWidgets import QGraphicsDropShadowEffect, QLabel, QLayout, QWidget
 
 from nodus.ui.theme.design import Elevation, Opacity
 from nodus.ui.theme.theme import Theme
@@ -60,3 +60,9 @@ def elevate(widget: QWidget, theme: Theme) -> None:
     shadow.setOffset(0, Elevation.OFFSET)
     shadow.setColor(color)
     widget.setGraphicsEffect(shadow)
+
+
+def muted_label(text: str) -> QLabel:
+    label = QLabel(text)
+    set_style_property(label, "muted", True)
+    return label

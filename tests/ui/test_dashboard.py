@@ -10,7 +10,8 @@ from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.dashboard import dashboard_page
-from nodus.ui.pages.dashboard.dashboard_cards import LatestTransactionRow, percent
+from nodus.ui.pages.dashboard.latest_transactions_card import LatestTransactionRow
+from nodus.ui.text.formatting import percent
 from nodus.ui.widgets.elided_label import ElidedLabel
 
 
