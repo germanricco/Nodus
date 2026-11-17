@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QObject, Qt
-from PySide6.QtGui import QColor, QKeyEvent, QKeySequence, QMouseEvent, QPainter
+from PySide6.QtGui import QColor, QKeyEvent, QMouseEvent, QPainter
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QTableView,
 )
 
+from nodus.ui.shortcuts import DELETE_ROWS
 from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme_manager import active_theme
 
@@ -60,7 +61,7 @@ class _DeleteKeyFilter(QObject):
         if (
             event.type() == QEvent.Type.KeyPress
             and isinstance(event, QKeyEvent)
-            and event.matches(QKeySequence.StandardKey.Delete)
+            and DELETE_ROWS.matches(event)
         ):
             self._delete()
             return True

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
 from nodus.ui.shell import tour
 from nodus.ui.shell.coach_marks import mark_target
-from nodus.ui.shell.shortcuts import HELP
+from nodus.ui.shortcuts import HELP
 from nodus.ui.theme.design import ControlSize, IconSize, Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme

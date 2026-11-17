@@ -12,6 +12,7 @@ from PySide6.QtCore import QEvent, QObject, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QKeyEvent, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QPen
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
+from nodus.ui.shortcuts import TOUR_BACK, TOUR_EXIT, TOUR_NEXT
 from nodus.ui.theme.design import Easing, Layout, Line, Motion, Opacity, Radius, Space, motion_ms
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.style import elevate, muted_label, unit_animation
@@ -201,12 +202,11 @@ class CoachMarks(QWidget):
         event.accept()  # the page under the layer waits until the tour ends
 
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
-        key = event.key()
-        if key == Qt.Key.Key_Escape:
+        if TOUR_EXIT.matches(event):
             self.finish()
-        elif key in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Right):
+        elif TOUR_NEXT.matches(event):
             self.next()
-        elif key == Qt.Key.Key_Left:
+        elif TOUR_BACK.matches(event):
             self.previous()
         else:
             super().keyPressEvent(event)

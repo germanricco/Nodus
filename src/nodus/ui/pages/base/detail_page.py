@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout
 
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.base.page import Page
+from nodus.ui.shortcuts import BACK_TO_LIST
 from nodus.ui.theme.design import ControlSize, IconSize, Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
@@ -58,7 +59,7 @@ class DetailPage(Page):
 
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
         # Reaches the page when no child used it, e.g. a table with no chosen rows.
-        if event.key() == Qt.Key.Key_Escape:
+        if BACK_TO_LIST.matches(event):
             self.back_requested.emit()
             return
         super().keyPressEvent(event)

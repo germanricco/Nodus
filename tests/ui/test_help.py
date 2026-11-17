@@ -2,12 +2,13 @@
 and lights up in the sidebar the pages a topic talks about."""
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, Qt
+from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QLabel
 
 from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.shell.help_panel import SHORTCUTS_VIEW, topic_html
-from nodus.ui.shell.shortcuts import SHORTCUT_GROUPS, SHORTCUTS
+from nodus.ui.shortcuts import SHORTCUT_GROUPS, SHORTCUTS
 from nodus.ui.text.help_texts import HELP_SECTIONS, HELP_TOPICS, TOPICS_BY_KEY
 
 
@@ -144,3 +145,15 @@ def test_the_tour_starts_from_help_and_the_help_makes_way(window, pesos):
 
     assert not window.help_panel.isVisible()
     assert window.tour.isVisible()
+
+
+@pytest.mark.parametrize("shortcut", [s for s in SHORTCUTS if s.qt_keys], ids=lambda s: s.text)
+def test_a_shortcut_answers_its_keys_pressed_alone(shortcut):
+    def press(key, modifiers=Qt.KeyboardModifier.NoModifier):
+        return QKeyEvent(QEvent.Type.KeyPress, key, modifiers)
+
+    for key in shortcut.qt_keys:
+        assert shortcut.matches(press(key))
+        assert shortcut.matches(press(key, Qt.KeyboardModifier.KeypadModifier))
+        assert not shortcut.matches(press(key, Qt.KeyboardModifier.ControlModifier))
+    assert not shortcut.matches(press(Qt.Key.Key_A))

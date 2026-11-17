@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.ui.shell.shortcuts import SHORTCUT_GROUPS, SHORTCUTS
+from nodus.ui.shortcuts import CLOSE_HELP, SHORTCUT_GROUPS, SHORTCUTS
 from nodus.ui.text.help_texts import HELP_SECTIONS, HELP_TOPICS, TOPICS_BY_KEY, HelpTopic
 from nodus.ui.text.labels import TOUR_LABEL
 from nodus.ui.theme.design import IconSize, Layout, Space
@@ -141,7 +141,7 @@ class HelpPanel(QFrame):
         self.closed.emit()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
-        if event.key() == Qt.Key.Key_Escape:
+        if CLOSE_HELP.matches(event):
             self.close_panel()
             return
         super().keyPressEvent(event)

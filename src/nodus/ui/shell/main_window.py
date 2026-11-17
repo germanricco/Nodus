@@ -56,10 +56,10 @@ from nodus.ui.shell.coach_marks import CoachMarks
 from nodus.ui.shell.help_panel import HelpPanel
 from nodus.ui.shell.notices import NOTICES
 from nodus.ui.shell.notification_panel import NotificationPanel
-from nodus.ui.shell.shortcuts import HELP, UNDO
 from nodus.ui.shell.sidebar import Sidebar
 from nodus.ui.shell.top_bar import TopBar
 from nodus.ui.shell.tour import TOUR_STEPS
+from nodus.ui.shortcuts import HELP, UNDO
 from nodus.ui.text.help_texts import HelpTopic, topic_for_page
 from nodus.ui.text.labels import TOUR_LABEL
 from nodus.ui.theme.design import Layout

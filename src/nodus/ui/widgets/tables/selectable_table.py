@@ -43,6 +43,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.ui.shortcuts import CLEAR_SELECTION
 from nodus.ui.theme.design import IconSize, Layout, Line, Radius
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
@@ -357,7 +358,7 @@ class SelectableTable(QTableView):
             self.open_menu(index.row(), event.globalPos())
 
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
-        if event.key() == Qt.Key.Key_Escape and self.selectionModel().hasSelection():
+        if CLEAR_SELECTION.matches(event) and self.selectionModel().hasSelection():
             self.clearSelection()
             return
         super().keyPressEvent(event)
