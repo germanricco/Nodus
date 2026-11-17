@@ -9,13 +9,13 @@ from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
 from nodus.models.budget import Budget, BudgetState, used_percent_label
 from nodus.ui.theme.design import ControlSize, Line, Opacity
 from nodus.ui.theme.theme import Theme
+from nodus.ui.widgets.change_badge import Tone, status_pill
 from nodus.ui.widgets.charts.chart_base import AnimatedChart, format_compact, lerp, with_alpha
-from nodus.ui.widgets.style import set_style_property
 
 STATE_TONES = {
-    BudgetState.ON_TRACK: "good",
-    BudgetState.AHEAD: "warning",
-    BudgetState.OVER: "bad",
+    BudgetState.ON_TRACK: Tone.GOOD,
+    BudgetState.AHEAD: Tone.WARNING,
+    BudgetState.OVER: Tone.BAD,
 }
 
 
@@ -53,10 +53,7 @@ def remaining_text(budget: Budget) -> str:
 
 def budget_pill(budget: Budget) -> QLabel:
     """What is left, in a pill colored like the budget's bar."""
-    pill = QLabel(remaining_text(budget))
-    pill.setObjectName("ChangeBadge")
-    set_style_property(pill, "tone", STATE_TONES[budget.state])
-    return pill
+    return status_pill(remaining_text(budget), STATE_TONES[budget.state])
 
 
 def paint_progress(

@@ -27,7 +27,7 @@ from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_rows import TransactionListBuilder, TransactionListItem
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.change_badge import status_pill
+from nodus.ui.widgets.change_badge import Tone, status_pill
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.pay_button import PayButton
@@ -172,7 +172,7 @@ class InstallmentPlanRow(ScheduleRow):
             summary.first.note or item.category_name,
             f"{summary.paid} de {plan.count} · {item.account_text} · {item.category_name}",
             upcoming.amount.format(),
-            status_pill(due_label((upcoming.occurred_on - today).days), "neutral"),
+            status_pill(due_label((upcoming.occurred_on - today).days), Tone.NEUTRAL),
             lambda: actions,
         )
         self.summary = summary

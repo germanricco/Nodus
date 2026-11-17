@@ -13,22 +13,22 @@ from nodus.models.period import MONTH_NAMES, Month, format_date
 from nodus.ui.text.labels import NO_RATE_TEXT, plural
 from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme import Theme
+from nodus.ui.widgets.change_badge import Tone, status_pill
 from nodus.ui.widgets.charts.budget_bar import paint_progress
 from nodus.ui.widgets.charts.chart_base import AnimatedChart, lerp
 from nodus.ui.widgets.money_label import amount_text
-from nodus.ui.widgets.style import set_style_property
 
 # The pill of each state, and its tone (the colors of ``ChangeBadge``).
 STATE_LABELS = {
-    GoalState.REACHED: ("Alcanzada", "good"),
-    GoalState.ON_TRACK: ("Al día", "good"),
-    GoalState.BEHIND: ("Atrasada", "warning"),
-    GoalState.OVERDUE: ("Vencida", "bad"),
-    GoalState.NO_HISTORY: ("Sin historia", "neutral"),
-    GoalState.NO_DATE: ("Sin fecha", "neutral"),
-    GoalState.NO_RATE: (NO_RATE_TEXT, "neutral"),
+    GoalState.REACHED: ("Alcanzada", Tone.GOOD),
+    GoalState.ON_TRACK: ("Al día", Tone.GOOD),
+    GoalState.BEHIND: ("Atrasada", Tone.WARNING),
+    GoalState.OVERDUE: ("Vencida", Tone.BAD),
+    GoalState.NO_HISTORY: ("Sin historia", Tone.NEUTRAL),
+    GoalState.NO_DATE: ("Sin fecha", Tone.NEUTRAL),
+    GoalState.NO_RATE: (NO_RATE_TEXT, Tone.NEUTRAL),
 }
-NO_RATE_TEXT = "Falta la cotización para sumar las cuentas en otras monedas."
+MISSING_RATE_SENTENCE = "Falta la cotización para sumar las cuentas en otras monedas."
 
 
 def month_phrase(month: Month) -> str:
@@ -60,7 +60,7 @@ def goal_sentence(goal: Goal, progress: GoalProgress, hidden: bool = False) -> s
     if state is GoalState.REACHED:
         return f"Alcanzada el {format_date(goal.reached_on)}." if goal.reached_on else "Alcanzada."
     if state is GoalState.NO_RATE:
-        return NO_RATE_TEXT
+        return MISSING_RATE_SENTENCE
     if state is GoalState.OVERDUE:
         missing = amount(progress.remaining)
         return f"La fecha pasó y faltan {missing}. Cambia la fecha o el objetivo."
@@ -81,11 +81,7 @@ def goal_sentence(goal: Goal, progress: GoalProgress, hidden: bool = False) -> s
 
 def goal_pill(progress: GoalProgress) -> QLabel:
     """The goal's state in a pill: green, amber, red or gray."""
-    text, tone = STATE_LABELS[progress.state]
-    pill = QLabel(text)
-    pill.setObjectName("ChangeBadge")
-    set_style_property(pill, "tone", tone)
-    return pill
+    return status_pill(*STATE_LABELS[progress.state])
 
 
 def bar_color(theme: Theme, state: GoalState) -> str:

@@ -26,7 +26,7 @@ from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_AMOUNT, TYPE_NAME, F
 from nodus.ui.event_bus import EventBus
 from nodus.ui.text.labels import CURRENCY_LABELS
 from nodus.ui.theme.design import Space
-from nodus.ui.widgets.charts.goal_bar import NO_RATE_TEXT, month_phrase
+from nodus.ui.widgets.charts.goal_bar import MISSING_RATE_SENTENCE, month_phrase
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.inputs.amount_input import AmountInput
 from nodus.ui.widgets.inputs.combo_box import ComboBox
@@ -301,7 +301,7 @@ class GoalDialog(FormDialog):
     def _summary(self, preview: Goal) -> str:
         progress = self._services.goals.progress(preview, self._today)
         if progress.state is GoalState.NO_RATE:
-            return NO_RATE_TEXT
+            return MISSING_RATE_SENTENCE
         if progress.state is GoalState.REACHED:
             return "Ya está cubierta: tus cuentas ya suman el objetivo."
         target = amount_text(preview.target, self._hidden)

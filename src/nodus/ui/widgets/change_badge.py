@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from enum import Enum
+
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.ui.widgets.style import set_style_property
@@ -23,6 +25,16 @@ def _percent_number(change: float) -> str:
     percent = abs(change) * 100
     text = f"{percent:.1f}" if percent < 10 else f"{percent:.0f}"
     return text.replace(".", ",").removesuffix(",0")
+
+
+class Tone(Enum):
+    """How a pill reads: well, a warning, badly, or just information. The values are the
+    stylesheet's ``tone`` of ``ChangeBadge``."""
+
+    GOOD = "good"
+    WARNING = "warning"
+    BAD = "bad"
+    NEUTRAL = "neutral"
 
 
 class ChangeBadge(QLabel):
@@ -54,15 +66,17 @@ class ChangeBadge(QLabel):
         if change is None:
             self.setText(self._none_text)
             self.setVisible(bool(self._none_text))
-            self._set_tone("empty")
+            self._set_tone(None)
             return
         self.setText(format_change(change, self._unit) + (f" · {detail}" if detail else ""))
         self.setVisible(True)
         good = change > 0 if self._higher_is_better else change < 0
-        self._set_tone("neutral" if change == 0 else "good" if good else "bad")
+        self._set_tone(Tone.NEUTRAL if change == 0 else Tone.GOOD if good else Tone.BAD)
 
-    def _set_tone(self, tone: str) -> None:
-        """Colors the pill; "empty" is a plain "—" without the pill or its padding."""
+    def _set_tone(self, tone: Tone | None) -> None:
+        """Colors the pill; without a tone it is a plain "—", without the pill or its
+        padding (the stylesheet's "empty")."""
+        tone = tone.value if tone else "empty"
         if self.property("tone") == tone:
             return
         set_style_property(self, "tone", tone)
@@ -71,9 +85,9 @@ class ChangeBadge(QLabel):
         self.setStyleSheet(f"/* {tone} */")  # qss-refresh
 
 
-def status_pill(text: str, tone: str) -> QLabel:
-    """A small colored pill, as the change badges: "bad", "warning", "good" or "neutral"."""
+def status_pill(text: str, tone: Tone) -> QLabel:
+    """A small pill colored by ``tone``, as the change badges."""
     label = QLabel(text)
     label.setObjectName("ChangeBadge")
-    set_style_property(label, "tone", tone)
+    set_style_property(label, "tone", tone.value)
     return label

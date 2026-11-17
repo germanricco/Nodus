@@ -12,12 +12,16 @@ from nodus.models.recurring_charge import DueStatus, RecurringCharge
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import due_label
 from nodus.ui.theme.design import Space
-from nodus.ui.widgets.change_badge import status_pill
+from nodus.ui.widgets.change_badge import Tone, status_pill
 from nodus.ui.widgets.pay_button import PayButton
 from nodus.ui.widgets.style import RIGHT_ALIGNED, amount_label, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
 
-DUE_TONES = {DueStatus.OVERDUE: "bad", DueStatus.SOON: "warning", DueStatus.LATER: "neutral"}
+DUE_TONES = {
+    DueStatus.OVERDUE: Tone.BAD,
+    DueStatus.SOON: Tone.WARNING,
+    DueStatus.LATER: Tone.NEUTRAL,
+}
 SEEN_TEXT = "Ya lo vi"
 REMIND_AGAIN_TEXT = "Volver a avisarme"
 
@@ -25,7 +29,7 @@ REMIND_AGAIN_TEXT = "Volver a avisarme"
 def due_status_label(charge: RecurringCharge, today: date, quiet: bool) -> QLabel:
     """When the charge is due, in a pill: red once overdue, amber within the week, and
     gray again while the user has seen it (``RecurringChargeService.is_quiet``)."""
-    tone = "neutral" if quiet else DUE_TONES[charge.status(today)]
+    tone = Tone.NEUTRAL if quiet else DUE_TONES[charge.status(today)]
     pill = status_pill(due_label(charge.days_until(today)), tone)
     if quiet:
         pill.setToolTip(
