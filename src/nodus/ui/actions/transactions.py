@@ -8,7 +8,7 @@ from datetime import date
 from PySide6.QtWidgets import QWidget
 
 from nodus.services.container import Services
-from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.confirm import delete_title, delete_with_confirm
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.text.formatting import format_date
@@ -38,10 +38,13 @@ def delete_transactions(
     """Deletes ``items`` after the user confirms, saying what goes with them."""
     if not items:
         return
-    title = "Eliminar transacción" if len(items) == 1 else f"Eliminar {len(items)} transacciones"
-    if confirm(parent, title, transaction_delete_warning(services, items)):
-        services.transactions.delete_many([item.transaction.id for item in items])
-        event_bus.transactions_changed.emit()
+    delete_with_confirm(
+        parent,
+        delete_title(len(items), "transacción", "transacciones"),
+        transaction_delete_warning(services, items),
+        lambda: services.transactions.delete_many([item.transaction.id for item in items]),
+        event_bus.transactions_changed,
+    )
 
 
 def transaction_delete_warning(services: Services, items: list[TransactionListItem]) -> str:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QPushButton, QWidget
+from PySide6.QtWidgets import QFileDialog, QPushButton, QWidget
 
 from nodus.services.container import Services
 from nodus.services.errors import BackupError, ValidationError
@@ -46,7 +46,7 @@ def restore_copy(
         with busy(button, "Restaurando…"):
             services.backups.restore(Path(path), datetime.now())
     except ValidationError as error:
-        QMessageBox.warning(parent, TITLE, str(error))
+        user_error(parent, TITLE, str(error), "Elige otra copia. Tus datos siguen como estaban.")
         return False
     except BackupError as error:
         user_error(

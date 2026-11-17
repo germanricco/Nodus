@@ -17,7 +17,7 @@ from nodus.services.transactions.installment_service import InstallmentSummary
 from nodus.services.transactions.recurring_charge_service import RecurringSummary
 from nodus.ui.actions.recurring import pay_charge, skip_charge, toggle_seen
 from nodus.ui.actions.transactions import delete_transactions, edit_transaction, pay_off_actions
-from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.dialogs.recurring_charge_dialog import RecurringChargeDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
@@ -309,10 +309,13 @@ class RecurringPage(Page):
             f"Se va a eliminar «{charge.name}». Los pagos ya registrados se conservan "
             "como transacciones."
         )
-        if not confirm(self.window(), "Eliminar cargo", text):
-            return
-        self._services.recurring.delete(charge.id)
-        self._event_bus.recurring_changed.emit()
+        delete_with_confirm(
+            self.window(),
+            "Eliminar cargo",
+            text,
+            lambda: self._services.recurring.delete(charge.id),
+            self._event_bus.recurring_changed,
+        )
 
     # Building
 

@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
 from nodus.models.transaction import TransactionType
+from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs.category_dialog import NO_PARENT_LABEL, CategoryDialog
 from nodus.ui.pages import categories_page
 from nodus.ui.pages.categories_page import CategoriesPage, CategoryRow
@@ -147,7 +148,7 @@ class TestCategoriesPage:
         services.transactions.create(expense_draft(services, pesos.id, ars("10"), category_id=ocio))
         warnings = []
         monkeypatch.setattr(
-            categories_page, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+            confirm_dialog, "confirm", lambda _parent, _title, text: warnings.append(text) or True
         )
 
         with qtbot.waitSignal(event_bus.transactions_changed):
@@ -157,7 +158,7 @@ class TestCategoriesPage:
         assert "Ocio" not in [r.category.name for r in rows(page)]
 
     def test_delete_is_cancelled_when_not_confirmed(self, qtbot, monkeypatch, services, page):
-        monkeypatch.setattr(categories_page, "confirm", lambda *_args: False)
+        monkeypatch.setattr(confirm_dialog, "confirm", lambda *_args: False)
 
         run_action(row_named(page, "Ocio").actions(), "Eliminar")
 

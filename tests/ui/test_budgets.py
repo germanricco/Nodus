@@ -7,9 +7,9 @@ from PySide6.QtCore import Qt
 from nodus.models.budget import BudgetState
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
+from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
 from nodus.ui.navigation import PageId, TransactionFocus
-from nodus.ui.pages import budgets_page
 from nodus.ui.pages.budgets_page import BudgetsPage
 
 NOVEMBER = Month.of(TODAY)
@@ -142,7 +142,7 @@ class TestPage:
         food = expense("Supermercado y comida", services)
         services.budgets.set_limit(food, NOVEMBER.previous(), ars("300"))
         page.refresh(TODAY)
-        monkeypatch.setattr(budgets_page, "confirm", lambda *_args, **_kwargs: True)
+        monkeypatch.setattr(confirm_dialog, "confirm", lambda *_args, **_kwargs: True)
 
         page.rows[0].remove_requested.emit()
 

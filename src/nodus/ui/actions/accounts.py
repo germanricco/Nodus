@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QWidget
 from nodus.models.account import Account
 from nodus.services.container import Services
 from nodus.ui.dialogs.account_dialog import AccountDialog
-from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.event_bus import EventBus
 
 
@@ -41,12 +41,14 @@ def delete_account(
     parent: QWidget, services: Services, event_bus: EventBus, account: Account
 ) -> bool:
     """Deletes ``account`` once the user confirms, saying what goes with it."""
-    if not confirm(parent, "Eliminar cuenta", account_delete_warning(services, account)):
-        return False
-    services.accounts.delete(account.id)
-    event_bus.accounts_changed.emit()
-    event_bus.transactions_changed.emit()
-    return True
+    return delete_with_confirm(
+        parent,
+        "Eliminar cuenta",
+        account_delete_warning(services, account),
+        lambda: services.accounts.delete(account.id),
+        event_bus.accounts_changed,
+        event_bus.transactions_changed,
+    )
 
 
 def edit_account(

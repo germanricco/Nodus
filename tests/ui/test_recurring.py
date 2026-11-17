@@ -11,9 +11,9 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
+from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
 from nodus.ui.navigation import PageId
-from nodus.ui.pages import recurring_page
 from nodus.ui.pages.recurring_page import RecurringChargeRow, RecurringPage
 from nodus.ui.text.labels import due_label
 
@@ -175,7 +175,7 @@ class TestPage:
         page.toggle_pause(services.recurring.get(charge.id))
         assert not services.recurring.get(charge.id).is_active
 
-        monkeypatch.setattr(recurring_page, "confirm", lambda *_args: True)
+        monkeypatch.setattr(confirm_dialog, "confirm", lambda *_args: True)
         page.delete_charge(services.recurring.get(charge.id))
         assert services.recurring.list_charges() == []
 

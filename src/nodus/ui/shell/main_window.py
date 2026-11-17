@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QMainWindow,
-    QMessageBox,
     QPushButton,
     QStackedWidget,
     QVBoxLayout,
@@ -28,7 +27,7 @@ from nodus.services.container import Services
 from nodus.services.external.update_service import Release
 from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
-from nodus.ui.dialogs.confirm import ask
+from nodus.ui.dialogs.confirm import ask, tell
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog, TransactionStart
 from nodus.ui.dialogs.update_dialog import UpdateDialog
@@ -429,7 +428,7 @@ class MainWindow(QMainWindow):
         """Opens the transaction dialog, filled with what ``start`` knows, or leads to
         Cuentas when there is nowhere to record it."""
         if not self._services.accounts.list_accounts():
-            QMessageBox.information(
+            tell(
                 self,
                 "Primero, una cuenta",
                 "Para registrar transacciones necesitas al menos una cuenta activa."

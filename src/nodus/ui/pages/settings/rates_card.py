@@ -14,7 +14,7 @@ from nodus.models.exchange_rate import ExchangeRate
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.services.external.rate_feed_service import SOURCES
-from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.event_bus import EventBus
 from nodus.ui.rate_updater import shared_rate_updater
 from nodus.ui.text.formatting import format_date
@@ -263,6 +263,10 @@ class RatesCard(Card):
 
     def _delete_rate(self, rate: ExchangeRate) -> None:
         text = f"Se va a eliminar la cotización del {format_date(rate.rate_date)}."
-        if confirm(self.window(), "Eliminar cotización", text):
-            self._services.exchange_rates.delete(rate.id)
-            self._event_bus.exchange_rates_changed.emit()
+        delete_with_confirm(
+            self.window(),
+            "Eliminar cotización",
+            text,
+            lambda: self._services.exchange_rates.delete(rate.id),
+            self._event_bus.exchange_rates_changed,
+        )

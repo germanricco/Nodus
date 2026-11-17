@@ -9,7 +9,7 @@ from nodus.models.category import Category
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
 from nodus.ui.dialogs.category_dialog import CategoryDialog
-from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, history_focus
 from nodus.ui.pages.base.page import Page
@@ -142,11 +142,14 @@ class CategoriesPage(Page):
         ).exec()
 
     def delete_category(self, category: Category) -> None:
-        if not confirm(self.window(), "Eliminar categoría", self._delete_warning(category)):
-            return
-        self._services.categories.delete(category.id)
-        self._event_bus.categories_changed.emit()
-        self._event_bus.transactions_changed.emit()
+        delete_with_confirm(
+            self.window(),
+            "Eliminar categoría",
+            self._delete_warning(category),
+            lambda: self._services.categories.delete(category.id),
+            self._event_bus.categories_changed,
+            self._event_bus.transactions_changed,
+        )
 
     def _section(self, kind: TransactionType, title: str) -> Card:
         card = Card(title)

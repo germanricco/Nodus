@@ -19,7 +19,7 @@ from nodus.services.accounts.account_group_service import AccountSection
 from nodus.services.container import Services
 from nodus.ui.actions.accounts import delete_account, edit_account, toggle_account_archived
 from nodus.ui.dialogs.account_group_dialogs import GroupDialog, MoveToGroupDialog
-from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
@@ -357,9 +357,13 @@ class AccountsPage(Page):
 
     def delete_group(self, group: AccountGroup) -> None:
         count = self._services.account_groups.account_count(group.id)
-        if confirm(self.window(), "Eliminar grupo", group_delete_warning(group, count)):
-            self._services.account_groups.delete(group.id)
-            self._event_bus.accounts_changed.emit()
+        delete_with_confirm(
+            self.window(),
+            "Eliminar grupo",
+            group_delete_warning(group, count),
+            lambda: self._services.account_groups.delete(group.id),
+            self._event_bus.accounts_changed,
+        )
 
     def _add_rows(
         self,

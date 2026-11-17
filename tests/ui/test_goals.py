@@ -12,7 +12,7 @@ from nodus.models.goal import Goal, GoalProgress, GoalShare, GoalState
 from nodus.models.period import Month
 from nodus.services.app.notification_service import NoticeKind
 from nodus.services.planning.goal_service import GoalDraft
-from nodus.ui.actions import goals as goal_actions
+from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.pages import accounts_page, goals_page
@@ -157,7 +157,7 @@ class TestPage:
 
         texts = []
         monkeypatch.setattr(
-            goal_actions, "confirm", lambda _p, _t, text: texts.append(text) or True
+            confirm_dialog, "confirm", lambda _p, _t, text: texts.append(text) or True
         )
         page.delete(services.goals.get(goal.id))
 
@@ -374,7 +374,7 @@ class TestDetail:
         assert window.detail(DetailId.ACCOUNT).account.id == savings.id
 
     def test_deleting_goes_back_to_the_list(self, monkeypatch, window, services, detail):
-        monkeypatch.setattr(goal_actions, "confirm", lambda *_args: True)
+        monkeypatch.setattr(confirm_dialog, "confirm", lambda *_args: True)
 
         detail.delete()
 

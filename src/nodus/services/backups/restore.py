@@ -27,7 +27,7 @@ WORK_NAME = "nodus-restaurando.db"
 NOT_A_COPY_TEXT = "El archivo no es una copia de Nodus."
 UNREADABLE_TEXT = "El archivo no es una copia válida de Nodus."
 NEWER_TEXT = "La copia viene de una versión más nueva de Nodus. Actualiza Nodus para usarla."
-INCOMPLETE_TEXT = "La copia está incompleta o dañada, así que tus datos quedan como estaban."
+INCOMPLETE_TEXT = "La copia está incompleta o dañada."
 
 
 def prepared_copy(source: Path, work_dir: Path) -> Database:

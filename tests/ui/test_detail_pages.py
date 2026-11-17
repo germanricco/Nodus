@@ -5,8 +5,7 @@ from menus import double_click_row, run_action
 from PySide6.QtCore import Qt
 
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.ui.actions import accounts as account_actions
-from nodus.ui.actions import payees as payee_actions
+from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.pages.accounts_page import AccountRow
 
@@ -118,7 +117,7 @@ class TestAccountDetail:
     ):
         answers = []
         monkeypatch.setattr(
-            account_actions, "confirm", lambda _parent, _title, text: answers.append(text) or True
+            confirm_dialog, "confirm", lambda _parent, _title, text: answers.append(text) or True
         )
         window.show_detail(DetailId.ACCOUNT, pesos.id)
 
@@ -160,7 +159,7 @@ class TestPayeeDetail:
         coto = services.payees.find("Coto")
         answers = []
         monkeypatch.setattr(
-            payee_actions, "confirm", lambda _parent, _title, text: answers.append(text) or True
+            confirm_dialog, "confirm", lambda _parent, _title, text: answers.append(text) or True
         )
         window.show_detail(DetailId.PAYEE, coto.id)
         detail = window.detail(DetailId.PAYEE)

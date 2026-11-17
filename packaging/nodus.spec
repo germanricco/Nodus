@@ -37,7 +37,8 @@ def version_resource() -> vi.VSVersionInfo:
 
 # Qt parts PySide6 brings along that Nodus never loads: QML and Quick (pulled in by the
 # virtual keyboard plugin), PDF (by its image plugin), the software OpenGL fallback and
-# Qt's own translations. Leaving them out saves about 45 MB.
+# Qt's own translations but qtbase_es (nodus.app.QT_TEXTS), which puts the menus of the
+# text fields in Spanish. Leaving them out saves about 45 MB.
 UNUSED_QT = (
     "opengl32sw.dll",
     "Qt6Qml",
@@ -50,8 +51,13 @@ UNUSED_QT = (
 )
 
 
+KEPT = ("PySide6/translations/qtbase_es.qm",)
+
+
 def unused(destination: str) -> bool:
     path = destination.replace("\\", "/")
+    if any(path.endswith(kept) for kept in KEPT):
+        return False
     return any(part in path for part in UNUSED_QT)
 
 

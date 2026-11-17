@@ -6,8 +6,8 @@ from PySide6.QtWidgets import QWidget
 
 from nodus.services.classification.tag_service import TagSummary
 from nodus.services.container import Services
-from nodus.ui.dialogs.confirm import confirm
-from nodus.ui.dialogs.tag_dialogs import announce_tag_change
+from nodus.ui.dialogs.confirm import delete_title, delete_with_confirm
+from nodus.ui.dialogs.tag_dialogs import tag_changes
 from nodus.ui.event_bus import EventBus
 from nodus.ui.text.labels import movements_text
 
@@ -30,9 +30,10 @@ def delete_tags(
     parent: QWidget, services: Services, event_bus: EventBus, summaries: list[TagSummary]
 ) -> bool:
     """Deletes the tags of ``summaries`` once the user confirms."""
-    title = "Eliminar etiqueta" if len(summaries) == 1 else f"Eliminar {len(summaries)} etiquetas"
-    if not confirm(parent, title, tag_delete_warning(services, summaries)):
-        return False
-    services.tags.delete_many([summary.tag.id for summary in summaries])
-    announce_tag_change(event_bus)
-    return True
+    return delete_with_confirm(
+        parent,
+        delete_title(len(summaries), "etiqueta", "etiquetas"),
+        tag_delete_warning(services, summaries),
+        lambda: services.tags.delete_many([summary.tag.id for summary in summaries]),
+        *tag_changes(event_bus),
+    )

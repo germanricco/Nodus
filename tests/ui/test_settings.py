@@ -11,8 +11,9 @@ from nodus.models.currency import FOREIGN_CURRENCIES, Currency
 from nodus.services.errors import BackupError
 from nodus.services.external.startup_service import StartupService
 from nodus.ui import browser
+from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs import export, external_backup, restore_copy
-from nodus.ui.pages.settings import data_card, rates_card
+from nodus.ui.pages.settings import data_card
 from nodus.ui.pages.settings.general_card import THEME_MODES
 from nodus.ui.pages.settings.rates_card import RateRow
 from nodus.ui.pages.settings.settings_page import SettingsPage
@@ -64,7 +65,7 @@ def test_invalid_rate_shows_error(services, page):
 def test_delete_rate_after_confirmation(monkeypatch, services, page):
     services.exchange_rates.set_rate(date(2026, 11, 1), Decimal("1200"))
     page.refresh()
-    monkeypatch.setattr(rates_card, "confirm", lambda *_args: True)
+    monkeypatch.setattr(confirm_dialog, "confirm", lambda *_args: True)
 
     run_action(rate_rows(page)[0].actions(), "Eliminar")
 
@@ -154,7 +155,7 @@ def test_restore_of_an_invalid_file_warns_and_keeps_data(
     warnings = []
     monkeypatch.setattr(restore_copy.QFileDialog, "getOpenFileName", lambda *_a: (str(bogus), ""))
     monkeypatch.setattr(restore_copy, "confirm", lambda *_a, **_k: True)
-    monkeypatch.setattr(restore_copy.QMessageBox, "warning", lambda *a: warnings.append(a[2]))
+    monkeypatch.setattr(restore_copy, "user_error", lambda *a: warnings.append(a[2]))
 
     page.data.restore_button.click()
 

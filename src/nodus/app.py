@@ -5,7 +5,7 @@ import logging
 import sys
 from datetime import date, datetime
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QLibraryInfo, QTimer, QTranslator
 from PySide6.QtWidgets import QApplication
 
 from nodus import APP_NAME, APP_USER_MODEL_ID
@@ -61,6 +61,22 @@ ALREADY_OPEN_HOW = (
 ASFW_ANY = -1  # lets any process, here the open Nodus, take the foreground
 
 
+QT_TEXTS = "qtbase_es"  # the only Qt translation the installer keeps (packaging/nodus.spec)
+
+
+def spanish_qt_texts(app: QApplication) -> QTranslator | None:
+    """Qt's own texts in Spanish: the right-click menu of every text field («Copiar»,
+    «Pegar») and any button Qt names itself. The translator is returned to be kept
+    alive; without the file Nodus still opens, in English only there."""
+    translator = QTranslator(app)
+    folder = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
+    if not translator.load(QT_TEXTS, folder):
+        logger.warning("Qt's Spanish texts not found")
+        return None
+    app.installTranslator(translator)
+    return translator
+
+
 class NodusApp:
     """Starts Nodus: makes sure the local database is usable, then opens the main window."""
 
@@ -71,6 +87,7 @@ class NodusApp:
         QApplication.setApplicationName(self.APPLICATION_NAME)
         self._qt_app = QApplication(argv)
         self._qt_app.setWindowIcon(app_icon())
+        self._qt_texts = spanish_qt_texts(self._qt_app)
         self._set_taskbar_identity()
         self._paths = AppPaths.from_environment()
         self._window: MainWindow | None = None

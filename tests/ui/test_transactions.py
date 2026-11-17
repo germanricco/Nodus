@@ -20,7 +20,7 @@ from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.transactions.transfer_service import TransferDraft
-from nodus.ui.actions import transactions as transaction_actions
+from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs import export
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog
 from nodus.ui.dialogs.transaction_dialog import (
@@ -371,7 +371,7 @@ class TestTransactionsPage:
     ):
         populate(services, pesos, dollars)
         page.refresh()
-        monkeypatch.setattr(transaction_actions, "confirm", lambda *_args: True)
+        monkeypatch.setattr(confirm_dialog, "confirm", lambda *_args: True)
 
         qtbot.keyClick(page.table, Qt.Key.Key_Delete)  # nothing selected: nothing happens
         assert len(all_transactions(services)) == 5
@@ -386,7 +386,7 @@ class TestTransactionsPage:
     ):
         buy_dollars(services, pesos, dollars)
         page.refresh()
-        monkeypatch.setattr(transaction_actions, "confirm", lambda *_args: True)
+        monkeypatch.setattr(confirm_dialog, "confirm", lambda *_args: True)
 
         with qtbot.waitSignal(event_bus.transactions_changed):
             run_action(page.row_actions(0), "Eliminar")
@@ -479,7 +479,7 @@ class TestTransactionsPage:
         page.refresh()
         warnings = []
         monkeypatch.setattr(
-            transaction_actions, "confirm", lambda _p, _t, text: warnings.append(text) or True
+            confirm_dialog, "confirm", lambda _p, _t, text: warnings.append(text) or True
         )
         page.table.selectRow(0)
         page.table.toggle_row(1)
@@ -559,9 +559,7 @@ def test_account_movements_open_filtered_by_account(services, window, pesos, dol
 class TestAddTransactionButton:
     def test_without_accounts_leads_to_accounts_page(self, monkeypatch, window):
         messages = []
-        monkeypatch.setattr(
-            main_window_module.QMessageBox, "information", lambda *args: messages.append(args)
-        )
+        monkeypatch.setattr(main_window_module, "tell", lambda *args: messages.append(args))
 
         window.top_bar.add_transaction_requested.emit()
 

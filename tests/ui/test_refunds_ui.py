@@ -17,7 +17,7 @@ from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.reports.export_service import HEADER
-from nodus.ui.actions import transactions as transaction_actions
+from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs.form_dialog import FIELD_ERROR
 from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog
@@ -190,9 +190,7 @@ def test_deleting_a_refunded_expense_warns(monkeypatch, services, pesos, shoes, 
     refund(services, pesos, shoes)
     page.reload()
     asked = []
-    monkeypatch.setattr(
-        transaction_actions, "confirm", lambda _parent, _title, text: asked.append(text)
-    )
+    monkeypatch.setattr(confirm_dialog, "confirm", lambda _parent, _title, text: asked.append(text))
     row = descriptions(page).index("↺ Zapatillas")
 
     page.table.selectRow(row)

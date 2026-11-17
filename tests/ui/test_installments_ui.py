@@ -17,6 +17,7 @@ from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.ui.actions import transactions as transaction_actions
+from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs.installment_fields import PER_INSTALLMENT, TOTAL
 from nodus.ui.dialogs.transaction_dialog import (
     EXPENSE_MODE,
@@ -473,7 +474,7 @@ class TestTransactionsList:
     ):
         opened, asked = [], []
         monkeypatch.setattr(TransactionDialog, "exec", lambda dialog: opened.append(dialog))
-        monkeypatch.setattr(transaction_actions, "confirm", lambda *args: asked.append(args))
+        monkeypatch.setattr(confirm_dialog, "confirm", lambda *args: asked.append(args))
         page.show()
 
         double_click_row(page.list_view.table, row_of(page, "5/6"))
@@ -506,7 +507,7 @@ class TestTransactionsList:
     ):
         warnings = []
         monkeypatch.setattr(
-            transaction_actions, "confirm", lambda _p, _t, text: warnings.append(text) or True
+            confirm_dialog, "confirm", lambda _p, _t, text: warnings.append(text) or True
         )
 
         run_action(page.list_view.row_actions(row_of(page, "4/6")), "Eliminar compra")
@@ -522,7 +523,7 @@ class TestTransactionsList:
         page.refresh()
         warnings = []
         monkeypatch.setattr(
-            transaction_actions, "confirm", lambda _p, _t, text: warnings.append(text) or True
+            confirm_dialog, "confirm", lambda _p, _t, text: warnings.append(text) or True
         )
         items = [page.model.item(row_of(page, "2/6")), page.model.item(row_of(page, "3/6"))]
         plain = page.model.item(

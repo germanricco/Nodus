@@ -9,7 +9,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.category_dialog import CategoryDialog
-from nodus.ui.dialogs.confirm import ask, confirm
+from nodus.ui.dialogs.confirm import ask, confirm, delete_title, delete_with_confirm, tell
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES
 
 
@@ -89,3 +89,56 @@ class TestAnswers:
         answer_box("Ver el recorrido", buttons)
 
         assert self.QUESTIONS[0]() is True
+
+
+class TestDeleteWithConfirm:
+    """Every delete goes through one flow: ask, delete, announce."""
+
+    def test_cancelling_deletes_nothing_and_announces_nothing(self, qtbot, event_bus):
+        deleted, announced = [], []
+        event_bus.tags_changed.connect(lambda: announced.append(1))
+        answer_box("Cancelar")
+
+        result = delete_with_confirm(
+            None,
+            "Eliminar etiqueta",
+            "Se va a eliminar.",
+            lambda: deleted.append(1),
+            event_bus.tags_changed,
+        )
+
+        assert (result, deleted, announced) == (False, [], [])
+
+    def test_confirming_deletes_then_announces_each_change(self, qtbot, event_bus):
+        order = []
+        event_bus.tags_changed.connect(lambda: order.append("tags"))
+        event_bus.transactions_changed.connect(lambda: order.append("transactions"))
+        answer_box("Eliminar etiqueta")
+
+        result = delete_with_confirm(
+            None,
+            "Eliminar etiqueta",
+            "Se va a eliminar.",
+            lambda: order.append("deleted"),
+            event_bus.tags_changed,
+            event_bus.transactions_changed,
+        )
+
+        assert result is True
+        assert order == ["deleted", "tags", "transactions"]
+
+    @pytest.mark.parametrize(
+        ("count", "title"), [(1, "Eliminar etiqueta"), (3, "Eliminar 3 etiquetas")]
+    )
+    def test_the_title_counts_what_goes(self, count, title):
+        assert delete_title(count, "etiqueta", "etiquetas") == title
+
+
+def test_a_notice_answers_in_spanish(qtbot):
+    """Nodus loads no Qt translation, so a static ``QMessageBox`` would say «OK»."""
+    buttons: list[str] = []
+    answer_box("Entendido", buttons)
+
+    tell(None, "Primero, una cuenta", "Crea una en Cuentas.")
+
+    assert buttons == ["Entendido"]

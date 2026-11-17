@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.ui.actions import tags as tag_actions
+from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs.category_dialog import CategoryDialog
 from nodus.ui.dialogs.tag_dialogs import MergeTagDialog, TagDialog
 from nodus.ui.navigation import PageId, TransactionFocus
@@ -88,7 +88,7 @@ def test_delete_several_counts_each_movement_once(
     page.refresh()
     warnings = []
     monkeypatch.setattr(
-        tag_actions, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+        confirm_dialog, "confirm", lambda _parent, _title, text: warnings.append(text) or True
     )
     select(page, "Viaje")
     page.table.toggle_row(column(page, NAME).index("Trabajo"))
@@ -106,7 +106,7 @@ def test_delete_keeps_the_movements(monkeypatch, qtbot, services, event_bus, pag
     page.refresh()
     warnings = []
     monkeypatch.setattr(
-        tag_actions, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+        confirm_dialog, "confirm", lambda _parent, _title, text: warnings.append(text) or True
     )
     select(page, "Viaje")
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from PySide6.QtCore import SignalInstance
 from PySide6.QtWidgets import QLineEdit, QWidget
 
 from nodus.models.tag import Tag
@@ -13,10 +14,15 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.undo import offer_undo
 
 
+def tag_changes(event_bus: EventBus) -> tuple[SignalInstance, SignalInstance]:
+    """What a change to the tags changes: the tags, and the movements that show them."""
+    return event_bus.tags_changed, event_bus.transactions_changed
+
+
 def announce_tag_change(event_bus: EventBus) -> None:
-    """Tags show in the transactions list too, so both get refreshed."""
-    event_bus.tags_changed.emit()
-    event_bus.transactions_changed.emit()
+    """Announces ``tag_changes``."""
+    for change in tag_changes(event_bus):
+        change.emit()
 
 
 class TagDialog(FormDialog):

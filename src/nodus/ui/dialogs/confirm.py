@@ -1,5 +1,12 @@
-"""Questions before acting: confirming a destructive action, or asking before a harmless one."""
+"""Questions before acting: confirming a destructive action, or asking before a harmless one.
 
+Every box is built here with its own buttons, named in Spanish: the static
+``QMessageBox.information`` and ``warning`` show «OK», since Nodus loads no Qt translation.
+"""
+
+from collections.abc import Callable
+
+from PySide6.QtCore import SignalInstance
 from PySide6.QtWidgets import QMessageBox, QPushButton, QWidget
 
 
@@ -26,6 +33,40 @@ def confirm(
     box.setDefaultButton(cancel_button)
     box.exec()
     return box.clickedButton() is accept_button
+
+
+def delete_title(count: int, one: str, many: str) -> str:
+    """The title of deleting ``count`` items: «Eliminar etiqueta», «Eliminar 3 etiquetas»."""
+    return f"Eliminar {one}" if count == 1 else f"Eliminar {count} {many}"
+
+
+def delete_with_confirm(
+    parent: QWidget,
+    title: str,
+    text: str,
+    delete: Callable[[], object],
+    *changes: SignalInstance,
+) -> bool:
+    """Deletes from any page the same way: ``confirm`` with ``text``, which says what
+    goes with it, then ``delete`` and the ``changes`` it makes. True if it was deleted.
+
+    The copy before a large delete is made by the service, so no caller can forget it.
+    """
+    if not confirm(parent, title, text):
+        return False
+    delete()
+    for change in changes:
+        change.emit()
+    return True
+
+
+def tell(parent: QWidget, title: str, text: str, button: str = "Entendido") -> None:
+    """Tells the user something that needs no answer, with one button in Spanish."""
+    box = QMessageBox(QMessageBox.Icon.Information, title, text, parent=parent)
+    box.setDefaultButton(
+        add_button(box, button, "PrimaryButton", QMessageBox.ButtonRole.AcceptRole)
+    )
+    box.exec()
 
 
 def ask(parent: QWidget, title: str, text: str, action: str, cancel: str = "Cancelar") -> bool:

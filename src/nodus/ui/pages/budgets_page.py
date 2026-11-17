@@ -18,7 +18,7 @@ from nodus.services.container import Services
 from nodus.services.planning.budget_service import MonthBudgets
 from nodus.services.reports.dashboard_service import CategoryTotal
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
-from nodus.ui.dialogs.confirm import confirm
+from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.base.page import Page
@@ -140,10 +140,13 @@ class BudgetsPage(Page):
             f"«{category.name}» deja de tener presupuesto desde "
             f"{format_month(self.month).lower()}. Los meses anteriores conservan su límite."
         )
-        if not confirm(self.window(), "Quitar presupuesto", text):
-            return
-        self._services.budgets.remove(category.id, self.month)
-        self._event_bus.budgets_changed.emit()
+        delete_with_confirm(
+            self.window(),
+            "Quitar presupuesto",
+            text,
+            lambda: self._services.budgets.remove(category.id, self.month),
+            self._event_bus.budgets_changed,
+        )
 
     def _show_transactions(self, category: Category) -> None:
         self.transactions_requested.emit(
