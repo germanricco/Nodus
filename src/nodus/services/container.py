@@ -38,6 +38,7 @@ from nodus.services.notification_service import NotificationService
 from nodus.services.payee_service import PayeeService
 from nodus.services.rate_feed_service import RateFeedService
 from nodus.services.recurring_charge_service import RecurringChargeService
+from nodus.services.seen_service import SeenService
 from nodus.services.settings_service import SettingsService
 from nodus.services.startup_service import StartupService
 from nodus.services.tag_service import TagService
@@ -102,6 +103,8 @@ class Services:
         payees = PayeeService(
             database, payee_repository, transactions, categories, exchange_rates, undo
         )
+        settings = SettingsService(database, SettingsRepository(database))
+        seen = SeenService(settings)
         recurring = RecurringChargeService(
             database,
             RecurringChargeRepository(database),
@@ -110,8 +113,8 @@ class Services:
             accounts,
             exchange_rates,
             undo,
+            seen,
         )
-        settings = SettingsService(database, SettingsRepository(database))
         backups = BackupService(database, database.path.parent / "backups", settings)
         dashboard = DashboardService(transactions, categories, exchange_rates)
         budgets = BudgetService(
@@ -142,7 +145,7 @@ class Services:
                 exchange_rates, settings, accounts, downloader(f"Nodus/{__version__}")
             ),
             notifications=NotificationService(
-                settings, accounts, exchange_rates, backups, recurring, budgets, goals
+                settings, seen, accounts, exchange_rates, backups, recurring, budgets, goals
             ),
             recurring=recurring,
             installments=InstallmentService(

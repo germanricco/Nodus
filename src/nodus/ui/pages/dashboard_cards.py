@@ -93,14 +93,15 @@ SEEN_TEXT = "Ya lo vi"
 REMIND_AGAIN_TEXT = "Volver a avisarme"
 
 
-def due_status_label(charge: RecurringCharge, today: date) -> QLabel:
+def due_status_label(charge: RecurringCharge, today: date, quiet: bool) -> QLabel:
     """When the charge is due, in a pill: red once overdue, amber within the week, and
-    gray again while «Ya lo vi» puts its warning off."""
-    quiet = charge.is_quiet(today)
+    gray again while the user has seen it (``RecurringChargeService.is_quiet``)."""
     tone = "neutral" if quiet else DUE_TONES[charge.status(today)]
     pill = status_pill(due_label(charge.days_until(today)), tone)
-    if quiet and charge.remind_from is not None:
-        pill.setToolTip(f"Ya lo viste. Te lo recordamos {reminder_day(charge.remind_from, today)}.")
+    if quiet:
+        pill.setToolTip(
+            f"Ya lo viste. Te lo recordamos {reminder_day(charge.quiet_until(), today)}."
+        )
     return pill
 
 
@@ -109,10 +110,12 @@ def reminder_day(day: date, today: date) -> str:
     return "mañana" if (day - today).days == 1 else f"el {format_date(day)}"
 
 
-def seen_actions(charge: RecurringCharge, today: date, toggled: SignalInstance) -> list[RowAction]:
+def seen_actions(
+    charge: RecurringCharge, today: date, quiet: bool, toggled: SignalInstance
+) -> list[RowAction]:
     """«Ya lo vi» while the charge warns with a day to spare, «Volver a avisarme» while
-    it is put off; nothing otherwise (overdue, due tomorrow or not due soon)."""
-    if charge.is_quiet(today):
+    it is seen (``quiet``); nothing otherwise (overdue, due tomorrow or not due soon)."""
+    if quiet:
         text, icon = REMIND_AGAIN_TEXT, "bell"
     elif charge.can_be_seen(today):
         text, icon = SEEN_TEXT, "check"
@@ -349,10 +352,13 @@ class UpcomingPaymentRow(QWidget):
     skip_requested = Signal(object)  # RecurringCharge
     seen_toggled = Signal(object)  # RecurringCharge
 
-    def __init__(self, charge: RecurringCharge, today: date, estimate: str = "") -> None:
+    def __init__(
+        self, charge: RecurringCharge, today: date, quiet: bool, estimate: str = ""
+    ) -> None:
         super().__init__()
         self.charge = charge
         self._today = today
+        self._quiet = quiet
         install_row_actions(self, self.actions)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
@@ -362,7 +368,9 @@ class UpcomingPaymentRow(QWidget):
         name = QLabel(charge.name)
         name.setObjectName("RowTitle")
         texts.addWidget(name)
-        texts.addWidget(due_status_label(charge, today), alignment=Qt.AlignmentFlag.AlignLeft)
+        texts.addWidget(
+            due_status_label(charge, today, quiet), alignment=Qt.AlignmentFlag.AlignLeft
+        )
         layout.addLayout(texts, stretch=1)
         amounts = QVBoxLayout()
         amounts.setSpacing(0)
@@ -393,7 +401,7 @@ class UpcomingPaymentRow(QWidget):
             RowAction(
                 "Omitir", lambda: self.skip_requested.emit(charge), "skip", effect=Effect.UNDOABLE
             ),
-            *seen_actions(charge, self._today, self.seen_toggled),
+            *seen_actions(charge, self._today, self._quiet, self.seen_toggled),
         ]
 
 
@@ -435,7 +443,12 @@ class UpcomingPaymentsCard(Card):
             )
         for charge in charges[:UPCOMING_COUNT]:
             estimate = self._services.recurring.estimated_payment(charge, today)
-            row = UpcomingPaymentRow(charge, today, estimate_text(charge.amount, estimate))
+            row = UpcomingPaymentRow(
+                charge,
+                today,
+                recurring.is_quiet(charge, today),
+                estimate_text(charge.amount, estimate),
+            )
             row.pay_requested.connect(self.pay_requested)
             row.skip_requested.connect(self.skip_requested)
             row.seen_toggled.connect(self.seen_toggled)

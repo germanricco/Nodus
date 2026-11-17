@@ -18,6 +18,7 @@ from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.account_service import AccountService
 from nodus.services.errors import ValidationError, clean_name, require_found
 from nodus.services.exchange_rate_service import ExchangeRateService
+from nodus.services.seen_service import SeenService
 from nodus.services.transaction_service import TransactionDraft, TransactionService
 from nodus.services.undo_service import UndoService, changed_since
 
@@ -77,8 +78,10 @@ class RecurringChargeService:
         accounts: AccountService,
         exchange_rates: ExchangeRateService,
         undo: UndoService,
+        seen: SeenService,
     ) -> None:
         self._database = database
+        self._seen = seen
         self._accounts = accounts
         self._charges = charges
         self._transaction_repository = transaction_repository
@@ -101,8 +104,6 @@ class RecurringChargeService:
         )
         anchor_day = current.anchor_day if same_schedule else draft.next_due_on.day
         charge = self._build(charge_id, draft, anchor_day, current.is_active)
-        if same_schedule:  # «Ya lo vi» was about this due date, which stays
-            charge = dataclasses.replace(charge, remind_from=current.remind_from)
         if self._paid_in_other_currency(charge):  # the rate per dollar is still good
             charge = dataclasses.replace(charge, last_paid_rate=current.last_paid_rate)
         with self._database.transaction():
@@ -174,23 +175,28 @@ class RecurringChargeService:
         self._save(advanced)
         self._undo.offer(f"Se omitió {charge.name}.", lambda: self._put_back(charge, advanced))
 
+    def is_quiet(self, charge: RecurringCharge, today: date) -> bool:
+        """Whether the user already saw this charge due soon, with «Ya lo vi» or in the
+        bell: it warns no more until the day before it is due."""
+        return charge.can_be_seen(today) and self._seen.is_seen(charge.seen_key(today))
+
     def mark_seen(self, charge_id: int, today: date) -> date:
         """«Ya lo vi»: no warning about this charge until the day before it is due, the
         day returned. The next due date, after paying or skipping, warns again."""
         charge = self.get(charge_id)
         if not charge.can_be_seen(today):
             raise ValidationError(f"«{charge.name}» no tiene un aviso para dejar para después.")
-        self._save(dataclasses.replace(charge, remind_from=charge.quiet_until()))
+        self._seen.mark({charge.seen_key(today)})
         return charge.quiet_until()
 
-    def remind_again(self, charge_id: int) -> None:
+    def remind_again(self, charge_id: int, today: date) -> None:
         """Undoes «Ya lo vi»: the charge warns again from today."""
-        self._save(dataclasses.replace(self.get(charge_id), remind_from=None))
+        self._seen.unmark({self.get(charge_id).seen_key(today)})
 
     @staticmethod
     def _advanced(charge: RecurringCharge) -> RecurringCharge:
-        """The charge on its next due date, which warns again whatever was put off."""
-        return dataclasses.replace(charge, next_due_on=charge.following_due(), remind_from=None)
+        """The charge on its next due date."""
+        return dataclasses.replace(charge, next_due_on=charge.following_due())
 
     def _put_back(
         self,

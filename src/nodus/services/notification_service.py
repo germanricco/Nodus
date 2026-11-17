@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from enum import Enum
 
 from nodus.models.currency import Currency
 from nodus.services.account_service import AccountService
-from nodus.services.backup_service import BackupService
+from nodus.services.backup_service import BackupService, reminder_start
 from nodus.services.budget_service import BudgetService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.goal_service import GoalService
 from nodus.services.recurring_charge_service import RecurringChargeService
+from nodus.services.seen_service import SeenService
 from nodus.services.settings_service import SettingsService
 from nodus.services.update_service import Release
 
@@ -20,6 +21,8 @@ from nodus.services.update_service import Release
 STALE_RATE_DAYS = 7
 # Charges due within this many days are announced, besides the overdue ones.
 CHARGE_NOTICE_DAYS = 3
+# How the record of what the user saw names a version found.
+UPDATE_PREFIX = "update:"
 
 
 # How the notices name each foreign currency: singular and plural.
@@ -43,8 +46,14 @@ class NoticeKind(Enum):
 @dataclass(frozen=True)
 class Notice:
     """One notification: a short title, a detail line and, for a new version, its page
-    and release notes; ``item_id`` names what it is about, such as a goal, and
-    ``item_ids`` the charges «Ya lo vi» can put off."""
+    and release notes; ``item_id`` names what it is about, such as a goal.
+
+    ``items`` are the keys of what it is about, in the record of what the user saw
+    (``SeenService``): one per charge or budget of a notice that gathers several. They
+    say what it is about, not how it reads, so they stay the same while the texts change
+    by the day («vence mañana», the amount over a budget). ``seen`` says whether the user
+    already saw every one of them: paying one of two charges leaves the other as seen
+    as it was, and another budget passing makes the notice new again."""
 
     kind: NoticeKind
     title: str
@@ -52,16 +61,19 @@ class Notice:
     url: str = ""
     notes: str = ""
     item_id: int | None = None
-    item_ids: tuple[int, ...] = ()
+    items: tuple[str, ...] = ()
+    seen: bool = False
 
 
 class NotificationService:
-    """Builds the list of notices from the app's state; it stores nothing but which new
-    version the user chose to ignore."""
+    """Builds the list of notices from the app's state and the latest release found.
+    What the user saw lives in ``SeenService``, shared with «Ya lo vi» on charges; this
+    service only adds which new version to ignore."""
 
     def __init__(
         self,
         settings: SettingsService,
+        seen: SeenService,
         accounts: AccountService,
         exchange_rates: ExchangeRateService,
         backups: BackupService,
@@ -70,6 +82,8 @@ class NotificationService:
         goals: GoalService,
     ) -> None:
         self._settings = settings
+        self._seen = seen
+        self._release: Release | None = None
         self._accounts = accounts
         self._exchange_rates = exchange_rates
         self._backups = backups
@@ -77,8 +91,39 @@ class NotificationService:
         self._budgets = budgets
         self._goals = goals
 
-    def notices(self, today: date, release: Release | None) -> list[Notice]:
+    @property
+    def release(self) -> Release | None:
+        """The newer version found, if any; None until the check answers."""
+        return self._release
+
+    def set_release(self, release: Release | None) -> None:
+        self._release = release
+
+    def notices(self, today: date) -> list[Notice]:
+        """Every notice, the ones not seen yet first."""
+        current = self._current(today)
+        self._forget_what_no_longer_applies(today, current)
+        seen = self._seen.all()
+        notices = [replace(n, seen=set(n.items) <= seen) for n in current]
+        return sorted(notices, key=lambda notice: notice.seen)
+
+    def mark_seen(self, notice: Notice) -> None:
+        """Remembers that the user saw everything ``notice`` is about."""
+        self._seen.mark(notice.items)
+
+    def _forget_what_no_longer_applies(self, today: date, current: list[Notice]) -> None:
+        """Keeps the record as short as the day's notices. A charge seen with «Ya lo vi»
+        is kept even before it enters the bell, and a version seen is kept while the
+        check has not answered yet."""
+        keep = {item for notice in current for item in notice.items}
+        keep |= {c.seen_key(today) for c in self._recurring.list_charges() if c.is_active}
+        if self._release is None:
+            keep |= {key for key in self._seen.all() if key.startswith(UPDATE_PREFIX)}
+        self._seen.keep_only(keep)
+
+    def _current(self, today: date) -> list[Notice]:
         notices = []
+        release = self._release
         if release is not None and release.version != self._settings.dismissed_version():
             notices.append(
                 Notice(
@@ -87,6 +132,7 @@ class NotificationService:
                     "Se instala en un momento y tus datos se conservan.",
                     release.url,
                     release.notes,
+                    items=(f"{UPDATE_PREFIX}{release.version}",),
                 )
             )
         notices.extend(self._goal_notices(today))
@@ -96,7 +142,12 @@ class NotificationService:
                 notices.append(notice)
         if self._backups.last_error:
             notices.append(
-                Notice(NoticeKind.BACKUP_FAILED, "La copia de hoy falló", self._backups.last_error)
+                Notice(
+                    NoticeKind.BACKUP_FAILED,
+                    "La copia de hoy falló",
+                    self._backups.last_error,
+                    items=(f"backup-failed:{today}",),
+                )
             )
         reminder = self._backup_reminder(today)
         if reminder:
@@ -113,13 +164,15 @@ class NotificationService:
                 f"Alcanzaste «{goal.name}»",
                 "Archívala para usar sus cuentas en otra meta, o súbele el objetivo.",
                 item_id=goal.id,
+                items=(f"goal:{goal.id}",),
             )
             for goal in self._goals.unseen_reached()
         ]
 
-    def dismiss(self, release: Release) -> None:
-        """Stops announcing ``release``; a later version is announced again."""
-        self._settings.set_dismissed_version(release.version)
+    def dismiss_release(self) -> None:
+        """Stops announcing the version found; a later one is announced again."""
+        if self._release is not None:
+            self._settings.set_dismissed_version(self._release.version)
 
     def _backup_reminder(self, today: date) -> Notice | None:
         """At the end of the month, to save a copy outside the computer."""
@@ -132,6 +185,7 @@ class NotificationService:
             "Guarda una copia fuera de esta computadora",
             f"{since} En un pendrive o en Drive, tus datos se salvan aunque la PC se pierda"
             " o se rompa.",
+            items=(f"backup:{reminder_start(today):%Y-%m}",),
         )
 
     def _rate_notices(self, today: date) -> list[Notice]:
@@ -149,6 +203,7 @@ class NotificationService:
                 NoticeKind.STALE_RATE,
                 f"Sin cotización del {name}",
                 f"Cárgala para sumar tus cuentas en {plural} al resto.",
+                items=(f"rate:{currency.value}:none",),
             )
         days = (today - rate.rate_date).days
         if days <= STALE_RATE_DAYS:
@@ -157,49 +212,51 @@ class NotificationService:
             NoticeKind.STALE_RATE,
             f"Sin cotización del {name} desde hace {days} días",
             f"La última es del {rate.rate_date:%d/%m/%Y}.",
+            items=(f"rate:{currency.value}:{rate.rate_date}",),
         )
 
     def _charges_notice(self, today: date) -> Notice | None:
-        """Overdue charges and those due in the next days, in a single notice, but for
-        those put off with «Ya lo vi». Without overdue ones, it lets the user put off
-        those that still have a day to spare (``item_ids``)."""
-        charges = [
-            c for c in self._recurring.upcoming(today, CHARGE_NOTICE_DAYS) if not c.is_quiet(today)
-        ]
+        """Overdue charges and those due in the next days, in a single notice. A charge
+        seen here or with «Ya lo vi» stays seen until the day before it is due."""
+        charges = self._recurring.upcoming(today, CHARGE_NOTICE_DAYS)
         if not charges:
             return None
         overdue = sum(1 for c in charges if c.days_until(today) < 0)
-        seeable = () if overdue else tuple(c.id for c in charges if c.can_be_seen(today))
+        items = tuple(c.seen_key(today) for c in charges)
         if len(charges) == 1:
             charge = charges[0]
             return Notice(
                 NoticeKind.CHARGES_DUE,
                 f"{charge.name} {_due_phrase(charge.days_until(today))}",
                 f"{charge.amount.format()} · Regístralo desde Recurrentes.",
-                item_ids=seeable,
+                items=items,
             )
         title = f"{len(charges)} cargos por pagar"
         if overdue:
             title += f" ({overdue} vencido{'s' if overdue > 1 else ''})"
         names = ", ".join(c.name for c in charges) + "."
-        return Notice(NoticeKind.CHARGES_DUE, title, names, item_ids=seeable)
+        return Notice(NoticeKind.CHARGES_DUE, title, names, items=items)
 
     def _budgets_notice(self, today: date) -> Notice | None:
-        """The budgets already passed this month, in a single notice."""
+        """The budgets already passed this month, in a single notice. Spending more on
+        one already passed is not news; another one passing, or a new month, is."""
         over = self._budgets.over_limit(today)
         if not over:
             return None
+        items = tuple(f"budget:{today:%Y-%m}:{b.category.id}" for b in over)
         if len(over) == 1:
             budget = over[0]
             return Notice(
                 NoticeKind.BUDGET_OVER,
                 f"{budget.category.name} pasó su límite",
                 f"Excedido en {(-budget.remaining).format()} este mes.",
+                items=items,
             )
         return Notice(
             NoticeKind.BUDGET_OVER,
             f"{len(over)} presupuestos excedidos",
             ", ".join(b.category.name for b in over) + ".",
+            items=items,
         )
 
 

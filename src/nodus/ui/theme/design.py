@@ -202,6 +202,7 @@ class Layout:
     HELP_PANEL_WIDTH = 340  # Ayuda, at the right of the window
     PICKER_MIN_SIZE = (780, 520)  # a dialog built around a table, such as the refund's
     NOTIFICATION_PANEL_WIDTH = 340
+    UNSEEN_DOT = 8  # the dot of a notification not opened yet
     TOAST_WIDTH = 360  # a notice at the bottom right of the page
     SEARCH_WIDTH = 200
     SEARCH_MIN_WIDTH = 140  # beside the filters of Transacciones

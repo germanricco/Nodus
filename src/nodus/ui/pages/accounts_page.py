@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QMouseEvent
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -137,16 +136,7 @@ class AccountRow(QWidget):
         chevron = QLabel("›")
         set_style_property(chevron, "muted", True)
         layout.addWidget(chevron)
-        install_row_actions(self, self.actions)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip("Abrir la cuenta")
-
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
-        super().mouseReleaseEvent(event)
-        if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(
-            event.position().toPoint()
-        ):
-            self.detail_requested.emit(self.account)
+        install_row_actions(self, self.actions, open_on_click="Abrir la cuenta")
 
     @property
     def can_update_value(self) -> bool:

@@ -87,23 +87,14 @@ def test_rejects_non_positive_amounts_and_invalid_days():
         charge(anchor_day=32)
 
 
-def seen(due: date) -> RecurringCharge:
-    """A charge due on ``due`` whose warning the user put off with «Ya lo vi»."""
-    plain = charge(due=due)
-    return dataclasses.replace(plain, remind_from=plain.quiet_until())
+def test_its_seen_key_names_the_due_date_and_how_near_it_is():
+    netflix = dataclasses.replace(charge(due=date(2026, 11, 11)), id=3)
 
-
-def test_ya_lo_vi_keeps_quiet_until_the_day_before():
-    due = date(2026, 11, 11)
-
-    assert seen(due).quiet_until() == date(2026, 11, 10)
-    assert seen(due).is_quiet(TODAY)
-    assert seen(due).is_quiet(date(2026, 11, 9))
-    assert not seen(due).is_quiet(date(2026, 11, 10))
-
-
-def test_an_overdue_charge_always_warns():
-    assert not seen(date(2026, 11, 11)).is_quiet(date(2026, 11, 12))
+    assert netflix.seen_key(TODAY) == "charge:3@2026-11-11:soon"
+    assert netflix.seen_key(date(2026, 11, 9)) == "charge:3@2026-11-11:soon"
+    assert netflix.seen_key(date(2026, 11, 10)) == "charge:3@2026-11-11:near"  # the day before
+    assert netflix.seen_key(date(2026, 11, 11)) == "charge:3@2026-11-11:near"
+    assert netflix.seen_key(date(2026, 11, 12)) == "charge:3@2026-11-11:overdue"
 
 
 @pytest.mark.parametrize(
@@ -121,8 +112,7 @@ def test_ya_lo_vi_is_offered_only_while_it_warns_with_a_day_to_spare(due, can):
     assert charge(due=due).can_be_seen(TODAY) is can
 
 
-def test_ya_lo_vi_is_not_offered_twice_nor_while_paused():
-    due = date(2026, 11, 11)
+def test_ya_lo_vi_is_not_offered_while_paused():
+    paused = dataclasses.replace(charge(due=date(2026, 11, 11)), is_active=False)
 
-    assert not seen(due).can_be_seen(TODAY)
-    assert not dataclasses.replace(charge(due=due), is_active=False).can_be_seen(TODAY)
+    assert not paused.can_be_seen(TODAY)

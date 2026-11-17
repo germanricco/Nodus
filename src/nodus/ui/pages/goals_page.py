@@ -5,8 +5,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QMouseEvent
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -112,16 +111,7 @@ class GoalRow(QWidget):
             bottom.addWidget(self.rate_button)
         layout.addLayout(bottom)
 
-        install_row_actions(self, self.actions)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip("Abrir la meta")
-
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
-        super().mouseReleaseEvent(event)
-        if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(
-            event.position().toPoint()
-        ):
-            self.detail_requested.emit(self.goal)
+        install_row_actions(self, self.actions, open_on_click="Abrir la meta")
 
     def actions(self) -> list[RowAction]:
         goal = self.goal

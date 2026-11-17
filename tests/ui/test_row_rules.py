@@ -66,7 +66,7 @@ def test_otros_cannot_change_so_its_main_action_shows_its_movements(qtbot, servi
 def test_a_charge_is_paid_with_a_double_click_and_a_paused_one_edited(services, pesos, qtbot):
     charge = services.recurring.create(charge_draft(services, pesos.id, ars("10"), TODAY))
     category = services.categories.get(charge.category_id)
-    row = RecurringChargeRow(charge, category, "Banco", TODAY)
+    row = RecurringChargeRow(charge, category, "Banco", TODAY, False)
     qtbot.addWidget(row)
     row.show()
     paid = []
@@ -76,7 +76,7 @@ def test_a_charge_is_paid_with_a_double_click_and_a_paused_one_edited(services, 
 
     assert paid == [charge]
     services.recurring.set_active(charge.id, False)
-    paused = RecurringChargeRow(services.recurring.get(charge.id), category, "Banco", TODAY)
+    paused = RecurringChargeRow(services.recurring.get(charge.id), category, "Banco", TODAY, False)
     assert main_action(paused.actions()) == "Editar"
 
 

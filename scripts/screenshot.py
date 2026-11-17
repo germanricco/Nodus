@@ -358,13 +358,18 @@ def render_pages(app: QApplication, services: Services, args: argparse.Namespace
         save(window, args.out / f"transactions-selection-{mode.value}.png")
         transactions.table.clearSelection()
         transactions.table.hovered_row = -1
-        # The notifications panel, with a new version announced.
+        # The notifications panel, with a new version announced and the last notice
+        # already opened, gray and without its dot.
         window.show_page(PageId.DASHBOARD)
-        window._show_release(Release("9.9.0", ""))
+        news = Release("9.9.0", "")
+        window._show_release(news)
+        notices = window.notices()
+        services.notifications.mark_seen(notices[-1])
         window.open_notifications()
         app.processEvents()
         save(window.notification_panel, args.out / f"notifications-{mode.value}.png")
         window.notification_panel.hide()
+        services.settings.set_seen_notices(set())
         window._show_release(None)
         # Updating from Nodus, halfway through the download (never started: no network).
         size = 24_578_342
@@ -471,7 +476,7 @@ def capture_seen(app: QApplication, window: MainWindow, out: Path, mode: ThemeMo
     seen.callback()
     app.processEvents()
     save(window, out / f"upcoming-seen-{mode.value}.png")
-    window._services.recurring.remind_again(charge.id)
+    window._services.recurring.remind_again(charge.id, date.today())
     window._event_bus.recurring_changed.emit()
     for toast in list(window.toasts.toasts):
         toast.dismiss()

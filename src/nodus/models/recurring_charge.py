@@ -74,9 +74,6 @@ class RecurringCharge:
     charged to a card. For the latter, ``last_paid_rate`` holds the pesos per dollar of
     its last payment, card taxes included. ``anchor_day`` is the day of the month it was
     set up for, which ``next_due_on`` returns to after short months.
-
-    ``remind_from`` is the day its warning comes back after the user said «Ya lo vi»:
-    until then, a charge due soon shows no warning. One overdue always warns.
     """
 
     id: int | None
@@ -90,7 +87,6 @@ class RecurringCharge:
     is_active: bool = True
     note: str = ""
     last_paid_rate: Decimal | None = None
-    remind_from: date | None = None
 
     def __post_init__(self) -> None:
         if self.amount.cents <= 0:
@@ -117,23 +113,25 @@ class RecurringCharge:
         """The day «Ya lo vi» lets the warning come back: the day before it is due."""
         return self.next_due_on - timedelta(days=1)
 
-    def is_quiet(self, today: date) -> bool:
-        """Whether its warning is put off today; never when it is overdue."""
-        return (
-            self.remind_from is not None
-            and today < self.remind_from
-            and self.status(today) is not DueStatus.OVERDUE
-        )
-
     def can_be_seen(self, today: date) -> bool:
         """Whether «Ya lo vi» makes sense: it warns now, and the day before is still
-        ahead, so putting it off leaves at least one quiet day."""
+        ahead, so putting it off leaves at least one quiet day. Due tomorrow, today or
+        overdue, it always warns."""
         return (
-            self.is_active
-            and self.status(today) is DueStatus.SOON
-            and self.quiet_until() > today
-            and not self.is_quiet(today)
+            self.is_active and self.status(today) is DueStatus.SOON and self.quiet_until() > today
         )
+
+    def seen_key(self, today: date) -> str:
+        """How the record of what the user saw names this charge today: its due date and
+        how near it is. Seen while due soon, it is new again the day before it is due,
+        and again once overdue; the next due date is another charge altogether."""
+        if self.days_until(today) < 0:
+            stage = "overdue"
+        elif self.quiet_until() <= today:
+            stage = "near"
+        else:
+            stage = "soon"
+        return f"charge:{self.id}@{self.next_due_on}:{stage}"
 
     def status(self, today: date) -> DueStatus:
         """Overdue only after its day has passed; the due day itself is still on time."""

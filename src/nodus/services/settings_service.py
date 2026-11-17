@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import date
 from pathlib import Path
 
@@ -38,6 +39,7 @@ class SettingsService:
     ACCOUNT_CHART_MONTHS_KEY = "account_chart_months"
     GUIDE_DISMISSED_KEY = "guide_dismissed"
     TOUR_OFFERED_KEY = "tour_offered"
+    SEEN_NOTICES_KEY = "seen_notices"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -79,12 +81,17 @@ class SettingsService:
 
     def folded_groups(self) -> set[int]:
         """The account groups the sidebar keeps folded, showing only their subtotal."""
-        value = self._settings.get(self.FOLDED_GROUPS_KEY) or ""
-        return {int(part) for part in value.split(",") if part.isdigit()}
+        return {int(part) for part in self._list(self.FOLDED_GROUPS_KEY) if part.isdigit()}
 
     def set_folded_groups(self, group_ids: set[int]) -> None:
-        with self._database.transaction():
-            self._settings.set(self.FOLDED_GROUPS_KEY, ",".join(map(str, sorted(group_ids))))
+        self._set_list(self.FOLDED_GROUPS_KEY, map(str, sorted(group_ids)))
+
+    def seen_notices(self) -> set[str]:
+        """The keys of the notifications the user already opened (``Notice.key``)."""
+        return set(self._list(self.SEEN_NOTICES_KEY, "\n"))
+
+    def set_seen_notices(self, keys: set[str]) -> None:
+        self._set_list(self.SEEN_NOTICES_KEY, sorted(keys), "\n")
 
     def amounts_hidden(self) -> bool:
         """Whether balances and the net worth show as "$ ••••", for privacy."""
@@ -208,3 +215,13 @@ class SettingsService:
     def _set_flag(self, key: str, value: bool) -> None:
         with self._database.transaction():
             self._settings.set(key, "true" if value else "false")
+
+    def _list(self, key: str, separator: str = ",") -> list[str]:
+        """A setting saved as a list of texts, in their order, split by ``separator``,
+        which none of them has."""
+        value = self._settings.get(key) or ""
+        return [part for part in value.split(separator) if part]
+
+    def _set_list(self, key: str, values: Iterable[str], separator: str = ",") -> None:
+        with self._database.transaction():
+            self._settings.set(key, separator.join(values))

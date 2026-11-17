@@ -10,6 +10,7 @@ from factories import table_rows
 from PySide6.QtWidgets import QDialog, QMessageBox
 from qt_cleanup import flush_deleted
 
+from nodus.services.settings_service import SettingsService
 from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, _RowHandler
 from nodus.ui.widgets.selectable_table import SelectableTable
@@ -60,11 +61,16 @@ def go(window, visit: tuple) -> None:
 
 
 def stored(database) -> dict:
-    """All the user's data but the settings, which remember the page shown."""
+    """All the user's data but the settings, which remember the page shown; what the
+    user has seen («Ya lo vi») is kept there too, so it counts."""
     names = database.connection.execute(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
     ).fetchall()
-    return table_rows(database, *(row[0] for row in names if row[0] != "settings"))
+    data = table_rows(database, *(row[0] for row in names if row[0] != "settings"))
+    data["seen"] = database.connection.execute(
+        "SELECT value FROM settings WHERE key = ?", (SettingsService.SEEN_NOTICES_KEY,)
+    ).fetchall()
+    return data
 
 
 @pytest.fixture

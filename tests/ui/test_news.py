@@ -3,6 +3,7 @@ import json
 from datetime import date
 
 import pytest
+from menus import run_action, texts
 from PySide6.QtWidgets import QDialog, QPushButton
 
 from nodus.links import DONATE_URL, feedback_url
@@ -95,7 +96,7 @@ def test_update_notice_tells_what_the_release_brings(
     qtbot.waitUntil(lambda: window.top_bar.notification_count.isVisible())
     window.open_notifications()
 
-    window.notification_panel.rows[0].news_button.click()
+    run_action(window.notification_panel.rows[0].actions(), "Qué trae")
 
     assert opened[0].windowTitle() == "Qué trae Nodus 9.0.0"
     assert opened[0].text.toPlainText().strip() == "Algo."
@@ -112,7 +113,7 @@ def test_update_notice_without_notes_has_no_news_button(qtbot, services, event_b
     qtbot.waitUntil(lambda: window.top_bar.notification_count.isVisible())
     window.open_notifications()
 
-    assert window.notification_panel.rows[0].news_button is None
+    assert "Qué trae" not in texts(window.notification_panel.rows[0].actions())
 
 
 def test_settings_opens_every_version(qtbot, services, event_bus, theme_manager, opened):

@@ -15,7 +15,8 @@ RELEASE = Release("9.0.0", "https://example.com/v9")
 
 
 def kinds(services, release=None):
-    return [n.kind for n in services.notifications.notices(TODAY, release)]
+    services.notifications.set_release(release)
+    return [n.kind for n in services.notifications.notices(TODAY)]
 
 
 def test_nothing_to_say(services, pesos):
@@ -25,7 +26,7 @@ def test_nothing_to_say(services, pesos):
 def test_new_release_until_dismissed(services):
     assert kinds(services, RELEASE) == [NoticeKind.UPDATE]
 
-    services.notifications.dismiss(RELEASE)
+    services.notifications.dismiss_release()
 
     assert kinds(services, RELEASE) == []
     assert kinds(services, Release("9.1.0", "")) == [NoticeKind.UPDATE]
@@ -36,7 +37,7 @@ def test_rate_matters_only_with_dollar_accounts(services, pesos):
 
 
 def test_missing_rate_with_dollar_accounts(services, dollars):
-    notices = services.notifications.notices(TODAY, None)
+    notices = services.notifications.notices(TODAY)
 
     assert [n.kind for n in notices] == [NoticeKind.STALE_RATE]
     assert notices[0].title == "Sin cotización del dólar"
@@ -49,14 +50,14 @@ def test_rate_becomes_stale_after_a_week(services, dollars):
     services.exchange_rates.set_rate(TODAY - timedelta(days=STALE_RATE_DAYS + 3), Decimal("1"))
     services.exchange_rates.delete(services.exchange_rates.history()[0].id)
 
-    notices = services.notifications.notices(TODAY, None)
+    notices = services.notifications.notices(TODAY)
     assert notices[0].title == f"Sin cotización del dólar desde hace {STALE_RATE_DAYS + 3} días"
 
 
 def test_failed_backup(services):
     services.backups.last_error = "No se pudo hacer la copia del día: disco lleno"
 
-    notices = services.notifications.notices(TODAY, None)
+    notices = services.notifications.notices(TODAY)
 
     assert [n.kind for n in notices] == [NoticeKind.BACKUP_FAILED]
     assert "disco lleno" in notices[0].detail
@@ -64,11 +65,7 @@ def test_failed_backup(services):
 
 def charges_notice(services):
     return next(
-        (
-            n
-            for n in services.notifications.notices(TODAY, None)
-            if n.kind is NoticeKind.CHARGES_DUE
-        ),
+        (n for n in services.notifications.notices(TODAY) if n.kind is NoticeKind.CHARGES_DUE),
         None,
     )
 
@@ -120,7 +117,7 @@ def test_a_budget_passed_this_month(services, pesos):
 
     services.transactions.create(expense_draft(services, pesos.id, ars("250"), category_id=food))
 
-    (notice,) = services.notifications.notices(TODAY, None)
+    (notice,) = services.notifications.notices(TODAY)
     assert notice.kind is NoticeKind.BUDGET_OVER
     assert notice.title == "Supermercado y comida pasó su límite"
     assert notice.detail == "Excedido en $ 250,00 este mes."
@@ -133,7 +130,7 @@ def test_several_budgets_passed_in_one_notice(services, pesos):
             expense_draft(services, pesos.id, ars("20"), category_id=category)
         )
 
-    (notice,) = services.notifications.notices(TODAY, None)
+    (notice,) = services.notifications.notices(TODAY)
     assert notice.title == "2 presupuestos excedidos"
     assert notice.detail == "Ocio, Ropa."
 
@@ -142,7 +139,7 @@ def test_each_foreign_currency_held_needs_its_rate(services, dollars):
     services.accounts.create("Europa", AccountType.CASH, Currency.EUR, eur("100"))
     services.exchange_rates.set_rate(TODAY, Decimal("1000"))
 
-    [notice] = services.notifications.notices(TODAY, None)
+    [notice] = services.notifications.notices(TODAY)
 
     assert notice.title == "Sin cotización del euro"
     assert notice.detail == "Cárgala para sumar tus cuentas en euros al resto."
@@ -157,9 +154,7 @@ class TestBackupReminder:
 
     @staticmethod
     def reminded(services, day) -> bool:
-        return NoticeKind.BACKUP_REMINDER in [
-            n.kind for n in services.notifications.notices(day, None)
-        ]
+        return NoticeKind.BACKUP_REMINDER in [n.kind for n in services.notifications.notices(day)]
 
     def test_from_the_28th_without_a_copy_this_month(self, services, tmp_path):
         services.backups.export_to(tmp_path, date(2026, 10, 10))
@@ -197,41 +192,149 @@ class TestBackupReminder:
         assert self.reminded(services, date(2026, 12, 29))
 
     def test_says_when_the_last_copy_was(self, services, tmp_path):
-        notice = services.notifications.notices(date(2026, 11, 28), None)[-1]
+        notice = services.notifications.notices(date(2026, 11, 28))[-1]
         assert notice.title == "Guarda una copia fuera de esta computadora"
         assert notice.detail.startswith("Todavía no guardaste ninguna.")
 
         services.backups.export_to(tmp_path, date(2026, 10, 10))
 
-        notice = services.notifications.notices(date(2026, 11, 28), None)[-1]
+        notice = services.notifications.notices(date(2026, 11, 28))[-1]
         assert notice.detail.startswith("La última es del 10/10/2026.")
 
 
-def test_a_charge_put_off_with_ya_lo_vi_is_not_announced(services, pesos):
+def test_a_charge_seen_with_ya_lo_vi_is_seen_in_the_bell(services, pesos):
     charge = services.recurring.create(
         charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=3), name="Netflix")
     )
-    assert charges_notice(services).item_ids == (charge.id,)
 
     services.recurring.mark_seen(charge.id, TODAY)
 
-    assert charges_notice(services) is None
+    assert charges_notice(services).seen
 
 
-def test_a_notice_with_overdue_charges_cannot_be_put_off(services, pesos):
-    for name, days in (("Internet", -2), ("Spotify", 3)):
-        services.recurring.create(
-            charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=days), name=name)
+class TestSeen:
+    """Opening a notice marks it seen until there is something new about it."""
+
+    @staticmethod
+    def open(services, notice, day=TODAY):
+        services.notifications.mark_seen(notice)
+
+    @staticmethod
+    def seen(services, day=TODAY):
+        return [n.seen for n in services.notifications.notices(day)]
+
+    @staticmethod
+    def spend(services, pesos, category, amount):
+        services.transactions.create(
+            expense_draft(services, pesos.id, ars(amount), category_id=category)
         )
 
-    assert charges_notice(services).item_ids == ()
+    def test_an_opened_notice_stays_listed_after_the_new_ones(self, services, pesos, dollars):
+        self.spend(services, pesos, budget(services, "Ocio", "10"), "20")
+        notices = services.notifications.notices(TODAY)
+        [over] = [n for n in notices if n.kind is NoticeKind.BUDGET_OVER]
 
+        self.open(services, over)
 
-def test_only_charges_with_a_day_to_spare_can_be_put_off(services, pesos):
-    for name, days in (("Netflix", 1), ("Spotify", 3)):
+        notices = services.notifications.notices(TODAY)
+        assert [(n.kind, n.seen) for n in notices] == [
+            (NoticeKind.STALE_RATE, False),
+            (NoticeKind.BUDGET_OVER, True),
+        ]
+
+    def test_spending_more_on_a_passed_budget_is_not_news(self, services, pesos):
+        leisure = budget(services, "Ocio", "10")
+        self.spend(services, pesos, leisure, "20")
+        self.open(services, services.notifications.notices(TODAY)[0])
+
+        self.spend(services, pesos, leisure, "50")
+
+        assert self.seen(services) == [True]
+
+    def test_another_budget_passing_is(self, services, pesos):
+        self.spend(services, pesos, budget(services, "Ocio", "10"), "20")
+        self.open(services, services.notifications.notices(TODAY)[0])
+
+        self.spend(services, pesos, budget(services, "Ropa", "10"), "20")
+
+        assert self.seen(services) == [False]
+
+    def test_a_charge_is_new_again_the_day_before_and_once_overdue(self, services, pesos):
         services.recurring.create(
-            charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=days), name=name)
+            charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=3))
+        )
+        self.open(services, charges_notice(services))
+        assert self.seen(services, TODAY + timedelta(days=1)) == [True]
+
+        assert self.seen(services, TODAY + timedelta(days=2)) == [False]  # the day before
+        self.open(services, services.notifications.notices(TODAY + timedelta(days=2))[0])
+        assert self.seen(services, TODAY + timedelta(days=4)) == [False]  # overdue
+
+    def test_seeing_charges_in_the_bell_is_ya_lo_vi_on_them(self, services, pesos):
+        charge = services.recurring.create(
+            charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=3))
         )
 
-    spotify = next(c for c in services.recurring.list_charges() if c.name == "Spotify")
-    assert charges_notice(services).item_ids == (spotify.id,)
+        self.open(services, charges_notice(services))
+
+        assert services.recurring.is_quiet(services.recurring.get(charge.id), TODAY)
+
+    def test_ya_lo_vi_on_one_charge_leaves_the_others_seen(self, services, pesos):
+        for name, days in (("Internet", -1), ("Netflix", 3)):
+            services.recurring.create(
+                charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=days), name=name)
+            )
+        self.open(services, charges_notice(services))
+        netflix = next(c for c in services.recurring.list_charges() if c.name == "Netflix")
+
+        services.recurring.remind_again(netflix.id, TODAY)
+        services.recurring.mark_seen(netflix.id, TODAY)
+
+        assert charges_notice(services).seen
+
+    def test_paying_one_charge_leaves_the_others_seen(self, services, pesos):
+        for name in ("Internet", "Luz"):
+            services.recurring.create(
+                charge_draft(services, pesos.id, ars("1"), TODAY - timedelta(days=1), name=name)
+            )
+        self.open(services, charges_notice(services))
+        internet = next(c for c in services.recurring.list_charges() if c.name == "Internet")
+
+        services.recurring.pay(internet.id, ars("1"), TODAY, pesos.id)
+
+        assert charges_notice(services).seen
+
+    def test_a_budget_back_under_its_limit_leaves_the_others_seen(self, services, pesos):
+        leisure = budget(services, "Ocio", "10")
+        for category in (leisure, budget(services, "Ropa", "10")):
+            self.spend(services, pesos, category, "20")
+        self.open(services, services.notifications.notices(TODAY)[0])
+
+        services.budgets.set_limit(leisure, Month.of(TODAY), ars("100"))
+
+        assert self.seen(services) == [True]
+
+    def test_a_version_seen_is_kept_while_the_check_has_not_answered(self, services):
+        services.notifications.set_release(RELEASE)
+        self.open(services, services.notifications.notices(TODAY)[0])
+
+        services.notifications.set_release(None)
+        services.notifications.notices(TODAY)  # the bell refreshes before the check answers
+        services.notifications.set_release(RELEASE)
+
+        assert self.seen(services) == [True]
+
+    def test_what_no_longer_applies_is_forgotten(self, services, pesos, dollars):
+        expense = services.transactions.create(
+            expense_draft(services, pesos.id, ars("20"), category_id=budget(services, "Ocio", "10"))
+        )
+        budget_notice, rate_notice = sorted(
+            services.notifications.notices(TODAY), key=lambda n: n.kind.value
+        )
+        self.open(services, budget_notice)
+        services.transactions.delete(expense.id)
+
+        self.open(services, rate_notice)
+        services.notifications.notices(TODAY)
+
+        assert services.settings.seen_notices() == set(rate_notice.items)

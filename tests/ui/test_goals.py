@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import pytest
 from factories import ars, data_since, expense_draft, income_draft, usd
+from menus import run_action, texts
 from PySide6.QtCore import Qt
 
 from nodus.models.account import AccountType
@@ -337,7 +338,7 @@ def test_spending_lowers_it(services, savings):
 
 
 def notice_kinds(services, day) -> list[NoticeKind]:
-    return [n.kind for n in services.notifications.notices(day, None)]
+    return [n.kind for n in services.notifications.notices(day)]
 
 
 class TestDetail:
@@ -428,9 +429,7 @@ class TestReachedNotice:
 
         assert NoticeKind.GOAL_REACHED in notice_kinds(services, today)
         [notice] = [
-            n
-            for n in services.notifications.notices(today, None)
-            if n.kind is NoticeKind.GOAL_REACHED
+            n for n in services.notifications.notices(today) if n.kind is NoticeKind.GOAL_REACHED
         ]
         assert notice.title == "Alcanzaste «Viaje»"
         services.goals.mark_seen(goal.id)
@@ -445,9 +444,9 @@ class TestReachedNotice:
         [row] = [
             r for r in window.notification_panel.rows if r.notice.kind is NoticeKind.GOAL_REACHED
         ]
-        assert (row.action_button.text(), row.dismiss_button.text()) == ("Ver meta", "Listo")
+        assert texts(row.actions()) == ["Ver meta", "Quitar el aviso"]
 
-        row.action_button.click()
+        run_action(row.actions(), "Ver meta")
 
         assert window.current_page is window.detail(DetailId.GOAL)
         assert services.goals.get(goal.id).reached_seen

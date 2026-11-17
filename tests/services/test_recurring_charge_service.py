@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -7,6 +7,10 @@ from factories import TODAY, ars, category_id, charge_draft, table_rows, usd
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
 from nodus.services.errors import ValidationError
+
+
+def quiet(services, charge_id, day) -> bool:
+    return services.recurring.is_quiet(services.recurring.get(charge_id), day)
 
 
 def create(services, account_id, amount, due=TODAY, **overrides):
@@ -212,10 +216,12 @@ class TestYaLoVi:
         charge = create(services, pesos.id, ars("100"), date(2026, 11, 10))
 
         assert services.recurring.mark_seen(charge.id, TODAY) == date(2026, 11, 9)
-        assert services.recurring.get(charge.id).is_quiet(TODAY)
+        assert quiet(services, charge.id, TODAY)
+        assert quiet(services, charge.id, date(2026, 11, 8))
+        assert not quiet(services, charge.id, date(2026, 11, 9))
 
-        services.recurring.remind_again(charge.id)
-        assert not services.recurring.get(charge.id).is_quiet(TODAY)
+        services.recurring.remind_again(charge.id, TODAY)
+        assert not quiet(services, charge.id, TODAY)
 
     @pytest.mark.parametrize("due", [date(2026, 11, 6), date(2026, 11, 1)])
     def test_not_for_one_due_tomorrow_or_overdue(self, services, pesos, due):
@@ -233,8 +239,9 @@ class TestYaLoVi:
         services.recurring.pay(first.id, ars("100"), TODAY, pesos.id)
         services.recurring.skip(second.id)
 
-        assert services.recurring.get(first.id).remind_from is None
-        assert services.recurring.get(second.id).remind_from is None
+        for charge in (first, second):  # the next date, a week before it is due
+            due = services.recurring.get(charge.id).next_due_on
+            assert not quiet(services, charge.id, due - timedelta(days=7))
 
     def test_undoing_a_payment_puts_it_back_seen(self, services, database, pesos):
         charge = create(services, pesos.id, ars("100"), date(2026, 11, 10))
@@ -245,6 +252,7 @@ class TestYaLoVi:
         services.undo.undo()
 
         assert table_rows(database, "recurring_charges", "transactions") == before
+        assert quiet(services, charge.id, TODAY)
 
     def test_editing_keeps_it_unless_the_date_changes(self, services, pesos):
         charge = create(services, pesos.id, ars("100"), date(2026, 11, 10))
@@ -253,9 +261,9 @@ class TestYaLoVi:
         services.recurring.update(
             charge.id, charge_draft(services, pesos.id, ars("120"), date(2026, 11, 10))
         )
-        assert services.recurring.get(charge.id).remind_from == date(2026, 11, 9)
+        assert quiet(services, charge.id, TODAY)
 
         services.recurring.update(
             charge.id, charge_draft(services, pesos.id, ars("120"), date(2026, 11, 12))
         )
-        assert services.recurring.get(charge.id).remind_from is None
+        assert not quiet(services, charge.id, TODAY)

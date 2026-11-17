@@ -86,7 +86,6 @@ class MainWindow(QMainWindow):
         self.notification_panel.action_requested.connect(self._act_on_notice)
         self.notification_panel.dismiss_requested.connect(self._dismiss_notice)
         self.notification_panel.news_requested.connect(self._show_release_news)
-        self._release: Release | None = None
         self._stack = QStackedWidget()
         self._stack.setObjectName("PageStack")
         dashboard = DashboardPage(services, event_bus, theme_manager)
@@ -324,18 +323,23 @@ class MainWindow(QMainWindow):
         return self.tour
 
     def _show_release(self, release: Release | None) -> None:
-        self._release = release
+        self._services.notifications.set_release(release)
         self.refresh_notifications()
 
     # Notifications
 
+    @property
+    def _release(self) -> Release | None:
+        return self._services.notifications.release
+
     def notices(self) -> list[Notice]:
-        return self._services.notifications.notices(date.today(), self._release)
+        return self._services.notifications.notices(date.today())
 
     def refresh_notifications(self) -> None:
-        """Updates the count on the bell, and the panel if it is open."""
+        """Updates the count on the bell, which counts only what the user has not opened
+        yet, and the panel if it is open."""
         notices = self.notices()
-        self.top_bar.set_notification_count(len(notices))
+        self.top_bar.set_notification_count(sum(1 for notice in notices if not notice.seen))
         if self.notification_panel.isVisible():
             self.notification_panel.set_notices(notices)
 
@@ -351,6 +355,11 @@ class MainWindow(QMainWindow):
         self.notification_panel.open_below(self.top_bar.notifications_button)
 
     def _act_on_notice(self, notice: Notice) -> None:
+        """Opening a notice marks it seen, and leads where its problem shows."""
+        self._services.notifications.mark_seen(notice)
+        if notice.kind is NoticeKind.CHARGES_DUE:  # seen here is «Ya lo vi» on their rows
+            self._event_bus.recurring_changed.emit()
+        self.refresh_notifications()
         if notice.kind is NoticeKind.UPDATE and self._release is not None:
             self.start_update(self._release)
         elif notice.kind is NoticeKind.CHARGES_DUE:
@@ -390,12 +399,8 @@ class MainWindow(QMainWindow):
             self._services.backups.put_off_reminder(date.today())
         elif notice.kind is NoticeKind.GOAL_REACHED and notice.item_id is not None:
             self._services.goals.mark_seen(notice.item_id)
-        elif notice.kind is NoticeKind.CHARGES_DUE:
-            for charge_id in notice.item_ids:
-                self._services.recurring.mark_seen(charge_id, date.today())
-            self._event_bus.recurring_changed.emit()  # Inicio and Recurrentes gray them
-        elif self._release is not None:
-            self._services.notifications.dismiss(self._release)
+        else:
+            self._services.notifications.dismiss_release()
         self.refresh_notifications()
 
     @property

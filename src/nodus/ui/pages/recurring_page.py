@@ -91,11 +91,13 @@ class RecurringChargeRow(ScheduleRow):
         category: Category,
         account_name: str,
         today: date,
+        quiet: bool,
         amount_text: str | None = None,
     ) -> None:
         self._today = today
+        self._quiet = quiet
         if charge.is_active:
-            status = due_status_label(charge, today)
+            status = due_status_label(charge, today, quiet)
         else:
             status = QLabel(PAUSED_TITLE)
             set_style_property(status, "muted", True)
@@ -134,7 +136,7 @@ class RecurringChargeRow(ScheduleRow):
                     "skip",
                     effect=Effect.UNDOABLE,
                 ),
-                *seen_actions(charge, self._today, self.seen_toggled),
+                *seen_actions(charge, self._today, self._quiet, self.seen_toggled),
             ]
         return result + [
             # A paused charge cannot be paid; editing is what it opens.
@@ -262,6 +264,7 @@ class RecurringPage(Page):
             for charge in members:
                 row = RecurringChargeRow(
                     charge, categories[charge.category_id], accounts[charge.account_id], today,
+                    self._services.recurring.is_quiet(charge, today),
                     charge_amount_text(
                         charge.amount, self._services.recurring.estimated_payment(charge, today)
                     ),
@@ -385,8 +388,8 @@ def toggle_seen(
     """«Ya lo vi» on ``charge``, or «Volver a avisarme» when it is put off, told in a
     toast with the day its warning comes back."""
     today = date.today()
-    if charge.is_quiet(today):
-        services.recurring.remind_again(charge.id)
+    if services.recurring.is_quiet(charge, today):
+        services.recurring.remind_again(charge.id, today)
         text = f"Te volvemos a avisar de {charge.name}."
     else:
         day = services.recurring.mark_seen(charge.id, today)

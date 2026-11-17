@@ -361,7 +361,12 @@ class AccountDetailPage(DetailPage):
         self.payment_rows = []
         for charge in charges:
             estimate = recurring.estimated_payment(charge, today)
-            row = UpcomingPaymentRow(charge, today, estimate_text(charge.amount, estimate))
+            row = UpcomingPaymentRow(
+                charge,
+                today,
+                recurring.is_quiet(charge, today),
+                estimate_text(charge.amount, estimate),
+            )
             row.pay_requested.connect(self.pay)
             row.skip_requested.connect(
                 lambda c: skip_charge(self, self._services, self._event_bus, c)

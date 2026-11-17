@@ -3,22 +3,17 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from nodus.services.notification_service import Notice, NoticeKind
 from nodus.ui.theme.design import Layout, Line, Popup, Space
+from nodus.ui.theme.theme_manager import active_theme
+from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.empty_state import EmptyState
+from nodus.ui.widgets.row_actions import Effect, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
 
-# The notices the user can put off, with how the button says it.
-DISMISS_LABELS = {
-    NoticeKind.UPDATE: ("Descartar", "No volver a avisar de esta versión"),
-    NoticeKind.BACKUP_REMINDER: ("Ahora no", "Volver a avisar a fin del mes que viene"),
-    NoticeKind.GOAL_REACHED: ("Listo", "Quitar el aviso"),
-    # Only when no charge is overdue (``Notice.item_ids``): what is overdue always warns.
-    NoticeKind.CHARGES_DUE: ("Ya lo vi", "Volver a avisar el día anterior a cada vencimiento"),
-}
-
+# Where a click on each notice leads, said in its tooltip and in bold in its menu.
 ACTION_LABELS = {
     NoticeKind.UPDATE: "Actualizar",
     NoticeKind.STALE_RATE: "Ir a Ajustes",
@@ -29,55 +24,82 @@ ACTION_LABELS = {
     NoticeKind.GOAL_REACHED: "Ver meta",
 }
 
+# The notices the user can put away from the row's menu.
+DISMISS_LABELS = {
+    NoticeKind.UPDATE: "Descartar esta versión",
+    NoticeKind.BACKUP_REMINDER: "Ahora no: avisar a fin del mes que viene",
+    NoticeKind.GOAL_REACHED: "Quitar el aviso",
+}
 
-def can_dismiss(notice: Notice) -> bool:
-    """Charges can be put off only when the notice names some that can wait."""
-    return notice.kind is not NoticeKind.CHARGES_DUE or bool(notice.item_ids)
+NEWS_LABEL = "Qué trae"
 
 
 class NoticeRow(QWidget):
-    """A notice: title, detail and its buttons."""
+    """A notice: title and detail, with a dot while the user has not opened it. A click
+    does what the notice asks; the right click also offers to put it away."""
+
+    opened = Signal(object)  # Notice
+    dismissed = Signal(object)  # Notice
+    news_requested = Signal(object)  # Notice
 
     def __init__(self, notice: Notice) -> None:
         super().__init__()
         self.notice = notice
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, Space.S, 0, Space.S)
-        layout.setSpacing(Space.XXS)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
+        layout.setSpacing(Space.S)
+        # An empty dot once seen, so every title starts at the same place.
+        self.dot = ColorDot("" if notice.seen else active_theme().accent, Layout.UNSEEN_DOT)
+        layout.addWidget(self.dot, alignment=Qt.AlignmentFlag.AlignTop)
+        texts = QVBoxLayout()
+        texts.setSpacing(Space.XXS)
         title = QLabel(notice.title)
-        title.setObjectName("RowTitle")
         title.setWordWrap(True)
+        if notice.seen:
+            set_style_property(title, "muted", True)
+        else:
+            title.setObjectName("RowTitle")
         detail = QLabel(notice.detail)
         detail.setWordWrap(True)
         set_style_property(detail, "muted", True)
-        layout.addWidget(title)
-        layout.addWidget(detail)
-        buttons = QHBoxLayout()
-        buttons.setSpacing(Space.S)
-        self.news_button: QPushButton | None = None
+        texts.addWidget(title)
+        texts.addWidget(detail)
+        layout.addLayout(texts, stretch=1)
+        self.setAccessibleName(f"{'' if notice.seen else 'Sin revisar: '}{notice.title}")
+        install_row_actions(self, self.actions, open_on_click=ACTION_LABELS[notice.kind])
+
+    def actions(self) -> list[RowAction]:
+        notice = self.notice
+        result = [
+            RowAction(
+                ACTION_LABELS[notice.kind],
+                lambda: self.opened.emit(notice),
+                default=True,
+                effect=Effect.OPEN,
+            )
+        ]
         if notice.kind is NoticeKind.UPDATE and notice.notes:
-            self.news_button = QPushButton("Qué trae")
-            self.news_button.setObjectName("SmallButton")
-            buttons.addWidget(self.news_button)
-        self.action_button = QPushButton(ACTION_LABELS[notice.kind])
-        self.action_button.setObjectName("SmallButton")
-        buttons.addWidget(self.action_button)
-        self.dismiss_button: QPushButton | None = None
-        if notice.kind in DISMISS_LABELS and can_dismiss(notice):
-            text, tooltip = DISMISS_LABELS[notice.kind]
-            self.dismiss_button = QPushButton(text)
-            self.dismiss_button.setObjectName("SmallButton")
-            self.dismiss_button.setToolTip(tooltip)
-            buttons.addWidget(self.dismiss_button)
-        buttons.addStretch()
-        layout.addSpacing(Space.XS)
-        layout.addLayout(buttons)
+            result.append(
+                RowAction(NEWS_LABEL, lambda: self.news_requested.emit(notice), effect=Effect.OPEN)
+            )
+        if notice.kind in DISMISS_LABELS:
+            result.append(
+                RowAction(
+                    DISMISS_LABELS[notice.kind],
+                    lambda: self.dismissed.emit(notice),
+                    # It only puts the notice away: whatever comes next is announced.
+                    effect=Effect.TOGGLE,
+                )
+            )
+        return result
 
 
 class NotificationPanel(QFrame):
-    """Lists the notices with their actions, or says there is nothing new.
+    """Lists the notices, the ones not opened yet first and marked with a dot, or says
+    there is nothing new.
 
-    A popup: it closes on its own when the user clicks elsewhere.
+    A popup: it closes on its own when the user clicks elsewhere, and when a notice is
+    opened, since that leads to another page.
     """
 
     action_requested = Signal(object)  # Notice
@@ -89,11 +111,18 @@ class NotificationPanel(QFrame):
         self.setObjectName("NotificationPanel")
         self.setFixedWidth(Layout.NOTIFICATION_PANEL_WIDTH)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(Space.L, Space.M, Space.L, Space.M)
+        layout.setContentsMargins(Space.M, Space.M, Space.M, Space.M)
         layout.setSpacing(0)
+        header = QHBoxLayout()
+        header.setContentsMargins(Space.S, 0, Space.S, Space.XS)
         title = QLabel("NOTIFICACIONES")
         title.setObjectName("CardTitle")
-        layout.addWidget(title)
+        header.addWidget(title)
+        header.addStretch()
+        self.unseen_label = QLabel()
+        set_style_property(self.unseen_label, "muted", True)
+        header.addWidget(self.unseen_label)
+        layout.addLayout(header)
         self._rows = QVBoxLayout()
         self._rows.setSpacing(0)
         layout.addLayout(self._rows)
@@ -102,6 +131,8 @@ class NotificationPanel(QFrame):
     def set_notices(self, notices: list[Notice]) -> None:
         clear_layout(self._rows)
         self.rows = []
+        unseen = sum(1 for notice in notices if not notice.seen)
+        self.unseen_label.setText(f"{unseen} sin revisar" if unseen else "")
         if not notices:
             self._rows.addWidget(EmptyState("Sin novedades.", compact=True))
         for index, notice in enumerate(notices):
@@ -111,13 +142,9 @@ class NotificationPanel(QFrame):
                 separator.setFixedHeight(Line.THIN)
                 self._rows.addWidget(separator)
             row = NoticeRow(notice)
-            row.action_button.clicked.connect(lambda _=False, n=notice: self._act(n))
-            if row.news_button is not None:
-                row.news_button.clicked.connect(lambda _=False, n=notice: self._show_news(n))
-            if row.dismiss_button is not None:
-                row.dismiss_button.clicked.connect(
-                    lambda _=False, n=notice: self.dismiss_requested.emit(n)
-                )
+            row.opened.connect(self._act)
+            row.news_requested.connect(self._show_news)
+            row.dismissed.connect(self.dismiss_requested)
             self._rows.addWidget(row)
             self.rows.append(row)
         self.adjustSize()

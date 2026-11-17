@@ -5,6 +5,9 @@ from decimal import Decimal
 
 import pytest
 from factories import ars, category_id, charge_draft, data_since, expense_draft
+from menus import main_action, run_action, texts
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtTest import QTest
 
 from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
@@ -43,6 +46,11 @@ def count(window) -> str:
     return label.text() if label.isVisible() else ""
 
 
+def open_row(row) -> None:
+    """A click on the notice, away from its texts."""
+    QTest.mouseClick(row, Qt.MouseButton.LeftButton, pos=QPoint(2, row.height() // 2))
+
+
 def found_release(qtbot, window) -> None:
     window.check_for_updates()
     qtbot.waitUntil(lambda: count(window) == "1")
@@ -62,7 +70,8 @@ def test_newer_release_is_counted_and_listed(qtbot, offline_window):
     assert panel.isVisible()
     assert [n.kind for n in offline_window.notices()] == [NoticeKind.UPDATE]
     assert "9.0.0" in offline_window.notices()[0].title
-    assert panel.rows[0].action_button.text() == "Actualizar"
+    assert main_action(panel.rows[0].actions()) == "Actualizar"
+    assert panel.rows[0].toolTip() == "Actualizar"
 
 
 def test_update_from_the_source_code_opens_the_release_page(qtbot, offline_window, monkeypatch):
@@ -73,7 +82,7 @@ def test_update_from_the_source_code_opens_the_release_page(qtbot, offline_windo
     found_release(qtbot, offline_window)
     offline_window.open_notifications()
 
-    offline_window.notification_panel.rows[0].action_button.click()
+    open_row(offline_window.notification_panel.rows[0])
 
     assert opened == ["https://example.com/v9"]
     assert not offline_window.notification_panel.isVisible()
@@ -83,7 +92,7 @@ def test_dismissed_release_is_not_announced_again(qtbot, services, offline_windo
     found_release(qtbot, offline_window)
     offline_window.open_notifications()
 
-    offline_window.notification_panel.rows[0].dismiss_button.click()
+    run_action(offline_window.notification_panel.rows[0].actions(), "Descartar esta versión")
 
     assert count(offline_window) == ""
     assert services.settings.dismissed_version() == "9.0.0"
@@ -104,7 +113,7 @@ def test_stale_rate_notice_leads_to_settings(qtbot, services, event_bus, offline
     assert count(offline_window) == "1"
     offline_window.open_notifications()
 
-    offline_window.notification_panel.rows[0].action_button.click()
+    open_row(offline_window.notification_panel.rows[0])
 
     assert offline_window.current_page is offline_window.page(PageId.SETTINGS)
 
@@ -131,7 +140,7 @@ def test_charges_notice_follows_payments_and_leads_to_the_charges(
     assert count(offline_window) == "1"
     offline_window.open_notifications()
 
-    offline_window.notification_panel.rows[0].action_button.click()
+    open_row(offline_window.notification_panel.rows[0])
     assert offline_window.current_page is offline_window.page(PageId.RECURRING)
 
     services.recurring.pay(charge.id, ars("100"), date.today(), pesos.id)
@@ -151,7 +160,7 @@ def test_budget_notice_appears_when_an_expense_passes_the_limit(
     assert count(offline_window) == "1"
     offline_window.open_notifications()
 
-    offline_window.notification_panel.rows[0].action_button.click()
+    open_row(offline_window.notification_panel.rows[0])
 
     assert offline_window.current_page is offline_window.page(PageId.BUDGETS)
 
@@ -164,14 +173,13 @@ class TestBackupReminder:
         assert count(offline_window) == "1"
         offline_window.open_notifications()
         row = offline_window.notification_panel.rows[0]
-        assert row.action_button.text() == "Guardar copia…"
+        assert main_action(row.actions()) == "Guardar copia…"
         return offline_window
 
     def test_put_off_with_ahora_no(self, reminded_window):
         row = reminded_window.notification_panel.rows[0]
-        assert row.dismiss_button.text() == "Ahora no"
 
-        row.dismiss_button.click()
+        run_action(row.actions(), "Ahora no: avisar a fin del mes que viene")
 
         assert count(reminded_window) == ""
 
@@ -180,34 +188,70 @@ class TestBackupReminder:
             external_backup.QFileDialog, "getExistingDirectory", lambda *_a: str(tmp_path)
         )
 
-        reminded_window.notification_panel.rows[0].action_button.click()
+        open_row(reminded_window.notification_panel.rows[0])
 
         assert services.backups.last_external_backup() == date.today()
         assert count(reminded_window) == ""
 
 
-def test_ya_lo_vi_puts_the_charges_notice_off(qtbot, services, event_bus, offline_window, pesos):
-    charge = services.recurring.create(
-        charge_draft(services, pesos.id, ars("100"), date.today() + timedelta(days=3))
-    )
-    event_bus.recurring_changed.emit()
-    offline_window.open_notifications()
-    row = offline_window.notification_panel.rows[0]
-    assert row.dismiss_button.text() == "Ya lo vi"
+class TestSeen:
+    """The bell counts what the user has not opened; the panel marks it with a dot."""
 
-    row.dismiss_button.click()
+    @pytest.fixture
+    def over_budget(self, services, event_bus, offline_window, pesos):
+        """Passes a budget and returns a function that passes another one."""
 
-    assert services.recurring.get(charge.id).is_quiet(date.today())
-    assert not offline_window.top_bar.notification_count.isVisibleTo(offline_window)
+        def pass_budget(name):
+            category = category_id(services, name, TransactionType.EXPENSE)
+            services.budgets.set_limit(category, Month.of(date.today()), ars("10"))
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars("20"), on=date.today(), category_id=category)
+            )
+            event_bus.transactions_changed.emit()
 
+        pass_budget("Ocio")
+        return pass_budget
 
-def test_an_overdue_charge_cannot_be_put_off_from_the_bell(
-    services, event_bus, offline_window, pesos
-):
-    services.recurring.create(
-        charge_draft(services, pesos.id, ars("100"), date.today() - timedelta(days=1))
-    )
-    event_bus.recurring_changed.emit()
-    offline_window.open_notifications()
+    def test_opening_the_bell_does_not_count_as_seeing(self, offline_window, over_budget):
+        offline_window.open_notifications()
 
-    assert offline_window.notification_panel.rows[0].dismiss_button is None
+        row = offline_window.notification_panel.rows[0]
+        assert count(offline_window) == "1"
+        assert row.dot.color() != ""
+        assert row.accessibleName().startswith("Sin revisar: ")
+        assert offline_window.notification_panel.unseen_label.text() == "1 sin revisar"
+
+    def test_a_click_marks_it_seen_and_it_stays_listed(self, offline_window, over_budget):
+        offline_window.open_notifications()
+
+        open_row(offline_window.notification_panel.rows[0])
+
+        assert count(offline_window) == ""
+        offline_window.open_notifications()
+        row = offline_window.notification_panel.rows[0]
+        assert row.notice.seen and row.dot.color() == ""
+        assert offline_window.notification_panel.unseen_label.text() == ""
+
+    def test_something_new_lights_it_again(self, offline_window, over_budget):
+        offline_window.open_notifications()
+        open_row(offline_window.notification_panel.rows[0])
+
+        over_budget("Ropa")
+
+        assert count(offline_window) == "1"
+
+    def test_what_was_seen_stays_seen_after_a_restart(
+        self, qtbot, services, event_bus, theme_manager, offline_window, over_budget
+    ):
+        offline_window.open_notifications()
+        open_row(offline_window.notification_panel.rows[0])
+
+        window = MainWindow(services, event_bus, theme_manager)
+        qtbot.addWidget(window)
+
+        assert count(window) == ""
+
+    def test_a_menu_without_ways_to_put_it_away(self, offline_window, over_budget):
+        offline_window.open_notifications()
+
+        assert texts(offline_window.notification_panel.rows[0].actions()) == ["Ver presupuestos"]

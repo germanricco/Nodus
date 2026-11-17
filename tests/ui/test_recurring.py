@@ -185,7 +185,7 @@ class TestPage:
         charge = services.recurring.get(charge.id)
         category = services.categories.get(charge.category_id)
 
-        row = RecurringChargeRow(charge, category, "Banco", TODAY)
+        row = RecurringChargeRow(charge, category, "Banco", TODAY, False)
 
         assert [a.text for a in row.actions()] == ["Editar", "Reanudar", "Eliminar"]
 
@@ -193,7 +193,7 @@ class TestPage:
         charge = create(services, pesos.id)
         category = services.categories.get(charge.category_id)
 
-        row = RecurringChargeRow(charge, category, "Banco", TODAY)
+        row = RecurringChargeRow(charge, category, "Banco", TODAY, False)
 
         assert [a.text for a in row.actions()] == [
             "Pagar",

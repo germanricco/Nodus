@@ -44,7 +44,10 @@ HELP_TOPICS = [
         (
             "A la izquierda están las páginas y tus cuentas con su saldo. Arriba, «Agregar"
             " transacción» anota un movimiento desde cualquier página, el ojo oculta los"
-            " montos, la campana junta los avisos y el «?» abre esta ayuda.",
+            " montos, la campana junta los avisos y el «?» abre esta ayuda. El número de la"
+            " campana cuenta los avisos que todavía no miraste, que llevan un punto: un clic"
+            " en uno te lleva adonde está el problema y lo marca como visto. Con el clic"
+            " derecho, algunos se pueden quitar.",
             "El Inicio muestra tu patrimonio neto, los próximos pagos, en qué se fue el dinero"
             " y tus presupuestos. Arriba a la derecha eliges el período, y un clic en una"
             " categoría o en un pago te lleva a sus movimientos.",
@@ -209,8 +212,9 @@ HELP_TOPICS = [
         (
             "En Recurrentes, «Agregar cargo» te pide cuánto es, cada cuánto se paga y desde qué"
             " cuenta. Nodus te muestra cuánto suman por mes, qué vence pronto y qué está"
-            " atrasado, y la campana te avisa. Si ya sabes que viene, «Ya lo vi», en su menú o"
-            " en la campana, calla el aviso hasta el día anterior; lo vencido avisa siempre.",
+            " atrasado, y la campana te avisa. Si ya sabes que viene, «Ya lo vi», en su menú,"
+            " calla el aviso hasta el día anterior, y abrir su aviso en la campana hace lo"
+            " mismo; lo vencido avisa siempre.",
             "«Pagar» registra el gasto y pasa el cargo a su próxima fecha. Si un mes no se paga,"
             " «Omitir» lo salta sin registrar nada. Los dos se pueden deshacer desde el aviso"
             " que aparece abajo, o con Ctrl + Z.",

@@ -6,7 +6,8 @@ when it opens, from a function that returns the actions, so it always matches th
 current state (paused or active, archived or not).
 
 A row's main action (``RowAction.default``) is bold in its menu and runs on a double
-click, as in Windows, so the double click and the menu never disagree.
+click, as in Windows, so the double click and the menu never disagree. A row that leads
+somewhere (an account, a goal, a notification) runs it on a single click instead.
 
 Every action declares what a click does (``Effect``), so none changes data by surprise:
 what changes it at once can be undone or reversed from the same menu, and what destroys
@@ -132,13 +133,21 @@ def show_menu(parent: QWidget, actions: Sequence[RowAction], position: QPoint) -
     return menu
 
 
-def install_row_actions(widget: QWidget, actions_for: ActionsFor) -> None:
+def install_row_actions(
+    widget: QWidget, actions_for: ActionsFor, open_on_click: str | None = None
+) -> None:
     """What every row with actions does, the same on every page: it lights up under the
     mouse, a right click anywhere on it opens the menu of ``actions_for()`` and a double
-    click runs its main action."""
+    click runs its main action.
+
+    With ``open_on_click``, the tooltip that says where it leads ("Abrir la cuenta"), a
+    single click runs it instead, with the hand cursor."""
     make_hoverable(widget)
     widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-    handler = _RowHandler(widget, actions_for)
+    if open_on_click:
+        widget.setCursor(Qt.CursorShape.PointingHandCursor)
+        widget.setToolTip(open_on_click)
+    handler = _RowHandler(widget, actions_for, bool(open_on_click))
     widget.customContextMenuRequested.connect(handler.open_menu)
     widget.installEventFilter(handler)
 
@@ -151,10 +160,12 @@ class _RowHandler(QObject):
     The menu's signal goes to a slot of this object, not to a lambda or to the menu,
     which is deleted on close: Qt then crashes calling into it."""
 
-    def __init__(self, row: QWidget, actions_for: ActionsFor) -> None:
+    def __init__(self, row: QWidget, actions_for: ActionsFor, open_on_click: bool) -> None:
         super().__init__(row)
         self._row = row
         self._actions_for = actions_for
+        self._open_on_click = open_on_click
+        self._after_double_click = False
 
     def actions_list(self) -> Sequence[RowAction]:
         return self._actions_for()
@@ -167,12 +178,24 @@ class _RowHandler(QObject):
         release_hover(self._row)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802
-        if (
-            event.type() == QEvent.Type.MouseButtonDblClick
-            and event.button() == Qt.MouseButton.LeftButton
-        ):
-            return run_default(self._actions_for())
-        return False
+        kind = event.type()
+        if kind not in (QEvent.Type.MouseButtonDblClick, QEvent.Type.MouseButtonRelease):
+            return False
+        if event.button() != Qt.MouseButton.LeftButton:
+            return False
+        if not self._open_on_click:
+            return kind == QEvent.Type.MouseButtonDblClick and run_default(self._actions_for())
+        # The first click already ran it: the double click, and the release that
+        # follows it, are swallowed so it does not run again.
+        if kind == QEvent.Type.MouseButtonDblClick:
+            self._after_double_click = True
+            return True
+        if self._after_double_click:
+            self._after_double_click = False
+            return True
+        if not self._row.rect().contains(event.position().toPoint()):
+            return False  # pressed on the row, but let go elsewhere: no click
+        return run_default(self._actions_for())
 
 
 class MoreButton(QPushButton):
