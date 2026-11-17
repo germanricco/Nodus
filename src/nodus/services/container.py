@@ -29,7 +29,6 @@ from nodus.services.dashboard_service import DashboardService
 from nodus.services.exchange_rate_service import ExchangeRateService
 from nodus.services.export_service import ExportService
 from nodus.services.goal_service import GoalService
-from nodus.services.guide_service import GuideService
 from nodus.services.http import downloader
 from nodus.services.installment_service import InstallmentService
 from nodus.services.net_worth_service import NetWorthService
@@ -42,6 +41,7 @@ from nodus.services.seen_service import SeenService
 from nodus.services.settings_service import SettingsService
 from nodus.services.startup_service import StartupService
 from nodus.services.tag_service import TagService
+from nodus.services.tour_service import TourService
 from nodus.services.transaction_service import TransactionService
 from nodus.services.undo_service import UndoService
 from nodus.services.update_service import UpdateService
@@ -77,7 +77,7 @@ class Services:
     tags: TagService
     startup: StartupService
     news: NewsService
-    guide: GuideService
+    tour: TourService
     undo: UndoService
 
     @classmethod
@@ -161,6 +161,6 @@ class Services:
             tags=TagService(database, tag_repository, transactions, exchange_rates, undo),
             startup=StartupService.for_this_program(),
             news=NewsService(settings, __version__, first_start=database.created),
-            guide=GuideService(accounts, transactions, recurring, budgets, goals, settings),
+            tour=TourService(accounts, settings),
             undo=undo,
         )

@@ -66,14 +66,13 @@ class HelpPanel(QFrame):
     one topic, with «Ir a…» and its related topics; and the shortcuts by where they
     work. ``spotlight_changed`` gives the pages to light up in the sidebar (none outside
     a topic); ``page_requested`` asks for one. At the foot of the topics, the guided
-    tour and, when it was put away, Primeros pasos.
+    tour.
     """
 
     closed = Signal()
     page_requested = Signal(object)  # PageId
     spotlight_changed = Signal(object)  # tuple[PageId, ...]
     tour_requested = Signal()
-    guide_requested = Signal()
 
     def __init__(self, theme_manager: ThemeManager, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -144,10 +143,6 @@ class HelpPanel(QFrame):
         self.views.setCurrentIndex(SHORTCUTS_VIEW)
         self.spotlight_changed.emit(())
 
-    def set_guide_hidden(self, hidden: bool) -> None:
-        """Offers Primeros pasos back only when it was put away."""
-        self.guide_button.setVisible(hidden)
-
     def close_panel(self) -> None:
         self.hide()
         self.spotlight_changed.emit(())
@@ -207,10 +202,6 @@ class HelpPanel(QFrame):
         foot.setSpacing(Space.S)
         self.tour_button = self._foot_button("Ver el recorrido", self.tour_requested)
         foot.addWidget(self.tour_button)
-        self.guide_button = self._foot_button("Primeros pasos", self.guide_requested)
-        self.guide_button.setToolTip("Vuelve a mostrar la lista en el Inicio")
-        self.guide_button.hide()
-        foot.addWidget(self.guide_button)
         foot.addStretch()
         layout.addLayout(foot)
         return view

@@ -22,8 +22,7 @@ def visible_texts(page) -> list[str]:
     return [label.text() for label in page.findChildren(QLabel) if label.isVisibleTo(page)]
 
 
-def test_welcome_leads_to_accounts_once_the_guide_is_put_away(qtbot, window, services):
-    services.guide.dismiss()
+def test_welcome_leads_to_accounts(qtbot, window, services):
     page = dashboard(window)
     page.refresh()
     assert "Te damos la bienvenida a Nodus" in visible_texts(page)
@@ -224,7 +223,6 @@ def grid_cell(page, card) -> tuple[int, int, int, int]:
 
 
 def test_cards_rearrange_for_narrow_windows(qtbot, window, services, pesos):
-    services.guide.dismiss()  # the cards below it are what this is about
     services.recurring.create(charge_draft(services, pesos.id, ars("1"), date.today()))
     page = dashboard(window)
     window.resize(1400, 900)

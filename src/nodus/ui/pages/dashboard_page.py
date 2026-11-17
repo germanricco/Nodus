@@ -19,15 +19,8 @@ from PySide6.QtWidgets import (
 from nodus.models.period import Month, Period
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
-from nodus.services.guide_service import GuideStepKind
 from nodus.ui import tour
-from nodus.ui.dialogs.account_dialog import AccountDialog
-from nodus.ui.dialogs.budget_dialog import BudgetDialog
-from nodus.ui.dialogs.confirm import ask
-from nodus.ui.dialogs.external_backup import save_copy_outside
-from nodus.ui.dialogs.goal_dialog import GoalDialog
-from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
-from nodus.ui.dialogs.transaction_dialog import TransactionStart
+from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.dashboard_cards import (
@@ -41,7 +34,6 @@ from nodus.ui.pages.dashboard_cards import (
     UpcomingPaymentsCard,
     muted_label,
 )
-from nodus.ui.pages.guide_card import GuideCard
 from nodus.ui.pages.page import Page
 from nodus.ui.pages.recurring_page import skip_charge, toggle_seen
 from nodus.ui.pages.transaction_list_view import delete_transactions, edit_transaction
@@ -68,7 +60,6 @@ class DashboardPage(Page):
     navigate_requested = Signal(object)  # PageId
     transactions_requested = Signal(object)  # TransactionFocus
     budgets_requested = Signal(object)  # Month
-    new_transaction_requested = Signal(object)  # TransactionStart
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -129,7 +120,6 @@ class DashboardPage(Page):
                 )
             )
 
-        self.guide_card = self._guide_card(theme_manager)
         grid_page = QWidget()
         self._grid = QGridLayout(grid_page)
         self._grid.setContentsMargins(0, 0, 0, 0)
@@ -146,18 +136,11 @@ class DashboardPage(Page):
 
         self._stack = QStackedWidget()
         self._welcome = self._welcome_card()
-        # Before the first account, Primeros pasos is the welcome; put away, a plain one is.
-        self.welcome_guide = self._guide_card(
-            theme_manager,
-            "Te damos la bienvenida a Nodus. Estos pasos dejan todo andando, y se tachan"
-            " solos a medida que los haces.",
-        )
         welcome_page = QWidget()
         welcome_layout = QGridLayout(welcome_page)
         welcome_layout.setContentsMargins(0, 0, 0, 0)
-        welcome_layout.addWidget(self.welcome_guide, 0, 0)
-        welcome_layout.addWidget(self._welcome, 1, 0)
-        welcome_layout.setRowStretch(2, 1)
+        welcome_layout.addWidget(self._welcome, 0, 0)
+        welcome_layout.setRowStretch(1, 1)
         self._stack.addWidget(welcome_page)
         self._stack.addWidget(scroll)
         self.content_layout.addWidget(self._stack)
@@ -182,7 +165,6 @@ class DashboardPage(Page):
         return self.latest_card.see_all_button
 
     def refresh(self) -> None:
-        self._show_guide()
         if not self._services.accounts.list_accounts(include_archived=True):
             self.period_selector.hide()
             self._stack.setCurrentIndex(0)
@@ -230,23 +212,18 @@ class DashboardPage(Page):
         narrow = self.width() < Layout.NARROW_WIDTH
         upcoming = self.upcoming_card.isVisibleTo(self)
         budgets = self.budgets_card.isVisibleTo(self)
-        guide = not self.guide_card.isHidden()
         # Expenses take the full width when narrow, four of the six columns otherwise.
         width = self._scroll.viewport().width()
         column = (width - 5 * self._grid.spacing()) / 6
         expenses_width = width if narrow else 4 * column + 3 * self._grid.spacing()
         beside = self.expenses_card.fits_legend_beside(expenses_width)
         self.expenses_card.set_legend_beside(beside)
-        layout = (narrow, upcoming, budgets, guide)
+        layout = (narrow, upcoming, budgets)
         if layout != self._layout:
             self._layout = layout
             grid = self._grid
             for card in self._cards():
                 grid.removeWidget(card)
-            # Primeros pasos, while shown, goes first and across.
-            top = 1 if guide else 0
-            if guide:
-                grid.addWidget(self.guide_card, 0, 0, 1, 2 if narrow else 6)
             if narrow:
                 rows = [
                     [(self.net_worth_card, 2)],
@@ -259,28 +236,28 @@ class DashboardPage(Page):
                 ]
                 if budgets:
                     rows.append([(self.budgets_card, 2)])
-                self._place(rows, top)
+                self._place(rows)
             else:
-                grid.addWidget(self.net_worth_card, top, 0, 2, 4)
+                grid.addWidget(self.net_worth_card, 0, 0, 2, 4)
                 if upcoming:
-                    grid.addWidget(self.upcoming_card, top, 4, 1, 2)
-                    grid.addWidget(self.latest_card, top + 1, 4, 1, 2)
+                    grid.addWidget(self.upcoming_card, 0, 4, 1, 2)
+                    grid.addWidget(self.latest_card, 1, 4, 1, 2)
                 else:
-                    grid.addWidget(self.latest_card, top, 4, 2, 2)
-                grid.addWidget(self.expenses_card, top + 2, 0, 1, 4)
-                grid.addWidget(self.comparison_card, top + 2, 4, 1, 2)
+                    grid.addWidget(self.latest_card, 0, 4, 2, 2)
+                grid.addWidget(self.expenses_card, 2, 0, 1, 4)
+                grid.addWidget(self.comparison_card, 2, 4, 1, 2)
                 if budgets:
-                    grid.addWidget(self.flow_card, top + 3, 0, 1, 4)
-                    grid.addWidget(self.budgets_card, top + 3, 4, 1, 2)
+                    grid.addWidget(self.flow_card, 3, 0, 1, 4)
+                    grid.addWidget(self.budgets_card, 3, 4, 1, 2)
                 else:
-                    grid.addWidget(self.flow_card, top + 3, 0, 1, 6)
+                    grid.addWidget(self.flow_card, 3, 0, 1, 6)
             for column in range(6):
                 grid.setColumnStretch(column, 1 if column < (2 if narrow else 6) else 0)
         self._remeasure()
 
-    def _place(self, rows: list[list[tuple[QWidget, int]]], top: int) -> None:
-        """Adds each row of (card, columns spanned) below the previous one, from ``top``."""
-        for row_index, row in enumerate(rows, start=top):
+    def _place(self, rows: list[list[tuple[QWidget, int]]]) -> None:
+        """Adds each row of (card, columns spanned) below the previous one."""
+        for row_index, row in enumerate(rows):
             column = 0
             for card, span in row:
                 self._grid.addWidget(card, row_index, column, 1, span)
@@ -288,7 +265,6 @@ class DashboardPage(Page):
 
     def _cards(self) -> list[QWidget]:
         return [
-            self.guide_card,
             self.net_worth_card,
             self.upcoming_card,
             self.latest_card,
@@ -318,51 +294,6 @@ class DashboardPage(Page):
         # Hidden pages are refreshed by the main window when shown.
         if self.isVisible():
             self.refresh()
-
-    # Primeros pasos
-
-    def _guide_card(self, theme_manager: ThemeManager, intro: str = "") -> GuideCard:
-        card = GuideCard(theme_manager, intro)
-        card.step_requested.connect(self.take_step)
-        card.hide_requested.connect(self.hide_guide)
-        return card
-
-    def _show_guide(self) -> None:
-        today = date.today()
-        visible = self._services.guide.visible(today)
-        steps = self._services.guide.steps(today) if visible else []
-        for card in (self.guide_card, self.welcome_guide):
-            card.setVisible(visible)
-            if visible:
-                card.show_steps(steps)
-        self._welcome.setVisible(not visible)
-
-    def take_step(self, kind: GuideStepKind) -> None:
-        """Opens what does ``kind``: its form, or the copy outside the computer."""
-        window, services, bus, today = self.window(), self._services, self._event_bus, date.today()
-        if kind is GuideStepKind.ACCOUNT:
-            AccountDialog(services, bus, parent=window).exec()
-        elif kind is GuideStepKind.EXPENSE:
-            self.new_transaction_requested.emit(TransactionStart())
-        elif kind is GuideStepKind.RECURRING:
-            RecurringChargeDialog(services, bus, parent=window).exec()
-        elif kind is GuideStepKind.BUDGET:
-            BudgetDialog(services, bus, Month.of(today), None, parent=window).exec()
-        elif kind is GuideStepKind.GOAL:
-            GoalDialog(services, bus, None, None, today, parent=window).exec()
-        elif kind is GuideStepKind.BACKUP:
-            save_copy_outside(window, services, bus)
-
-    def hide_guide(self) -> None:
-        """Puts Primeros pasos away: at once when it is finished, after asking otherwise."""
-        guide = self._services.guide
-        finished = all(step.done for step in guide.steps(date.today()))
-        if not finished and not ask(
-            self.window(), "Ocultar Primeros pasos", "Puedes volver a verla desde Ayuda.", "Ocultar"
-        ):
-            return
-        guide.dismiss()
-        self.refresh()
 
     def _welcome_card(self) -> Card:
         card = Card()

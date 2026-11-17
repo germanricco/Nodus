@@ -42,7 +42,7 @@ Home, the first page, answers the usual questions: how much you have, how the mo
   <img src="docs/images/dashboard-light.png" alt="Home: net worth, upcoming payments and spending by category">
 </picture>
 
-While you are starting out, a «Primeros pasos» (first steps) list at the top walks you through creating an account, recording an expense, adding a recurring payment, a budget and a goal, and saving a copy off your computer; each step crosses itself out as you do it. The first time, Nodus also offers a one-minute guided tour that points at each part of the window; you can take it again from Ajustes. For anything else, F1 or the «?» in the top bar opens Ayuda (help) beside the window, on the page you are on: friendly answers on what each part is for and how to use it, from installments and refunds to goals and backups, with the page it talks about lit up in the sidebar, and every keyboard shortcut, grouped by where it works.
+The first time, after your first account, Nodus offers a one-minute guided tour that points at each part of the window; you can take it again from Ajustes. For anything else, F1 or the «?» in the top bar opens Ayuda (help) beside the window, on the page you are on: friendly answers on what each part is for and how to use it, from installments and refunds to goals and backups, with the page it talks about lit up in the sidebar, and every keyboard shortcut, grouped by where it works.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/tour-dark.png">

@@ -137,24 +137,6 @@ def test_the_shortcuts_are_listed_by_group(window):
     assert len({(s.keys, s.group) for s in SHORTCUTS}) == len(SHORTCUTS)
 
 
-def test_primeros_pasos_comes_back_from_help(window, services, pesos):
-    services.guide.dismiss()
-    window.show_help()
-    assert not window.help_panel.guide_button.isHidden()
-
-    window.help_panel.guide_button.click()
-
-    assert not services.settings.guide_dismissed()
-    assert window.page(PageId.DASHBOARD).guide_card.isVisible()
-    assert window.help_panel.guide_button.isHidden()
-
-
-def test_primeros_pasos_is_offered_only_when_put_away(window):
-    window.show_help()
-
-    assert window.help_panel.guide_button.isHidden()
-
-
 def test_the_tour_starts_from_help_and_the_help_makes_way(window, pesos):
     window.show_help()
 

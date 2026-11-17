@@ -70,9 +70,8 @@ HELP_TOPICS = [
             "Suma el alquiler, los servicios y las suscripciones en Recurrentes, así Nodus te"
             " avisa antes de que venzan. Cuando tengas un mes de gastos, ponle un límite a las"
             " categorías que quieras cuidar en Presupuestos.",
-            "La lista «Primeros pasos» del Inicio te lleva paso a paso y se tacha sola. Si la"
-            " ocultaste, el botón «Primeros pasos», al pie de la lista de temas, la trae de"
-            " vuelta.",
+            "Para ver dónde está cada cosa, el botón «Ver el recorrido», al pie de la lista"
+            " de temas, recorre la ventana en un minuto.",
         ),
         ("overview", "transactions", "recurring"),
     ),

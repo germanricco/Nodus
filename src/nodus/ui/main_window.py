@@ -90,7 +90,6 @@ class MainWindow(QMainWindow):
         self._stack.setObjectName("PageStack")
         dashboard = DashboardPage(services, event_bus, theme_manager)
         dashboard.navigate_requested.connect(self.show_page)
-        dashboard.new_transaction_requested.connect(self.open_new_transaction)
         accounts = AccountsPage(services, event_bus, theme_manager)
         accounts.navigate_requested.connect(self.show_page)
         accounts.transactions_requested.connect(self.show_transactions)
@@ -183,7 +182,6 @@ class MainWindow(QMainWindow):
         self.help_panel.page_requested.connect(self.show_page)
         self.help_panel.spotlight_changed.connect(self.sidebar.spotlight)
         self.help_panel.tour_requested.connect(self._tour_from_help)
-        self.help_panel.guide_requested.connect(self.show_guide)
         # The panel had the focus; Qt would hand it to the sidebar's first button.
         self.help_panel.closed.connect(self._content.setFocus)
         self.top_bar.notifications_requested.connect(self.open_notifications)
@@ -265,7 +263,6 @@ class MainWindow(QMainWindow):
         """Opens Ayuda on ``topic``, or on the topic of the page shown: the help about
         where the user is, with that page lit up in the sidebar."""
         panel = self.help_panel
-        panel.set_guide_hidden(self._services.settings.guide_dismissed())
         panel.search_input.clear()
         topic = topic or topic_for_page(self.current_page_id)
         if topic is None:
@@ -289,23 +286,17 @@ class MainWindow(QMainWindow):
         self.help_panel.close_panel()
         self.start_tour()
 
-    def show_guide(self) -> None:
-        """Brings Primeros pasos back and shows it on Inicio."""
-        self._services.guide.restore()
-        self.help_panel.set_guide_hidden(False)
-        self.show_page(PageId.DASHBOARD)
-
     def _offer_tour_soon(self) -> None:
         """After the first account, once the form that created it has closed."""
-        if self._services.guide.tour_due():
+        if self._services.tour.tour_due():
             QTimer.singleShot(0, self, self.offer_tour)
 
     def offer_tour(self) -> None:
-        """Offers the guided tour, once: see ``GuideService.tour_due``."""
-        guide = self._services.guide
-        if not guide.tour_due():
+        """Offers the guided tour, once: see ``TourService.tour_due``."""
+        tour = self._services.tour
+        if not tour.tour_due():
             return
-        guide.mark_tour_offered()
+        tour.mark_tour_offered()
         if ask(
             self,
             "Recorrido guiado",

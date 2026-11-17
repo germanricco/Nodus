@@ -37,7 +37,6 @@ class SettingsService:
     BACKUP_REMINDER_KEY = "backup_reminder"
     BACKUP_REMINDER_DISMISSED_KEY = "backup_reminder_dismissed"
     ACCOUNT_CHART_MONTHS_KEY = "account_chart_months"
-    GUIDE_DISMISSED_KEY = "guide_dismissed"
     TOUR_OFFERED_KEY = "tour_offered"
     SEEN_NOTICES_KEY = "seen_notices"
 
@@ -143,13 +142,6 @@ class SettingsService:
 
     def set_backup_reminder(self, enabled: bool) -> None:
         self._set_flag(self.BACKUP_REMINDER_KEY, enabled)
-
-    def guide_dismissed(self) -> bool:
-        """Whether the user put away Primeros pasos on Inicio."""
-        return self._flag(self.GUIDE_DISMISSED_KEY, default=False)
-
-    def set_guide_dismissed(self, dismissed: bool) -> None:
-        self._set_flag(self.GUIDE_DISMISSED_KEY, dismissed)
 
     def tour_offered(self) -> bool:
         """Whether the guided tour was already offered, which happens once."""
