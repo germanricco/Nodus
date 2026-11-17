@@ -1,4 +1,4 @@
-"""Deleting an account, from its row in Cuentas or from its own page."""
+"""Editing, archiving and deleting an account, from its row in Cuentas or its own page."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget
 
 from nodus.models.account import Account
 from nodus.services.container import Services
+from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
 
@@ -46,3 +47,16 @@ def delete_account(
     event_bus.accounts_changed.emit()
     event_bus.transactions_changed.emit()
     return True
+
+
+def edit_account(
+    parent: QWidget, services: Services, event_bus: EventBus, account: Account | None = None
+) -> None:
+    """Opens the account form: a new account, or ``account`` to edit."""
+    AccountDialog(services, event_bus, account, parent=parent.window()).exec()
+
+
+def toggle_account_archived(services: Services, event_bus: EventBus, account: Account) -> None:
+    """Archives ``account``, or brings it back if it was archived."""
+    services.accounts.set_archived(account.id, not account.is_archived)
+    event_bus.accounts_changed.emit()

@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 from nodus.models.account import Account
 from nodus.models.goal import Goal, GoalProgress, GoalState
 from nodus.services.container import Services
-from nodus.ui.actions.goals import delete_goal
+from nodus.ui.actions.goals import delete_goal, toggle_goal_archived
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
@@ -192,8 +192,7 @@ class GoalsPage(Page):
         ).exec()
 
     def toggle_archived(self, goal: Goal) -> None:
-        self._services.goals.set_archived(goal.id, not goal.is_archived)
-        self._event_bus.goals_changed.emit()
+        toggle_goal_archived(self._services, self._event_bus, goal)
 
     def delete_goal(self, goal: Goal) -> None:
         delete_goal(self.window(), self._services, self._event_bus, goal)

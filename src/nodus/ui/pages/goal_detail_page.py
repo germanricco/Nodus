@@ -15,7 +15,7 @@ from nodus.models.period import Month
 from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
 from nodus.services.planning.goal_service import GoalContribution
-from nodus.ui.actions.goals import delete_goal
+from nodus.ui.actions.goals import delete_goal, toggle_goal_archived
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
@@ -188,8 +188,7 @@ class GoalDetailPage(DetailPage):
         ).exec()
 
     def toggle_archived(self) -> None:
-        self._services.goals.set_archived(self.goal.id, not self.goal.is_archived)
-        self._event_bus.goals_changed.emit()
+        toggle_goal_archived(self._services, self._event_bus, self.goal)
 
     def delete(self) -> None:
         if delete_goal(self.window(), self._services, self._event_bus, self.goal):

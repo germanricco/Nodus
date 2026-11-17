@@ -18,9 +18,8 @@ from PySide6.QtWidgets import (
 from nodus.models.period import Month, Period
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
-from nodus.ui.actions.recurring import skip_charge, toggle_seen
+from nodus.ui.actions.recurring import pay_charge, skip_charge, toggle_seen
 from nodus.ui.actions.transactions import delete_transactions, edit_transaction
-from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.base.page import Page
@@ -187,7 +186,7 @@ class DashboardPage(Page):
         return self.period_selector.period().last_month
 
     def open_pay_dialog(self, charge: RecurringCharge) -> None:
-        PayChargeDialog(self._services, self._event_bus, charge, parent=self.window()).exec()
+        pay_charge(self, self._services, self._event_bus, charge)
 
     # Layout
 

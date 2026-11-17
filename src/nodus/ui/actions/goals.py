@@ -1,4 +1,4 @@
-"""Deleting a goal, from its row in Metas or from its own page."""
+"""Archiving and deleting a goal, from its row in Metas or from its own page."""
 
 from __future__ import annotations
 
@@ -19,3 +19,9 @@ def delete_goal(parent: QWidget, services: Services, event_bus: EventBus, goal: 
     services.goals.delete(goal.id)
     event_bus.goals_changed.emit()
     return True
+
+
+def toggle_goal_archived(services: Services, event_bus: EventBus, goal: Goal) -> None:
+    """Archives ``goal``, or brings it back if it was archived."""
+    services.goals.set_archived(goal.id, not goal.is_archived)
+    event_bus.goals_changed.emit()

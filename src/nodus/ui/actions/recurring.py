@@ -1,4 +1,4 @@
-"""What a charge's row offers wherever it shows: «Ya lo vi» and «Omitir»."""
+"""What a charge's row offers wherever it shows: «Ya lo vi» and «Omitir», and paying it."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QWidget
 
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
+from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.tables.charge_row import reminder_day
@@ -40,3 +41,10 @@ def skip_charge(
     services.recurring.skip(charge.id)
     event_bus.recurring_changed.emit()
     offer_undo(widget, services, event_bus.recurring_changed)
+
+
+def pay_charge(
+    parent: QWidget, services: Services, event_bus: EventBus, charge: RecurringCharge
+) -> None:
+    """Opens the form that records a payment of ``charge``."""
+    PayChargeDialog(services, event_bus, charge, parent=parent.window()).exec()

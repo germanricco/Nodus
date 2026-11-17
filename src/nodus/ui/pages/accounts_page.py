@@ -17,8 +17,7 @@ from nodus.models.account_group import AccountGroup
 from nodus.models.money import Money
 from nodus.services.accounts.account_group_service import AccountSection
 from nodus.services.container import Services
-from nodus.ui.actions.accounts import delete_account
-from nodus.ui.dialogs.account_dialog import AccountDialog
+from nodus.ui.actions.accounts import delete_account, edit_account, toggle_account_archived
 from nodus.ui.dialogs.account_group_dialogs import GroupDialog, MoveToGroupDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.goal_dialog import GoalDialog
@@ -261,7 +260,7 @@ class AccountsPage(Page):
             self._sections.addWidget(self._accounts_card("Archivadas", archived, balances))
 
     def open_account_dialog(self, account: Account | None = None) -> None:
-        AccountDialog(self._services, self._event_bus, account, parent=self.window()).exec()
+        edit_account(self, self._services, self._event_bus, account)
 
     def open_group_dialog(self, group: AccountGroup | None = None) -> None:
         GroupDialog(self._services, self._event_bus, group, parent=self.window()).exec()
@@ -430,8 +429,7 @@ class AccountsPage(Page):
         offer_undo(self, self._services, self._event_bus.accounts_changed)
 
     def _toggle_archived(self, account: Account) -> None:
-        self._services.accounts.set_archived(account.id, not account.is_archived)
-        self._event_bus.accounts_changed.emit()
+        toggle_account_archived(self._services, self._event_bus, account)
 
     def delete_account(self, account: Account) -> None:
         delete_account(self.window(), self._services, self._event_bus, account)

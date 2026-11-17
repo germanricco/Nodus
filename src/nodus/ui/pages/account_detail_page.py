@@ -22,10 +22,13 @@ from nodus.models.recurring_charge import RecurringCharge
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
-from nodus.ui.actions.accounts import account_delete_warning, delete_account
-from nodus.ui.actions.recurring import skip_charge, toggle_seen
-from nodus.ui.dialogs.account_dialog import AccountDialog
-from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
+from nodus.ui.actions.accounts import (
+    account_delete_warning,
+    delete_account,
+    edit_account,
+    toggle_account_archived,
+)
+from nodus.ui.actions.recurring import pay_charge, skip_charge, toggle_seen
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
@@ -230,7 +233,7 @@ class AccountDetailPage(DetailPage):
         ]
 
     def edit(self) -> None:
-        AccountDialog(self._services, self._event_bus, self.account, parent=self.window()).exec()
+        edit_account(self, self._services, self._event_bus, self.account)
 
     def update_value(self) -> None:
         ValueAdjustmentDialog(
@@ -238,15 +241,14 @@ class AccountDetailPage(DetailPage):
         ).exec()
 
     def toggle_archived(self) -> None:
-        self._services.accounts.set_archived(self.account.id, not self.account.is_archived)
-        self._event_bus.accounts_changed.emit()
+        toggle_account_archived(self._services, self._event_bus, self.account)
 
     def delete(self) -> None:
         if delete_account(self.window(), self._services, self._event_bus, self.account):
             self.back_requested.emit()
 
     def pay(self, charge: RecurringCharge) -> None:
-        PayChargeDialog(self._services, self._event_bus, charge, parent=self.window()).exec()
+        pay_charge(self, self._services, self._event_bus, charge)
 
     # Building
 
