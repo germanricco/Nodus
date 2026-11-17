@@ -53,11 +53,10 @@ EMPTY_TEXT = (
 
 
 def summary_text(summary: RecurringSummary) -> tuple[str, str]:
-    """The monthly and yearly totals, with dollar charges that lack a rate added apart."""
-    monthly, yearly = summary.monthly.format(), summary.yearly.format()
-    if not summary.unconverted_monthly.is_zero:
-        monthly += f" + {summary.unconverted_monthly.format()}"
-        yearly += f" + {summary.unconverted_yearly.format()}"
+    """The monthly and yearly totals, with charges that lack a rate added apart, one
+    amount per currency."""
+    monthly = " + ".join(m.format() for m in (summary.monthly, *summary.unconverted_monthly))
+    yearly = " + ".join(m.format() for m in (summary.yearly, *summary.unconverted_yearly))
     return monthly, yearly
 
 

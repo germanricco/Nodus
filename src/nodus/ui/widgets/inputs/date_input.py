@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.models.period import FIRST_DAY, LAST_DAY
 from nodus.ui.theme.design import Popup, TextRole, role_font
 
 # The calendar grid: a row of day names over six weeks, seven days wide.
@@ -102,6 +103,7 @@ class DateInput(QDateEdit):
         self.setCalendarPopup(True)
         self.setCalendarWidget(Calendar(self))
         self.setDisplayFormat("dd/MM/yyyy")
+        self.setDateRange(_qdate(FIRST_DAY), _qdate(LAST_DAY))
         self.set_day(date.today())
         self.lineEdit().installEventFilter(self)
 
@@ -142,4 +144,8 @@ class DateInput(QDateEdit):
         return self.date().toPython()
 
     def set_day(self, day: date) -> None:
-        self.setDate(QDate(day.year, day.month, day.day))
+        self.setDate(_qdate(day))
+
+
+def _qdate(day: date) -> QDate:
+    return QDate(day.year, day.month, day.day)

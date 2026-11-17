@@ -17,7 +17,7 @@ from PySide6.QtWidgets import QApplication, QLineEdit
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
-from nodus.models.money import Money
+from nodus.models.money import MAX_CENTS, Money
 from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
@@ -90,8 +90,8 @@ class TestAmountField:
     @pytest.mark.parametrize(
         "text",
         [
-            pytest.param("9" * 17, marks=known("A7: absurd amounts are not refused")),
-            pytest.param("9" * 30, marks=known("A7: absurd amounts are not refused")),
+            "9" * 17,
+            "9" * 30,
             pytest.param("1,234.56", marks=known("task 6: a dot after a comma is guessed")),
             pytest.param("10,005", marks=known("task 6: a third decimal is rounded")),
             pytest.param("12.5.5", marks=known("task 6: dots that do not group thousands")),
@@ -155,26 +155,7 @@ HOSTILE = {
 }
 
 # Each (dialog, text) that fails today, with the finding that explains it.
-KNOWN = {
-    ("goal", "letters"): "A2: an invalid target raises outside the save",
-    ("goal", "sql"): "A2: an invalid target raises outside the save",
-    ("goal", "percent"): "A2: an invalid target raises outside the save",
-    ("goal", "emoji"): "A2: an invalid target raises outside the save",
-    ("goal", "long"): "A2: an invalid target raises outside the save",
-    **{
-        case: "A7: absurd amounts reach SQLite or Decimal unchecked"
-        for case in [
-            ("account", "17 digits"),
-            ("account", "30 digits"),
-            ("goal", "30 digits"),
-            ("pay charge", "17 digits"),
-            ("pay charge", "30 digits"),
-            ("transaction", "30 digits"),
-            ("value", "17 digits"),
-            ("value", "30 digits"),
-        ]
-    },
-}
+KNOWN: dict[tuple[str, str], str] = {}
 
 
 def cases() -> list:
@@ -204,20 +185,20 @@ def test_every_form_takes_any_text(
     services.transactions.list_transactions(TransactionFilter())  # the data is still readable
 
 
-@known("A2: an invalid target raises outside the save")
 def test_goal_preview_with_a_target_that_is_not_a_number(qtbot, services, event_bus, world):
     dialog = GoalDialog(services, event_bus, today=TODAY)
     qtbot.addWidget(dialog)
     dialog.target_input.line_edit.setText("abc")
 
 
-@known("A8: amounts that fit alone overflow SQLite's SUM")
 def test_nodus_opens_with_the_largest_amounts_saved(
     qtbot, services, event_bus, theme_manager, pesos
 ):
     services.settings.set_tour_offered(True)
-    for _ in range(3):  # each fits in SQLite's INTEGER; together they do not
-        services.transactions.create(expense_draft(services, pesos.id, Money(2**62, Currency.ARS)))
+    for _ in range(3):
+        services.transactions.create(
+            expense_draft(services, pesos.id, Money(MAX_CENTS, Currency.ARS))
+        )
     window = MainWindow(services, event_bus, theme_manager)
     qtbot.addWidget(window)
     window.show()

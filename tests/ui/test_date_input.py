@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QDateTimeEdit
 
+from nodus.models.period import FIRST_DAY, LAST_DAY
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.theme.design import Popup
 from nodus.ui.theme.theme import ThemeMode
@@ -74,3 +75,10 @@ def test_a_click_on_the_date_text_lands_on_its_line_edit(qtbot, services, event_
     QTest.mouseClick(field.lineEdit(), Qt.MouseButton.LeftButton)
 
     qtbot.waitUntil(field.calendarWidget().isVisible)
+
+
+def test_the_calendar_keeps_to_the_days_a_date_can_take(qtbot):
+    """Past ``LAST_DAY`` the next charge or the last installment could not be computed."""
+    field = DateInput()
+    qtbot.addWidget(field)
+    assert (field.minimumDate().toPython(), field.maximumDate().toPython()) == (FIRST_DAY, LAST_DAY)

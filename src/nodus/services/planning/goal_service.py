@@ -16,7 +16,13 @@ from nodus.models.money import Money
 from nodus.models.period import Month
 from nodus.services.accounts.account_service import AccountService
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
-from nodus.services.errors import ValidationError, clean_name, require_found
+from nodus.services.errors import (
+    ValidationError,
+    clean_name,
+    require_found,
+    require_in_calendar,
+    require_storable,
+)
 from nodus.services.sorting import name_sort_key
 
 
@@ -276,8 +282,11 @@ class GoalService:
         name = clean_name(draft.name)
         if draft.target.cents <= 0:
             raise ValidationError("El objetivo tiene que ser mayor que cero.", field="target")
+        require_storable(draft.target, "target")
         if draft.target_date is not None and draft.target_date <= today:
             raise ValidationError("Elige una fecha posterior a hoy.", field="target_date")
+        if draft.target_date is not None:
+            require_in_calendar(draft.target_date, "target_date")
         if not draft.shares:
             raise ValidationError("Elige al menos una cuenta.", field="shares")
         ids = [share.account_id for share in draft.shares]

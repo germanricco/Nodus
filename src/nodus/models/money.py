@@ -13,6 +13,10 @@ from decimal import ROUND_HALF_EVEN, Decimal
 from nodus.models.currency import Currency
 
 CENTS_PER_UNIT = 100
+# The largest amount accepted, in units: far above any personal balance, and small enough
+# that SQLite's 64-bit SUM of 900.000 amounts this large still does not overflow.
+MAX_UNITS = 10**11
+MAX_CENTS = MAX_UNITS * CENTS_PER_UNIT
 _CENT = Decimal("0.01")
 _UNIT = Decimal("1")
 
@@ -60,6 +64,11 @@ class Money:
     @property
     def is_negative(self) -> bool:
         return self.cents < 0
+
+    @property
+    def is_storable(self) -> bool:
+        """Whether the amount is within ``MAX_UNITS``, either way."""
+        return abs(self.cents) <= MAX_CENTS
 
     def __add__(self, other: Money) -> Money:
         self._require_same_currency(other)

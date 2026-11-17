@@ -31,6 +31,7 @@ from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.inputs.amount_input import AmountInput
 from nodus.ui.widgets.inputs.combo_box import ComboBox
 from nodus.ui.widgets.inputs.date_input import DateInput
+from nodus.ui.widgets.inputs.input_error import InputError
 from nodus.ui.widgets.money_label import amount_text
 
 PERCENT_WIDTH = 48  # geometry: room for «100»
@@ -276,7 +277,7 @@ class GoalDialog(FormDialog):
         """The target as typed so far; zero while it is not a valid amount."""
         try:
             return self.target_input.money()
-        except ValueError:
+        except InputError:
             return Money.zero(self.currency_input.currentData())
 
     def _target_date(self) -> date | None:

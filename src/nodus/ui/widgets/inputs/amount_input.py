@@ -8,7 +8,8 @@ from decimal import Decimal, InvalidOperation
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
 
 from nodus.models.currency import Currency
-from nodus.models.money import Money
+from nodus.models.money import MAX_UNITS, Money
+from nodus.services.errors import TOO_LARGE_TEXT
 from nodus.ui.widgets.inputs.input_error import InputError
 
 _ALLOWED = re.compile(r"^-?[\d.,]+$")
@@ -70,6 +71,8 @@ class AmountInput(QWidget):
             amount = parse_amount(text) if text.strip() else Decimal(0)
         except ValueError as error:
             raise InputError(str(error), self) from error  # user-text: parse_amount's own
+        if abs(amount) > MAX_UNITS:  # before rounding, which a 30-digit number would break
+            raise InputError(TOO_LARGE_TEXT, self)
         if not self._currency.decimals and amount != amount.to_integral_value():
             raise InputError("Los pesos chilenos no llevan centavos.", self)
         return Money.from_decimal(amount, self._currency)

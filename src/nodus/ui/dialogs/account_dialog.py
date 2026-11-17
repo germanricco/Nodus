@@ -56,6 +56,7 @@ class AccountDialog(FormDialog):
         self.form.addRow("Moneda", self.currency_input)
         self.form.addRow("Saldo inicial", self.balance_input)
         self.bind_field(self.name_input, "name")
+        self.bind_field(self.balance_input, "initial_balance")
         self.group_picker = GroupPicker(self, services, account.group_id if account else None)
 
         if account:

@@ -15,7 +15,7 @@ from nodus.models.money import Money
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.services.classification.category_service import CategoryService
-from nodus.services.errors import ValidationError
+from nodus.services.errors import ValidationError, require_storable
 from nodus.services.reports.dashboard_service import CategoryTotal, DashboardService
 from nodus.services.transactions.transaction_service import TransactionService
 
@@ -89,6 +89,7 @@ class BudgetService:
             raise ValidationError("El límite del presupuesto va en pesos.", field="limit")
         if amount.cents <= 0:
             raise ValidationError("El límite tiene que ser mayor que cero.", field="limit")
+        require_storable(amount, "limit")
         with self._database.transaction():
             self._budgets.set(category_id, month, amount)
 

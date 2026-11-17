@@ -5,9 +5,16 @@ Error messages are in Spanish because the UI shows them to the user as they are.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import TypeVar
 
+from nodus.models.money import Money
+from nodus.models.period import FIRST_DAY, LAST_DAY
+
 T = TypeVar("T")
+
+TOO_LARGE_TEXT = "El monto es demasiado grande."
+OUT_OF_CALENDAR_TEXT = f"La fecha tiene que estar entre {FIRST_DAY.year} y {LAST_DAY.year}."
 
 
 class ValidationError(Exception):
@@ -60,3 +67,16 @@ def clean_name(name: str) -> str:
     if not cleaned:
         raise ValidationError("El nombre no puede estar vacío.", field="name")
     return cleaned
+
+
+def require_storable(amount: Money, field: str | None = None) -> None:
+    """Rejects an amount beyond ``MAX_UNITS``: saved, it would break the balances."""
+    if not amount.is_storable:
+        raise ValidationError(TOO_LARGE_TEXT, field=field)
+
+
+def require_in_calendar(day: date, field: str | None = None) -> None:
+    """Rejects a day outside ``FIRST_DAY``–``LAST_DAY``, from which later dates (the next
+    charge, the last installment) could not be computed."""
+    if not FIRST_DAY <= day <= LAST_DAY:
+        raise ValidationError(OUT_OF_CALENDAR_TEXT, field=field)

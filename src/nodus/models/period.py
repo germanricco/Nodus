@@ -13,6 +13,11 @@ MONTH_NAMES = [
 ]  # fmt: skip
 SHORT_MONTH_NAMES = [name[:3] for name in MONTH_NAMES]
 
+# The days a date can take: room for old records and long plans, while every date
+# computed from one (the next charge, the last installment) stays a valid date.
+FIRST_DAY = date(1900, 1, 1)
+LAST_DAY = date(2100, 12, 31)
+
 
 def format_date(day: date) -> str:
     """Day/month/year, as dates are written in Argentina: "05/11/2026"."""

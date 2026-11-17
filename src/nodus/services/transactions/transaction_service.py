@@ -25,7 +25,12 @@ from nodus.models.period import Month, Period
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction, TransactionType, Transfer
 from nodus.services.app.undo_service import UndoService, changed_since
-from nodus.services.errors import ValidationError, require_found
+from nodus.services.errors import (
+    ValidationError,
+    require_found,
+    require_in_calendar,
+    require_storable,
+)
 
 
 @dataclass(frozen=True)
@@ -451,6 +456,7 @@ class TransactionService:
     ) -> Transaction:
         account = self._active_account(draft.account_id, "account_id")
         self._require_amount_for(draft.amount, account, "amount")
+        require_in_calendar(draft.occurred_on, "occurred_on")
         category = require_found(self._categories.get(draft.category_id), "La categoría no existe.")
         if category.kind is not draft.type:
             raise ValidationError(
@@ -513,6 +519,7 @@ class TransactionService:
         amount_in = self._incoming_amount(draft, source, destination)
         self._require_amount_for(draft.amount_out, source, "amount_out")
         self._require_amount_for(amount_in, destination, "amount_in")
+        require_in_calendar(draft.occurred_on, "occurred_on")
         note = draft.note.strip()
         outgoing_id, incoming_id = leg_ids
         return Transfer(
@@ -559,3 +566,4 @@ class TransactionService:
             )
         if amount.cents <= 0:
             raise ValidationError("El monto debe ser mayor que cero.", field=field)
+        require_storable(amount, field)

@@ -6,7 +6,7 @@ import dataclasses
 import sqlite3
 from datetime import date
 
-from nodus.database.repositories.base import Repository
+from nodus.database.repositories.base import LIKE, Repository, contains
 from nodus.models.currency import Currency
 from nodus.models.installment_plan import Installment
 from nodus.models.money import Money
@@ -159,14 +159,14 @@ class TransactionRepository(Repository):
             name_text = normalize_name(criteria.text)
             if name_text:
                 conditions.append(
-                    "(t.note LIKE ? OR p.normalized_name LIKE ? OR t.id IN ("
+                    f"(t.note {LIKE} OR p.normalized_name {LIKE} OR t.id IN ("
                     "SELECT tt.transaction_id FROM transaction_tags tt"
-                    " JOIN tags g ON g.id = tt.tag_id WHERE g.normalized_name LIKE ?))"
+                    f" JOIN tags g ON g.id = tt.tag_id WHERE g.normalized_name {LIKE}))"
                 )
-                params.extend([f"%{criteria.text}%"] + [f"%{name_text}%"] * 2)
+                params.extend([contains(criteria.text)] + [contains(name_text)] * 2)
             else:
-                conditions.append("t.note LIKE ?")
-                params.append(f"%{criteria.text}%")
+                conditions.append(f"t.note {LIKE}")
+                params.append(contains(criteria.text))
         return conditions, params
 
     @staticmethod

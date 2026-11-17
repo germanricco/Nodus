@@ -118,12 +118,12 @@ def test_summary_converts_dollar_charges_at_the_latest_rate(services, pesos, dol
 
     without_rate = services.recurring.summary(TODAY)
     assert without_rate.monthly == ars("12000")
-    assert without_rate.unconverted_monthly == usd("10")
+    assert without_rate.unconverted_monthly == (usd("10"),)
 
     services.exchange_rates.set_rate(date(2026, 11, 1), Decimal("1000"))
     summary = services.recurring.summary(TODAY)
     assert summary.monthly == ars("22000")
-    assert summary.unconverted_monthly.is_zero
+    assert summary.unconverted_monthly == ()
     assert summary.yearly == ars("264000")
     assert summary.active == 2
 
@@ -172,7 +172,7 @@ class TestDollarChargesPaidInPesos:
 
     def test_first_estimate_uses_the_saved_rate(self, services, subscription):
         assert services.recurring.estimated_payment(subscription, TODAY) is None
-        assert services.recurring.summary(TODAY).unconverted_monthly == usd("100")
+        assert services.recurring.summary(TODAY).unconverted_monthly == (usd("100"),)
 
         services.exchange_rates.set_rate(date(2026, 11, 1), Decimal("1500"))
 

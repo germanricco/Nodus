@@ -21,7 +21,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.goal import GoalShare
 from nodus.models.money import Money
-from nodus.models.period import Month
+from nodus.models.period import FIRST_DAY, LAST_DAY, Month
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
@@ -103,7 +103,6 @@ def test_any_search_text_returns_a_list(services, pesos, text):
     assert services.transactions.list_transactions(TransactionFilter(text=text)) == []
 
 
-@pytest.mark.xfail(strict=True, reason="A9: % and _ are LIKE wildcards in the search")
 @pytest.mark.parametrize("text,expected", [("%", ["descuento 50%"]), ("_", ["a_b"])])
 def test_search_treats_percent_and_underscore_as_text(services, pesos, text, expected):
     for note in ["descuento 50%", "pago 500", "a_b", "axb"]:
@@ -118,7 +117,6 @@ def test_amounts_that_are_not_positive_are_refused(services, pesos, cents):
         services.transactions.create(expense_draft(services, pesos.id, Money(cents, Currency.ARS)))
 
 
-@pytest.mark.xfail(strict=True, reason="A7: an absurd amount reaches SQLite and overflows")
 @pytest.mark.parametrize("save", ["expense", "budget", "initial balance"])
 def test_absurd_amounts_are_refused_with_a_message(services, pesos, save):
     absurd = Money(ABSURD_CENTS, Currency.ARS)
@@ -132,7 +130,6 @@ def test_absurd_amounts_are_refused_with_a_message(services, pesos, save):
             services.accounts.create("Enorme", AccountType.CASH, Currency.ARS, absurd)
 
 
-@pytest.mark.xfail(strict=True, reason="A8: amounts that fit alone overflow SQLite's SUM")
 def test_the_largest_amounts_accepted_still_add_up(services, pesos):
     largest = Money(2**63 - 1, Currency.ARS)
     for _ in range(2):
@@ -141,15 +138,14 @@ def test_the_largest_amounts_accepted_still_add_up(services, pesos):
     services.accounts.balances()
 
 
-@pytest.mark.xfail(strict=True, reason="A1: an unconverted EUR charge is added to US$")
 def test_recurring_summary_with_a_charge_that_cannot_be_converted(services, euros):
-    services.recurring.create(charge_draft(services, euros.id, eur("9,99")))
+    services.recurring.create(charge_draft(services, euros.id, eur("9.99")))
     summary = services.recurring.summary(TODAY)
     assert summary.monthly == ars("0")
 
 
 @pytest.mark.parametrize("frequency", list(Frequency))
-@pytest.mark.parametrize("due", [date(1752, 9, 14), date(2100, 1, 31)])
+@pytest.mark.parametrize("due", [FIRST_DAY, date(2100, 1, 31)])
 def test_skipping_a_charge_at_reasonable_date_edges(services, pesos, frequency, due):
     charge = services.recurring.create(
         charge_draft(services, pesos.id, ars("100"), due=due, frequency=frequency)
@@ -158,14 +154,21 @@ def test_skipping_a_charge_at_reasonable_date_edges(services, pesos, frequency, 
     assert services.recurring.get(charge.id).next_due_on > due
 
 
-@pytest.mark.xfail(strict=True, reason="A10: the calendar allows 9999 and the next date fails")
 @pytest.mark.parametrize("frequency", [Frequency.WEEKLY, Frequency.MONTHLY, Frequency.ANNUAL])
 def test_skipping_a_charge_due_at_the_calendars_last_day(services, pesos, frequency):
     charge = services.recurring.create(
-        charge_draft(services, pesos.id, ars("100"), due=date(9999, 12, 31), frequency=frequency)
+        charge_draft(services, pesos.id, ars("100"), due=LAST_DAY, frequency=frequency)
     )
-    with suppress(ValidationError):  # a message is fine; an OverflowError is not
-        services.recurring.skip(charge.id)
+    services.recurring.skip(charge.id)
+    assert services.recurring.get(charge.id).next_due_on > LAST_DAY
+
+
+@pytest.mark.parametrize("day", [date(9999, 12, 31), date(1, 1, 1)], ids=["9999", "year 1"])
+def test_dates_outside_the_calendar_are_refused_with_a_message(services, pesos, day):
+    with pytest.raises(ValidationError):
+        services.recurring.create(charge_draft(services, pesos.id, ars("100"), due=day))
+    with pytest.raises(ValidationError):
+        services.transactions.create(expense_draft(services, pesos.id, ars("10"), on=day))
 
 
 def write(folder, name: str, content: bytes):

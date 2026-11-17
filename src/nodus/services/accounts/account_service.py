@@ -13,7 +13,13 @@ from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.period import Period
 from nodus.models.value_adjustment import ValueAdjustment
-from nodus.services.errors import ValidationError, clean_name, require_found
+from nodus.services.errors import (
+    ValidationError,
+    clean_name,
+    require_found,
+    require_in_calendar,
+    require_storable,
+)
 from nodus.services.sorting import name_sort_key
 
 
@@ -31,6 +37,7 @@ class AccountService:
     def create(
         self, name: str, account_type: AccountType, currency: Currency, initial_balance: Money
     ) -> Account:
+        require_storable(initial_balance, "initial_balance")
         account = Account(None, clean_name(name), account_type, currency, initial_balance)
         with self._database.transaction():
             position = self._accounts.next_position()
@@ -42,6 +49,7 @@ class AccountService:
         """Edits an account. The currency is fixed at creation: changing it would silently
         reinterpret every amount already recorded in the account."""
         existing = self.get(account_id)
+        require_storable(initial_balance, "initial_balance")
         if initial_balance.currency is not existing.currency:
             raise ValidationError("No se puede cambiar la moneda de una cuenta.")
         updated = dataclasses.replace(
@@ -132,6 +140,8 @@ class AccountService:
             raise ValidationError(
                 f"El valor va en la moneda de la cuenta ({account.currency.value}).", field="value"
             )
+        require_storable(value, "value")
+        require_in_calendar(day, "day")
         difference = value - self.balance(account.id, day)
         if difference.is_zero:
             return None

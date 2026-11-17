@@ -45,12 +45,13 @@ class RecurringChargeDraft:
 class RecurringSummary:
     """What the active charges cost together, in pesos.
 
-    Dollar charges are converted at the latest rate; without one they are added up apart
-    in ``unconverted_monthly`` instead of being left out silently.
+    Charges in another currency are converted at the latest rate; without one they are
+    added up apart, one total per currency, in ``unconverted_monthly`` instead of being
+    left out silently.
     """
 
     monthly: Money
-    unconverted_monthly: Money
+    unconverted_monthly: tuple[Money, ...]
     active: int
 
     @property
@@ -58,8 +59,8 @@ class RecurringSummary:
         return _times_twelve(self.monthly)
 
     @property
-    def unconverted_yearly(self) -> Money:
-        return _times_twelve(self.unconverted_monthly)
+    def unconverted_yearly(self) -> tuple[Money, ...]:
+        return tuple(_times_twelve(money) for money in self.unconverted_monthly)
 
 
 def _times_twelve(money: Money) -> Money:
@@ -216,16 +217,17 @@ class RecurringChargeService:
 
     def summary(self, today: date) -> RecurringSummary:
         monthly = Money.zero(self.CURRENCY)
-        unconverted = Money.zero(Currency.USD)
+        unconverted = {currency: Money.zero(currency) for currency in Currency}
         active = [c for c in self._charges.list() if c.is_active]
         for charge in active:
             amount = charge.monthly_amount(self.estimated_payment(charge, today))
             converted = self._exchange_rates.convert(amount, self.CURRENCY, today)
             if converted is None:
-                unconverted += amount
+                unconverted[amount.currency] += amount
             else:
                 monthly += converted
-        return RecurringSummary(monthly, unconverted, len(active))
+        apart = tuple(money for money in unconverted.values() if not money.is_zero)
+        return RecurringSummary(monthly, apart, len(active))
 
     def upcoming(self, today: date, days: int = UPCOMING_DAYS) -> list[RecurringCharge]:
         """Active charges that are overdue or due within ``days``, the oldest first."""

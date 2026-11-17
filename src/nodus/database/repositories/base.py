@@ -8,6 +8,16 @@ from typing import Any
 
 from nodus.database.database import Database
 
+# ``LIKE`` with a backslash as escape character, for ``contains`` patterns.
+LIKE = "LIKE ? ESCAPE '\\'"
+
+
+def contains(text: str) -> str:
+    """The ``LIKE`` pattern that finds ``text`` anywhere, read literally: without
+    escaping, a «%» typed in the search would match everything and «_» any character."""
+    escaped = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escaped}%"
+
 
 class Repository:
     """Base class for the objects that translate between table rows and domain models.

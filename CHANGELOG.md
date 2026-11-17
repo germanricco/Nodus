@@ -2,6 +2,14 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.9.0
+
+- Arreglo: un pago recurrente en euros o pesos chilenos sin cotización hacía fallar la página Recurrentes. Ahora su total se suma aparte, uno por moneda, como ya pasaba con los dólares.
+- Arreglo: escribir letras en el «Objetivo» de una meta nueva podía cerrar el formulario con un error. Ahora el resumen espera a que haya un monto, y al guardar te dice qué corregir.
+- Arreglo: un monto absurdo, de 17 cifras o más, hacía fallar el guardado, y varios así podían impedir que Nodus abriera. Ahora cualquier campo de monto te avisa «El monto es demasiado grande.» antes de guardar.
+- Arreglo: buscar «%» o «_» en Transacciones encontraba casi todo, porque se leían como comodines. Ahora se buscan tal cual, así que «50%» encuentra «descuento 50%» y no «pago 500».
+- Arreglo: el calendario llegaba hasta el año 9999, y omitir o pagar un pago con una fecha así fallaba. Ahora las fechas van de 1900 a 2100.
+
 ## 1.8.0 — 2026-11-15
 
 - Lo que haces se confirma con un aviso breve abajo a la derecha, que se va solo: «Copia guardada.», «Exportación lista: 120 transacciones.», «Cotización actualizada: US$ 1 = $ 1.215,50». Ya no queda una ventana que cerrar después de restaurar o guardar una copia, y la cotización que Nodus trae sola al abrir también se anuncia.
