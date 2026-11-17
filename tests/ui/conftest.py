@@ -1,6 +1,7 @@
 """Fixtures for interface tests."""
 
 import pytest
+from factories import light_theme
 from PySide6.QtWidgets import QApplication
 
 from nodus.ui.dialogs import form_dialog
@@ -32,7 +33,13 @@ def event_bus() -> EventBus:
 
 @pytest.fixture
 def theme_manager(qapp: QApplication) -> ThemeManager:
-    return ThemeManager(qapp, ThemeMode.LIGHT)
+    return light_theme()
+
+
+@pytest.fixture(params=[ThemeMode.LIGHT, ThemeMode.DARK], ids=["light", "dark"])
+def theme(request, qapp: QApplication) -> ThemeManager:
+    """Each theme in turn, for what has to look right in both."""
+    return ThemeManager(qapp, request.param)
 
 
 @pytest.fixture

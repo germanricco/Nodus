@@ -1,10 +1,9 @@
 from datetime import date
 
 import pytest
+from factories import TODAY
 
 from nodus.models.period import Month, Period, QuickPeriod
-
-TODAY = date(2026, 11, 6)
 
 
 def test_month_shifts_across_years():

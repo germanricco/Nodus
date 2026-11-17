@@ -1,9 +1,15 @@
 """Linking refunds from the transaction dialog and seeing them in the transactions list."""
 
-from datetime import date
-
 import pytest
-from factories import ars, category_id, expense_draft, income_draft, light_theme
+from factories import (
+    TODAY,
+    ars,
+    category_id,
+    expense_draft,
+    income_draft,
+    light_theme,
+    transaction_dialog,
+)
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
@@ -15,12 +21,11 @@ from nodus.ui.actions import transactions as transaction_actions
 from nodus.ui.dialogs.form_dialog import FIELD_ERROR
 from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog
-from nodus.ui.dialogs.transaction_dialog import EXPENSE_MODE, INCOME_MODE, TransactionDialog
+from nodus.ui.dialogs.transaction_dialog import EXPENSE_MODE, INCOME_MODE
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.widgets.tables.transaction_table import DESCRIPTION
 
 INCOME = TransactionType.INCOME
-TODAY = date.today()
 
 
 @pytest.fixture
@@ -40,12 +45,6 @@ def refund(services, pesos, expense, amount="400"):
     )  # fmt: skip
 
 
-def make_dialog(qtbot, services, event_bus, transaction=None) -> TransactionDialog:
-    dialog = TransactionDialog(services, event_bus, light_theme(), transaction)
-    qtbot.addWidget(dialog)
-    return dialog
-
-
 def choose_in_picker(monkeypatch, expense):
     """Makes the picker return ``expense`` as if the user chose it."""
 
@@ -63,7 +62,7 @@ def pick_category(dialog, category: int) -> None:
 
 
 def test_refund_row_only_for_a_refund(qtbot, services, event_bus, pesos):
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
 
     assert not dialog.form.isRowVisible(dialog.refund_input)
     dialog.mode_input.set_index(INCOME_MODE)
@@ -76,7 +75,7 @@ def test_refund_row_only_for_a_refund(qtbot, services, event_bus, pesos):
 
 def test_linking_a_refund_from_the_dialog(monkeypatch, qtbot, services, event_bus, pesos, shoes):
     choose_in_picker(monkeypatch, shoes)
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
     dialog.mode_input.set_index(INCOME_MODE)
     dialog.amount_input.line_edit.setText("400")
     pick_category(dialog, category_id(services, "Reembolsos", INCOME))
@@ -92,7 +91,7 @@ def test_linking_a_refund_from_the_dialog(monkeypatch, qtbot, services, event_bu
 def test_leaving_refunds_drops_the_link(monkeypatch, qtbot, services, event_bus, pesos, shoes):
     """A link the user can no longer see is never saved."""
     choose_in_picker(monkeypatch, shoes)
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
     dialog.mode_input.set_index(INCOME_MODE)
     dialog.amount_input.line_edit.setText("400")
     pick_category(dialog, category_id(services, "Reembolsos", INCOME))
@@ -107,7 +106,7 @@ def test_leaving_refunds_drops_the_link(monkeypatch, qtbot, services, event_bus,
 
 def test_editing_keeps_or_removes_the_link(qtbot, services, event_bus, pesos, shoes):
     devolucion = refund(services, pesos, shoes)
-    dialog = make_dialog(qtbot, services, event_bus, devolucion)
+    dialog = transaction_dialog(qtbot, services, event_bus, devolucion)
 
     assert dialog.refund_input.expense_id() == shoes.id
     assert "queda $ 1.000,00" in dialog.refund_input.summary_label.text()  # its own 400 aside
@@ -119,7 +118,7 @@ def test_editing_keeps_or_removes_the_link(qtbot, services, event_bus, pesos, sh
 
 def test_edited_expense_shows_what_was_refunded(qtbot, services, event_bus, pesos, shoes):
     refund(services, pesos, shoes)
-    dialog = make_dialog(qtbot, services, event_bus, shoes)
+    dialog = transaction_dialog(qtbot, services, event_bus, shoes)
 
     assert dialog.mode_input.index() == EXPENSE_MODE
     assert dialog.refunded_hint.text() == "Reembolsado $ 400,00 de $ 1.000,00"
@@ -218,7 +217,7 @@ class TestRefundWithExtra:
         refund(services, pesos, shoes)
         choose_in_picker(monkeypatch, shoes)
         monkeypatch.setattr(RefundExtraDialog, "exec", answer)
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.mode_input.set_index(INCOME_MODE)
         dialog.amount_input.line_edit.setText("1000")
         pick_category(dialog, category_id(services, "Reembolsos", INCOME))

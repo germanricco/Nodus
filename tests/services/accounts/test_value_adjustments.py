@@ -3,20 +3,11 @@ from datetime import timedelta
 import pytest
 from factories import TODAY, ars, income_draft, usd
 
-from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.period import Month, Period
 from nodus.services.errors import ValidationError
 
 NOVEMBER = Month.of(TODAY)
-
-
-@pytest.fixture
-def investment(services):
-    """An investment account in pesos that started with $ 1.000.000."""
-    return services.accounts.create(
-        "MP Inversiones", AccountType.INVESTMENT, Currency.ARS, ars("1000000")
-    )
 
 
 def test_adjustment_brings_the_balance_to_the_value_given(services, investment):

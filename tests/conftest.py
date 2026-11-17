@@ -2,6 +2,7 @@
 
 import os
 import sys
+from datetime import date
 
 import pytest
 
@@ -10,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 if sys.platform == "win32":
     os.environ.setdefault("QT_QPA_FONTDIR", os.path.join(os.environ["WINDIR"], "Fonts"))
 
-from factories import ars, eur, services_for, usd  # noqa: E402
+from factories import ars, data_since, eur, services_for, usd  # noqa: E402
 from qt_cleanup import flush_deleted  # noqa: E402
 
 from nodus.config.paths import AppPaths
@@ -76,3 +77,19 @@ def euros(services) -> Account:
     """A euro account starting with € 0. Tests give the euro no rate, the one case a
     movement cannot be converted: a day before the first rate takes that first one."""
     return services.accounts.create("Viaje", AccountType.CASH, Currency.EUR, eur("0"))
+
+
+@pytest.fixture
+def savings(services, database) -> Account:
+    """A dollar savings account with US$ 500, with data since January."""
+    account = services.accounts.create("Ahorro", AccountType.SAVINGS, Currency.USD, usd("500"))
+    data_since(database, date(2026, 1, 10))
+    return account
+
+
+@pytest.fixture
+def investment(services) -> Account:
+    """An investment account in pesos that started with $ 1.000.000."""
+    return services.accounts.create(
+        "MP Inversiones", AccountType.INVESTMENT, Currency.ARS, ars("1000000")
+    )

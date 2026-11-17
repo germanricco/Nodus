@@ -4,7 +4,7 @@ The spacing comes from ``Popup`` (design.py) through the stylesheet, so these te
 the real popups and measure them, and change ``Popup.PADDING`` to see every list follow.
 """
 
-import pytest
+from factories import light_theme, transaction_dialog
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -15,28 +15,13 @@ from PySide6.QtWidgets import (
 
 from nodus.models.payee import Payee
 from nodus.models.transaction import TransactionType
-from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.navigation import PageId
 from nodus.ui.theme import design
 from nodus.ui.theme.design import Popup
-from nodus.ui.theme.theme import ThemeMode
-from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.inputs.selectors import PayeeComboBox
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, build_menu
 
 BORDER = 1
-
-
-@pytest.fixture(params=[ThemeMode.LIGHT, ThemeMode.DARK], ids=["light", "dark"])
-def theme(request, qapp) -> ThemeManager:
-    return ThemeManager(qapp, request.param)
-
-
-def make_dialog(qtbot, services, event_bus, theme) -> TransactionDialog:
-    dialog = TransactionDialog(services, event_bus, theme)
-    qtbot.addWidget(dialog)
-    dialog.show()
-    return dialog
 
 
 def open_list(qtbot, combo: QComboBox) -> QAbstractItemView:
@@ -83,7 +68,7 @@ def assert_options_padded(view: QAbstractItemView) -> None:
 def test_installments_list_leaves_room_after_its_last_option(
     qtbot, services, event_bus, pesos, theme
 ):
-    dialog = make_dialog(qtbot, services, event_bus, theme)
+    dialog = transaction_dialog(qtbot, services, event_bus, theme=theme, show=True)
 
     view = open_list(qtbot, dialog.installment_fields.count_input)
 
@@ -94,7 +79,7 @@ def test_installments_list_leaves_room_after_its_last_option(
 def test_installments_separator_is_a_thin_line_not_an_empty_option(
     qtbot, services, event_bus, pesos, theme
 ):
-    dialog = make_dialog(qtbot, services, event_bus, theme)
+    dialog = transaction_dialog(qtbot, services, event_bus, theme=theme, show=True)
     combo = dialog.installment_fields.count_input
     view = open_list(qtbot, combo)
 
@@ -105,7 +90,7 @@ def test_installments_separator_is_a_thin_line_not_an_empty_option(
 
 
 def test_a_long_category_list_scrolls_to_a_spaced_end(qtbot, services, event_bus, pesos, theme):
-    dialog = make_dialog(qtbot, services, event_bus, theme)
+    dialog = transaction_dialog(qtbot, services, event_bus, theme=theme, show=True)
     combo = dialog.category_input
     combo.setMaxVisibleItems(4)  # shorter than the list, so it scrolls
 
@@ -145,7 +130,7 @@ def test_transactions_filter_list_is_spaced(qtbot, window):
 def test_payee_suggestions_are_spaced(qtbot, services, event_bus, pesos, theme):
     for name in ["Coto", "Carrefour", "Cine"]:
         services.payees.create(name)
-    dialog = make_dialog(qtbot, services, event_bus, theme)
+    dialog = transaction_dialog(qtbot, services, event_bus, theme=theme, show=True)
 
     qtbot.keyClicks(dialog.payee_input.line_edit, "c")
     popup = dialog.payee_input.names.completer.popup()
@@ -160,7 +145,7 @@ def test_suggestions_that_fit_need_no_scroll_bar(qtbot, services, event_bus, pes
     for it, or a list of six would scroll."""
     for number in range(6):
         services.payees.create(f"Comercio {number}")
-    dialog = make_dialog(qtbot, services, event_bus, theme)
+    dialog = transaction_dialog(qtbot, services, event_bus, theme=theme, show=True)
 
     qtbot.keyClicks(dialog.payee_input.line_edit, "comercio")
     popup = dialog.payee_input.names.completer.popup()
@@ -195,8 +180,8 @@ def test_one_value_spaces_every_list(qtbot, monkeypatch, services, event_bus, pe
     """Changing Popup.PADDING alone moves the edge of every list: it is the one value."""
     wider = Popup.PADDING + 8
     monkeypatch.setattr(design.Popup, "PADDING", wider)
-    theme = ThemeManager(QApplication.instance(), ThemeMode.LIGHT)
-    dialog = make_dialog(qtbot, services, event_bus, theme)
+    theme = light_theme()
+    dialog = transaction_dialog(qtbot, services, event_bus, theme=theme, show=True)
 
     for combo in (dialog.installment_fields.count_input, dialog.category_input):
         view = open_list(qtbot, combo)

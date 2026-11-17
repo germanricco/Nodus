@@ -6,6 +6,7 @@ from factories import ars
 
 from nodus.models.recurring_charge import DueStatus, Frequency, RecurringCharge, next_due
 
+# Not factories.TODAY: the charges below fall due on the 5th, a day before this one.
 TODAY = date(2026, 11, 6)
 
 

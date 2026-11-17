@@ -22,7 +22,6 @@ from nodus.ui.navigation import PageId
 from nodus.ui.pages.settings_page import THEME_MODES
 from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.theme.theme import ThemeMode
-from nodus.ui.theme.theme_manager import ThemeManager
 
 
 def fill_and_save(qtbot, dialog) -> None:
@@ -58,7 +57,7 @@ def test_first_month_with_nodus(qtbot, qapp, tmp_path):
     database = Database.open(tmp_path / "nodus.db")
     services, event_bus = services_for(database), EventBus()
     services.settings.set_tour_offered(True)  # its offer is a question of its own test
-    theme_manager = ThemeManager(qapp, ThemeMode.LIGHT)
+    theme_manager = light_theme()
     window = MainWindow(services, event_bus, theme_manager)
     qtbot.addWidget(window)
 

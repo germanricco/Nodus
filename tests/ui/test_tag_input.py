@@ -1,10 +1,10 @@
 """The tags field of the transaction dialog."""
 
-from factories import light_theme
+from factories import transaction_dialog
 from PySide6.QtCore import Qt
 
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog
+from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE
 from nodus.ui.widgets.inputs.tag_input import TagInput, new_names_hint
 
 
@@ -72,14 +72,8 @@ def test_new_names_hint():
     assert new_names_hint(["A", "B", "C"]) == "Se crearán «A», «B» y «C»"
 
 
-def make_dialog(qtbot, services, event_bus, transaction=None) -> TransactionDialog:
-    dialog = TransactionDialog(services, event_bus, light_theme(), transaction)
-    qtbot.addWidget(dialog)
-    return dialog
-
-
 def test_dialog_saves_and_loads_tags(qtbot, services, event_bus, pesos):
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
     dialog.amount_input.line_edit.setText("100")
     dialog.category_input.setCurrentIndex(0)
     dialog.tag_input.add("Viaje")
@@ -89,12 +83,12 @@ def test_dialog_saves_and_loads_tags(qtbot, services, event_bus, pesos):
         qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
 
     (saved,) = services.transactions.list_transactions(TransactionFilter())
-    edit = make_dialog(qtbot, services, event_bus, saved)
+    edit = transaction_dialog(qtbot, services, event_bus, saved)
     assert edit.tag_input.names() == ("Trabajo", "Viaje")
 
 
 def test_enter_in_the_tags_box_does_not_save(qtbot, services, event_bus, pesos):
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
     dialog.show()
     dialog.amount_input.line_edit.setText("100")
     dialog.tag_input.line_edit.setText("Viaje")
@@ -107,7 +101,7 @@ def test_enter_in_the_tags_box_does_not_save(qtbot, services, event_bus, pesos):
 
 
 def test_tags_row_is_hidden_for_transfers(qtbot, services, event_bus, pesos):
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
 
     dialog.mode_input.set_index(TRANSFER_MODE)
 

@@ -7,7 +7,7 @@ switch the amount back and forth, change the kind of movement, double-click a ro
 from datetime import date
 
 import pytest
-from factories import ars, category_id, expense_draft, light_theme
+from factories import ars, category_id, expense_draft, light_theme, transaction_dialog
 from menus import double_click_row, main_action, run_action, texts
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget
@@ -34,13 +34,8 @@ from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.text.formatting import format_date
 from nodus.ui.widgets.tables.transaction_table import AMOUNT, DATE, DESCRIPTION
 
+# Not factories.TODAY: the form starts on the real day, and the installments count from it.
 TODAY = date.today()
-
-
-def make_dialog(qtbot, services, event_bus, transaction=None) -> TransactionDialog:
-    dialog = TransactionDialog(services, event_bus, light_theme(), transaction)
-    qtbot.addWidget(dialog)
-    return dialog
 
 
 def save(qtbot, dialog) -> None:
@@ -88,7 +83,7 @@ def first_installment(services, plan):
 
 class TestDialog:
     def test_the_row_is_there_only_for_an_expense(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         fields = dialog.installment_fields
 
         assert dialog.form.isRowVisible(fields)
@@ -99,7 +94,7 @@ class TestDialog:
         assert dialog.form.isRowVisible(fields)
 
     def test_how_it_is_paid_comes_before_how_much(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         row = dialog.form.getWidgetPosition
 
         assert row(dialog.account_input)[0] < row(dialog.installment_fields)[0]
@@ -107,7 +102,7 @@ class TestDialog:
         assert dialog.installments_hint.parent() is dialog.amount_row  # right under it
 
     def test_a_single_payment_reads_as_a_plain_expense(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.amount_input.line_edit.setText("75.000")
         fields = dialog.installment_fields
 
@@ -119,7 +114,7 @@ class TestDialog:
         assert label_of(dialog, dialog.date_input) == "Fecha"
 
     def test_the_list_is_short_and_plain(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.amount_input.line_edit.setText("75.000")
         combo = dialog.installment_fields.count_input
 
@@ -137,7 +132,7 @@ class TestDialog:
     def test_the_hint_under_the_amount_says_what_each_is_and_when_the_last_comes(
         self, qtbot, services, event_bus, pesos
     ):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.date_input.set_day(date(2026, 11, 10))
         fill(dialog, "75.000", 6)
         fields = dialog.installment_fields
@@ -154,7 +149,7 @@ class TestDialog:
     def test_an_uneven_total_says_the_first_installment_takes_the_cents(
         self, qtbot, services, event_bus, pesos
     ):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.date_input.set_day(date(2026, 1, 31))
         fill(dialog, "100", 3)
 
@@ -163,14 +158,14 @@ class TestDialog:
         )
 
     def test_no_hint_while_the_amount_cannot_be_split(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         fill(dialog, "0,05", 6)
         assert not hint_shown(dialog)
         dialog.amount_input.line_edit.setText("")
         assert not hint_shown(dialog)
 
     def test_no_hint_in_another_kind_of_movement(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         fill(dialog, "75.000", 6)
 
         dialog.mode_input.set_index(INCOME_MODE)
@@ -182,7 +177,7 @@ class TestDialog:
     def test_switching_total_and_per_installment_never_rewrites_the_amount(
         self, qtbot, services, event_bus, pesos
     ):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         fill(dialog, "100", 3)
         fields = dialog.installment_fields
 
@@ -195,7 +190,7 @@ class TestDialog:
         assert sum((t.amount for t in all_transactions(services)), ars("0")) == ars("100")
 
     def test_a_click_anywhere_on_the_list_opens_it(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.show()
         qtbot.waitExposed(dialog)
         combo = dialog.installment_fields.count_input
@@ -206,14 +201,14 @@ class TestDialog:
         combo.hidePopup()
 
     def test_typing_a_number_picks_it(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
 
         qtbot.keyClicks(dialog.installment_fields.count_input, "12")
 
         assert dialog.installment_fields.count == 12
 
     def test_another_count_is_typed_beside_the_list(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.amount_input.line_edit.setText("75.000")
         fields = dialog.installment_fields
         combo = fields.count_input
@@ -234,7 +229,7 @@ class TestDialog:
     def test_another_count_out_of_range_is_not_saved(
         self, qtbot, services, event_bus, pesos, typed
     ):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.amount_input.line_edit.setText("75.000")
         dialog.category_input.setCurrentIndex(0)
         fields = dialog.installment_fields
@@ -251,7 +246,7 @@ class TestDialog:
     ):
         draft = expense_draft(services, pesos.id, ars("40000"), TODAY, note="Auto")
         plan = services.installments.create(draft, InstallmentPlan(None, 40, ars("40000"), TODAY))
-        dialog = make_dialog(qtbot, services, event_bus, first_installment(services, plan))
+        dialog = transaction_dialog(qtbot, services, event_bus, first_installment(services, plan))
         fields = dialog.installment_fields
 
         assert fields.count_input.currentText() == "Otra cantidad…"
@@ -260,7 +255,7 @@ class TestDialog:
         assert len(all_transactions(services)) == 40
 
     def test_the_dialog_keeps_its_width(self, qtbot, services, event_bus, pesos, dollars):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.amount_input.line_edit.setText("75.000")
         dialog.show()
         qtbot.waitExposed(dialog)
@@ -277,7 +272,7 @@ class TestDialog:
             assert dialog.width() == width
 
     def test_saves_six_installments_the_first_today(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         fill(dialog, "75.000", 6)
 
         with qtbot.waitSignal(event_bus.transactions_changed):
@@ -291,7 +286,7 @@ class TestDialog:
         assert services.accounts.balance(pesos.id) == ars("87500")
 
     def test_per_installment_saves_that_amount_each_time(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         fill(dialog, "13.000", 6)
         dialog.installment_fields.amount_mode.set_index(PER_INSTALLMENT)
 
@@ -300,7 +295,7 @@ class TestDialog:
         assert {t.amount for t in all_transactions(services)} == {ars("13000")}
 
     def test_one_installment_creates_no_plan(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         fill(dialog, "75.000", 6)
         dialog.installment_fields.set_count(1)
 
@@ -315,7 +310,7 @@ class TestDialog:
     def test_another_kind_ignores_the_installments_left_typed(
         self, qtbot, services, event_bus, pesos, dollars, mode
     ):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         fill(dialog, "75.000", 6)
         dialog.account_input.select(pesos.id)  # two accounts, none used yet
         dialog.mode_input.set_index(mode)
@@ -334,7 +329,7 @@ class TestDialog:
         assert len(saved) == (2 if mode == TRANSFER_MODE else 1)
 
     def test_too_small_an_amount_keeps_the_dialog_open(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         fill(dialog, "0,05", 6)
 
         save(qtbot, dialog)
@@ -350,7 +345,7 @@ class TestDialog:
         )
         fourth = next(t for t in found if t.installment.number == 4)
 
-        dialog = make_dialog(qtbot, services, event_bus, fourth)
+        dialog = transaction_dialog(qtbot, services, event_bus, fourth)
 
         assert dialog.amount_input.line_edit.text() == "75.000,00"
         assert dialog.installment_fields.count == 6
@@ -361,7 +356,9 @@ class TestDialog:
     def test_editing_the_purchase_rewrites_its_installments(
         self, qtbot, services, event_bus, heladera
     ):
-        dialog = make_dialog(qtbot, services, event_bus, first_installment(services, heladera))
+        dialog = transaction_dialog(
+            qtbot, services, event_bus, first_installment(services, heladera)
+        )
         dialog.installment_fields.set_count(3)
         dialog.note_input.setText("Heladera nueva")
 
@@ -377,14 +374,19 @@ class TestDialog:
     ):
         before = sorted(all_transactions(services), key=lambda t: t.id)
 
-        save(qtbot, make_dialog(qtbot, services, event_bus, first_installment(services, heladera)))
+        save(
+            qtbot,
+            transaction_dialog(qtbot, services, event_bus, first_installment(services, heladera)),
+        )
 
         assert sorted(all_transactions(services), key=lambda t: t.id) == before
 
     def test_down_to_one_installment_it_becomes_a_plain_expense(
         self, qtbot, services, event_bus, heladera
     ):
-        dialog = make_dialog(qtbot, services, event_bus, first_installment(services, heladera))
+        dialog = transaction_dialog(
+            qtbot, services, event_bus, first_installment(services, heladera)
+        )
         dialog.installment_fields.set_count(1)
 
         save(qtbot, dialog)
@@ -400,7 +402,7 @@ class TestDialog:
         expense = services.transactions.create(
             expense_draft(services, pesos.id, ars("75000"), TODAY, note="Heladera")
         )
-        dialog = make_dialog(qtbot, services, event_bus, expense)
+        dialog = transaction_dialog(qtbot, services, event_bus, expense)
         assert dialog.form.isRowVisible(dialog.installment_fields)
         dialog.installment_fields.set_count(6)
 
@@ -612,7 +614,7 @@ class TestAccountDetail:
 
 
 def test_an_expense_category_is_kept_on_every_installment(qtbot, services, event_bus, pesos):
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
     fill(dialog, "6.000", 3)
     dialog.category_input.select(category_id(services, "Ocio", TransactionType.EXPENSE))
 

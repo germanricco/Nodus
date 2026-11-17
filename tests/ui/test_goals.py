@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, data_since, expense_draft, income_draft, usd
+from factories import TODAY, ars, expense_draft, income_draft, usd
 from menus import run_action, texts
 from PySide6.QtCore import Qt
 
@@ -20,16 +20,6 @@ from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.goals_page import GoalsPage
 from nodus.ui.widgets.charts.goal_bar import goal_sentence, saved_of_target
 from nodus.ui.widgets.money_label import month_change_text
-
-TODAY = date(2026, 11, 13)
-
-
-@pytest.fixture
-def savings(services, database):
-    """US$ 500 in a dollar savings account, with data since January."""
-    account = services.accounts.create("Ahorro", AccountType.SAVINGS, Currency.USD, usd("500"))
-    data_since(database, date(2026, 1, 10))
-    return account
 
 
 @pytest.fixture

@@ -1,14 +1,11 @@
-from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, usd
+from factories import TODAY, ars, usd
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.services.errors import NotFoundError, ValidationError
-
-TODAY = date(2026, 11, 13)
 
 
 @pytest.fixture

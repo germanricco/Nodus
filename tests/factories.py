@@ -9,10 +9,12 @@ from nodus.database.database import Database
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.recurring_charge import Frequency
-from nodus.models.transaction import TransactionType
+from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 from nodus.services.transactions.recurring_charge_service import RecurringChargeDraft
 from nodus.services.transactions.transaction_service import TransactionDraft
+from nodus.ui.dialogs.transaction_dialog import TransactionDialog
+from nodus.ui.event_bus import EventBus
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 
@@ -86,6 +88,23 @@ def charge_draft(
 def light_theme() -> ThemeManager:
     """A light theme for widgets that need one, built over the running application."""
     return ThemeManager(QApplication.instance(), ThemeMode.LIGHT)
+
+
+def transaction_dialog(
+    qtbot,
+    services: Services,
+    event_bus: EventBus,
+    transaction: Transaction | None = None,
+    theme: ThemeManager | None = None,
+    show: bool = False,
+) -> TransactionDialog:
+    """The transaction form, new or for ``transaction``, in ``theme`` (the light one by
+    default), closed with the test."""
+    dialog = TransactionDialog(services, event_bus, theme or light_theme(), transaction)
+    qtbot.addWidget(dialog)
+    if show:
+        dialog.show()
+    return dialog
 
 
 class FakeRegistry:

@@ -215,13 +215,6 @@ class TestAccountsPage:
         assert services.accounts.list_accounts() == [pesos]
 
 
-@pytest.fixture
-def investment(services):
-    return services.accounts.create(
-        "MP Inversiones", AccountType.INVESTMENT, Currency.ARS, ars("1000000")
-    )
-
-
 class TestValueAdjustment:
     def make(self, qtbot, services, event_bus, account) -> ValueAdjustmentDialog:
         dialog = ValueAdjustmentDialog(services, event_bus, account, today=TODAY)

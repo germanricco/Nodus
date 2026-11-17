@@ -10,6 +10,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.services.external.rate_feed_service import MANUAL, RateFeedService
 
+# Not factories.TODAY: the dates below are counted from this day.
 TODAY = date(2026, 11, 6)
 QUOTES = [
     {"casa": "oficial", "compra": 1520, "venta": 1570},

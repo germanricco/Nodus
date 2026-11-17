@@ -1,7 +1,14 @@
 from datetime import date
 
 import pytest
-from factories import ars, category_id, expense_draft, income_draft, light_theme, usd
+from factories import (
+    ars,
+    category_id,
+    expense_draft,
+    income_draft,
+    transaction_dialog,
+    usd,
+)
 from menus import run_action, texts
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextDocumentFragment
@@ -35,12 +42,6 @@ EXPENSE = TransactionType.EXPENSE
 NOVEMBER = Month(2026, 11)
 
 
-def make_dialog(qtbot, services, event_bus, transaction=None) -> TransactionDialog:
-    dialog = TransactionDialog(services, event_bus, light_theme(), transaction)
-    qtbot.addWidget(dialog)
-    return dialog
-
-
 def save(qtbot, dialog) -> None:
     qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
 
@@ -59,23 +60,27 @@ class TestTransactionDialog:
     def test_new_dialog_offers_the_last_account_used(
         self, qtbot, services, event_bus, pesos, dollars
     ):
-        first = make_dialog(qtbot, services, event_bus)
+        first = transaction_dialog(qtbot, services, event_bus)
         assert first.account_input.current_id() is None  # two accounts, none used yet
         first.account_input.select(dollars.id)
         first.amount_input.line_edit.setText("100")
         first.category_input.select(category_id(services, "Ocio", EXPENSE))
         save(qtbot, first)
 
-        assert make_dialog(qtbot, services, event_bus).account_input.current_id() == dollars.id
+        assert (
+            transaction_dialog(qtbot, services, event_bus).account_input.current_id() == dollars.id
+        )
 
     def test_archived_last_account_is_not_offered(self, qtbot, services, event_bus, pesos, dollars):
         services.settings.set_last_account_id(pesos.id)
         services.accounts.set_archived(pesos.id, True)
 
-        assert make_dialog(qtbot, services, event_bus).account_input.current_id() == dollars.id
+        assert (
+            transaction_dialog(qtbot, services, event_bus).account_input.current_id() == dollars.id
+        )
 
     def test_records_expense_in_chosen_category(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.amount_input.line_edit.setText("1.500,50")
         dialog.category_input.select(category_id(services, "Ocio", EXPENSE))
         dialog.note_input.setText("Cine")
@@ -93,7 +98,7 @@ class TestTransactionDialog:
     def test_dialog_shrinks_and_grows_with_its_fields(
         self, qtbot, services, event_bus, pesos, dollars
     ):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.show()
         qtbot.waitExposed(dialog)
         expense_height = dialog.height()
@@ -109,7 +114,7 @@ class TestTransactionDialog:
         assert dialog.width() == transfer_width
 
     def test_fields_stay_in_place_across_modes(self, qtbot, services, event_bus, pesos, dollars):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.show()
         qtbot.waitExposed(dialog)
         positions = set()
@@ -122,7 +127,7 @@ class TestTransactionDialog:
         assert len(positions) == 1
 
     def test_category_choices_follow_mode(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
 
         dialog.mode_input.set_index(INCOME_MODE)
 
@@ -134,7 +139,7 @@ class TestTransactionDialog:
     def test_transfer_between_currencies_shows_implied_rate(
         self, qtbot, services, event_bus, pesos, dollars
     ):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.mode_input.set_index(TRANSFER_MODE)
         dialog.account_input.select(pesos.id)
         dialog.to_account_input.select(dollars.id)
@@ -158,7 +163,7 @@ class TestTransactionDialog:
     ):
         """A wrong destination moves money to the wrong account: it is always chosen."""
         services.settings.set_last_account_id(pesos.id)
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
 
         dialog.mode_input.set_index(TRANSFER_MODE)
 
@@ -167,7 +172,7 @@ class TestTransactionDialog:
 
     def test_same_currency_transfer_hides_incoming_amount(self, qtbot, services, event_bus, pesos):
         services.accounts.create("Efectivo", pesos.type, pesos.currency, ars("0"))
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
 
         dialog.mode_input.set_index(TRANSFER_MODE)
 
@@ -177,7 +182,7 @@ class TestTransactionDialog:
         self, qtbot, services, event_bus, pesos, dollars
     ):
         transfer = buy_dollars(services, pesos, dollars)
-        dialog = make_dialog(qtbot, services, event_bus, transfer.incoming)
+        dialog = transaction_dialog(qtbot, services, event_bus, transfer.incoming)
 
         assert dialog.mode_input.index() == TRANSFER_MODE
         assert not dialog.mode_input.buttons[EXPENSE_MODE].isEnabled()
@@ -194,7 +199,7 @@ class TestTransactionDialog:
         self, qtbot, services, event_bus, pesos
     ):
         expense = services.transactions.create(expense_draft(services, pesos.id, ars("10")))
-        dialog = make_dialog(qtbot, services, event_bus, expense)
+        dialog = transaction_dialog(qtbot, services, event_bus, expense)
 
         assert dialog.category_input.current_id() == expense.category_id
         assert not dialog.mode_input.buttons[TRANSFER_MODE].isEnabled()
@@ -207,7 +212,7 @@ class TestTransactionDialog:
         assert services.transactions.get(expense.id).type is TransactionType.INCOME
 
     def test_invalid_amount_keeps_dialog_open_with_error(self, qtbot, services, event_bus, pesos):
-        dialog = make_dialog(qtbot, services, event_bus)
+        dialog = transaction_dialog(qtbot, services, event_bus)
         dialog.amount_input.line_edit.setText("0")
         dialog.category_input.select(category_id(services, "Ocio", EXPENSE))
 

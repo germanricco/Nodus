@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from factories import ars, data_since, expense_draft, income_draft, usd
+from factories import TODAY, ars, data_since, expense_draft, income_draft, usd
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
@@ -10,20 +10,10 @@ from nodus.models.goal import Goal, GoalShare, GoalState
 from nodus.services.errors import ValidationError
 from nodus.services.planning.goal_service import GoalDraft
 
-TODAY = date(2026, 11, 13)
-
 
 @pytest.fixture
 def goals(services):
     return services.goals
-
-
-@pytest.fixture
-def savings(services, database):
-    """A dollar savings account with US$ 500, with data since January."""
-    account = services.accounts.create("Ahorro", AccountType.SAVINGS, Currency.USD, usd("500"))
-    data_since(database, date(2026, 1, 10))
-    return account
 
 
 def draft(*shares, target="2000", on=date(2027, 3, 31), name="Vacaciones") -> GoalDraft:

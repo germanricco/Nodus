@@ -1,12 +1,10 @@
 from datetime import date
 
 import pytest
-from factories import usd
+from factories import TODAY, usd
 
 from nodus.models.goal import Goal, GoalShare, GoalState, goal_progress, median_cents, months_until
 from nodus.models.period import Month
-
-TODAY = date(2026, 11, 13)
 
 
 def goal(target="2000", on=date(2027, 3, 31), reached_on=None) -> Goal:

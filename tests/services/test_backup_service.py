@@ -10,6 +10,7 @@ from nodus.models.currency import Currency
 from nodus.services.backup_service import BackupService, reminder_start
 from nodus.services.errors import BackupError, ValidationError
 
+# Not factories.TODAY: the copies below are named after this day.
 TODAY = date(2026, 11, 6)
 NOW = datetime(2026, 11, 6, 21, 30)
 

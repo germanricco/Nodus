@@ -2,20 +2,14 @@
 
 from datetime import date
 
-from factories import ars, category_id, expense_draft, income_draft, light_theme
+from factories import ars, category_id, expense_draft, income_draft, transaction_dialog
 from PySide6.QtCore import Qt
 
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.ui.dialogs.transaction_dialog import INCOME_MODE, TRANSFER_MODE, TransactionDialog
+from nodus.ui.dialogs.transaction_dialog import INCOME_MODE, TRANSFER_MODE
 
 EXPENSE = TransactionType.EXPENSE
-
-
-def make_dialog(qtbot, services, event_bus, transaction=None) -> TransactionDialog:
-    dialog = TransactionDialog(services, event_bus, light_theme(), transaction)
-    qtbot.addWidget(dialog)
-    return dialog
 
 
 def type_payee(qtbot, dialog, text: str) -> None:
@@ -31,7 +25,7 @@ def choose_payee(qtbot, dialog, text: str) -> None:
 def test_typing_suggests_matching_payees_ignoring_accents(qtbot, services, event_bus, pesos):
     for name in ["Verdulería", "La verdura", "Coto"]:
         services.payees.create(name)
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
 
     type_payee(qtbot, dialog, "verd")
 
@@ -42,7 +36,7 @@ def test_typing_suggests_matching_payees_ignoring_accents(qtbot, services, event
 def test_choosing_a_payee_fills_in_its_category(qtbot, services, event_bus, pesos):
     servicios = category_id(services, "Servicios", EXPENSE)
     services.payees.create("Edenor", servicios)
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
 
     choose_payee(qtbot, dialog, "edenor")
 
@@ -52,7 +46,7 @@ def test_choosing_a_payee_fills_in_its_category(qtbot, services, event_bus, peso
 def test_a_category_picked_by_hand_is_kept(qtbot, services, event_bus, pesos):
     services.payees.create("Edenor", category_id(services, "Servicios", EXPENSE))
     salud = category_id(services, "Salud", EXPENSE)
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
     dialog.category_input.select(salud)
     dialog.category_input.activated.emit(dialog.category_input.currentIndex())
 
@@ -62,7 +56,7 @@ def test_a_category_picked_by_hand_is_kept(qtbot, services, event_bus, pesos):
 
 
 def test_new_name_shows_hint_and_is_created_on_saving(qtbot, services, event_bus, pesos):
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
     dialog.amount_input.line_edit.setText("100")
     dialog.category_input.setCurrentIndex(0)
 
@@ -78,7 +72,7 @@ def test_new_name_shows_hint_and_is_created_on_saving(qtbot, services, event_bus
 
 
 def test_payee_row_is_hidden_for_transfers(qtbot, services, event_bus, pesos):
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
 
     dialog.mode_input.set_index(TRANSFER_MODE)
     assert not dialog.form.isRowVisible(dialog.payee_input)
@@ -92,7 +86,7 @@ def test_editing_shows_the_current_payee_and_keeps_the_category(qtbot, services,
     created = services.transactions.create(
         expense_draft(services, pesos.id, ars("10"), payee_name="Coto")
     )
-    dialog = make_dialog(qtbot, services, event_bus, services.transactions.get(created.id))
+    dialog = transaction_dialog(qtbot, services, event_bus, services.transactions.get(created.id))
 
     assert dialog.payee_input.text() == "Coto"
     assert dialog.category_input.current_id() == created.category_id
@@ -114,7 +108,7 @@ def test_a_click_on_the_empty_field_offers_the_frequent_payees(qtbot, services, 
     spend_today(services, pesos, "Coto")
     spend_today(services, pesos, "Farmacia")
     services.payees.create("Nunca usado")
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
 
     click_payee(qtbot, dialog)
 
@@ -127,7 +121,7 @@ def test_the_chosen_category_orders_the_suggestions(qtbot, services, event_bus, 
     spend_today(services, pesos, "Coto")
     spend_today(services, pesos, "Coto")
     spend_today(services, pesos, "Cine", category_id=leisure)
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
     dialog.category_input.select(leisure)
 
     type_payee(qtbot, dialog, "c")
@@ -140,7 +134,7 @@ def test_an_income_offers_the_payees_of_incomes(qtbot, services, event_bus, peso
     services.transactions.create(
         income_draft(services, pesos.id, ars("100"), date.today(), payee_name="Acme")
     )
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
     dialog.mode_input.set_index(INCOME_MODE)
 
     click_payee(qtbot, dialog)
@@ -150,7 +144,7 @@ def test_an_income_offers_the_payees_of_incomes(qtbot, services, event_bus, peso
 
 def test_a_field_with_text_suggests_only_what_matches(qtbot, services, event_bus, pesos):
     spend_today(services, pesos, "Coto")
-    dialog = make_dialog(qtbot, services, event_bus)
+    dialog = transaction_dialog(qtbot, services, event_bus)
     type_payee(qtbot, dialog, "zz")
 
     click_payee(qtbot, dialog)
