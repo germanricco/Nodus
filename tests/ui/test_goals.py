@@ -10,14 +10,14 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.goal import Goal, GoalProgress, GoalShare, GoalState
 from nodus.models.period import Month
-from nodus.services.goal_service import GoalDraft
-from nodus.services.notification_service import NoticeKind
+from nodus.services.app.notification_service import NoticeKind
+from nodus.services.planning.goal_service import GoalDraft
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.pages import accounts_page, goals_page
 from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.goals_page import GoalsPage
-from nodus.ui.widgets.goal_bar import goal_sentence, saved_of_target
+from nodus.ui.widgets.charts.goal_bar import goal_sentence, saved_of_target
 from nodus.ui.widgets.money_label import month_change_text
 
 TODAY = date(2026, 11, 13)

@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 from nodus.models.account import Account
 from nodus.models.account_group import AccountGroup
 from nodus.models.money import Money
-from nodus.services.account_group_service import AccountSection
+from nodus.services.accounts.account_group_service import AccountSection
 from nodus.services.container import Services
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.account_group_dialogs import GroupDialog, MoveToGroupDialog
@@ -24,9 +24,9 @@ from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.navigation import PageId, history_focus
-from nodus.ui.pages.page import Page
+from nodus.ui.pages.base.page import Page
+from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.undo import offer_undo
@@ -34,9 +34,9 @@ from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
 from nodus.ui.widgets.money_label import MoneyLabel, masked, total_text
 from nodus.ui.widgets.net_worth_card import NetWorthCard, signed
-from nodus.ui.widgets.reorderable_list import ReorderableList
-from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.tables.reorderable_list import ReorderableList
+from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 
 # The lists of the groups' cards, which take each other's accounts.
 ACCOUNTS_FAMILY = "accounts"

@@ -6,7 +6,7 @@ from PySide6.QtCore import QMimeData
 from PySide6.QtGui import QDrag
 from PySide6.QtWidgets import QFrame, QLabel
 
-from nodus.ui.widgets.reorderable_list import ROW_MIME_TYPE, ReorderableList, drag_pixmap
+from nodus.ui.widgets.tables.reorderable_list import ROW_MIME_TYPE, ReorderableList, drag_pixmap
 
 KEYS = ["a", "b", "c"]
 

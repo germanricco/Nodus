@@ -11,22 +11,22 @@ from nodus.models.currency import TOTAL_CURRENCIES, Currency
 from nodus.models.money import Money
 from nodus.models.period import Month, Period
 from nodus.services.container import Services
-from nodus.services.dashboard_service import relative_change
-from nodus.services.net_worth_service import NetWorth, NetWorthPoint
-from nodus.ui.formatting import format_date
-from nodus.ui.labels import HELD_IN_LABELS, rate_text
+from nodus.services.reports.dashboard_service import relative_change
+from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint
+from nodus.ui.text.formatting import format_date
+from nodus.ui.text.labels import HELD_IN_LABELS, rate_text
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import ChangeBadge, format_signed_percent
-from nodus.ui.widgets.chart_base import format_compact
-from nodus.ui.widgets.charts import ProportionBar, Segment
+from nodus.ui.widgets.charts.chart_base import format_compact
+from nodus.ui.widgets.charts.charts import ProportionBar, Segment
+from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.flow_layout import FlowLayout
-from nodus.ui.widgets.line_chart import LineChart, LinePoint
+from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel, masked
-from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.style import set_style_property
 
 # The net worth can be shown in these; the parts held in any currency are listed apart.

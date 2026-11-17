@@ -4,12 +4,12 @@ import pytest
 from factories import ars, expense_draft
 
 from nodus.models.period import Month, Period
-from nodus.ui import main_window
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.payees_page import PayeesPage
 from nodus.ui.pages.transactions_page import TransactionsPage
+from nodus.ui.shell import main_window
 from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
 
 

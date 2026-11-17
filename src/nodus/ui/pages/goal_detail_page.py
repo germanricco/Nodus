@@ -14,23 +14,23 @@ from nodus.models.money import Money
 from nodus.models.period import Month
 from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
-from nodus.services.goal_service import GoalContribution
+from nodus.services.planning.goal_service import GoalContribution
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
-from nodus.ui.pages.dashboard_cards import FigureTile, muted_label
-from nodus.ui.pages.detail_page import DetailPage
+from nodus.ui.pages.base.detail_page import DetailPage
+from nodus.ui.pages.dashboard.dashboard_cards import FigureTile, muted_label
 from nodus.ui.pages.goals_page import delete_goal
 from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.chart_base import format_compact
+from nodus.ui.widgets.charts.chart_base import format_compact
+from nodus.ui.widgets.charts.goal_bar import goal_pill, goal_sentence, month_phrase
+from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.figure_row import FigureRow
-from nodus.ui.widgets.goal_bar import goal_pill, goal_sentence, month_phrase
-from nodus.ui.widgets.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.money_label import amount_text, month_change_text
-from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction
 from nodus.ui.widgets.style import clear_layout, make_hoverable
+from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
 
 HISTORY_MONTHS = 12
 

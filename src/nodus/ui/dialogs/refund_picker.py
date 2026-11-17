@@ -15,12 +15,12 @@ from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.transaction_list import TransactionListBuilder
+from nodus.ui.transaction_rows import TransactionListBuilder
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.input_error import InputError
-from nodus.ui.widgets.period_selector import PeriodSelector
-from nodus.ui.widgets.table import record_table
-from nodus.ui.widgets.transaction_table import DESCRIPTION, TAGS, TransactionTableModel
+from nodus.ui.widgets.inputs.input_error import InputError
+from nodus.ui.widgets.inputs.period_selector import PeriodSelector
+from nodus.ui.widgets.tables.table import record_table
+from nodus.ui.widgets.tables.transaction_table import DESCRIPTION, TAGS, TransactionTableModel
 
 # The expenses offered first: refunds usually come within a few months.
 CANDIDATE_MONTHS = 6

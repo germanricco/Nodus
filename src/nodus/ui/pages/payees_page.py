@@ -4,17 +4,17 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QWidget
 
+from nodus.services.classification.payee_service import PayeeSummary
 from nodus.services.container import Services
-from nodus.services.payee_service import PayeeSummary
 from nodus.services.sorting import name_sort_key
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.payee_dialogs import MergePayeeDialog, PayeeDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import movements_text
 from nodus.ui.navigation import TransactionFocus, history_period
-from nodus.ui.pages.summary_page import TOTAL, SummaryPage, SummaryTableModel
+from nodus.ui.pages.base.summary_page import TOTAL, SummaryPage, SummaryTableModel
+from nodus.ui.text.labels import movements_text
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.color import color_icon
+from nodus.ui.widgets.inputs.color import color_icon
 
 CATEGORY = TOTAL + 1
 NO_PAYEES_TEXT = (

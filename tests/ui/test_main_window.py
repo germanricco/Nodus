@@ -9,9 +9,9 @@ from qt_cleanup import flush_deleted
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
-from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
-from nodus.ui.widgets.sidebar import Sidebar, SidebarAccountRow
+from nodus.ui.shell.main_window import MainWindow
+from nodus.ui.shell.sidebar import Sidebar, SidebarAccountRow
 
 
 def sidebar_texts(window) -> list[str]:

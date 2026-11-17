@@ -10,8 +10,8 @@ from nodus.services.container import Services
 from nodus.ui.dialogs.color_choice import color_picker, remember_color
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import TRANSACTION_TYPE_LABELS
-from nodus.ui.widgets.combo_box import ComboBox
+from nodus.ui.text.labels import TRANSACTION_TYPE_LABELS
+from nodus.ui.widgets.inputs.combo_box import ComboBox
 
 NO_PARENT_LABEL = "Ninguna (categoría principal)"
 

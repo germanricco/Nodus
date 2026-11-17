@@ -6,10 +6,10 @@ from PySide6.QtCore import QPoint, QPointF, Qt
 
 from nodus.models.currency import Currency
 from nodus.ui.theme.theme import LIGHT
-from nodus.ui.widgets.bar_chart import BarChart, BarGroup
 from nodus.ui.widgets.change_badge import ChangeBadge, format_change
-from nodus.ui.widgets.chart_base import format_compact, resample
-from nodus.ui.widgets.charts import (
+from nodus.ui.widgets.charts.bar_chart import BarChart, BarGroup
+from nodus.ui.widgets.charts.chart_base import format_compact, resample
+from nodus.ui.widgets.charts.charts import (
     DonutChart,
     ProportionBar,
     Segment,
@@ -17,7 +17,7 @@ from nodus.ui.widgets.charts import (
     index_at_angle,
     segment_spans,
 )
-from nodus.ui.widgets.line_chart import (
+from nodus.ui.widgets.charts.line_chart import (
     LineChart,
     LinePoint,
     axis_indexes,

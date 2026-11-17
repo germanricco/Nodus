@@ -14,7 +14,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.tag import Tag
 from nodus.models.transaction import TransactionType
-from nodus.services.transaction_service import TransferDraft
+from nodus.services.transactions.transaction_service import TransferDraft
 
 EXPENSE = TransactionType.EXPENSE
 

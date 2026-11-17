@@ -11,7 +11,7 @@ from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.theme.design import Popup
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.date_input import Calendar, DateInput
+from nodus.ui.widgets.inputs.date_input import Calendar, DateInput
 
 
 @pytest.fixture(params=[ThemeMode.LIGHT, ThemeMode.DARK], ids=["light", "dark"])

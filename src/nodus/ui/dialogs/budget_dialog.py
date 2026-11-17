@@ -8,9 +8,9 @@ from nodus.models.category import Category
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.period import Month, format_month
-from nodus.services.budget_service import BudgetSuggestion
-from nodus.services.category_service import CategoryNode
+from nodus.services.classification.category_service import CategoryNode
 from nodus.services.container import Services
+from nodus.services.planning.budget_service import BudgetSuggestion
 from nodus.ui.dialogs.form_dialog import (
     CATEGORY_PLACEHOLDER,
     CHOOSE_CATEGORY,
@@ -19,8 +19,8 @@ from nodus.ui.dialogs.form_dialog import (
     FormDialog,
 )
 from nodus.ui.event_bus import EventBus
-from nodus.ui.widgets.amount_input import AmountInput
-from nodus.ui.widgets.selectors import CategoryComboBox
+from nodus.ui.widgets.inputs.amount_input import AmountInput
+from nodus.ui.widgets.inputs.selectors import CategoryComboBox
 
 
 class BudgetDialog(FormDialog):

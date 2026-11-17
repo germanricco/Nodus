@@ -1,0 +1,267 @@
+"""Business rules for payees: unique names, merging and what each one adds up to."""
+
+from __future__ import annotations
+
+import dataclasses
+from collections import Counter, defaultdict
+from dataclasses import dataclass
+from datetime import date, timedelta
+
+from nodus.database.database import Database
+from nodus.database.repositories.payee_repository import PayeeRepository
+from nodus.models.category import Category
+from nodus.models.currency import Currency
+from nodus.models.money import Money
+from nodus.models.payee import Payee, PayeeUsage, normalize_name
+from nodus.models.transaction import Transaction, TransactionType
+from nodus.models.transaction_filter import TransactionFilter
+from nodus.services.accounts.exchange_rate_service import ExchangeRateService
+from nodus.services.app.undo_service import UndoError, UndoService, changed_since
+from nodus.services.classification.category_service import CategoryService
+from nodus.services.errors import ValidationError, clean_name, require_found
+from nodus.services.reports.dashboard_service import net_in_pesos
+from nodus.services.sorting import name_sort_key, rank_matches
+from nodus.services.transactions.transaction_service import TransactionService
+
+
+@dataclass(frozen=True)
+class PayeeSummary:
+    """A payee with its transactions added up, for the payees page.
+
+    ``net`` is income minus expenses in pesos, with dollars converted at the rate of their
+    day; those without a rate yet are left out and counted in ``unconverted``.
+    ``top_category`` is the one used most with this payee, and ``first_on`` and
+    ``last_on`` the dates of its first and latest transactions (None while it has none).
+    """
+
+    payee: Payee
+    count: int
+    net: Money
+    unconverted: int
+    top_category: Category | None
+    first_on: date | None
+    last_on: date | None
+
+
+class PayeeService:
+    CURRENCY = Currency.ARS
+    # How far back use orders the suggestions while typing, and before typing anything:
+    # the latter shows only what is used now, a few of them.
+    MATCHES_DAYS = 365
+    FREQUENT_DAYS = 90
+    FREQUENT_COUNT = 6
+
+    def __init__(
+        self,
+        database: Database,
+        payees: PayeeRepository,
+        transactions: TransactionService,
+        categories: CategoryService,
+        exchange_rates: ExchangeRateService,
+        undo: UndoService,
+    ) -> None:
+        self._database = database
+        self._payees = payees
+        self._undo = undo
+        self._transactions = transactions
+        self._categories = categories
+        self._exchange_rates = exchange_rates
+
+    def list_payees(self) -> list[Payee]:
+        """Every payee in alphabetical order."""
+        return sorted(self._payees.list(), key=lambda p: name_sort_key(p.name))
+
+    def get(self, payee_id: int) -> Payee:
+        return require_found(self._payees.get(payee_id), "El beneficiario no existe.")
+
+    def find(self, name: str) -> Payee | None:
+        """The payee called ``name``, ignoring case, accents and signs."""
+        normalized = normalize_name(name)
+        return self._payees.find_by_normalized(normalized) if normalized else None
+
+    def matches(
+        self,
+        text: str,
+        kind: TransactionType | None = None,
+        category_id: int | None = None,
+        today: date | None = None,
+    ) -> list[Payee]:
+        """Payees whose name contains ``text``, those starting with it first. For a
+        ``kind`` of transaction, the ones used with ``category_id`` come next, then the
+        most used and latest in that kind over the last year, then the rest
+        alphabetically."""
+        if kind is None:
+            return rank_matches(self._payees.list(), text)
+        usage = self._usage(kind, self.MATCHES_DAYS, today)
+        return rank_matches(
+            self._payees.list(), text, then=lambda p: _by_use(usage.get(p.id), category_id)
+        )
+
+    def frequent(
+        self, kind: TransactionType, category_id: int | None = None, today: date | None = None
+    ) -> list[Payee]:
+        """What to suggest before anything is typed: the payees most used in ``kind``
+        transactions lately, those used with ``category_id`` first. None if nothing was."""
+        usage = self._usage(kind, self.FREQUENT_DAYS, today)
+        used = [payee for payee in self._payees.list() if payee.id in usage]
+        used.sort(key=lambda p: (_by_use(usage[p.id], category_id), name_sort_key(p.name)))
+        return used[: self.FREQUENT_COUNT]
+
+    def _usage(self, kind: TransactionType, days: int, today: date | None) -> dict[int, PayeeUsage]:
+        until = today or date.today()
+        return self._payees.usage(kind, until - timedelta(days=days), until)
+
+    def create(self, name: str, default_category_id: int | None = None) -> Payee:
+        payee = self._checked(Payee(None, clean_name(name), default_category_id))
+        with self._database.transaction():
+            return self._payees.add(payee)
+
+    def update(self, payee_id: int, name: str, default_category_id: int | None) -> None:
+        current = self.get(payee_id)
+        payee = self._checked(
+            dataclasses.replace(
+                current, name=clean_name(name), default_category_id=default_category_id
+            )
+        )
+        with self._database.transaction():
+            self._payees.update(payee)
+
+    def transaction_count(self, payee_id: int) -> int:
+        return self._payees.count_transactions(payee_id)
+
+    def delete(self, payee_id: int) -> int:
+        """Deletes a payee and returns how many transactions were left without one."""
+        return self.delete_many([payee_id])
+
+    def delete_many(self, payee_ids: list[int]) -> int:
+        """Deletes every one of ``payee_ids`` together, or none if one is missing, and
+        returns how many transactions were left without a payee."""
+        for payee_id in payee_ids:
+            self.get(payee_id)
+        count = sum(self._payees.count_transactions(payee_id) for payee_id in payee_ids)
+        with self._database.transaction():
+            for payee_id in payee_ids:
+                self._payees.delete(payee_id)
+        return count
+
+    def merge(self, source_id: int, target_id: int) -> None:
+        """Moves the transactions of ``source_id`` to ``target_id`` and deletes the former.
+
+        The target keeps its default category, or takes the source's if it had none.
+        """
+        self.merge_many([source_id], target_id)
+
+    def merge_many(self, source_ids: list[int], target_id: int) -> None:
+        """Moves the transactions of every one of ``source_ids`` to ``target_id`` and
+        deletes the sources, all together.
+
+        The target keeps its default category, or takes the first source's that has one.
+        It can be undone.
+        """
+        sources = [self.get(source_id) for source_id in source_ids if source_id != target_id]
+        if not sources:
+            raise ValidationError("Elige otro beneficiario para unir.")
+        target = self.get(target_id)
+        inherited = next(
+            (s.default_category_id for s in sources if s.default_category_id is not None), None
+        )
+        rows = [self._payees.row(source.id) for source in sources]
+        moved = [self._payees.transaction_ids(source.id) for source in sources]
+        with self._database.transaction():
+            for source in sources:
+                self._payees.reassign(source.id, target_id)
+                self._payees.delete(source.id)
+            if target.default_category_id is None and inherited is not None:
+                self._payees.update(dataclasses.replace(target, default_category_id=inherited))
+            merged = self._payees.get(target_id)
+        self._undo.offer(
+            f"Se unieron {len(sources) + 1} beneficiarios en {target.name}.",
+            lambda: self._unmerge(target, merged, rows, moved),
+        )
+
+    def _unmerge(
+        self, target: Payee, merged: Payee | None, rows: list[dict], moved: list[list[int]]
+    ) -> None:
+        """Undoes ``merge_many``: the merged payees back, with their own id and their
+        transactions, and the target's default category as it was."""
+        if self._payees.get(target.id) != merged:
+            raise changed_since(f"«{target.name}»")
+        kept = set(self._payees.transaction_ids(target.id))
+        for row, transaction_ids in zip(rows, moved, strict=True):
+            if self._payees.find_by_normalized(row["normalized_name"]) is not None:
+                raise UndoError(
+                    f"Ya hay otro beneficiario «{row['name']}», así que no se puede deshacer."
+                )
+            if not set(transaction_ids) <= kept:
+                raise changed_since(f"Algún movimiento de «{row['name']}»")
+        for row, transaction_ids in zip(rows, moved, strict=True):
+            self._payees.put_back(row)
+            self._payees.assign(transaction_ids, row["id"])
+        self._payees.update(target)
+
+    def suggested_category(self, payee_id: int, kind: TransactionType) -> int | None:
+        """The category for a new ``kind`` transaction with this payee: its default if it is
+        of that kind, otherwise the one of its latest ``kind`` transaction."""
+        payee = self.get(payee_id)
+        default = payee.default_category_id
+        if default is not None and self._categories.get(default).kind is kind:
+            return default
+        latest = self._transactions.list_transactions(
+            TransactionFilter(payee_id=payee_id, type=kind, is_transfer=False, limit=1)
+        )
+        return latest[0].category_id if latest else None
+
+    def summaries(self) -> list[PayeeSummary]:
+        """Every payee with its totals, the most used first."""
+        by_payee: dict[int, list[Transaction]] = defaultdict(list)
+        for transaction in self._transactions.list_transactions(
+            TransactionFilter(is_transfer=False)
+        ):
+            if transaction.payee_id is not None:
+                by_payee[transaction.payee_id].append(transaction)
+        categories = {c.id: c for c in self._categories.list_categories()}
+        summaries = [self._summary(p, by_payee[p.id], categories) for p in self._payees.list()]
+        return sorted(summaries, key=lambda s: (-s.count, name_sort_key(s.payee.name)))
+
+    def summary(self, payee_id: int) -> PayeeSummary:
+        """One payee with its totals, for its own page."""
+        payee = self.get(payee_id)
+        transactions = self._transactions.list_transactions(
+            TransactionFilter(payee_id=payee_id, is_transfer=False)
+        )
+        categories = {c.id: c for c in self._categories.list_categories()}
+        return self._summary(payee, transactions, categories)
+
+    def _summary(
+        self, payee: Payee, transactions: list[Transaction], categories: dict[int, Category]
+    ) -> PayeeSummary:
+        net, unconverted = net_in_pesos(transactions, self._exchange_rates)
+        usage = Counter(t.category_id for t in transactions).most_common(1)
+        return PayeeSummary(
+            payee=payee,
+            count=len(transactions),
+            net=net,
+            unconverted=unconverted,
+            top_category=categories[usage[0][0]] if usage else None,
+            first_on=min((t.occurred_on for t in transactions), default=None),
+            last_on=max((t.occurred_on for t in transactions), default=None),
+        )
+
+    def _checked(self, payee: Payee) -> Payee:
+        """``payee`` if its name is usable and no other payee has it."""
+        if not payee.normalized_name:
+            raise ValidationError("El nombre debe tener letras o números.", field="name")
+        if payee.default_category_id is not None:
+            self._categories.get(payee.default_category_id)
+        existing = self._payees.find_by_normalized(payee.normalized_name)
+        if existing is not None and existing.id != payee.id:
+            hint = "; para juntarlos usa «Unir con…»" if payee.id is not None else ""
+            raise ValidationError(f"Ya existe «{existing.name}»{hint}.", field="name")
+        return payee
+
+
+def _by_use(usage: PayeeUsage | None, category_id: int | None) -> tuple[int, int, int]:
+    """Sort key: used with ``category_id`` most, then used most, then latest first."""
+    if usage is None:
+        return (0, 0, 0)
+    return (-usage.uses_with(category_id), -usage.uses, -usage.last_used.toordinal())

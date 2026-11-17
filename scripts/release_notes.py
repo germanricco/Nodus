@@ -14,7 +14,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from nodus.services.changelog import ChangelogEntry, parse_changelog
+from nodus.services.app.changelog import ChangelogEntry, parse_changelog
 
 ROOT = Path(__file__).resolve().parent.parent
 CHANGELOG = ROOT / "CHANGELOG.md"

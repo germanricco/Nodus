@@ -5,10 +5,10 @@ import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
-from nodus.ui.help_texts import HELP_SECTIONS, HELP_TOPICS, TOPICS_BY_KEY
 from nodus.ui.navigation import DetailId, PageId
-from nodus.ui.shortcuts import SHORTCUT_GROUPS, SHORTCUTS
-from nodus.ui.widgets.help_panel import SHORTCUTS_VIEW, topic_html
+from nodus.ui.shell.help_panel import SHORTCUTS_VIEW, topic_html
+from nodus.ui.shell.shortcuts import SHORTCUT_GROUPS, SHORTCUTS
+from nodus.ui.text.help_texts import HELP_SECTIONS, HELP_TOPICS, TOPICS_BY_KEY
 
 
 def lit(window) -> set[PageId]:

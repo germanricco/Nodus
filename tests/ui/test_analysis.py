@@ -13,10 +13,10 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.period import Month, Period, format_month
 from nodus.models.transaction import TransactionType
-from nodus.services.dashboard_service import MonthFlow
+from nodus.services.reports.dashboard_service import MonthFlow
 from nodus.ui.navigation import PageId, TransactionFocus
-from nodus.ui.pages.analysis_page import AnalysisPage
-from nodus.ui.pages.analysis_views import (
+from nodus.ui.pages.analysis.analysis_page import AnalysisPage
+from nodus.ui.pages.analysis.analysis_views import (
     NO_PAYEE_LABEL,
     NO_RATE_TEXT,
     CashFlowView,

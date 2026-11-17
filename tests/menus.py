@@ -8,7 +8,7 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QTableView, QWidget
 
-from nodus.ui.widgets.row_actions import RowAction
+from nodus.ui.widgets.tables.row_actions import RowAction
 
 
 def texts(actions: Sequence[RowAction]) -> list[str]:

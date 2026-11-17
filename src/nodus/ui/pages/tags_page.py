@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QWidget
 
+from nodus.services.classification.tag_service import TagSummary
 from nodus.services.container import Services
-from nodus.services.tag_service import TagSummary
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.tag_dialogs import MergeTagDialog, TagDialog, announce_tag_change
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import movements_text
 from nodus.ui.navigation import TransactionFocus, history_period
-from nodus.ui.pages.summary_page import NAME, SummaryPage, SummaryTableModel
+from nodus.ui.pages.base.summary_page import NAME, SummaryPage, SummaryTableModel
+from nodus.ui.text.labels import movements_text
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.color import color_icon
+from nodus.ui.widgets.inputs.color import color_icon
 
 NO_TAGS_TEXT = "Todavía no hay etiquetas: se crean al escribir una nueva al cargar un movimiento."
 NO_MATCHES_TEXT = "Ninguna etiqueta coincide con la búsqueda."

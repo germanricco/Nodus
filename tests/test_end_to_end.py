@@ -19,9 +19,9 @@ from nodus.ui.dialogs.transaction_dialog import (
     TransactionDialog,
 )
 from nodus.ui.event_bus import EventBus
-from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.settings_page import THEME_MODES
+from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 

@@ -14,7 +14,7 @@ from nodus.models.payee import Payee
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
-from nodus.services.transaction_service import TransactionDraft, TransferDraft
+from nodus.services.transactions.transaction_service import TransactionDraft, TransferDraft
 from nodus.ui.dialogs.account_fields import required_account, selectable_accounts
 from nodus.ui.dialogs.form_dialog import (
     ACCOUNT_PLACEHOLDER,
@@ -29,15 +29,15 @@ from nodus.ui.dialogs.installment_fields import ASK_COUNT, InstallmentFields
 from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog
 from nodus.ui.dialogs.refund_picker import RefundField
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import rate_text
+from nodus.ui.text.labels import rate_text
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.amount_input import AmountInput
-from nodus.ui.widgets.date_input import DateInput
-from nodus.ui.widgets.payee_input import PayeeInput
-from nodus.ui.widgets.segmented import SegmentedControl
-from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
-from nodus.ui.widgets.tag_input import TagInput
+from nodus.ui.widgets.inputs.amount_input import AmountInput
+from nodus.ui.widgets.inputs.date_input import DateInput
+from nodus.ui.widgets.inputs.payee_input import PayeeInput
+from nodus.ui.widgets.inputs.segmented import SegmentedControl
+from nodus.ui.widgets.inputs.selectors import AccountComboBox, CategoryComboBox
+from nodus.ui.widgets.inputs.tag_input import TagInput
 
 # Segment order of the mode selector.
 EXPENSE_MODE, INCOME_MODE, TRANSFER_MODE = range(3)

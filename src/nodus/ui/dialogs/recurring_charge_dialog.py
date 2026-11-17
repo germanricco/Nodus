@@ -12,7 +12,7 @@ from nodus.models.period import format_date
 from nodus.models.recurring_charge import Frequency, RecurringCharge
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
-from nodus.services.recurring_charge_service import RecurringChargeDraft
+from nodus.services.transactions.recurring_charge_service import RecurringChargeDraft
 from nodus.ui.dialogs.account_fields import required_account, selectable_accounts
 from nodus.ui.dialogs.form_dialog import (
     ACCOUNT_PLACEHOLDER,
@@ -25,12 +25,12 @@ from nodus.ui.dialogs.form_dialog import (
     FormDialog,
 )
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import FREQUENCY_LABELS
+from nodus.ui.text.labels import FREQUENCY_LABELS
 from nodus.ui.undo import offer_undo
-from nodus.ui.widgets.amount_input import AmountInput
-from nodus.ui.widgets.combo_box import ComboBox
-from nodus.ui.widgets.date_input import DateInput
-from nodus.ui.widgets.selectors import AccountComboBox, CategoryComboBox
+from nodus.ui.widgets.inputs.amount_input import AmountInput
+from nodus.ui.widgets.inputs.combo_box import ComboBox
+from nodus.ui.widgets.inputs.date_input import DateInput
+from nodus.ui.widgets.inputs.selectors import AccountComboBox, CategoryComboBox
 
 
 def account_input_for(

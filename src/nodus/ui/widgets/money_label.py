@@ -7,9 +7,9 @@ from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.models.money import Money
-from nodus.services.account_group_service import GroupTotal
+from nodus.services.accounts.account_group_service import GroupTotal
 from nodus.ui.theme.design import Easing, Motion, motion_ms
-from nodus.ui.widgets import chart_base
+from nodus.ui.widgets.charts import chart_base
 from nodus.ui.widgets.style import set_style_property
 
 

@@ -8,10 +8,10 @@ from factories import eur
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
-from nodus.services.rate_feed_service import SOURCES, RateFeedService
-from nodus.ui.main_window import MainWindow
+from nodus.services.external.rate_feed_service import SOURCES, RateFeedService
 from nodus.ui.navigation import PageId
 from nodus.ui.rate_updater import RateUpdater
+from nodus.ui.shell.main_window import MainWindow
 
 QUOTES = json.dumps([{"casa": "blue", "venta": 1555}, {"casa": "bolsa", "venta": 1588.5}]).encode()
 

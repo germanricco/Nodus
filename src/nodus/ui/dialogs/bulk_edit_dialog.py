@@ -9,11 +9,11 @@ from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import transactions_text
+from nodus.ui.text.labels import transactions_text
 from nodus.ui.undo import offer_undo
-from nodus.ui.widgets.payee_input import PayeeInput
-from nodus.ui.widgets.selectors import CategoryComboBox
-from nodus.ui.widgets.tag_input import TagInput
+from nodus.ui.widgets.inputs.payee_input import PayeeInput
+from nodus.ui.widgets.inputs.selectors import CategoryComboBox
+from nodus.ui.widgets.inputs.tag_input import TagInput
 
 UNCHANGED = "Sin cambios"
 MIXED_KINDS_HINT = "La categoría cambia solo si todas son gastos o todas son ingresos."

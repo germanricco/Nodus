@@ -11,7 +11,7 @@ from nodus.models.currency import Currency
 from nodus.services.container import Services
 from nodus.ui.background import BackgroundCall
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import rate_text
+from nodus.ui.text.labels import rate_text
 
 
 class RateUpdater(QObject):

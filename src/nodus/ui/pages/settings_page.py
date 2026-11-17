@@ -29,7 +29,7 @@ from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.backup_service import BackupService
 from nodus.services.container import Services
 from nodus.services.errors import BackupError, ValidationError
-from nodus.services.rate_feed_service import SOURCES
+from nodus.services.external.rate_feed_service import SOURCES
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.export import export_transactions
@@ -37,24 +37,24 @@ from nodus.ui.dialogs.external_backup import save_copy_outside
 from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.user_error import user_error
 from nodus.ui.event_bus import EventBus
-from nodus.ui.formatting import format_date
-from nodus.ui.labels import rate_text
-from nodus.ui.pages.page import Page
+from nodus.ui.pages.base.page import Page
 from nodus.ui.rate_updater import RateUpdater, updated_text
+from nodus.ui.text.formatting import format_date
+from nodus.ui.text.labels import rate_text
 from nodus.ui.theme.design import Layout, Line, Space, set_reduced_motion
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.amount_input import AmountInput
 from nodus.ui.widgets.busy import busy, start_busy, stop_busy
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.date_input import DateInput
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, install_row_actions
-from nodus.ui.widgets.segmented import SegmentedControl
+from nodus.ui.widgets.inputs.amount_input import AmountInput
+from nodus.ui.widgets.inputs.date_input import DateInput
+from nodus.ui.widgets.inputs.segmented import SegmentedControl
+from nodus.ui.widgets.inputs.toggle_switch import ToggleSwitch
 from nodus.ui.widgets.setting_row import SettingRow
 from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.toast import show_toast
-from nodus.ui.widgets.toggle_switch import ToggleSwitch
 
 # Segment order of the theme selector.
 THEME_MODES = [ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM]

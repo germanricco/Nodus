@@ -27,9 +27,9 @@ from PySide6.QtWidgets import (
 from nodus.services.errors import ValidationError
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.theme.design import Layout, Space
-from nodus.ui.widgets.input_error import InputError
+from nodus.ui.widgets.inputs.input_error import InputError
+from nodus.ui.widgets.inputs.tag_input import TagInput
 from nodus.ui.widgets.style import set_style_property
-from nodus.ui.widgets.tag_input import TagInput
 
 # The main button of a dialog that edits something that already exists.
 SAVE_CHANGES = "Guardar cambios"

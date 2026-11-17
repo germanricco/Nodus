@@ -1,0 +1,321 @@
+"""Left sidebar: navigation and the list of accounts with their balances, by group."""
+
+from __future__ import annotations
+
+from datetime import date
+
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QMouseEvent
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+
+from nodus import __version__
+from nodus.models.account import Account
+from nodus.models.money import Money
+from nodus.services.container import Services
+from nodus.ui.event_bus import EventBus
+from nodus.ui.navigation import PageId
+from nodus.ui.shell import tour
+from nodus.ui.shell.coach_marks import mark_target
+from nodus.ui.theme.design import ControlSize, IconSize, Layout, Space
+from nodus.ui.theme.icons import icon, logo_pixmap
+from nodus.ui.theme.theme import Theme
+from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.elided_label import ElidedLabel
+from nodus.ui.widgets.money_label import MoneyLabel, total_text
+from nodus.ui.widgets.style import clear_layout, make_hoverable, set_style_property
+
+
+def keep_whole(label: QLabel) -> None:
+    """An amount beside a name in the narrow sidebar never gives up width: the name is
+    the one shortened with "…", so the cents always show."""
+    label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
+
+
+class SidebarAccountRow(QWidget):
+    """An account and its balance in the sidebar; a click opens the account's page."""
+
+    clicked = Signal()
+
+    def __init__(self, name: str, balance: Money, hidden: bool, indent: int = 0) -> None:
+        super().__init__()
+        layout = QHBoxLayout(self)
+        make_hoverable(self)
+        layout.setContentsMargins(Space.S + indent, Space.XXS, Space.S, Space.XXS)
+        self.name_label = ElidedLabel(name)
+        layout.addWidget(self.name_label, stretch=1)
+        self.amount_label = MoneyLabel()
+        self.amount_label.set_hidden(hidden)
+        self.amount_label.set_money(balance)
+        keep_whole(self.amount_label)
+        layout.addWidget(self.amount_label)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+
+
+class SidebarGroupRow(QWidget):
+    """A group's name in the sidebar, which folds its accounts under it; folded, it shows
+    what they add up to, so the list stays short without losing the totals."""
+
+    clicked = Signal()
+
+    def __init__(self, name: str, folded: bool, total: str, tooltip: str) -> None:
+        super().__init__()
+        self.setObjectName("SidebarGroup")
+        layout = QHBoxLayout(self)
+        make_hoverable(self)
+        layout.setContentsMargins(Space.S, Space.XXS, Space.S, Space.XXS)
+        self.name_label = ElidedLabel(f"{'▸' if folded else '▾'}  {name}")
+        self.name_label.setObjectName("SidebarGroupName")
+        layout.addWidget(self.name_label, stretch=1)
+        self.total_label = QLabel(total)
+        self.total_label.setObjectName("SidebarGroupName")
+        self.total_label.setToolTip(tooltip)
+        self.total_label.setVisible(folded)
+        keep_whole(self.total_label)
+        layout.addWidget(self.total_label)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip("Mostrar sus cuentas" if folded else "Plegar el grupo")
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+
+
+class Sidebar(QFrame):
+    """Navigation buttons on top, the user's accounts below, like MoneyMatter's sidebar,
+    and Ajustes at the foot.
+
+    It can collapse to its icons, to leave the room to the page; the choice is saved.
+    """
+
+    page_requested = Signal(object)  # PageId
+    account_requested = Signal(int)  # account id
+
+    WIDTH = Layout.SIDEBAR_WIDTH
+    COLLAPSED_WIDTH = Layout.SIDEBAR_COLLAPSED_WIDTH
+    LOGO_SIZE = ControlSize.LOGO
+
+    def __init__(self, services: Services, event_bus: EventBus, theme_manager: ThemeManager):
+        super().__init__()
+        self._services = services
+        self.setObjectName("Sidebar")
+        self.setFixedWidth(self.WIDTH)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(Space.M, Space.L, Space.M, Space.S)
+        layout.setSpacing(Space.XXS)
+
+        layout.addWidget(self._build_logo())
+
+        self._nav_buttons = self._build_nav_buttons(layout)
+
+        self._accounts_title = QPushButton()
+        self._accounts_title.setObjectName("SectionToggle")
+        self._accounts_title.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._accounts_title.clicked.connect(self.toggle_accounts_folded)
+        self._accounts_folded = services.settings.accounts_folded()
+        layout.addWidget(self._accounts_title)
+        self._accounts_area = self._build_accounts_area()
+        mark_target(self._accounts_title, tour.ACCOUNTS)
+        mark_target(self._accounts_area, tour.ACCOUNTS)
+        layout.addWidget(self._accounts_area, stretch=1)
+        layout.addStretch()  # keeps the buttons on top while the accounts are hidden
+        # At the foot, as in Windows apps: it is visited rarely, not every day.
+        layout.addWidget(self._nav_buttons[PageId.SETTINGS])
+
+        layout.addLayout(self._build_footer())
+
+        self._theme = theme_manager.theme
+        self._collapsed = False
+        self.set_collapsed(services.settings.sidebar_collapsed())
+        self._apply_theme(theme_manager.theme)
+        theme_manager.theme_changed.connect(self._apply_theme)
+        event_bus.accounts_changed.connect(self.refresh_accounts)
+        event_bus.transactions_changed.connect(self.refresh_accounts)
+        event_bus.exchange_rates_changed.connect(self.refresh_accounts)
+        event_bus.net_worth_currency_changed.connect(self.refresh_accounts)
+        event_bus.amounts_hidden_changed.connect(lambda _hidden: self.refresh_accounts())
+        self.refresh_accounts()
+
+    @property
+    def is_collapsed(self) -> bool:
+        return self._collapsed
+
+    def set_collapsed(self, collapsed: bool) -> None:
+        """Shows only the icons (with the names as tooltips), or everything."""
+        self._collapsed = collapsed
+        self.setFixedWidth(self.COLLAPSED_WIDTH if collapsed else self.WIDTH)
+        for page_id, button in self._nav_buttons.items():
+            button.setText("" if collapsed else page_id.label)
+            button.setToolTip(page_id.label if collapsed else "")
+            set_style_property(button, "collapsed", collapsed)
+        for widget in (self._logo_name, self._accounts_title, self._footer):
+            widget.setVisible(not collapsed)
+        self._show_accounts_state()
+        side = Space.XXS if collapsed else Space.S
+        self._logo_row.setContentsMargins(side, Space.XS, side, Space.M)
+        self.collapse_button.setToolTip("Expandir el panel" if collapsed else "Contraer el panel")
+        self._apply_collapse_icon()
+
+    def toggle_collapsed(self) -> None:
+        self.set_collapsed(not self._collapsed)
+        self._services.settings.set_sidebar_collapsed(self._collapsed)
+
+    @property
+    def accounts_folded(self) -> bool:
+        return self._accounts_folded
+
+    def toggle_accounts_folded(self) -> None:
+        """Folds the list of accounts under its title, or unfolds it; the choice is saved."""
+        self._accounts_folded = not self._accounts_folded
+        self._services.settings.set_accounts_folded(self._accounts_folded)
+        self._show_accounts_state()
+
+    def _show_accounts_state(self) -> None:
+        self._accounts_title.setText(f"CUENTAS  {'▸' if self._accounts_folded else '▾'}")
+        self._accounts_area.setVisible(not (self._collapsed or self._accounts_folded))
+
+    def select(self, page_id: PageId) -> None:
+        self._nav_buttons[page_id].setChecked(True)
+
+    def spotlight(self, pages: tuple[PageId, ...]) -> None:
+        """Lights up the pages an open help topic talks about; none puts them out."""
+        for page_id, button in self._nav_buttons.items():
+            set_style_property(button, "spotlight", page_id in pages)
+
+    def nav_button(self, page_id: PageId) -> QPushButton:
+        return self._nav_buttons[page_id]
+
+    def refresh_accounts(self) -> None:
+        """Rebuilds the account list from the database: by group once there are groups,
+        with the accounts in none at the end."""
+        clear_layout(self._accounts_layout)
+        self.group_rows: dict[int, SidebarGroupRow] = {}
+        accounts = self._services.accounts.list_accounts()
+        if not accounts:
+            # An item of the list, styled as one, rather than an EmptyState.
+            empty = QLabel("Todavía no hay cuentas")  # list-item
+            empty.setObjectName("SidebarItem")
+            set_style_property(empty, "muted", True)
+            self._accounts_layout.addWidget(empty)
+        balances = self._services.accounts.balances()
+        groups = self._services.account_groups
+        folded = self._services.settings.folded_groups()
+        for index, section in enumerate(groups.sections(accounts)):
+            if index:  # a little air between groups, and before the loose accounts
+                self._accounts_layout.addSpacing(Space.XS)
+            if section.group is None:
+                self._add_account_rows(section.accounts, balances)
+                continue
+            if not section.accounts:  # nothing to see in the sidebar
+                continue
+            group = section.group
+            total = groups.total(section.accounts, balances, date.today())
+            text, tooltip = total_text(total, self._services.settings.amounts_hidden())
+            row = SidebarGroupRow(group.name, group.id in folded, text, tooltip)
+            row.clicked.connect(lambda g=group.id: self.toggle_group(g))
+            self.group_rows[group.id] = row
+            self._accounts_layout.addWidget(row)
+            if group.id not in folded:
+                self._add_account_rows(section.accounts, balances, indent=Space.M)
+        self._accounts_layout.addStretch()
+
+    def toggle_group(self, group_id: int) -> None:
+        """Folds a group under its name, or unfolds it; the choice is saved."""
+        folded = self._services.settings.folded_groups()
+        folded ^= {group_id}
+        self._services.settings.set_folded_groups(folded)
+        self.refresh_accounts()
+
+    def _add_account_rows(
+        self, accounts: list[Account], balances: dict[int, Money], indent: int = 0
+    ) -> None:
+        hidden = self._services.settings.amounts_hidden()
+        for account in accounts:
+            row = SidebarAccountRow(account.name, balances[account.id], hidden, indent)
+            row.clicked.connect(lambda a=account.id: self.account_requested.emit(a))
+            self._accounts_layout.addWidget(row)
+
+    def _build_logo(self) -> QWidget:
+        logo = QWidget()
+        row = QHBoxLayout(logo)
+        row.setContentsMargins(Space.S, Space.XS, Space.S, Space.M)
+        row.setSpacing(Space.S)
+        image = QLabel()
+        image.setPixmap(logo_pixmap(self.LOGO_SIZE))
+        image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        row.addWidget(image)
+        self._logo_name = QLabel("Nodus")
+        self._logo_name.setObjectName("SidebarLogo")
+        row.addWidget(self._logo_name, stretch=1)
+        self._logo_row = row
+        return logo
+
+    def _build_footer(self) -> QHBoxLayout:
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        self._footer = QLabel(f"Nodus {__version__}")
+        self._footer.setObjectName("SidebarFooter")
+        row.addWidget(self._footer, stretch=1)
+        self.collapse_button = QPushButton()
+        self.collapse_button.setObjectName("IconButton")
+        self.collapse_button.setIconSize(QSize(IconSize.L, IconSize.L))
+        self.collapse_button.setFixedSize(ControlSize.COLLAPSE_BUTTON, ControlSize.COLLAPSE_BUTTON)
+        self.collapse_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.collapse_button.clicked.connect(self.toggle_collapsed)
+        row.addWidget(self.collapse_button)
+        return row
+
+    def _build_nav_buttons(self, layout: QVBoxLayout) -> dict[PageId, QPushButton]:
+        group = QButtonGroup(self)
+        buttons = {}
+        for page_id in PageId:
+            button = QPushButton(page_id.label)
+            button.setObjectName("NavButton")
+            button.setCheckable(True)
+            button.setIconSize(QSize(IconSize.XL, IconSize.XL))
+            button.clicked.connect(lambda _checked, p=page_id: self.page_requested.emit(p))
+            group.addButton(button)
+            if page_id is not PageId.SETTINGS:  # placed at the foot
+                layout.addWidget(button)
+                mark_target(button, tour.PAGES)
+            buttons[page_id] = button
+        return buttons
+
+    def _build_accounts_area(self) -> QScrollArea:
+        container = QWidget()
+        container.setObjectName("SidebarAccounts")
+        self._accounts_layout = QVBoxLayout(container)
+        self._accounts_layout.setContentsMargins(0, 0, 0, 0)
+        self._accounts_layout.setSpacing(Space.S)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.viewport().setObjectName("SidebarAccounts")
+        scroll.setWidget(container)
+        return scroll
+
+    def _apply_theme(self, theme: Theme) -> None:
+        self._theme = theme
+        for page_id, button in self._nav_buttons.items():
+            button.setIcon(icon(page_id.icon_name, theme.text_muted, checked_color=theme.accent))
+        self._apply_collapse_icon()
+
+    def _apply_collapse_icon(self) -> None:
+        name = "panel-left-open" if self._collapsed else "panel-left-close"
+        self.collapse_button.setIcon(icon(name, self._theme.text_muted))

@@ -11,8 +11,7 @@ from nodus.models.currency import Currency
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.services.transaction_service import TransferDraft
-from nodus.ui import main_window as main_window_module
+from nodus.services.transactions.transaction_service import TransferDraft
 from nodus.ui.dialogs import export
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog
 from nodus.ui.dialogs.transaction_dialog import (
@@ -25,10 +24,11 @@ from nodus.ui.navigation import PageId
 from nodus.ui.pages import transaction_list_view
 from nodus.ui.pages.accounts_page import AccountRow
 from nodus.ui.pages.transactions_page import TransactionsPage
+from nodus.ui.shell import main_window as main_window_module
 from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme import LIGHT
-from nodus.ui.widgets.selectors import HEADING_ROLE, MANAGE_ROLE
-from nodus.ui.widgets.transaction_table import ACCOUNT, AMOUNT, CATEGORY, PAYEE
+from nodus.ui.widgets.inputs.selectors import HEADING_ROLE, MANAGE_ROLE
+from nodus.ui.widgets.tables.transaction_table import ACCOUNT, AMOUNT, CATEGORY, PAYEE
 
 EXPENSE = TransactionType.EXPENSE
 NOVEMBER = Month(2026, 11)

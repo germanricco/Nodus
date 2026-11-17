@@ -1,7 +1,7 @@
 """The color field of the category and tag forms, which share the recent colors."""
 
 from nodus.services.container import Services
-from nodus.ui.widgets.color import ColorPicker
+from nodus.ui.widgets.inputs.color import ColorPicker
 
 
 def color_picker(services: Services) -> ColorPicker:

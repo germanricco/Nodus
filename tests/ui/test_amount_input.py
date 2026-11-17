@@ -4,7 +4,7 @@ import pytest
 from factories import ars, usd
 
 from nodus.models.currency import Currency
-from nodus.ui.widgets.amount_input import AmountInput, parse_amount
+from nodus.ui.widgets.inputs.amount_input import AmountInput, parse_amount
 
 
 @pytest.mark.parametrize(

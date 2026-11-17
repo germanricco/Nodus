@@ -23,13 +23,13 @@ from nodus.ui.dialogs.transaction_dialog import (
     TRANSFER_MODE,
     TransactionDialog,
 )
-from nodus.ui.formatting import format_date
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages import transaction_list_view
-from nodus.ui.pages.dashboard_cards import LatestTransactionRow, LatestTransactionsCard
+from nodus.ui.pages.dashboard.dashboard_cards import LatestTransactionRow, LatestTransactionsCard
 from nodus.ui.pages.recurring_page import RecurringPage
 from nodus.ui.pages.transactions_page import TransactionsPage
-from nodus.ui.widgets.transaction_table import AMOUNT, DATE, DESCRIPTION
+from nodus.ui.text.formatting import format_date
+from nodus.ui.widgets.tables.transaction_table import AMOUNT, DATE, DESCRIPTION
 
 TODAY = date.today()
 

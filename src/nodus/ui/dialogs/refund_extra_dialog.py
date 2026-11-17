@@ -8,9 +8,9 @@ from PySide6.QtWidgets import QLabel, QWidget
 from nodus.models.money import Money
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
-from nodus.services.transaction_service import TransactionDraft
+from nodus.services.transactions.transaction_service import TransactionDraft
 from nodus.ui.dialogs.form_dialog import CHOOSE_CATEGORY, FormDialog
-from nodus.ui.widgets.selectors import CategoryComboBox
+from nodus.ui.widgets.inputs.selectors import CategoryComboBox
 
 
 class RefundExtraDialog(FormDialog):

@@ -13,9 +13,9 @@ from nodus.models.period import Month
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
-from nodus.services.goal_service import GoalDraft
-from nodus.services.recurring_charge_service import RecurringChargeDraft
-from nodus.services.transaction_service import TransactionDraft, TransferDraft
+from nodus.services.planning.goal_service import GoalDraft
+from nodus.services.transactions.recurring_charge_service import RecurringChargeDraft
+from nodus.services.transactions.transaction_service import TransactionDraft, TransferDraft
 
 # Months of history before the current one, so the dashboard has trends to show.
 HISTORY_MONTHS = 5

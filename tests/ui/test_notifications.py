@@ -11,12 +11,12 @@ from PySide6.QtTest import QTest
 
 from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
-from nodus.services.notification_service import NoticeKind
-from nodus.services.update_service import UpdateService
+from nodus.services.app.notification_service import NoticeKind
+from nodus.services.external.update_service import UpdateService
 from nodus.ui import browser
 from nodus.ui.dialogs import external_backup
-from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
+from nodus.ui.shell.main_window import MainWindow
 
 NEWER = json.dumps({"tag_name": "v9.0.0", "html_url": "https://example.com/v9"}).encode()
 

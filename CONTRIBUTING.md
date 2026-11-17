@@ -42,6 +42,8 @@ El paquete `src/nodus/` está en capas que solo dependen hacia abajo:
 - `services`: las reglas de negocio, como saldos, validaciones o qué vence.
 - `ui`: ventanas, páginas, diálogos y tema. La interfaz nunca ejecuta SQL ni calcula saldos.
 
+Dentro de `services` y de `ui`, cada carpeta agrupa archivos que comparten una regla, que su `__init__.py` dice en una línea. En `services`, los servicios se agrupan por lo que manejan: `accounts`, `transactions`, `classification` (categorías, beneficiarios y etiquetas), `planning` (presupuestos y metas) y `app` (ajustes, avisos, novedades, recorrido y deshacer). `reports` arma cifras combinando otros servicios y nunca toca la base de datos. `external` es la única puerta hacia internet y hacia Windows. En `ui`, `shell` tiene la ventana principal y las partes que existen solo para ella; `text` reúne los textos que se arman para el usuario; `pages/base` tiene las clases de las que parte cada página; y `widgets` tiene piezas reutilizables, ordenadas en `charts`, `inputs` y `tables`, que no conocen las páginas que las usan.
+
 Los tests en `tests/` siguen la misma estructura. Algunas reglas que conviene conocer:
 
 - **Dinero:** los montos se guardan en centavos enteros, nunca en números de punto flotante, que acumulan errores de redondeo.

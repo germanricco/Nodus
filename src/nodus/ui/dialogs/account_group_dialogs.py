@@ -10,7 +10,7 @@ from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.widgets.combo_box import ComboBox
+from nodus.ui.widgets.inputs.combo_box import ComboBox
 
 # The item of the group list that creates a group on the spot.
 NEW_GROUP = "new"

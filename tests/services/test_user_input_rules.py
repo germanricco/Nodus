@@ -26,7 +26,7 @@ from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import ValidationError
-from nodus.services.goal_service import GoalDraft
+from nodus.services.planning.goal_service import GoalDraft
 
 # Text a person can paste into any name or note field.
 STORED_AS_TYPED = [

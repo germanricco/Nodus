@@ -7,10 +7,10 @@ from PySide6.QtCore import Qt
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.money import Money
-from nodus.ui import main_window
-from nodus.ui.main_window import MainWindow
-from nodus.ui.tour import TOUR_STEPS
-from nodus.ui.widgets.coach_marks import CoachMarks
+from nodus.ui.shell import main_window
+from nodus.ui.shell.coach_marks import CoachMarks
+from nodus.ui.shell.main_window import MainWindow
+from nodus.ui.shell.tour import TOUR_STEPS
 
 
 @pytest.fixture

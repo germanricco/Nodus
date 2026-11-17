@@ -7,8 +7,8 @@ from collections.abc import Iterable
 from nodus.models.account import Account
 from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import CHOOSE_ACCOUNT
-from nodus.ui.widgets.input_error import InputError
-from nodus.ui.widgets.selectors import AccountComboBox
+from nodus.ui.widgets.inputs.input_error import InputError
+from nodus.ui.widgets.inputs.selectors import AccountComboBox
 
 
 def selectable_accounts(services: Services, used_ids: Iterable[int] = ()) -> list[Account]:

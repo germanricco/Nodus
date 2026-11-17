@@ -12,9 +12,9 @@ from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.ui.dialogs.form_dialog import TYPE_AMOUNT, FormDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.formatting import format_date
-from nodus.ui.widgets.amount_input import AmountInput
-from nodus.ui.widgets.date_input import DateInput
+from nodus.ui.text.formatting import format_date
+from nodus.ui.widgets.inputs.amount_input import AmountInput
+from nodus.ui.widgets.inputs.date_input import DateInput
 from nodus.ui.widgets.net_worth_card import signed
 from nodus.ui.widgets.style import set_style_property
 

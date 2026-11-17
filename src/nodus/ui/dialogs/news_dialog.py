@@ -13,9 +13,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.services.changelog import ChangelogEntry
-from nodus.services.update_service import Release
-from nodus.ui.formatting import format_date
+from nodus.services.app.changelog import ChangelogEntry
+from nodus.services.external.update_service import Release
+from nodus.ui.text.formatting import format_date
 from nodus.ui.theme.design import Layout, Space
 
 

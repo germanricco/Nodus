@@ -28,32 +28,32 @@ from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import ACCOUNT_TYPE_LABELS, estimate_text
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.accounts_page import account_delete_warning, delete_account
-from nodus.ui.pages.dashboard_cards import (
+from nodus.ui.pages.base.detail_page import DetailPage, danger_zone
+from nodus.ui.pages.dashboard.dashboard_cards import (
     FigureTile,
     UpcomingPaymentRow,
     card_header,
     muted_label,
 )
-from nodus.ui.pages.detail_page import DetailPage, danger_zone
 from nodus.ui.pages.recurring_page import skip_charge, toggle_seen
 from nodus.ui.pages.transaction_list_view import TransactionListView
+from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, estimate_text
 from nodus.ui.theme.design import Chart, Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import format_signed_percent
-from nodus.ui.widgets.chart_base import format_compact
+from nodus.ui.widgets.charts.chart_base import format_compact
+from nodus.ui.widgets.charts.goal_bar import month_phrase
+from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint
 from nodus.ui.widgets.figure_row import FigureRow
-from nodus.ui.widgets.goal_bar import month_phrase
-from nodus.ui.widgets.line_chart import LineChart, LinePoint
+from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.money_label import MoneyLabel, amount_text, masked, month_change_text
 from nodus.ui.widgets.net_worth_card import signed
-from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction
-from nodus.ui.widgets.segmented import SegmentedControl
 from nodus.ui.widgets.style import clear_layout
-from nodus.ui.widgets.transaction_table import ACCOUNT
+from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
+from nodus.ui.widgets.tables.transaction_table import ACCOUNT
 
 # How far back the balance chart looks: months, or None for the account's whole life.
 CHART_RANGES: tuple[tuple[int | None, str], ...] = ((6, "6 meses"), (12, "1 año"), (None, "Todo"))

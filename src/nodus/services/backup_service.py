@@ -10,8 +10,8 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from nodus.database.database import Database, DatabaseError, latest_schema_version
+from nodus.services.app.settings_service import SettingsService
 from nodus.services.errors import BackupError, ValidationError
-from nodus.services.settings_service import SettingsService
 
 _DAILY_NAME = re.compile(r"^nodus-(\d{4}-\d{2}-\d{2})\.db$")
 # The reminder to save a copy outside the computer opens on the last days of each month.

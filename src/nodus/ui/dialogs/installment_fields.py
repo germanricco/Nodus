@@ -11,11 +11,11 @@ from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QWidget
 from nodus.models.installment_plan import MAX_INSTALLMENTS, MIN_INSTALLMENTS, InstallmentPlan
 from nodus.models.money import Money
 from nodus.services.errors import ValidationError
-from nodus.ui.formatting import format_date
+from nodus.ui.text.formatting import format_date
 from nodus.ui.theme.design import Space
-from nodus.ui.widgets.combo_box import ComboBox
-from nodus.ui.widgets.input_error import InputError
-from nodus.ui.widgets.segmented import SegmentedControl
+from nodus.ui.widgets.inputs.combo_box import ComboBox
+from nodus.ui.widgets.inputs.input_error import InputError
+from nodus.ui.widgets.inputs.segmented import SegmentedControl
 
 TOTAL, PER_INSTALLMENT = range(2)
 AMOUNT_MODES = ["Total", "Por cuota"]

@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtCore import QPoint, QPointF, Qt
 
 from nodus.ui.theme.theme import LIGHT
-from nodus.ui.widgets.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
+from nodus.ui.widgets.charts.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
 
 # The chart is 400 x 260 and its bars sit between TOP (18) and 260 - BOTTOM (22).
 WIDTH, HEIGHT = 400, 260

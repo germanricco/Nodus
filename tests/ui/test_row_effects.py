@@ -10,10 +10,10 @@ from factories import table_rows
 from PySide6.QtWidgets import QDialog, QMessageBox
 from qt_cleanup import flush_deleted
 
-from nodus.services.settings_service import SettingsService
+from nodus.services.app.settings_service import SettingsService
 from nodus.ui.navigation import DetailId, PageId
-from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, _RowHandler
-from nodus.ui.widgets.selectable_table import SelectableTable
+from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, _RowHandler
+from nodus.ui.widgets.tables.selectable_table import SelectableTable
 
 ROWS_PER_TABLE = 3  # the first rows of a long list have the same actions as the rest
 OPPOSITES = {

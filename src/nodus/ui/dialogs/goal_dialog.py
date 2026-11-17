@@ -21,16 +21,16 @@ from nodus.models.goal import Goal, GoalShare, GoalState
 from nodus.models.money import Money
 from nodus.models.period import Month
 from nodus.services.container import Services
-from nodus.services.goal_service import GoalDraft
+from nodus.services.planning.goal_service import GoalDraft
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_AMOUNT, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import CURRENCY_LABELS
+from nodus.ui.text.labels import CURRENCY_LABELS
 from nodus.ui.theme.design import Space
-from nodus.ui.widgets.amount_input import AmountInput
-from nodus.ui.widgets.combo_box import ComboBox
-from nodus.ui.widgets.date_input import DateInput
+from nodus.ui.widgets.charts.goal_bar import NO_RATE_TEXT, month_phrase
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.goal_bar import NO_RATE_TEXT, month_phrase
+from nodus.ui.widgets.inputs.amount_input import AmountInput
+from nodus.ui.widgets.inputs.combo_box import ComboBox
+from nodus.ui.widgets.inputs.date_input import DateInput
 from nodus.ui.widgets.money_label import amount_text
 
 PERCENT_WIDTH = 48  # geometry: room for «100»

@@ -12,10 +12,10 @@ from nodus.models.currency import Currency
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
-from nodus.ui.labels import due_label
 from nodus.ui.navigation import PageId
 from nodus.ui.pages import recurring_page
 from nodus.ui.pages.recurring_page import RecurringChargeRow, RecurringPage
+from nodus.ui.text.labels import due_label
 
 
 @pytest.fixture

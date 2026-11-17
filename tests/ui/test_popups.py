@@ -21,8 +21,8 @@ from nodus.ui.theme import design
 from nodus.ui.theme.design import Popup
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.row_actions import Effect, RowAction, build_menu
-from nodus.ui.widgets.selectors import PayeeComboBox
+from nodus.ui.widgets.inputs.selectors import PayeeComboBox
+from nodus.ui.widgets.tables.row_actions import Effect, RowAction, build_menu
 
 BORDER = 1
 

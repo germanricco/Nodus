@@ -10,14 +10,14 @@ from PySide6.QtWidgets import QLabel
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.services.export_service import HEADER
+from nodus.services.reports.export_service import HEADER
 from nodus.ui.dialogs.form_dialog import FIELD_ERROR
 from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog
 from nodus.ui.dialogs.transaction_dialog import EXPENSE_MODE, INCOME_MODE, TransactionDialog
 from nodus.ui.pages import transaction_list_view
 from nodus.ui.pages.transactions_page import TransactionsPage
-from nodus.ui.widgets.transaction_table import DESCRIPTION
+from nodus.ui.widgets.tables.transaction_table import DESCRIPTION
 
 INCOME = TransactionType.INCOME
 TODAY = date.today()

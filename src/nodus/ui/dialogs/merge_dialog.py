@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.ui.dialogs.form_dialog import FormDialog
-from nodus.ui.labels import movements_text
-from nodus.ui.widgets.combo_box import ComboBox
+from nodus.ui.text.labels import movements_text
+from nodus.ui.widgets.inputs.combo_box import ComboBox
 
 
 @dataclass(frozen=True)

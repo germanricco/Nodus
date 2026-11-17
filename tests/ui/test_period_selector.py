@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from nodus.models.period import Month, Period, QuickPeriod
 from nodus.ui.dialogs.date_range_dialog import DateRangeDialog
 from nodus.ui.pages.transactions_page import export_filename
-from nodus.ui.widgets.period_selector import PeriodSelector
+from nodus.ui.widgets.inputs.period_selector import PeriodSelector
 
 NOVEMBER = Period.of_months(Month(2026, 11))
 

@@ -16,7 +16,7 @@ from nodus.ui.navigation import PageId
 from nodus.ui.pages.categories_page import CategoriesPage, CategoryRow
 from nodus.ui.pages.recurring_page import RecurringChargeRow
 from nodus.ui.pages.settings_page import RateRow
-from nodus.ui.widgets.row_actions import Effect, RowAction, build_menu, install_row_actions
+from nodus.ui.widgets.tables.row_actions import Effect, RowAction, build_menu, install_row_actions
 
 FAR_AWAY = QPoint(5000, 5000)
 

@@ -4,8 +4,8 @@ import pytest
 from PySide6.QtCore import QPointF
 
 from nodus.models.palette import PALETTE
-from nodus.ui.widgets.color import ColorPicker, ColorSwatch
-from nodus.ui.widgets.color_wheel import VALUE_STEPS, ColorWheelPopup
+from nodus.ui.widgets.inputs.color import ColorPicker, ColorSwatch
+from nodus.ui.widgets.inputs.color_wheel import VALUE_STEPS, ColorWheelPopup
 
 
 @pytest.fixture

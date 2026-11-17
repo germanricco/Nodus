@@ -6,8 +6,8 @@ from PySide6.QtCore import QEvent, QPointF
 from PySide6.QtGui import QEnterEvent
 
 from nodus.models.currency import Currency
-from nodus.ui import main_window as main_window_module
 from nodus.ui.rate_updater import updated_text
+from nodus.ui.shell import main_window as main_window_module
 from nodus.ui.theme.design import Dwell
 from nodus.ui.widgets.toast import MAX_TOASTS, show_toast
 

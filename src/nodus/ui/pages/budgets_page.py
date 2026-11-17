@@ -17,25 +17,30 @@ from PySide6.QtWidgets import (
 from nodus.models.budget import Budget, BudgetState
 from nodus.models.category import Category
 from nodus.models.period import Month, Period, format_month
-from nodus.services.budget_service import MonthBudgets
 from nodus.services.container import Services
-from nodus.services.dashboard_service import CategoryTotal
+from nodus.services.planning.budget_service import MonthBudgets
+from nodus.services.reports.dashboard_service import CategoryTotal
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import days_left_text, unconverted_note
 from nodus.ui.navigation import TransactionFocus
-from nodus.ui.pages.dashboard_cards import BudgetRow, CategoryLine, FigureTile, muted_label
-from nodus.ui.pages.page import Page
+from nodus.ui.pages.base.page import Page
+from nodus.ui.pages.dashboard.dashboard_cards import (
+    BudgetRow,
+    CategoryLine,
+    FigureTile,
+    muted_label,
+)
+from nodus.ui.text.labels import days_left_text, unconverted_note
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.charts.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.empty_state import empty_page_card
-from nodus.ui.widgets.period_selector import PeriodSelector
-from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.inputs.period_selector import PeriodSelector
 from nodus.ui.widgets.style import clear_layout
+from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 
 EMPTY_TEXT = (
     "Ponle un límite mensual a las categorías que quieres cuidar, como el supermercado o "

@@ -9,7 +9,7 @@ from menus import run_action
 from nodus.models.account import AccountType
 from nodus.models.currency import FOREIGN_CURRENCIES, Currency
 from nodus.services.errors import BackupError
-from nodus.services.startup_service import StartupService
+from nodus.services.external.startup_service import StartupService
 from nodus.ui.dialogs import export, external_backup
 from nodus.ui.pages import settings_page
 from nodus.ui.pages.settings_page import THEME_MODES, RateRow, SettingsPage

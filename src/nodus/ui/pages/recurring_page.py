@@ -16,14 +16,14 @@ from PySide6.QtWidgets import (
 from nodus.models.category import Category
 from nodus.models.recurring_charge import DueStatus, RecurringCharge
 from nodus.services.container import Services
-from nodus.services.installment_service import InstallmentSummary
-from nodus.services.recurring_charge_service import RecurringSummary
+from nodus.services.transactions.installment_service import InstallmentSummary
+from nodus.services.transactions.recurring_charge_service import RecurringSummary
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringChargeDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import FREQUENCY_LABELS, charge_amount_text, due_label
 from nodus.ui.navigation import PageId
-from nodus.ui.pages.dashboard_cards import (
+from nodus.ui.pages.base.page import Page
+from nodus.ui.pages.dashboard.dashboard_cards import (
     FigureTile,
     due_status_label,
     muted_label,
@@ -31,22 +31,22 @@ from nodus.ui.pages.dashboard_cards import (
     seen_actions,
     status_pill,
 )
-from nodus.ui.pages.page import Page
 from nodus.ui.pages.transaction_list_view import (
     delete_transactions,
     edit_transaction,
     pay_off_actions,
 )
+from nodus.ui.text.labels import FREQUENCY_LABELS, charge_amount_text, due_label
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.transaction_list import TransactionListBuilder, TransactionListItem
+from nodus.ui.transaction_rows import TransactionListBuilder, TransactionListItem
 from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.pay_button import PayButton
-from nodus.ui.widgets.row_actions import Effect, RowAction
-from nodus.ui.widgets.schedule_row import ScheduleRow
 from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.tables.row_actions import Effect, RowAction
+from nodus.ui.widgets.tables.schedule_row import ScheduleRow
 from nodus.ui.widgets.toast import show_toast, toast_host
 
 GROUP_TITLES = {

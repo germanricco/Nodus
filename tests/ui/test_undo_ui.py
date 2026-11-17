@@ -15,7 +15,7 @@ from nodus.ui.dialogs.payee_dialogs import MergePayeeDialog
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.dialogs.tag_dialogs import MergeTagDialog
 from nodus.ui.navigation import PageId
-from nodus.ui.widgets.transaction_table import DESCRIPTION
+from nodus.ui.widgets.tables.transaction_table import DESCRIPTION
 
 
 @pytest.fixture

@@ -11,18 +11,18 @@ from PySide6.QtWidgets import QHeaderView, QLabel, QWidget
 from nodus.models.money import Money
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
-from nodus.services.dashboard_service import FilteredTotals
+from nodus.services.reports.dashboard_service import FilteredTotals
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.formatting import format_date
-from nodus.ui.labels import movements_text, transactions_text, unconverted_note
-from nodus.ui.pages.page import Page
+from nodus.ui.pages.base.page import Page
+from nodus.ui.text.formatting import format_date
+from nodus.ui.text.labels import movements_text, transactions_text, unconverted_note
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.transaction_list import (
+from nodus.ui.transaction_rows import (
     TransactionListBuilder,
     TransactionListItem,
     delete_text,
@@ -31,11 +31,11 @@ from nodus.ui.transaction_list import (
 from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.row_actions import Effect, RowAction
-from nodus.ui.widgets.selectable_table import SelectableTable
-from nodus.ui.widgets.selection_bar import SelectionBar
-from nodus.ui.widgets.table import DELETE_KEY_HINT, bind_delete_key
-from nodus.ui.widgets.transaction_table import (
+from nodus.ui.widgets.tables.row_actions import Effect, RowAction
+from nodus.ui.widgets.tables.selectable_table import SelectableTable
+from nodus.ui.widgets.tables.selection_bar import SelectionBar
+from nodus.ui.widgets.tables.table import DELETE_KEY_HINT, bind_delete_key
+from nodus.ui.widgets.tables.transaction_table import (
     ACCOUNT,
     CATEGORY,
     DESCRIPTION,

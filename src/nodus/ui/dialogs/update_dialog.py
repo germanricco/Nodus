@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.services.errors import UpdateError
-from nodus.services.update_service import Release, UpdateService
+from nodus.services.external.update_service import Release, UpdateService
 from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.user_error import ErrorDetail

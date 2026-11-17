@@ -6,8 +6,8 @@ from PySide6.QtWidgets import QWidget
 
 from nodus.models.period import Period
 from nodus.ui.dialogs.form_dialog import FormDialog
-from nodus.ui.widgets.date_input import DateInput
-from nodus.ui.widgets.input_error import InputError
+from nodus.ui.widgets.inputs.date_input import DateInput
+from nodus.ui.widgets.inputs.input_error import InputError
 
 
 class DateRangeDialog(FormDialog):

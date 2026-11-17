@@ -12,8 +12,8 @@ from nodus.models.transaction import TransactionType
 from nodus.ui.dialogs.payee_dialogs import NO_DEFAULT_CATEGORY, MergePayeeDialog, PayeeDialog
 from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages import payees_page
+from nodus.ui.pages.base.summary_page import COUNT, NAME, TOTAL
 from nodus.ui.pages.payees_page import NO_PAYEES_TEXT, PayeesPage
-from nodus.ui.pages.summary_page import COUNT, NAME, TOTAL
 
 EXPENSE = TransactionType.EXPENSE
 

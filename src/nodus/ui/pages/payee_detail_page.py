@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 from nodus.models.transaction_filter import TransactionFilter
+from nodus.services.classification.payee_service import PayeeSummary
 from nodus.services.container import Services
-from nodus.services.payee_service import PayeeSummary
 from nodus.ui.dialogs.payee_dialogs import MergePayeeDialog, PayeeDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
+from nodus.ui.pages.base.summary_detail_page import NO_MOVEMENTS, SummaryDetailPage
 from nodus.ui.pages.payees_page import delete_payees, payee_delete_warning
-from nodus.ui.pages.summary_detail_page import NO_MOVEMENTS, SummaryDetailPage
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.transaction_table import PAYEE
+from nodus.ui.widgets.tables.transaction_table import PAYEE
 
 
 class PayeeDetailPage(SummaryDetailPage[PayeeSummary]):

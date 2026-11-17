@@ -7,14 +7,14 @@ from menus import run_action, texts
 from PySide6.QtWidgets import QDialog, QPushButton
 
 from nodus.links import DONATE_URL, feedback_url
-from nodus.services.changelog import ChangelogEntry
-from nodus.services.news_service import NewsService
-from nodus.services.update_service import Release, UpdateService
+from nodus.services.app.changelog import ChangelogEntry
+from nodus.services.app.news_service import NewsService
+from nodus.services.external.update_service import Release, UpdateService
 from nodus.ui import browser
 from nodus.ui.dialogs.news_dialog import NewsDialog, entries_markdown
-from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
 from nodus.ui.pages.settings_page import SettingsPage
+from nodus.ui.shell.main_window import MainWindow
 
 ENTRIES = [
     ChangelogEntry("1.1.0", date(2026, 11, 7), "- Euros y pesos chilenos."),

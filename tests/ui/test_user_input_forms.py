@@ -32,11 +32,11 @@ from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog, RecurringC
 from nodus.ui.dialogs.tag_dialogs import TagDialog
 from nodus.ui.dialogs.transaction_dialog import INCOME_MODE, TransactionDialog
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
-from nodus.ui.main_window import MainWindow
 from nodus.ui.navigation import PageId
-from nodus.ui.transaction_list import TransactionListBuilder
-from nodus.ui.widgets.amount_input import AmountInput
-from nodus.ui.widgets.input_error import InputError
+from nodus.ui.shell.main_window import MainWindow
+from nodus.ui.transaction_rows import TransactionListBuilder
+from nodus.ui.widgets.inputs.amount_input import AmountInput
+from nodus.ui.widgets.inputs.input_error import InputError
 
 INCOME = TransactionType.INCOME
 

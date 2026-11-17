@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QMenu, QWidget
 
 from nodus.ui.theme.theme import DARK, LIGHT, ThemeMode
 from nodus.ui.theme.theme_manager import active_theme
-from nodus.ui.widgets.row_actions import (
+from nodus.ui.widgets.tables.row_actions import (
     Effect,
     MoreButton,
     RowAction,

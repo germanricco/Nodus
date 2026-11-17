@@ -10,9 +10,9 @@ from nodus.services.container import Services
 from nodus.ui.dialogs.account_group_dialogs import GroupPicker
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.labels import ACCOUNT_TYPE_LABELS, CURRENCY_LABELS
-from nodus.ui.widgets.amount_input import AmountInput
-from nodus.ui.widgets.combo_box import ComboBox
+from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, CURRENCY_LABELS
+from nodus.ui.widgets.inputs.amount_input import AmountInput
+from nodus.ui.widgets.inputs.combo_box import ComboBox
 
 
 class AccountDialog(FormDialog):

@@ -12,7 +12,7 @@ from nodus.config.paths import AppPaths
 from nodus.database.database import Database, DatabaseError
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
-from nodus.ui.main_window import MainWindow
+from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.theme.design import set_reduced_motion
 from nodus.ui.theme.icons import app_icon
 from nodus.ui.theme.theme import ThemeMode

@@ -22,15 +22,15 @@ from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
-from nodus.ui.pages.page import Page
+from nodus.ui.pages.base.page import Page
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.charts.goal_bar import GoalBar, goal_pill, goal_sentence, saved_of_target
 from nodus.ui.widgets.empty_state import empty_page_card
-from nodus.ui.widgets.goal_bar import GoalBar, goal_pill, goal_sentence, saved_of_target
-from nodus.ui.widgets.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.style import clear_layout, set_style_property
+from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 
 EMPTY_TITLE = "Todavía no hay metas"
 EMPTY_TEXT = (

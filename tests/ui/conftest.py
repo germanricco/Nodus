@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QApplication
 
 from nodus.ui.dialogs import form_dialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.main_window import MainWindow
+from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
 

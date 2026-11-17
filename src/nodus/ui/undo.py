@@ -5,9 +5,9 @@ from __future__ import annotations
 from PySide6.QtCore import SignalInstance
 from PySide6.QtWidgets import QWidget
 
+from nodus.services.app.undo_service import UndoRecord
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
-from nodus.services.undo_service import UndoRecord
 from nodus.ui.widgets.toast import show_toast, toast_host
 
 UNDO_TEXT = "Deshacer"

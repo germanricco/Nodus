@@ -3,7 +3,7 @@
 import pytest
 from PySide6.QtWidgets import QLabel
 
-from nodus.ui.pages.dashboard_cards import FigureTile
+from nodus.ui.pages.dashboard.dashboard_cards import FigureTile
 from nodus.ui.widgets.figure_row import FigureRow, balanced_columns
 
 

@@ -30,8 +30,8 @@ from nodus.models.period import Month  # noqa: E402
 from nodus.models.transaction import Transaction, TransactionType  # noqa: E402
 from nodus.models.transaction_filter import TransactionFilter  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
-from nodus.services.transaction_service import TransactionDraft  # noqa: E402
-from nodus.services.update_service import Installer, Release  # noqa: E402
+from nodus.services.external.update_service import Installer, Release  # noqa: E402
+from nodus.services.transactions.transaction_service import TransactionDraft  # noqa: E402
 from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
 from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog  # noqa: E402
@@ -44,14 +44,14 @@ from nodus.ui.dialogs.update_dialog import UpdateDialog  # noqa: E402
 from nodus.ui.dialogs.user_error import UserErrorDialog  # noqa: E402
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
-from nodus.ui.help_texts import TOPICS_BY_KEY  # noqa: E402
-from nodus.ui.main_window import MainWindow  # noqa: E402
 from nodus.ui.navigation import DetailId, PageId  # noqa: E402
 from nodus.ui.pages.accounts_page import AccountRow  # noqa: E402
+from nodus.ui.shell.main_window import MainWindow  # noqa: E402
+from nodus.ui.text.help_texts import TOPICS_BY_KEY  # noqa: E402
 from nodus.ui.theme.design import set_reduced_motion  # noqa: E402
 from nodus.ui.theme.theme import ThemeMode  # noqa: E402
 from nodus.ui.theme.theme_manager import ThemeManager  # noqa: E402
-from nodus.ui.widgets.row_actions import build_menu  # noqa: E402
+from nodus.ui.widgets.tables.row_actions import build_menu  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).parent))
 from demo_data import load_demo_data  # noqa: E402

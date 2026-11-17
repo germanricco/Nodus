@@ -5,9 +5,10 @@ import threading
 import pytest
 from PySide6.QtWidgets import QDialog
 
-from nodus.services.update_service import Installer, Release, UpdateService
-from nodus.ui import browser, main_window
+from nodus.services.external.update_service import Installer, Release, UpdateService
+from nodus.ui import browser
 from nodus.ui.dialogs.update_dialog import UpdateDialog, megabytes
+from nodus.ui.shell import main_window
 
 SETUP = b"setup program" * 50_000
 RELEASE = Release(

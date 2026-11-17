@@ -11,7 +11,7 @@ from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.undo import offer_undo
-from nodus.ui.widgets.selectors import CategoryComboBox
+from nodus.ui.widgets.inputs.selectors import CategoryComboBox
 
 NO_DEFAULT_CATEGORY = "Sin categoría predeterminada"
 

@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget
 from nodus.ui.theme.design import IconSize
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme_manager import active_theme
-from nodus.ui.widgets.row_actions import MoreButton
+from nodus.ui.widgets.tables.row_actions import MoreButton
 
 PAY_TIP = "Registrar el pago"
 
