@@ -426,13 +426,12 @@ class TransactionDialog(FormDialog):
             refund_of_id=self.refund_input.expense_id(),
             tag_names=self.tag_input.names(),
         )
-        creates_tags = any(self._services.tags.find(name) is None for name in draft.tag_names)
+        creates_tags = self._services.tags.any_new(draft.tag_names)
         plan = (
             self.installment_fields.plan_for(draft.amount, draft.occurred_on)
             if draft.type is TransactionType.EXPENSE
             else None
         )
-        installments = self._services.installments
         transaction_id = self._transaction.id if self._transaction else None
         excess = self._services.transactions.refund_excess(draft, transaction_id)
         if excess is not None:
@@ -440,17 +439,9 @@ class TransactionDialog(FormDialog):
             if not extra.exec():
                 # Not split: the refund goes over, and the form says by how much.
                 self._services.transactions.validated(draft, transaction_id)
-            if not self._transaction:
-                self._services.settings.set_last_account_id(draft.account_id)
-        elif self._transaction and (plan or self._transaction.installment):
-            installments.update(self._transaction.id, draft, plan)
-        elif self._transaction:
-            self._services.transactions.update(self._transaction.id, draft)
         else:
-            if plan:
-                installments.create(draft, plan)
-            else:
-                self._services.transactions.create(draft)
+            self._services.installments.save(draft, plan, self._transaction)
+        if not self._transaction:
             self._services.settings.set_last_account_id(draft.account_id)
         if creates_tags:
             self._event_bus.tags_changed.emit()

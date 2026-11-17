@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 
@@ -58,6 +59,10 @@ class TagService:
 
     def get(self, tag_id: int) -> Tag:
         return require_found(self._tags.get(tag_id), "La etiqueta no existe.")
+
+    def any_new(self, names: Iterable[str]) -> bool:
+        """Whether saving ``names`` creates a tag, so the lists of tags need refreshing."""
+        return any(self.find(name) is None for name in names)
 
     def find(self, name: str) -> Tag | None:
         """The tag called ``name``, ignoring case, accents and signs."""

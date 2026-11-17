@@ -8,7 +8,6 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout
 
 from nodus.models.period import Month, Period, format_month
 from nodus.services.container import Services
-from nodus.services.conversion import relative_change
 from nodus.services.reports.analysis_service import CashFlowReport
 from nodus.services.reports.dashboard_service import MonthFlow
 from nodus.ui.navigation import TransactionFocus
@@ -19,7 +18,7 @@ from nodus.ui.pages.analysis.common import (
     ModelIndex,
     chart_card,
 )
-from nodus.ui.text.formatting import percent
+from nodus.ui.text.formatting import rate_text
 from nodus.ui.text.labels import unconverted_note
 from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme import Theme
@@ -81,7 +80,7 @@ class CashFlowTableModel(QAbstractTableModel):
                 flow.income.format(),
                 flow.expenses.format(),
                 flow.savings.format(),
-                percent(flow.savings, flow.income),
+                rate_text(flow.savings_rate),
             ][column]
         if role == Qt.ItemDataRole.ForegroundRole and column in (INCOME, EXPENSES, SAVINGS):
             amount = [flow.income, -flow.expenses, flow.savings][column - INCOME]
@@ -161,16 +160,15 @@ class CashFlowView(AnalysisView):
 
     def show_period(self, period: Period) -> None:
         report = self._report = self._services.analysis.cash_flow(period)
-        current, previous = report.current, report.previous
+        current = report.current
         self.income_label.set_money(current.income)
         self.expenses_label.set_money(-current.expenses)
         self.savings_label.set_money(current.savings)
-        self.rate_label.setText(percent(current.savings, current.income))
-        self.income_badge.set_change(relative_change(current.income, previous.income))
-        self.expenses_badge.set_change(relative_change(current.expenses, previous.expenses))
-        self.savings_badge.set_change(relative_change(current.savings, previous.savings))
-        rates = (current.savings_rate, previous.savings_rate)
-        self.rate_badge.set_change(None if None in rates else rates[0] - rates[1])
+        self.rate_label.setText(rate_text(current.savings_rate))
+        self.income_badge.set_change(report.income_change)
+        self.expenses_badge.set_change(report.expenses_change)
+        self.savings_badge.set_change(report.savings_change)
+        self.rate_badge.set_change(report.savings_rate_change)
 
         has_data = not (current.income.is_zero and current.expenses.is_zero)
         self.chart.setVisible(has_data)

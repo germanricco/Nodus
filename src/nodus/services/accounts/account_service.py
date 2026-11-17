@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from dataclasses import dataclass
 from datetime import date
 
 from nodus.database.database import Database
@@ -23,6 +24,15 @@ from nodus.services.errors import (
     require_unique_name,
 )
 from nodus.services.sorting import name_sort_key
+
+
+@dataclass(frozen=True)
+class ValueGain:
+    """What a savings or investment account gained (or lost) by itself, and that as a
+    share of what was put in; ``share`` is None with nothing put in or nothing gained."""
+
+    amount: Money
+    share: float | None
 
 
 class AccountService:
@@ -175,6 +185,16 @@ class AccountService:
         for adjustment in self._adjustments.list(account_id):
             total += adjustment.amount
         return total
+
+    def value_gain(self, account: Account, balance: Money) -> ValueGain | None:
+        """What ``account`` gained by itself, now that it holds ``balance``; None for an
+        account whose value does not change by itself."""
+        if not account.type.changes_value:
+            return None
+        gain = self.value_change(account.id)
+        invested = balance - gain
+        share = gain.cents / invested.cents if invested.cents > 0 and not gain.is_zero else None
+        return ValueGain(gain, share)
 
     def delete_adjustment(self, adjustment_id: int) -> None:
         require_found(self._adjustments.get(adjustment_id), "El ajuste no existe.")

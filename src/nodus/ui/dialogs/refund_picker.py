@@ -26,15 +26,6 @@ from nodus.ui.widgets.tables.transaction_table import DESCRIPTION, TAGS, Transac
 CANDIDATE_MONTHS = 6
 
 
-def is_fully_refunded(expense: Transaction, refunded: dict[int, list]) -> bool:
-    """Whether the refunds in the expense's currency already cover all of it."""
-    same_currency = [
-        money.cents for money in refunded.get(expense.id, [])
-        if money.currency is expense.amount.currency
-    ]  # fmt: skip
-    return sum(same_currency) >= expense.amount.cents
-
-
 class RefundPickerDialog(FormDialog):
     """Lists the expenses of a period that can still be refunded, newest first, with a
     search, and returns the chosen one in ``chosen``. ``linked_id`` is the expense the
@@ -89,12 +80,7 @@ class RefundPickerDialog(FormDialog):
                 text=self.search_input.text().strip() or None,
             )
         )
-        refunded = self._services.transactions.refund_totals()
-        candidates = [
-            expense
-            for expense in expenses
-            if expense.id == self._linked_id or not is_fully_refunded(expense, refunded)
-        ]
+        candidates = self._services.transactions.still_refundable(expenses, self._linked_id)
         self.model.set_items(self._builder.build(candidates))
         self.table.setVisible(bool(candidates))
         self.empty_label.setVisible(not candidates)

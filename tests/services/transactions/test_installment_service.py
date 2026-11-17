@@ -354,3 +354,33 @@ def test_cash_account_works_too(services):
     plan = services.installments.create(draft(services, cash), SIX)
 
     assert len(installments(services, plan.id)) == 6
+
+
+class TestSave:
+    def test_a_new_movement_is_a_purchase_only_with_a_plan(self, services, pesos):
+        services.installments.save(draft(services, pesos), SIX, None)
+        services.installments.save(draft(services, pesos, note="Pan"), None, None)
+
+        assert database_counts(services) == (1, 7)
+
+    def test_a_single_movement_given_a_plan_becomes_a_purchase(self, services, pesos):
+        single = services.transactions.create(draft(services, pesos))
+
+        services.installments.save(draft(services, pesos), SIX, single)
+
+        assert database_counts(services) == (1, 6)
+
+    def test_an_installment_without_its_plan_becomes_one_movement(self, services, pesos, purchase):
+        first = installments(services, purchase.id)[0]
+
+        services.installments.save(draft(services, pesos), None, first)
+
+        assert database_counts(services) == (0, 1)
+
+    def test_a_single_movement_is_edited_in_place(self, services, pesos):
+        single = services.transactions.create(draft(services, pesos))
+
+        services.installments.save(draft(services, pesos, note="Pan"), None, single)
+
+        assert services.transactions.get(single.id).note == "Pan"
+        assert database_counts(services) == (0, 1)

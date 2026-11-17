@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor
@@ -173,15 +173,9 @@ class NetWorthView(AnalysisView):
     def _fill_table(self) -> None:
         if self._period is None:
             return
-        net_worth = self._services.net_worth
         currency = self.card.currency()
-        points = net_worth.month_ends(self._period, date.today())
-        opening_day = self._period.start - timedelta(days=1)
-        opening = net_worth.net_worth(opening_day)
-        starts = [opening_day, *(point.day for point in points[:-1])]
-        effects = [
-            net_worth.rate_effect(point, start, currency)
-            for point, start in zip(points, starts, strict=False)
-        ]
-        self.model.set_points(points, opening, currency, effects)
+        ends = self._services.net_worth.month_ends_with_effects(
+            self._period, date.today(), currency
+        )
+        self.model.set_points(ends.points, ends.opening, currency, ends.rate_effects)
         fit_rows(self.table)

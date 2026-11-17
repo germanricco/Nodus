@@ -135,3 +135,11 @@ def test_filter_by_tag(services, pesos):
     found = services.transactions.list_transactions(TransactionFilter(tag_id=viaje.id))
 
     assert len(found) == 1
+
+
+def test_any_new_tells_whether_saving_the_names_creates_a_tag(services):
+    services.tags.create("Trabajo")
+
+    assert not services.tags.any_new(["trabajo", "TRABAJO"])
+    assert services.tags.any_new(["Trabajo", "Viaje"])
+    assert not services.tags.any_new([])

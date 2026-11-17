@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel
 
 from nodus.services.reports.dashboard_service import Comparison, MonthFlow
-from nodus.ui.text.formatting import percent
+from nodus.ui.text.formatting import rate_text
 from nodus.ui.text.labels import unconverted_note
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
@@ -79,7 +79,7 @@ class CashFlowCard(Card):
         )
         self.income_label.set_money(summary.income)
         self.expenses_label.set_money(-summary.expenses)
-        self.saved_label.setText(percent(summary.savings, summary.income))
+        self.saved_label.setText(rate_text(summary.savings_rate))
         self.unconverted_label.setText(unconverted_note(summary.unconverted))
         self.unconverted_label.setVisible(bool(summary.unconverted))
         single_month = len(summary.period.months()) == 1

@@ -73,6 +73,11 @@ class Month:
         payment set on the 31st falls on in February."""
         return self.start.replace(day=min(day_of_month, self.end.day))
 
+    def months_to(self, other: Month) -> int:
+        """Whole months from this month to ``other``: 4 from November to March; negative
+        when ``other`` comes before."""
+        return (other.year - self.year) * 12 + other.month - self.month
+
     def shifted(self, months: int) -> Month:
         """The month ``months`` away (negative goes back)."""
         index = self.year * 12 + self.month - 1 + months
@@ -133,7 +138,7 @@ class Period:
     def months(self) -> list[Month]:
         """Every month the period touches, oldest first."""
         first, last = self.first_month, self.last_month
-        count = (last.year - first.year) * 12 + last.month - first.month + 1
+        count = first.months_to(last) + 1
         return [first.shifted(i) for i in range(count)]
 
     def months_since(self, first_day: date, today: date) -> list[Month]:

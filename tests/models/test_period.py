@@ -105,3 +105,9 @@ def test_contains_is_inclusive():
     assert period.contains(date(2026, 11, 1))
     assert period.contains(date(2026, 11, 30))
     assert not period.contains(date(2026, 12, 1))
+
+
+def test_months_to_counts_whole_calendar_months():
+    assert Month(2026, 11).months_to(Month(2027, 3)) == 4
+    assert Month(2026, 11).months_to(Month(2026, 11)) == 0
+    assert Month(2027, 3).months_to(Month(2026, 11)) == -4

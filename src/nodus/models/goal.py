@@ -98,7 +98,7 @@ class GoalProgress:
 
 def months_until(today: date, day: date) -> int:
     """Whole calendar months from ``today``'s month to ``day``'s: 4 from November to March."""
-    return (day.year - today.year) * 12 + day.month - today.month
+    return Month.of(today).months_to(Month.of(day))
 
 
 def median_cents(values: list[int]) -> int:

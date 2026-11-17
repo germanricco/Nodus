@@ -209,3 +209,17 @@ class TestRefundWithExtra:
         draft = refund_draft(services, pesos.id, ars("998"), share)
         with pytest.raises(ValidationError, match="no supera"):
             services.transactions.save_refund_with_extra(draft, self.others(services))
+
+
+def test_still_refundable_leaves_out_what_is_refunded_in_full(services, pesos, purchase):
+    other = services.transactions.create(
+        expense_draft(services, pesos.id, ars("500"), date(2026, 10, 21))
+    )
+    services.transactions.create(refund_draft(services, pesos.id, ars("1000"), purchase))
+    services.transactions.create(refund_draft(services, pesos.id, ars("100"), other))
+
+    assert services.transactions.still_refundable([purchase, other]) == [other]
+    assert services.transactions.still_refundable([purchase, other], purchase.id) == [
+        purchase,
+        other,
+    ]

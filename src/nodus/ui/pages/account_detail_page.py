@@ -278,15 +278,14 @@ class AccountDetailPage(DetailPage):
         self.outgoing_label.setText(amount_text(activity.outgoing, hidden))
         self.outgoing_note.setText(self._transfers_note(activity.transfers_out, "a"))
 
-        gain = accounts.value_change(account.id) if account.type.changes_value else None
+        gain = accounts.value_gain(account, balance)
         self.gain_tile.setVisible(gain is not None)
         if gain is not None:
-            self.gain_label.setText(masked(gain) if hidden else signed(gain))
-            invested = balance - gain
+            self.gain_label.setText(masked(gain.amount) if hidden else signed(gain.amount))
             self.gain_note.setText(
-                f"{format_signed_percent(gain.cents / invested.cents)} sobre lo invertido"
-                if invested.cents > 0 and not gain.is_zero
-                else ""
+                ""
+                if gain.share is None
+                else f"{format_signed_percent(gain.share)} sobre lo invertido"
             )
 
         installments = self._services.installments
@@ -344,9 +343,7 @@ class AccountDetailPage(DetailPage):
         """The account's active recurring charges, the soonest first; no card without."""
         clear_layout(self._payment_rows)
         recurring = self._services.recurring
-        charges = [
-            c for c in recurring.list_charges() if c.is_active and c.account_id == account.id
-        ]
+        charges = recurring.active_for_account(account.id)
         self.payments_card.setVisible(bool(charges))
         self.payment_rows = []
         for charge in charges:

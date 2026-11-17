@@ -124,6 +124,10 @@ class RecurringChargeService:
         """By next due date, then by name."""
         return sorted(self._charges.list(), key=lambda c: (c.next_due_on, c.name.casefold()))
 
+    def active_for_account(self, account_id: int) -> list[RecurringCharge]:
+        """The active charges paid from the account, in the order of ``list_charges``."""
+        return [c for c in self.list_charges() if c.is_active and c.account_id == account_id]
+
     def count_for_account(self, account_id: int) -> int:
         return self._charges.count_for_account(account_id)
 

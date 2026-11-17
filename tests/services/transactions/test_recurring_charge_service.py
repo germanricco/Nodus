@@ -267,3 +267,15 @@ class TestYaLoVi:
             charge.id, charge_draft(services, pesos.id, ars("120"), date(2026, 11, 12))
         )
         assert not quiet(services, charge.id, TODAY)
+
+
+def test_active_for_account_leaves_out_paused_charges_and_other_accounts(services, pesos, dollars):
+    later = services.recurring.create(
+        charge_draft(services, pesos.id, ars("100"), TODAY + timedelta(days=9), name="Gym")
+    )
+    soon = services.recurring.create(charge_draft(services, pesos.id, ars("200"), TODAY))
+    paused = services.recurring.create(charge_draft(services, pesos.id, ars("300"), name="Club"))
+    services.recurring.set_active(paused.id, False)
+    services.recurring.create(charge_draft(services, dollars.id, usd("5"), name="Nube"))
+
+    assert [c.id for c in services.recurring.active_for_account(pesos.id)] == [soon.id, later.id]

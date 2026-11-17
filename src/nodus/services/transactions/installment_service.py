@@ -104,6 +104,21 @@ class InstallmentService:
                 plan = self._plans.add(plan)
             self._write(plan, installments, draft)
 
+    def save(
+        self, draft: TransactionDraft, plan: InstallmentPlan | None, editing: Transaction | None
+    ) -> None:
+        """Saves what the transaction form holds: a new movement, or ``editing``. It is a
+        purchase in installments when ``plan`` is given, and stays one when ``editing``
+        was one: dropping the plan turns its installments back into a single movement."""
+        if editing is not None and (plan is not None or editing.installment is not None):
+            self.update(editing.id, draft, plan)
+        elif editing is not None:
+            self._transactions.update(editing.id, draft)
+        elif plan is not None:
+            self.create(draft, plan)
+        else:
+            self._transactions.create(draft)
+
     def settle(self, plan_id: int, day: date) -> None:
         """Pays off the rest of the purchase on ``day``: the installments due after it fall
         on that day. ``unsettle`` undoes it, and so does «Deshacer» (``UndoService``)."""

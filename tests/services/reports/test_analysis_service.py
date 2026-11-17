@@ -1,3 +1,4 @@
+import dataclasses
 from datetime import date
 from decimal import Decimal
 
@@ -6,7 +7,8 @@ from factories import ars, category_id, eur, expense_draft, income_draft, usd
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
-from nodus.services.reports.analysis_service import Metric
+from nodus.services.conversion import FlowTotals
+from nodus.services.reports.analysis_service import CashFlowReport, Metric
 from nodus.services.transactions.transaction_service import TransferDraft
 
 EXPENSE, INCOME = TransactionType.EXPENSE, TransactionType.INCOME
@@ -193,3 +195,21 @@ class TestCashFlow:
         report = services.analysis.cash_flow(Period.of_months(Month(2026, 10)))
 
         assert [m.month for m in report.months] == [Month(2026, 10)]
+
+
+def test_cash_flow_changes_compare_with_the_previous_period():
+    report = CashFlowReport(
+        Period.of_months(Month(2026, 11)),
+        [],
+        FlowTotals(ars("1000"), ars("600")),
+        FlowTotals(ars("800"), ars("600")),
+        0,
+        [],
+    )
+
+    assert report.income_change == pytest.approx(0.25)
+    assert report.expenses_change == pytest.approx(0)
+    assert report.savings_change == pytest.approx(1)
+    assert report.savings_rate_change == pytest.approx(0.4 - 0.25)
+    without_income = dataclasses.replace(report, previous=FlowTotals(ars("0"), ars("100")))
+    assert without_income.savings_rate_change is None

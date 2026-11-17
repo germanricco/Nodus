@@ -389,11 +389,8 @@ class AccountsPage(Page):
             self.account_list = self.account_list or rows
             card.body.addWidget(rows)
         for account in accounts:
-            value_change = (
-                self._services.accounts.value_change(account.id)
-                if account.type.changes_value
-                else None
-            )
+            gain = self._services.accounts.value_gain(account, balances[account.id])
+            value_change = gain.amount if gain else None
             focus = history_focus(self._services, account_id=account.id)
             row = AccountRow(
                 account,

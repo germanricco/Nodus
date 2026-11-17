@@ -9,6 +9,10 @@ __all__ = ["format_date", "format_month"]
 
 def percent(part: Money, whole: Money) -> str:
     """Share of ``whole``, rounded to a whole percent; "—" when ``whole`` is not positive."""
-    if whole.cents <= 0:
-        return "—"
-    return f"{round(100 * part.cents / whole.cents)} %"
+    return rate_text(part.cents / whole.cents if whole.cents > 0 else None)
+
+
+def rate_text(share: float | None) -> str:
+    """A share (0.2 is 20 %) rounded to a whole percent, as a savings rate; "—" without
+    one."""
+    return "—" if share is None else f"{round(100 * share)} %"

@@ -124,6 +124,25 @@ class CashFlowReport:
     unconverted: int
     history: list[Month]
 
+    @property
+    def income_change(self) -> float | None:
+        return relative_change(self.current.income, self.previous.income)
+
+    @property
+    def expenses_change(self) -> float | None:
+        return relative_change(self.current.expenses, self.previous.expenses)
+
+    @property
+    def savings_change(self) -> float | None:
+        return relative_change(self.current.savings, self.previous.savings)
+
+    @property
+    def savings_rate_change(self) -> float | None:
+        """How far the savings rate moved, in points (0.05 is five points); None when
+        either period had no income."""
+        rates = (self.current.savings_rate, self.previous.savings_rate)
+        return None if None in rates else rates[0] - rates[1]
+
 
 def _sum(amounts) -> Money:
     return sum(amounts, Money.zero(HOME_CURRENCY))

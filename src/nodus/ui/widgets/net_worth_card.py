@@ -12,7 +12,7 @@ from nodus.models.money import Money
 from nodus.models.period import Period, format_day_month
 from nodus.services.container import Services
 from nodus.services.conversion import relative_change
-from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint
+from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint, trend_change
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import HELD_IN_LABELS, NO_RATE_TEXT, rate_text
 from nodus.ui.theme.design import ControlSize, Space
@@ -50,11 +50,9 @@ def rate_effect_text(effect: Money | None, start: Money | None) -> str:
     return "" if change is None else f"{format_signed_percent(change)} por la cotización"
 
 
-def share(part: Money, whole: Money) -> str:
-    """Rounded percentage of ``whole``; empty when there is no positive whole."""
-    if whole.cents <= 0:
-        return ""
-    return f"{round(100 * max(0, part.cents) / whole.cents)} %"
+def share_text(share: float | None) -> str:
+    """A currency's rounded share of the net worth; empty without one."""
+    return "" if share is None else f"{round(100 * share)} %"
 
 
 class CurrencyLegend(QWidget):
@@ -240,12 +238,7 @@ class NetWorthCard(Card):
             self._show_trend(history, opening, opening_day, currency, has_total)
 
     def _show_composition(self, net_worth: NetWorth, currency: Currency, day: date) -> None:
-        convert = self._services.exchange_rates.convert
-        parts = {
-            held: convert(amount, currency, day) for held, amount in net_worth.by_currency.items()
-        }
-        positive = [p for p in parts.values() if p is not None and p.cents > 0]
-        whole = sum(positive[1:], positive[0]) if positive else Money.zero(currency)
+        composition = self._services.net_worth.composition(net_worth, currency, day)
         colors = self._colors()
         segments = []
         for held, legend in self.legends.items():
@@ -255,8 +248,8 @@ class NetWorthCard(Card):
                 continue
             legend.dot.set_color(colors[held])
             legend.amount.set_money(amount)
-            part = parts[held]
-            legend.share.setText(share(part, whole) if part is not None else "")
+            part = composition.parts[held]
+            legend.share.setText(share_text(composition.share(held)))
             segments.append(Segment(colors[held], max(0, part.cents) if part else 0, held.value))
         self.composition.set_segments(segments)
 
@@ -298,21 +291,14 @@ class NetWorthCard(Card):
             value = point.net_worth.total_in[currency]
             points.append(LinePoint(point.day, None if value is None else value.cents))
         self.chart.set_points(points)
-        known = [p for p in history if p.net_worth.total_in[currency] is not None]
-        first = opening.total_in[currency] if opening else None
-        start_day = opening_day
-        if first is None and len(known) >= 2:
-            first, start_day = known[0].net_worth.total_in[currency], known[0].day
-        if has_total and known and first is not None and start_day is not None:
-            end = known[-1]
-            last = end.net_worth.total_in[currency]
-            assert last is not None
-            difference = last - first
+        change = trend_change(history, opening, opening_day, currency) if has_total else None
+        if change is not None:
+            difference = change.difference
             self.change_badge.set_change(
-                relative_change(last, first),
+                change.change,
                 "" if difference.is_zero or self._hidden else signed(difference),
             )
-            self._show_rate_effect(end, start_day, first, currency)
+            self._show_rate_effect(change.end, change.start_day, change.first, currency)
             self.change_caption.show()
         else:
             self.change_badge.set_change(None)

@@ -73,8 +73,7 @@ def goal_sentence(goal: Goal, progress: GoalProgress, hidden: bool = False) -> s
         return f"Vas bien: {arrives[0].lower()}{arrives[1:]}."
     if state is GoalState.BEHIND:
         assert goal.target_date is not None  # behind means behind its date
-        due = Month.of(goal.target_date)
-        late = (progress.eta.year - due.year) * 12 + progress.eta.month - due.month
+        late = Month.of(goal.target_date).months_to(progress.eta)
         return f"{arrives}, {plural(late, 'mes', 'meses')} tarde." + needed
     return f"{arrives}."
 

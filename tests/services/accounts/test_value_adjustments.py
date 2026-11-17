@@ -95,3 +95,23 @@ def test_deleting_the_account_takes_its_adjustments(services, investment):
     services.accounts.delete(investment.id)
 
     assert services.accounts.value_adjustments() == []
+
+
+def test_value_gain_is_the_adjustments_over_what_was_put_in(services, investment):
+    services.accounts.adjust_value(investment.id, ars("1100000"), TODAY)
+
+    gain = services.accounts.value_gain(investment, ars("1100000"))
+
+    assert gain.amount == ars("100000")
+    assert gain.share == pytest.approx(0.1)
+
+
+def test_value_gain_has_no_share_until_the_value_moves(services, investment):
+    gain = services.accounts.value_gain(investment, ars("1000000"))
+
+    assert gain.amount == ars("0")
+    assert gain.share is None
+
+
+def test_only_savings_and_investments_have_a_value_gain(services, pesos):
+    assert services.accounts.value_gain(pesos, ars("100000")) is None

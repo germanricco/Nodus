@@ -344,6 +344,23 @@ class TransactionService:
         at once for lists."""
         return self._transactions.refund_totals()
 
+    def still_refundable(
+        self, expenses: list[Transaction], keep_id: int | None = None
+    ) -> list[Transaction]:
+        """The ``expenses`` whose refunds in their own currency do not cover them yet, in
+        their order; ``keep_id``, the one a refund already pays back, stays regardless."""
+        refunded = self.refund_totals()
+
+        def covered(expense: Transaction) -> bool:
+            same_currency = [
+                money.cents
+                for money in refunded.get(expense.id, [])
+                if money.currency is expense.amount.currency
+            ]
+            return sum(same_currency) >= expense.amount.cents
+
+        return [e for e in expenses if e.id == keep_id or not covered(e)]
+
     def get(self, transaction_id: int) -> Transaction:
         return require_found(self._transactions.get(transaction_id), "La transacción no existe.")
 

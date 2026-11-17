@@ -11,6 +11,7 @@ from nodus.models.period import Period
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.account_service import AccountService
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
+from nodus.services.conversion import relative_change
 from nodus.services.transactions.transaction_service import TransactionService
 
 # Up to about a quarter, the trend has a point per day; longer periods, one per month end.
@@ -37,6 +38,73 @@ class NetWorthPoint:
 
     day: date
     net_worth: NetWorth
+
+
+@dataclass(frozen=True)
+class Composition:
+    """What each currency held is worth in one currency, for the bar of shares. A part
+    without a rate is None; ``whole`` adds up the parts above zero."""
+
+    parts: dict[Currency, Money | None]
+    whole: Money
+
+    def share(self, held: Currency) -> float | None:
+        """``held``'s part of the whole, a debt counting as nothing; None without a rate
+        or without a whole above zero."""
+        part = self.parts.get(held)
+        if part is None or self.whole.cents <= 0:
+            return None
+        return max(0, part.cents) / self.whole.cents
+
+
+@dataclass(frozen=True)
+class TrendChange:
+    """How a trend moved: from ``first``, the total on ``start_day``, to ``end``'s."""
+
+    first: Money
+    start_day: date
+    end: NetWorthPoint
+    last: Money
+
+    @property
+    def difference(self) -> Money:
+        return self.last - self.first
+
+    @property
+    def change(self) -> float | None:
+        return relative_change(self.last, self.first)
+
+
+def trend_change(
+    history: list[NetWorthPoint],
+    opening: NetWorth | None,
+    opening_day: date | None,
+    currency: Currency,
+) -> TrendChange | None:
+    """The change in ``currency`` from the opening balance (the end of ``opening_day``) to
+    the last point with a total. Without a rate for the opening, it is measured from the
+    first point that has one; None with nothing to measure."""
+    known = [p for p in history if p.net_worth.total_in[currency] is not None]
+    first = opening.total_in[currency] if opening else None
+    start_day = opening_day
+    if first is None and len(known) >= 2:
+        first, start_day = known[0].net_worth.total_in[currency], known[0].day
+    if not known or first is None or start_day is None:
+        return None
+    end = known[-1]
+    last = end.net_worth.total_in[currency]
+    assert last is not None
+    return TrendChange(first, start_day, end, last)
+
+
+@dataclass(frozen=True)
+class MonthEnds:
+    """The net worth at each month end of a period, after the ``opening`` one (the day
+    before it starts), with how much of each month's change came from the rates."""
+
+    opening: NetWorth
+    points: list[NetWorthPoint]
+    rate_effects: list[Money | None]
 
 
 def trend_days(period: Period, today: date) -> list[date]:
@@ -112,6 +180,28 @@ class NetWorthService:
             return []
         ends = [month.end for month in period.months() if month.end < end]
         return self._points(period, [*ends, end])
+
+    def month_ends_with_effects(self, period: Period, today: date, target: Currency) -> MonthEnds:
+        """``month_ends`` with the opening balance and each month's ``rate_effect`` in
+        ``target``, for the table of month ends."""
+        points = self.month_ends(period, today)
+        opening_day = period.start - timedelta(days=1)
+        starts = [opening_day, *(point.day for point in points[:-1])]
+        effects = [
+            self.rate_effect(point, start, target)
+            for point, start in zip(points, starts, strict=False)
+        ]
+        return MonthEnds(self.net_worth(opening_day), points, effects)
+
+    def composition(self, net_worth: NetWorth, target: Currency, day: date) -> Composition:
+        """What each currency of ``net_worth`` is worth in ``target`` at ``day``'s rate."""
+        convert = self._exchange_rates.convert
+        parts = {
+            held: convert(amount, target, day) for held, amount in net_worth.by_currency.items()
+        }
+        positive = [p for p in parts.values() if p is not None and p.cents > 0]
+        whole = sum(positive[1:], positive[0]) if positive else Money.zero(target)
+        return Composition(parts, whole)
 
     def _points(self, period: Period, days: list[date]) -> list[NetWorthPoint]:
         """The net worth at the end of each of ``days``, in order within ``period``.

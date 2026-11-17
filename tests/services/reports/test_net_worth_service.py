@@ -1,11 +1,14 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
+import pytest
 from factories import TODAY, ars, eur, expense_draft, income_draft, usd
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.models.money import Money
 from nodus.models.period import Month, Period
+from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint, trend_change
 from nodus.services.transactions.transaction_service import TransferDraft
 
 
@@ -216,3 +219,73 @@ def test_an_account_history_can_start_later(services, pesos):
 
     assert history[0][0] >= since
     assert history[-1] == (TODAY, ars("99990"))
+
+
+def total(day: date, pesos: Money | None) -> NetWorthPoint:
+    """A point with a total in pesos only."""
+    return NetWorthPoint(day, NetWorth({}, {Currency.ARS: pesos, Currency.USD: None}))
+
+
+def test_composition_shares_the_currencies_held_in_one_currency(services, pesos, dollars):
+    services.exchange_rates.set_rate(TODAY, Decimal("1000"))
+
+    composition = services.net_worth.composition(
+        services.net_worth.net_worth(TODAY), Currency.ARS, TODAY
+    )
+
+    assert composition.parts == {Currency.ARS: ars("100000"), Currency.USD: ars("500000")}
+    assert composition.whole == ars("600000")
+    assert composition.share(Currency.USD) == pytest.approx(5 / 6)
+
+
+def test_composition_without_a_rate_has_no_share_for_that_currency(services, pesos, dollars):
+    composition = services.net_worth.composition(
+        services.net_worth.net_worth(TODAY), Currency.ARS, TODAY
+    )
+
+    assert composition.parts[Currency.USD] is None
+    assert composition.share(Currency.USD) is None
+    assert composition.share(Currency.ARS) == pytest.approx(1)
+
+
+def test_trend_change_runs_from_the_opening_balance():
+    opening = total(date(2026, 10, 31), ars("80")).net_worth
+    history = [total(date(2026, 11, 1), ars("100")), total(date(2026, 11, 2), ars("120"))]
+
+    change = trend_change(history, opening, date(2026, 10, 31), Currency.ARS)
+
+    assert (change.first, change.start_day, change.last) == (
+        ars("80"),
+        date(2026, 10, 31),
+        ars("120"),
+    )
+    assert change.difference == ars("40")
+    assert change.change == pytest.approx(0.5)
+
+
+def test_trend_change_without_an_opening_rate_starts_at_the_first_point_with_one():
+    opening = total(date(2026, 10, 31), None).net_worth
+    history = [
+        total(date(2026, 11, 1), None),
+        total(date(2026, 11, 2), ars("100")),
+        total(date(2026, 11, 3), ars("150")),
+    ]
+
+    change = trend_change(history, opening, date(2026, 10, 31), Currency.ARS)
+
+    assert (change.first, change.start_day, change.last) == (
+        ars("100"),
+        date(2026, 11, 2),
+        ars("150"),
+    )
+    assert trend_change(history[:2], opening, date(2026, 10, 31), Currency.ARS) is None
+
+
+def test_month_ends_with_effects_open_the_day_before_the_period(services, pesos):
+    period = Period.of_months(Month(2026, 9), Month(2026, 10))
+
+    ends = services.net_worth.month_ends_with_effects(period, TODAY, Currency.ARS)
+
+    assert ends.opening == services.net_worth.net_worth(date(2026, 8, 31))
+    assert [p.day for p in ends.points] == [date(2026, 9, 30), date(2026, 10, 31)]
+    assert ends.rate_effects == [ars("0"), ars("0")]
