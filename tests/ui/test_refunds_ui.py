@@ -5,10 +5,14 @@ from datetime import date
 import pytest
 from factories import ars, category_id, expense_draft, income_draft, light_theme
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLabel
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.export_service import HEADER
+from nodus.ui.dialogs.form_dialog import FIELD_ERROR
+from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog
 from nodus.ui.dialogs.transaction_dialog import EXPENSE_MODE, INCOME_MODE, TransactionDialog
 from nodus.ui.pages import transaction_list_view
@@ -205,3 +209,47 @@ def test_export_names_the_refunded_expense(services, pesos, shoes):
 
     assert HEADER[-1] == "Reembolso de"
     assert rows[0][-1].endswith(" · Zapatillas")
+
+
+class TestRefundWithExtra:
+    """$ 1.000 back against a $ 1.000 purchase that already had $ 400 refunded."""
+
+    def fill(self, monkeypatch, qtbot, services, event_bus, pesos, shoes, answer):
+        refund(services, pesos, shoes)
+        choose_in_picker(monkeypatch, shoes)
+        monkeypatch.setattr(RefundExtraDialog, "exec", answer)
+        dialog = make_dialog(qtbot, services, event_bus)
+        dialog.mode_input.set_index(INCOME_MODE)
+        dialog.amount_input.line_edit.setText("1000")
+        pick_category(dialog, category_id(services, "Reembolsos", INCOME))
+        dialog.refund_input.choose()
+        dialog.save_button.click()
+        return dialog
+
+    def test_both_are_saved(self, monkeypatch, qtbot, services, event_bus, pesos, shoes):
+        offered = []
+
+        def accept(extra):
+            offered.append(extra.category_input.currentText())
+            extra.save_button.click()
+            return extra.result()
+
+        self.fill(monkeypatch, qtbot, services, event_bus, pesos, shoes, accept)
+
+        assert offered == ["Otros"]
+        assert services.transactions.refund_summary(shoes.id).remaining == ars("0")
+        others = category_id(services, "Otros", INCOME)
+        incomes = [
+            t for t in services.transactions.list_transactions(TransactionFilter())
+            if t.category_id == others
+        ]  # fmt: skip
+        assert [t.amount for t in incomes] == [ars("400")]
+
+    def test_cancel_keeps_the_form_open(
+        self, monkeypatch, qtbot, services, event_bus, pesos, shoes
+    ):
+        dialog = self.fill(monkeypatch, qtbot, services, event_bus, pesos, shoes, lambda extra: 0)
+
+        assert not dialog.result()
+        assert "$ 600,00" in dialog.findChild(QLabel, FIELD_ERROR).text()
+        assert len(services.transactions.refund_summary(shoes.id).refunds) == 1

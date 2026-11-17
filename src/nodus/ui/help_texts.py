@@ -183,6 +183,9 @@ HELP_TOPICS = [
             "Nodus lo cuenta entonces como un gasto menor, en la categoría del gasto original y"
             " en el mes en que volvió el dinero, y no como un ingreso. Tus presupuestos, el"
             " Inicio y Análisis lo tienen en cuenta.",
+            "Si te devuelven más de lo que quedaba, como 1.000 por una parte de 998, Nodus"
+            " anota como reembolso lo que quedaba y el resto como un ingreso aparte, en «Otros»"
+            " o la categoría que elijas.",
         ),
         ("transactions", "budgets"),
     ),

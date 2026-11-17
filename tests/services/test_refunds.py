@@ -145,3 +145,67 @@ def test_budgets_and_trends_see_the_net_spending(services, pesos, purchase):
     assert [month.total for month in trends.months] == [ars("1000"), ars("300")]
     assert trends.total == ars("1300")
     assert income.total == ars("0")
+
+
+class TestRefundWithExtra:
+    """A friend sends $ 1.000 for a $ 998 share: the refund keeps $ 998, the rest is apart."""
+
+    @pytest.fixture
+    def share(self, services, pesos):
+        return services.transactions.create(
+            expense_draft(services, pesos.id, ars("998"), date(2026, 10, 20))
+        )
+
+    def others(self, services):
+        return category_id(services, "Otros", INCOME)
+
+    def test_excess_over_what_is_left(self, services, pesos, dollars, share):
+        excess = services.transactions.refund_excess
+        assert excess(refund_draft(services, pesos.id, ars("1000"), share)) == ars("2")
+        assert excess(refund_draft(services, pesos.id, ars("998"), share)) is None
+        assert excess(refund_draft(services, dollars.id, usd("1000"), share)) is None
+        assert excess(income_draft(services, pesos.id, ars("1000"))) is None
+
+    def test_saves_the_refund_and_the_rest(self, services, pesos, share):
+        draft = refund_draft(
+            services, pesos.id, ars("1000"), share, note="Entradas", payee_name="Ana",
+            tag_names=("Juntada",),
+        )  # fmt: skip
+
+        refund, extra = services.transactions.save_refund_with_extra(draft, self.others(services))
+
+        assert (refund.amount, refund.refund_of_id) == (ars("998"), share.id)
+        assert (extra.amount, extra.refund_of_id, extra.category_id) == (
+            ars("2"), None, self.others(services),
+        )  # fmt: skip
+        assert (extra.account_id, extra.occurred_on, extra.note) == (
+            pesos.id, draft.occurred_on, "Entradas",
+        )  # fmt: skip
+        assert extra.payee_id == refund.payee_id is not None
+        tags = services.transactions.tags_for([extra.id])[extra.id]
+        assert [tag.name for tag in tags] == ["Juntada"]
+        assert services.transactions.refund_summary(share.id).remaining == ars("0")
+
+    def test_raising_an_edited_refund(self, services, pesos, share):
+        first = services.transactions.create(refund_draft(services, pesos.id, ars("500"), share))
+
+        refund, extra = services.transactions.save_refund_with_extra(
+            refund_draft(services, pesos.id, ars("1000"), share), self.others(services), first.id
+        )
+
+        assert refund.id == first.id
+        assert services.transactions.get(first.id).amount == ars("998")
+        assert extra.amount == ars("2")
+
+    def test_rejects_an_expense_category_and_saves_nothing(self, services, pesos, share):
+        draft = refund_draft(services, pesos.id, ars("1000"), share)
+        expense_category = category_id(services, "Otros", EXPENSE)
+
+        with pytest.raises(ValidationError, match="no corresponde"):
+            services.transactions.save_refund_with_extra(draft, expense_category)
+        assert services.transactions.refund_summary(share.id).refunds == []
+
+    def test_only_when_it_goes_over(self, services, pesos, share):
+        draft = refund_draft(services, pesos.id, ars("998"), share)
+        with pytest.raises(ValidationError, match="no supera"):
+            services.transactions.save_refund_with_extra(draft, self.others(services))

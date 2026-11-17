@@ -26,6 +26,7 @@ from nodus.ui.dialogs.form_dialog import (
     FormDialog,
 )
 from nodus.ui.dialogs.installment_fields import ASK_COUNT, InstallmentFields
+from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog
 from nodus.ui.dialogs.refund_picker import RefundField
 from nodus.ui.event_bus import EventBus
 from nodus.ui.labels import rate_text
@@ -440,7 +441,16 @@ class TransactionDialog(FormDialog):
             else None
         )
         installments = self._services.installments
-        if self._transaction and (plan or self._transaction.installment):
+        transaction_id = self._transaction.id if self._transaction else None
+        excess = self._services.transactions.refund_excess(draft, transaction_id)
+        if excess is not None:
+            extra = RefundExtraDialog(self._services, draft, excess, transaction_id, self)
+            if not extra.exec():
+                # Not split: the refund goes over, and the form says by how much.
+                self._services.transactions.validated(draft, transaction_id)
+            if not self._transaction:
+                self._services.settings.set_last_account_id(draft.account_id)
+        elif self._transaction and (plan or self._transaction.installment):
             installments.update(self._transaction.id, draft, plan)
         elif self._transaction:
             self._services.transactions.update(self._transaction.id, draft)

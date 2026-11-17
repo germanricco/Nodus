@@ -27,15 +27,17 @@ from nodus.database.database import Database  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
 from nodus.models.money import Money  # noqa: E402
 from nodus.models.period import Month  # noqa: E402
-from nodus.models.transaction import TransactionType  # noqa: E402
+from nodus.models.transaction import Transaction, TransactionType  # noqa: E402
 from nodus.models.transaction_filter import TransactionFilter  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
+from nodus.services.transaction_service import TransactionDraft  # noqa: E402
 from nodus.services.update_service import Installer, Release  # noqa: E402
 from nodus.ui.dialogs.account_dialog import AccountDialog  # noqa: E402
 from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
 from nodus.ui.dialogs.goal_dialog import GoalDialog  # noqa: E402
+from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog  # noqa: E402
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
 from nodus.ui.dialogs.update_dialog import UpdateDialog  # noqa: E402
@@ -81,6 +83,9 @@ DIALOGS = {
     "transaction-dialog-refund": lambda services, event_bus, window: refund_dialog(
         services, event_bus, window
     ),
+    "refund-extra-dialog": lambda services, event_bus, window: refund_extra_dialog(
+        services, window
+    ),
     "refund-picker": lambda services, event_bus, window: RefundPickerDialog(
         services, window.theme_manager, parent=window
     ),
@@ -113,14 +118,35 @@ def value_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QW
     return dialog
 
 
-def refund_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
-    """The demo refund of a purchase from the trip, open for editing: its expense, from
-    another month, and its tag."""
+def refund_extra_dialog(services: Services, window: QWidget) -> QWidget:
+    """A friend sends $ 2 more than what was left of the demo refunded purchase."""
+    refund = demo_refund(services)
+    left = services.transactions.refund_summary(refund.refund_of_id).remaining
+    excess = Money.from_decimal(2, left.currency)
+    draft = TransactionDraft(
+        account_id=refund.account_id,
+        type=TransactionType.INCOME,
+        amount=left + excess,
+        occurred_on=date.today(),
+        category_id=refund.category_id,
+        refund_of_id=refund.refund_of_id,
+    )
+    return RefundExtraDialog(services, draft, excess, parent=window)
+
+
+def demo_refund(services: Services) -> Transaction:
+    """The demo refund of a purchase from the trip: its expense is from another month,
+    and it has a tag."""
     refunds = services.transactions.list_transactions(
         TransactionFilter(type=TransactionType.INCOME, refund_linked=True)
     )
     tags = services.transactions.tags_for([refund.id for refund in refunds])
-    refund = next(refund for refund in refunds if refund.id in tags)
+    return next(refund for refund in refunds if refund.id in tags)
+
+
+def refund_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
+    """The demo refund (``demo_refund``), open for editing."""
+    refund = demo_refund(services)
     return TransactionDialog(services, event_bus, window.theme_manager, refund, parent=window)
 
 

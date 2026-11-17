@@ -137,17 +137,75 @@ class TransactionService:
         return transaction
 
     def update(self, transaction_id: int, draft: TransactionDraft) -> None:
+        transaction = self._edited(transaction_id, draft)
+        with self._database.transaction():
+            self._stage_edit(transaction, draft)
+
+    def refund_excess(
+        self, draft: TransactionDraft, transaction_id: int | None = None
+    ) -> Money | None:
+        """How much the refund ``draft`` brings back over what is left of its expense, as
+        when a friend sends $ 1.000 for a $ 998 share; None when it fits, when it is not a
+        refund, or in another currency, which has no cap. ``transaction_id`` is the refund
+        being edited, so its own amount does not count as already refunded."""
+        if draft.type is not TransactionType.INCOME or draft.refund_of_id is None:
+            return None
+        summary = self.refund_summary(draft.refund_of_id, ignore_id=transaction_id)
+        remaining = summary.remaining
+        if draft.amount.currency is not remaining.currency or not draft.amount > remaining:
+            return None
+        # Nothing left: the whole amount is no refund at all, and the cap says so.
+        if remaining.is_zero or remaining.is_negative:
+            return None
+        return draft.amount - remaining
+
+    def save_refund_with_extra(
+        self,
+        draft: TransactionDraft,
+        extra_category_id: int,
+        transaction_id: int | None = None,
+    ) -> tuple[Transaction, Transaction]:
+        """Saves a refund that goes over what is left of its expense as two incomes,
+        together: the refund of what was left, and the rest, apart, in
+        ``extra_category_id``, with the same account, day, payee, note and tags. So the
+        expense ends fully refunded and never below zero. ``transaction_id`` is the
+        refund being edited, if any."""
+        excess = self.refund_excess(draft, transaction_id)
+        if excess is None:
+            raise ValidationError("Ese reembolso no supera lo que queda del gasto.", field="amount")
+        refund_draft = dataclasses.replace(draft, amount=draft.amount - excess)
+        extra_draft = dataclasses.replace(
+            draft, amount=excess, category_id=extra_category_id, refund_of_id=None
+        )
+        refund = (
+            self._build_transaction(None, refund_draft)
+            if transaction_id is None
+            else self._edited(transaction_id, refund_draft)
+        )
+        extra = self._build_transaction(None, extra_draft)
+        with self._database.transaction():
+            if transaction_id is None:
+                refund = self.stage(refund, refund_draft)
+            else:
+                refund = self._stage_edit(refund, refund_draft)
+            extra = self.stage(extra, extra_draft)
+        return refund, extra
+
+    def _edited(self, transaction_id: int, draft: TransactionDraft) -> Transaction:
+        """Transaction ``transaction_id`` as ``draft`` leaves it, checked, not saved."""
         current = self.get(transaction_id)
         if current.is_transfer:
             raise ValidationError("Las transferencias se editan como transferencia.")
         if current.installment is not None:
             raise ValidationError("Las cuotas se editan desde su compra.")
-        transaction = self._build_transaction(transaction_id, draft)
-        with self._database.transaction():
-            if transaction.type is TransactionType.INCOME:
-                # An expense turned into income can no longer be refunded.
-                self._transactions.unlink_refunds_of(transaction_id)
-            self.stage(transaction, draft)
+        return self._build_transaction(transaction_id, draft)
+
+    def _stage_edit(self, transaction: Transaction, draft: TransactionDraft) -> Transaction:
+        """Saves an edited ``transaction`` inside the caller's database transaction."""
+        if transaction.type is TransactionType.INCOME:
+            # An expense turned into income can no longer be refunded.
+            self._transactions.unlink_refunds_of(transaction.id)
+        return self.stage(transaction, draft)
 
     def delete(self, transaction_id: int) -> None:
         """Deletes a transaction. Deleting either leg of a transfer deletes the whole transfer."""
