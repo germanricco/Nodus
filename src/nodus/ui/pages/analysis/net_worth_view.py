@@ -8,6 +8,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QVBoxLayout
 
+from nodus.i18n import _
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.money import Money
 from nodus.models.period import Month, Period, format_month
@@ -21,7 +22,7 @@ from nodus.ui.pages.base.net_worth_card import (
     rate_effect_text,
 )
 from nodus.ui.text.formatting import format_date, signed
-from nodus.ui.text.labels import HELD_IN_LABELS, NO_RATE_TEXT
+from nodus.ui.text.labels import NO_RATE_TEXT, held_in_label
 from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -85,7 +86,7 @@ class NetWorthTableModel(QAbstractTableModel):
         if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             if section == self.total_column:
                 return f"Total en {CURRENCY_LABELS[CURRENCIES.index(self._currency)]}"
-            held = [HELD_IN_LABELS[currency] for currency in self._held]
+            held = [held_in_label(currency) for currency in self._held]
             return ["Mes", *held, "Total", "Variación"][section]
         if role == Qt.ItemDataRole.TextAlignmentRole and section != MONTH:
             return RIGHT_ALIGNED
@@ -101,7 +102,7 @@ class NetWorthTableModel(QAbstractTableModel):
             return [
                 self._month_text(point.day),
                 *(by_currency[currency].format() for currency in self._held),
-                total.format() if total is not None else NO_RATE_TEXT.lower(),
+                total.format() if total is not None else _(NO_RATE_TEXT).lower(),
                 signed(change) if change is not None else "—",
             ][column]
         is_change = column == self.change_column

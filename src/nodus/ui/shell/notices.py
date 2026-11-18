@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING
 
+from nodus.i18n import N_
 from nodus.models.period import Month
 from nodus.services.app.notification_service import Notice, NoticeKind
 from nodus.ui.dialogs.external_backup import save_copy_outside
@@ -24,7 +25,7 @@ NoticeAction = Callable[["MainWindow", Notice], None]
 class NoticeBehavior:
     """``action_text`` says where a click leads (tooltip, and bold in its menu) and
     ``open`` goes there; ``dismiss_text`` and ``dismiss`` put the notice away, for the
-    kinds that can be."""
+    kinds that can be. The texts are ``N_()``, translated where they are shown."""
 
     action_text: str
     open: NoticeAction
@@ -76,14 +77,19 @@ def _forget_goal(window: MainWindow, notice: Notice) -> None:
 
 NOTICES: dict[NoticeKind, NoticeBehavior] = {
     NoticeKind.UPDATE: NoticeBehavior(
-        "Actualizar", _update, "Descartar esta versión", _forget_release
+        N_("Actualizar"), _update, N_("Descartar esta versión"), _forget_release
     ),
-    NoticeKind.STALE_RATE: NoticeBehavior("Ir a Ajustes", _settings),
-    NoticeKind.BACKUP_FAILED: NoticeBehavior("Ir a Ajustes", _settings),
+    NoticeKind.STALE_RATE: NoticeBehavior(N_("Ir a Ajustes"), _settings),
+    NoticeKind.BACKUP_FAILED: NoticeBehavior(N_("Ir a Ajustes"), _settings),
     NoticeKind.BACKUP_REMINDER: NoticeBehavior(
-        "Guardar copia…", _save_copy, "Ahora no: avisar a fin del mes que viene", _put_off_copy
+        N_("Guardar copia…"),
+        _save_copy,
+        N_("Ahora no: avisar a fin del mes que viene"),
+        _put_off_copy,
     ),
-    NoticeKind.CHARGES_DUE: NoticeBehavior("Ver cargos", _charges),
-    NoticeKind.BUDGET_OVER: NoticeBehavior("Ver presupuestos", _budgets),
-    NoticeKind.GOAL_REACHED: NoticeBehavior("Ver meta", _goal, "Quitar el aviso", _forget_goal),
+    NoticeKind.CHARGES_DUE: NoticeBehavior(N_("Ver cargos"), _charges),
+    NoticeKind.BUDGET_OVER: NoticeBehavior(N_("Ver presupuestos"), _budgets),
+    NoticeKind.GOAL_REACHED: NoticeBehavior(
+        N_("Ver meta"), _goal, N_("Quitar el aviso"), _forget_goal
+    ),
 }

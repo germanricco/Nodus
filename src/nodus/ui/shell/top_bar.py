@@ -3,6 +3,7 @@
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
+from nodus.i18n import _
 from nodus.ui.shell import tour
 from nodus.ui.shell.coach_marks import mark_target
 from nodus.ui.shortcuts import HELP
@@ -30,7 +31,7 @@ class TopBar(QFrame):
         layout.setContentsMargins(Space.XXL, Space.M, Space.XXL, Space.M)
         layout.setSpacing(Space.S)
 
-        self._add_button = QPushButton("Agregar transacción")
+        self._add_button = QPushButton(_("Agregar transacción"))
         self._add_button.setObjectName("PrimaryButton")
         self._add_button.setIconSize(QSize(IconSize.L, IconSize.L))
         self._add_button.clicked.connect(self.add_transaction_requested)
@@ -38,10 +39,10 @@ class TopBar(QFrame):
         mark_target(self._add_button, tour.ADD_TRANSACTION)
         layout.addStretch()
 
-        self.feedback_button = self._icon_button("Enviar comentarios")
+        self.feedback_button = self._icon_button(_("Enviar comentarios"))
         self.feedback_button.clicked.connect(self.feedback_requested)
         mark_target(self.feedback_button, tour.FEEDBACK)
-        self.notifications_button = self._icon_button("Notificaciones")
+        self.notifications_button = self._icon_button(_("Notificaciones"))
         self.notifications_button.clicked.connect(self.notifications_requested)
         mark_target(self.notifications_button, tour.NOTIFICATIONS)
         self.notification_count = QLabel(self.notifications_button)
@@ -56,8 +57,8 @@ class TopBar(QFrame):
         self.hide_amounts_button.clicked.connect(self.hide_amounts_toggled)
         mark_target(self.hide_amounts_button, tour.HIDE_AMOUNTS)
         self._amounts_hidden = False
-        self.help_button = self._icon_button(f"Ayuda ({HELP.label})")
-        self.help_button.setAccessibleName("Ayuda")
+        self.help_button = self._icon_button(_("Ayuda ({key})").format(key=HELP.label))
+        self.help_button.setAccessibleName(_("Ayuda"))
         self.help_button.clicked.connect(self.help_requested)
         mark_target(self.help_button, tour.HELP)
         layout.addWidget(self.hide_amounts_button)
@@ -71,7 +72,7 @@ class TopBar(QFrame):
     def set_amounts_hidden(self, hidden: bool) -> None:
         """Shows the eye that would undo the current state."""
         self._amounts_hidden = hidden
-        self.hide_amounts_button.setToolTip("Mostrar montos" if hidden else "Ocultar montos")
+        self.hide_amounts_button.setToolTip(_("Mostrar montos") if hidden else _("Ocultar montos"))
         self._apply_theme(self._theme)
 
     def set_notification_count(self, count: int) -> None:

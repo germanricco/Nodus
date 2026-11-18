@@ -8,10 +8,11 @@ browser, where the user reads it, can change it, and sends it only if they want 
 from __future__ import annotations
 
 from nodus.config.logs import HIDDEN, describe, frames, system_line
+from nodus.i18n import N_, _
 from nodus.links import MAX_URL_LENGTH, bug_report_url
 
-ASK = "¿Qué estabas haciendo cuando apareció el error?"
-WHERE = "Dónde, del último paso al primero:"
+ASK = N_("¿Qué estabas haciendo cuando apareció el error?")
+WHERE = N_("Dónde, del último paso al primero:")
 MOST_STEPS = 8
 # A message this long is cut, when even without steps the link would not fit.
 SHORT_MESSAGE = 200
@@ -24,11 +25,16 @@ def error_report(error: BaseException, steps: int = MOST_STEPS, message_limit: i
     description = describe(error)
     if message_limit and len(description) > message_limit:
         description = description[:message_limit] + HIDDEN
-    lines = [ASK, "", "", "—", f"Error: {description}"]
+    lines = [_(ASK), "", "", "—", _("Error: {description}").format(description=description)]
     innermost = frames(error)[::-1][:steps]
     if innermost:
-        lines.append(WHERE)
-        lines.extend(f"{step.path}:{step.line} en {step.function}" for step in innermost)
+        lines.append(_(WHERE))
+        lines.extend(
+            _("{path}:{line} en {function}").format(
+                path=step.path, line=step.line, function=step.function
+            )
+            for step in innermost
+        )
     lines.append(system_line())
     return "\n".join(lines)
 

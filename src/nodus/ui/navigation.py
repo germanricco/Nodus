@@ -6,29 +6,31 @@ from dataclasses import dataclass
 from datetime import date
 from enum import Enum
 
+from nodus.i18n import N_, _
 from nodus.models.period import Month, Period
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 
 
 class PageId(Enum):
-    """A section reachable from the sidebar. Each value is (label, icon name)."""
+    """A section reachable from the sidebar. Each value is (label, icon name); the label
+    is translated where it is shown, through ``label``."""
 
-    DASHBOARD = ("Inicio", "dashboard")
-    ACCOUNTS = ("Cuentas", "accounts")
-    TRANSACTIONS = ("Transacciones", "transactions")
-    RECURRING = ("Recurrentes", "repeat")
-    BUDGETS = ("Presupuestos", "budget")
-    GOALS = ("Metas", "goal")
-    ANALYSIS = ("Análisis", "analysis")
-    CATEGORIES = ("Categorías", "categories")
-    PAYEES = ("Beneficiarios", "payee")
-    TAGS = ("Etiquetas", "tags")
-    SETTINGS = ("Ajustes", "settings")
+    DASHBOARD = (N_("Inicio"), "dashboard")
+    ACCOUNTS = (N_("Cuentas"), "accounts")
+    TRANSACTIONS = (N_("Transacciones"), "transactions")
+    RECURRING = (N_("Recurrentes"), "repeat")
+    BUDGETS = (N_("Presupuestos"), "budget")
+    GOALS = (N_("Metas"), "goal")
+    ANALYSIS = (N_("Análisis"), "analysis")
+    CATEGORIES = (N_("Categorías"), "categories")
+    PAYEES = (N_("Beneficiarios"), "payee")
+    TAGS = (N_("Etiquetas"), "tags")
+    SETTINGS = (N_("Ajustes"), "settings")
 
     @property
     def label(self) -> str:
-        return self.value[0]
+        return _(self.value[0])
 
     @property
     def icon_name(self) -> str:

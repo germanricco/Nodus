@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import N_, _
 from nodus.ui.shortcuts import CLOSE_HELP, SHORTCUT_GROUPS, SHORTCUTS, Shortcut
 from nodus.ui.text.help_texts import HELP_SECTIONS, HELP_TOPICS, TOPICS_BY_KEY, HelpTopic
 from nodus.ui.text.labels import TOUR_LABEL
@@ -33,22 +34,24 @@ from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.style import muted_label, scrolling, secondary_button, separator
 
 INDEX, TOPIC, SHORTCUTS_VIEW = range(3)
-SHORTCUTS_TITLE = "Atajos de teclado"
+SHORTCUTS_TITLE = N_("Atajos de teclado")
 TOPIC_ICON = "info"  # a topic about no page in particular
 
 
 def topic_html(topic: HelpTopic) -> str:
-    """The intro, then each paragraph; the screen's names, between «», in bold."""
+    """The intro, then each paragraph; the screen's names, between «» (“” in English),
+    in bold."""
 
     def paragraph(text: str) -> str:
-        return "<p>" + re.sub(r"«([^»]+)»", r"«<b>\1</b>»", escape(text)) + "</p>"
+        html = re.sub(r"([«“])([^»”]+)([»”])", r"\1<b>\2</b>\3", escape(_(text)))
+        return "<p>" + html + "</p>"
 
     return "".join(paragraph(text) for text in (topic.intro, *topic.paragraphs))
 
 
 def matches(topic: HelpTopic, words: str) -> bool:
-    """Whether every word typed is in the topic's title or text, ignoring case."""
-    text = " ".join((topic.title, topic.intro, *topic.paragraphs)).casefold()
+    """Whether every word typed is in the topic's title or text, as shown, ignoring case."""
+    text = " ".join(_(text) for text in (topic.title, topic.intro, *topic.paragraphs)).casefold()
     return all(word in text for word in words.casefold().split())
 
 
@@ -78,14 +81,14 @@ class HelpPanel(QFrame):
         layout.setContentsMargins(Space.XL, Space.L, Space.L, Space.L)
         layout.setSpacing(Space.M)
         header = QHBoxLayout()
-        title = QLabel("Ayuda")
+        title = QLabel(_("Ayuda"))
         title.setObjectName("DialogTitle")
         header.addWidget(title)
         header.addStretch()
         self.close_button = QPushButton()
         self.close_button.setObjectName("PanelClose")
-        self.close_button.setToolTip("Cerrar la ayuda (Esc)")
-        self.close_button.setAccessibleName("Cerrar la ayuda")
+        self.close_button.setToolTip(_("Cerrar la ayuda (Esc)"))
+        self.close_button.setAccessibleName(_("Cerrar la ayuda"))
         self.close_button.setIconSize(QSize(IconSize.L, IconSize.L))
         self.close_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.close_button.clicked.connect(self.close_panel)
@@ -111,17 +114,17 @@ class HelpPanel(QFrame):
 
     def show_topic(self, topic: HelpTopic) -> None:
         self.topic = topic
-        self.topic_title.setText(topic.title)
+        self.topic_title.setText(_(topic.title))
         self.topic_text.setText(topic_html(topic))
         self.go_button.setVisible(bool(topic.pages))
         if topic.pages:
-            self.go_button.setText(f"Ir a {topic.pages[0].label}")
+            self.go_button.setText(_("Ir a {page}").format(page=topic.pages[0].label))
         for button in self._related_buttons:
             button.setParent(None)  # gone now, not when the event loop deletes it
             button.deleteLater()
         self._related_buttons = []
         for key in topic.related:
-            button = self._link(TOPICS_BY_KEY[key].title)
+            button = self._link(_(TOPICS_BY_KEY[key].title))
             button.clicked.connect(lambda _c=False, k=key: self.show_topic(TOPICS_BY_KEY[k]))
             self._related_layout.addWidget(button, alignment=Qt.AlignmentFlag.AlignLeft)
             self._related_buttons.append(button)
@@ -153,7 +156,7 @@ class HelpPanel(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.M)
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Buscar en la ayuda…")
+        self.search_input.setPlaceholderText(_("Buscar en la ayuda…"))
         self.search_input.setClearButtonEnabled(True)
         self.search_input.textChanged.connect(self.filter)
         layout.addWidget(self.search_input)
@@ -165,25 +168,25 @@ class HelpPanel(QFrame):
         self._topics_layout.setSpacing(Space.XXS)
         self._section_labels: dict[str, QLabel] = {}
         for section in HELP_SECTIONS:
-            label = QLabel(section.upper())
+            label = QLabel(_(section).upper())
             label.setObjectName("SectionLabel")
             self._topics_layout.addWidget(label)
             self._section_labels[section] = label
             for topic in HELP_TOPICS:
                 if topic.section == section:
                     button = self._topic_button(
-                        topic.title, topic.pages[0].icon_name if topic.pages else TOPIC_ICON
+                        _(topic.title), topic.pages[0].icon_name if topic.pages else TOPIC_ICON
                     )
                     button.clicked.connect(lambda _c=False, t=topic: self.show_topic(t))
                     self._topics_layout.addWidget(button)
                     self._topic_buttons[topic.key] = button
-        self.shortcuts_label = QLabel("TECLADO Y MOUSE")
+        self.shortcuts_label = QLabel(_("TECLADO Y MOUSE"))
         self.shortcuts_label.setObjectName("SectionLabel")
         self._topics_layout.addWidget(self.shortcuts_label)
-        self.shortcuts_button = self._topic_button(SHORTCUTS_TITLE, "keyboard")
+        self.shortcuts_button = self._topic_button(_(SHORTCUTS_TITLE), "keyboard")
         self.shortcuts_button.clicked.connect(self.show_shortcuts)
         self._topics_layout.addWidget(self.shortcuts_button)
-        self.no_results = EmptyState("Ningún tema habla de eso.", compact=True)
+        self.no_results = EmptyState(_("Ningún tema habla de eso."), compact=True)
         self.no_results.hide()
         self._topics_layout.addWidget(self.no_results)
         self._topics_layout.addStretch()
@@ -191,7 +194,7 @@ class HelpPanel(QFrame):
 
         foot = QHBoxLayout()
         foot.setSpacing(Space.S)
-        self.tour_button = self._foot_button(TOUR_LABEL, self.tour_requested)
+        self.tour_button = self._foot_button(_(TOUR_LABEL), self.tour_requested)
         foot.addWidget(self.tour_button)
         foot.addStretch()
         layout.addLayout(foot)
@@ -230,7 +233,7 @@ class HelpPanel(QFrame):
     # One topic
 
     def _back_button(self) -> QPushButton:
-        button = self._link("‹ Temas")
+        button = self._link(_("‹ Temas"))
         button.clicked.connect(self.show_index)
         return button
 
@@ -267,7 +270,7 @@ class HelpPanel(QFrame):
         self.go_button.clicked.connect(self._go)
         column.addWidget(self.go_button, alignment=Qt.AlignmentFlag.AlignLeft)
         column.addSpacing(Space.S)
-        self.related_label = QLabel("RELACIONADOS")
+        self.related_label = QLabel(_("RELACIONADOS"))
         self.related_label.setObjectName("HelpRelated")
         column.addWidget(self.related_label)
         self._related_layout = QVBoxLayout()
@@ -290,7 +293,7 @@ class HelpPanel(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.S)
         layout.addWidget(self._back_button(), alignment=Qt.AlignmentFlag.AlignLeft)
-        title = QLabel(SHORTCUTS_TITLE)
+        title = QLabel(_(SHORTCUTS_TITLE))
         title.setObjectName("HelpTitle")
         layout.addWidget(title)
 
@@ -300,7 +303,7 @@ class HelpPanel(QFrame):
         groups.setContentsMargins(0, 0, Space.S, 0)
         groups.setSpacing(Space.XS)
         for group in SHORTCUT_GROUPS:
-            label = QLabel(group.upper())
+            label = QLabel(_(group).upper())
             label.setObjectName("SectionLabel")
             label.setWordWrap(True)
             groups.addWidget(label)
@@ -323,7 +326,7 @@ class HelpPanel(QFrame):
                 rows.addWidget(separator())
             row = QHBoxLayout()
             row.setSpacing(Space.M)
-            text = QLabel(shortcut.text)
+            text = QLabel(_(shortcut.text))
             text.setWordWrap(True)
             row.addWidget(text, stretch=1)
             row.addLayout(cls._keys(shortcut.keys))
@@ -339,7 +342,7 @@ class HelpPanel(QFrame):
             if index:
                 plus = muted_label("+")
                 row.addWidget(plus)
-            cap = QLabel(key)
+            cap = QLabel(_(key))
             cap.setObjectName("KeyCap")
             row.addWidget(cap)
         return row

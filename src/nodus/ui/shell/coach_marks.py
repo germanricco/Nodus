@@ -13,6 +13,7 @@ from PySide6.QtCore import QEvent, QObject, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QKeyEvent, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QPen
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
+from nodus.i18n import _
 from nodus.ui.shortcuts import TOUR_BACK, TOUR_EXIT, TOUR_NEXT
 from nodus.ui.theme.design import Easing, Layout, Line, Motion, Opacity, Radius, Space, motion_ms
 from nodus.ui.theme.theme import Theme
@@ -30,7 +31,7 @@ def mark_target(widget: QWidget, target: str) -> None:
 @dataclass(frozen=True)
 class CoachStep:
     """One stop of the tour: the control it points at (its ``COACH_TARGET``), a title
-    and what it says."""
+    and what it says, both ``N_()`` texts translated when the step is shown."""
 
     target: str
     title: str
@@ -57,7 +58,7 @@ class CoachMarks(QWidget):
         self.index = 0
         self._fade = 1.0
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.setAccessibleName("Recorrido guiado")
+        self.setAccessibleName(_("Recorrido guiado"))
 
         self.bubble = QFrame(self)
         self.bubble.setObjectName("CoachBubble")
@@ -78,11 +79,11 @@ class CoachMarks(QWidget):
         self.count_label = muted_label("")
         buttons.addWidget(self.count_label)
         buttons.addStretch()
-        self.skip_button = self._button("Saltar", "LinkButton", self.finish)
+        self.skip_button = self._button(_("Saltar"), "LinkButton", self.finish)
         buttons.addWidget(self.skip_button)
-        self.back_button = self._button("Anterior", "SecondaryButton", self.previous)
+        self.back_button = self._button(_("Anterior"), "SecondaryButton", self.previous)
         buttons.addWidget(self.back_button)
-        self.next_button = self._button("Siguiente", "PrimaryButton", self.next)
+        self.next_button = self._button(_("Siguiente"), "PrimaryButton", self.next)
         buttons.addWidget(self.next_button)
         layout.addLayout(buttons)
         elevate(self.bubble, theme)
@@ -136,11 +137,13 @@ class CoachMarks(QWidget):
     def _show_step(self) -> None:
         step = self.steps[self.index]
         last = self.index == len(self.steps) - 1
-        self.title_label.setText(step.title)
-        self.text_label.setText(step.text)
-        self.count_label.setText(f"{self.index + 1} de {len(self.steps)}")
+        self.title_label.setText(_(step.title))
+        self.text_label.setText(_(step.text))
+        self.count_label.setText(
+            _("{number} de {count}").format(number=self.index + 1, count=len(self.steps))
+        )
         self.back_button.setEnabled(self.index > 0)
-        self.next_button.setText("Terminar" if last else "Siguiente")
+        self.next_button.setText(_("Terminar") if last else _("Siguiente"))
         self.skip_button.setVisible(not last)
         self._place_bubble()
         self.update()

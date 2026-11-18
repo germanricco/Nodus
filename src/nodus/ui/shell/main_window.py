@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus import APP_NAME
+from nodus.i18n import _
 from nodus.links import feedback_url
 from nodus.models.period import Month
 from nodus.services.app.notification_service import Notice
@@ -303,10 +304,10 @@ class MainWindow(QMainWindow):
         tour.mark_tour_offered()
         if ask(
             self,
-            "Recorrido guiado",
-            "¿Te muestro cómo se usa Nodus? Es un minuto.",
-            TOUR_LABEL,
-            "Ahora no",
+            _("Recorrido guiado"),
+            _("¿Te muestro cómo se usa Nodus? Es un minuto."),
+            _(TOUR_LABEL),
+            _("Ahora no"),
         ):
             self.start_tour()
 
@@ -479,9 +480,11 @@ class MainWindow(QMainWindow):
         if not self._services.accounts.list_accounts():
             tell(
                 self,
-                "Primero, una cuenta",
-                "Para registrar transacciones necesitas al menos una cuenta activa."
-                " Crea una en Cuentas y vuelve a intentarlo.",
+                _("Primero, una cuenta"),
+                _(
+                    "Para registrar transacciones necesitas al menos una cuenta activa."
+                    " Crea una en Cuentas y vuelve a intentarlo."
+                ),
             )
             self.show_page(PageId.ACCOUNTS)
             return
@@ -489,4 +492,4 @@ class MainWindow(QMainWindow):
             self._services, self._event_bus, self.theme_manager, parent=self, start=start
         )
         if dialog.exec():
-            self.toast("Transacción guardada.")
+            self.toast(_("Transacción guardada."))

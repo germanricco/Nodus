@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import _
 from nodus.models.account import Account
 from nodus.models.account_group import AccountGroup
 from nodus.models.money import Money
@@ -81,7 +82,7 @@ class AccountRow(QWidget):
         texts.setSpacing(0)
         name = QLabel(account.name)
         name.setObjectName("RowTitle")
-        details = [ACCOUNT_TYPE_LABELS[account.type], account.currency.value]
+        details = [_(ACCOUNT_TYPE_LABELS[account.type]), account.currency.value]
         if value_change is not None and not value_change.is_zero:
             change = masked(value_change) if hide_balance else signed(value_change)
             details.append(f"Rendimiento {change}")

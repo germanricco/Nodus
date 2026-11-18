@@ -9,6 +9,7 @@ from PySide6.QtCore import QEvent, QPointF, Qt
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QApplication
 
+from nodus.i18n import _
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.period import Month, Period, format_month
@@ -280,7 +281,7 @@ def test_net_worth_table_follows_the_currency(services, dollars, filled):
     view.card.currency_input.set_index(1)
 
     assert view.model.headerData(3, Qt.Orientation.Horizontal) == "Total en US$"
-    assert table_row(view, 0)[3] == NO_RATE_TEXT.lower()  # no exchange rate loaded
+    assert table_row(view, 0)[3] == _(NO_RATE_TEXT).lower()  # no exchange rate loaded
     assert table_row(view, 0)[4] == "—"
 
 

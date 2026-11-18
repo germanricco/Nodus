@@ -7,6 +7,7 @@ from datetime import date
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QWidget
 
+from nodus.i18n import _
 from nodus.models.period import Period, QuickPeriod
 from nodus.ui.dialogs.date_range_dialog import DateRangeDialog
 from nodus.ui.theme.design import Space
@@ -35,21 +36,21 @@ class PeriodSelector(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.XS)
-        self.previous_button = self._arrow("‹", "Período anterior")
-        self.next_button = self._arrow("›", "Período siguiente")
+        self.previous_button = self._arrow("‹", _("Período anterior"))
+        self.next_button = self._arrow("›", _("Período siguiente"))
         self.period_button = QPushButton()
         self.period_button.setObjectName("PeriodButton")
         self.period_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.quick_menu = QMenu(self)
         for quick in QuickPeriod:
             action = self.quick_menu.addAction(quick.label)
-            action.triggered.connect(lambda _=False, q=quick: self.choose(q))
+            action.triggered.connect(lambda _checked=False, q=quick: self.choose(q))
         self.quick_menu.addSeparator()
-        self.quick_menu.addAction("Personalizado…").triggered.connect(self.choose_range)
+        self.quick_menu.addAction(_("Personalizado…")).triggered.connect(self.choose_range)
         if quick_choices:
             self.period_button.setMenu(self.quick_menu)
         else:
-            self.period_button.setToolTip("Volver al mes actual")
+            self.period_button.setToolTip(_("Volver al mes actual"))
             self.period_button.clicked.connect(lambda: self.choose(QuickPeriod.CURRENT_MONTH))
         layout.addWidget(self.previous_button)
         layout.addWidget(self.period_button)

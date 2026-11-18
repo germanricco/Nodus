@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus import APP_NAME, __version__
+from nodus.i18n import _
 from nodus.models.account import Account
 from nodus.models.money import Money
 from nodus.services.container import Services
@@ -94,7 +95,7 @@ class SidebarGroupRow(QWidget):
         keep_whole(self.total_label)
         layout.addWidget(self.total_label)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip("Mostrar sus cuentas" if folded else "Plegar el grupo")
+        self.setToolTip(_("Mostrar sus cuentas") if folded else _("Plegar el grupo"))
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         super().mouseReleaseEvent(event)
@@ -171,7 +172,9 @@ class Sidebar(QFrame):
         self._show_accounts_state()
         side = Space.XXS if collapsed else Space.S
         self._logo_row.setContentsMargins(side, Space.XS, side, Space.M)
-        self.collapse_button.setToolTip("Expandir el panel" if collapsed else "Contraer el panel")
+        self.collapse_button.setToolTip(
+            _("Expandir el panel") if collapsed else _("Contraer el panel")
+        )
         self._apply_collapse_icon()
 
     def toggle_collapsed(self) -> None:
@@ -189,7 +192,8 @@ class Sidebar(QFrame):
         self._show_accounts_state()
 
     def _show_accounts_state(self) -> None:
-        self._accounts_title.setText(f"CUENTAS  {'▸' if self._accounts_folded else '▾'}")
+        arrow = "▸" if self._accounts_folded else "▾"
+        self._accounts_title.setText(_("CUENTAS") + f"  {arrow}")
         self._accounts_area.setVisible(not (self._collapsed or self._accounts_folded))
 
     def select(self, page_id: PageId) -> None:
@@ -211,7 +215,7 @@ class Sidebar(QFrame):
         accounts = self._services.accounts.list_accounts()
         if not accounts:
             # An item of the list, styled as one, rather than an EmptyState.
-            empty = muted_label("Todavía no hay cuentas")  # list-item
+            empty = muted_label(_("Todavía no hay cuentas"))  # list-item
             empty.setObjectName("SidebarItem")
             self._accounts_layout.addWidget(empty)
         balances = self._services.accounts.balances()

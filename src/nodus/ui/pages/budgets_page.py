@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
+from nodus.i18n import ngettext
 from nodus.models.budget import Budget, BudgetState
 from nodus.models.category import Category
 from nodus.models.period import Month, Period, format_month
@@ -23,7 +24,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.base.page import Page
 from nodus.ui.period_selector import PeriodSelector
-from nodus.ui.text.labels import days_left_text, plural, unconverted_note
+from nodus.ui.text.labels import days_left_text, unconverted_note
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -183,7 +184,9 @@ class BudgetsPage(Page):
         over = sum(1 for b in month.budgets if b.state is BudgetState.OVER)
         title = f"Presupuestos ({len(month.budgets)})"
         if over:
-            title += f" · {plural(over, 'excedido', 'excedidos')}"
+            title += " · " + ngettext("{count} excedido", "{count} excedidos", over).format(
+                count=over
+            )
         card = Card(title)
         theme = self._theme_manager.theme
         for budget in month.budgets:

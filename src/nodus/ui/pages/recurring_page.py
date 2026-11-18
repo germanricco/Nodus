@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
+from nodus.i18n import _
 from nodus.models.category import Category
 from nodus.models.recurring_charge import SOON_DAYS, DueStatus, RecurringCharge
 from nodus.services.container import Services
@@ -90,7 +91,7 @@ class RecurringChargeRow(ScheduleRow):
         super().__init__(
             category.color,
             charge.name,
-            f"{FREQUENCY_LABELS[charge.frequency]} · {account_name} · {category.name}",
+            f"{_(FREQUENCY_LABELS[charge.frequency])} · {account_name} · {category.name}",
             amount_text or charge.amount.format(),
             status,
             self.actions,

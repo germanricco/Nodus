@@ -613,7 +613,7 @@ msgstr "Expenses"
 msgid "Ingresos"
 msgstr "Income"
 
-#: nodus/services/reports/analysis_service.py
+#: nodus/services/reports/analysis_service.py nodus/ui/text/labels.py
 msgid "Ahorro"
 msgstr "Savings"
 
@@ -653,15 +653,15 @@ msgstr "Currency"
 msgid "Reembolso de"
 msgstr "Refund of"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/transaction_rows.py
 msgid "Transferencia"
 msgstr "Transfer"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/text/labels.py
 msgid "Gasto"
 msgstr "Expense"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/text/labels.py
 msgid "Ingreso"
 msgstr "Income"
 
@@ -814,4 +814,1292 @@ msgstr ""
 #: nodus/services/transactions/transfer_service.py
 msgid "Indica el monto que entra en la cuenta de destino."
 msgstr "Enter the amount that arrives in the destination account."
+
+#: nodus/ui/navigation.py
+msgid "Inicio"
+msgstr "Home"
+
+#: nodus/ui/navigation.py
+msgid "Cuentas"
+msgstr "Accounts"
+
+#: nodus/ui/navigation.py
+msgid "Transacciones"
+msgstr "Transactions"
+
+#: nodus/ui/navigation.py
+msgid "Recurrentes"
+msgstr "Recurring"
+
+#: nodus/ui/navigation.py nodus/ui/text/help_texts.py
+msgid "Presupuestos"
+msgstr "Budgets"
+
+#: nodus/ui/navigation.py
+msgid "Metas"
+msgstr "Goals"
+
+#: nodus/ui/navigation.py nodus/ui/text/help_texts.py
+msgid "Análisis"
+msgstr "Analysis"
+
+#: nodus/ui/navigation.py
+msgid "Categorías"
+msgstr "Categories"
+
+#: nodus/ui/navigation.py
+msgid "Beneficiarios"
+msgstr "Payees"
+
+#: nodus/ui/navigation.py
+msgid "Etiquetas"
+msgstr "Tags"
+
+#: nodus/ui/navigation.py nodus/ui/shell/tour.py
+msgid "Ajustes"
+msgstr "Settings"
+
+#: nodus/ui/period_selector.py
+msgid "Período anterior"
+msgstr "Previous period"
+
+#: nodus/ui/period_selector.py
+msgid "Período siguiente"
+msgstr "Next period"
+
+#: nodus/ui/period_selector.py
+msgid "Personalizado…"
+msgstr "Custom…"
+
+#: nodus/ui/period_selector.py
+msgid "Volver al mes actual"
+msgstr "Back to this month"
+
+#: nodus/ui/rate_updater.py
+#, python-brace-format
+msgid "Cotización actualizada: {rate}"
+msgstr "Exchange rate updated: {rate}"
+
+#: nodus/ui/rate_updater.py
+msgid "Cotizaciones actualizadas."
+msgstr "Exchange rates updated."
+
+#: nodus/ui/shortcuts.py
+msgid "En toda la app"
+msgstr "Anywhere in the app"
+
+#: nodus/ui/shortcuts.py
+msgid "En las listas"
+msgstr "In lists"
+
+#: nodus/ui/shortcuts.py
+msgid "En los formularios"
+msgstr "In forms"
+
+#: nodus/ui/shortcuts.py
+msgid "En una cuenta, un beneficiario o una etiqueta"
+msgstr "In an account, a payee or a tag"
+
+#: nodus/ui/shortcuts.py
+msgid "En el recorrido guiado"
+msgstr "In the guided tour"
+
+#: nodus/ui/shortcuts.py
+msgid "Abre o cierra la Ayuda."
+msgstr "Opens or closes Help."
+
+#: nodus/ui/shortcuts.py
+msgid "Deshace lo último."
+msgstr "Undoes the last change."
+
+#: nodus/ui/shortcuts.py
+msgid "Cierra la Ayuda."
+msgstr "Closes Help."
+
+#: nodus/ui/shortcuts.py
+msgid "Supr"
+msgstr "Del"
+
+#: nodus/ui/shortcuts.py
+msgid "Borra las filas elegidas."
+msgstr "Deletes the chosen rows."
+
+#: nodus/ui/shortcuts.py
+msgid "Quita la selección."
+msgstr "Clears the selection."
+
+#: nodus/ui/shortcuts.py
+msgid "Vuelve a la lista."
+msgstr "Goes back to the list."
+
+#: nodus/ui/shortcuts.py
+msgid "Avanza (también Enter)."
+msgstr "Goes forward (also Enter)."
+
+#: nodus/ui/shortcuts.py
+msgid "Retrocede."
+msgstr "Goes back."
+
+#: nodus/ui/shortcuts.py
+msgid "Sale del recorrido."
+msgstr "Leaves the tour."
+
+#: nodus/ui/shortcuts.py
+msgid "Doble clic"
+msgstr "Double-click"
+
+#: nodus/ui/shortcuts.py
+msgid "Abre o edita la fila."
+msgstr "Opens or edits the row."
+
+#: nodus/ui/shortcuts.py
+msgid "Clic derecho"
+msgstr "Right-click"
+
+#: nodus/ui/shortcuts.py
+msgid "Abre el menú de la fila."
+msgstr "Opens the row's menu."
+
+#: nodus/ui/shortcuts.py
+msgid "clic"
+msgstr "click"
+
+#: nodus/ui/shortcuts.py
+msgid "Suma o quita una fila."
+msgstr "Adds or removes a row."
+
+#: nodus/ui/shortcuts.py
+msgid "Mayús"
+msgstr "Shift"
+
+#: nodus/ui/shortcuts.py
+msgid "Elige hasta esa fila."
+msgstr "Chooses up to that row."
+
+#: nodus/ui/shortcuts.py
+msgid "Guarda."
+msgstr "Saves."
+
+#: nodus/ui/shortcuts.py
+msgid "Cierra; pregunta si cambiaste algo."
+msgstr "Closes; asks if you changed something."
+
+#: nodus/ui/transaction_rows.py
+#, python-brace-format
+msgid "Reembolso de «{description}» del {date}"
+msgstr "Refund of “{description}” from {date}"
+
+#: nodus/ui/transaction_rows.py
+#, python-brace-format
+msgid "Se descuenta el {date}"
+msgstr "Charged on {date}"
+
+#: nodus/ui/transaction_rows.py
+msgid "Editar compra"
+msgstr "Edit purchase"
+
+#: nodus/ui/transaction_rows.py
+msgid "Editar"
+msgstr "Edit"
+
+#: nodus/ui/transaction_rows.py
+msgid "Eliminar compra"
+msgstr "Delete purchase"
+
+#: nodus/ui/transaction_rows.py
+msgid "Eliminar"
+msgstr "Delete"
+
+#: nodus/ui/transaction_rows.py
+#, python-brace-format
+msgid "Reembolsado {amounts}"
+msgstr "Refunded {amounts}"
+
+#: nodus/ui/undo.py
+msgid "Deshacer"
+msgstr "Undo"
+
+#: nodus/ui/undo.py
+msgid "Se deshizo."
+msgstr "Undone."
+
+#: nodus/ui/pages/account_detail_page.py
+#, python-brace-format
+msgid "{count} cuota"
+msgid_plural "{count} cuotas"
+msgstr[0] "{count} installment"
+msgstr[1] "{count} installments"
+
+#: nodus/ui/pages/budgets_page.py
+#, python-brace-format
+msgid "{count} excedido"
+msgid_plural "{count} excedidos"
+msgstr[0] "{count} over its limit"
+msgstr[1] "{count} over their limit"
+
+#: nodus/ui/shell/coach_marks.py nodus/ui/shell/main_window.py
+msgid "Recorrido guiado"
+msgstr "Guided tour"
+
+#: nodus/ui/shell/coach_marks.py
+msgid "Saltar"
+msgstr "Skip"
+
+#: nodus/ui/shell/coach_marks.py
+msgid "Anterior"
+msgstr "Previous"
+
+#: nodus/ui/shell/coach_marks.py
+msgid "Siguiente"
+msgstr "Next"
+
+#: nodus/ui/shell/coach_marks.py
+#, python-brace-format
+msgid "{number} de {count}"
+msgstr "{number} of {count}"
+
+#: nodus/ui/shell/coach_marks.py
+msgid "Terminar"
+msgstr "Finish"
+
+#: nodus/ui/shell/help_panel.py
+msgid "Atajos de teclado"
+msgstr "Keyboard shortcuts"
+
+#: nodus/ui/shell/help_panel.py nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
+msgid "Ayuda"
+msgstr "Help"
+
+#: nodus/ui/shell/help_panel.py
+msgid "Cerrar la ayuda (Esc)"
+msgstr "Close Help (Esc)"
+
+#: nodus/ui/shell/help_panel.py
+msgid "Cerrar la ayuda"
+msgstr "Close Help"
+
+#: nodus/ui/shell/help_panel.py
+#, python-brace-format
+msgid "Ir a {page}"
+msgstr "Go to {page}"
+
+#: nodus/ui/shell/help_panel.py
+msgid "Buscar en la ayuda…"
+msgstr "Search Help…"
+
+#: nodus/ui/shell/help_panel.py
+msgid "TECLADO Y MOUSE"
+msgstr "KEYBOARD AND MOUSE"
+
+#: nodus/ui/shell/help_panel.py
+msgid "Ningún tema habla de eso."
+msgstr "No topic talks about that."
+
+#: nodus/ui/shell/help_panel.py
+msgid "‹ Temas"
+msgstr "‹ Topics"
+
+#: nodus/ui/shell/help_panel.py
+msgid "RELACIONADOS"
+msgstr "RELATED"
+
+#: nodus/ui/shell/main_window.py
+msgid "¿Te muestro cómo se usa Nodus? Es un minuto."
+msgstr "Want me to show you how Nodus works? It takes a minute."
+
+#: nodus/ui/shell/main_window.py
+msgid "Ahora no"
+msgstr "Not now"
+
+#: nodus/ui/shell/main_window.py
+msgid "Primero, una cuenta"
+msgstr "First, an account"
+
+#: nodus/ui/shell/main_window.py
+msgid ""
+"Para registrar transacciones necesitas al menos una cuenta activa. Crea una en Cuentas y vuelve a"
+" intentarlo."
+msgstr "To record transactions you need at least one active account. Create one in Accounts and try again."
+
+#: nodus/ui/shell/main_window.py
+msgid "Transacción guardada."
+msgstr "Transaction saved."
+
+#: nodus/ui/shell/notices.py
+msgid "Actualizar"
+msgstr "Update"
+
+#: nodus/ui/shell/notices.py
+msgid "Descartar esta versión"
+msgstr "Skip this version"
+
+#: nodus/ui/shell/notices.py
+msgid "Ir a Ajustes"
+msgstr "Go to Settings"
+
+#: nodus/ui/shell/notices.py
+msgid "Guardar copia…"
+msgstr "Save backup…"
+
+#: nodus/ui/shell/notices.py
+msgid "Ahora no: avisar a fin del mes que viene"
+msgstr "Not now: remind me at the end of next month"
+
+#: nodus/ui/shell/notices.py
+msgid "Ver cargos"
+msgstr "View charges"
+
+#: nodus/ui/shell/notices.py
+msgid "Ver presupuestos"
+msgstr "View budgets"
+
+#: nodus/ui/shell/notices.py
+msgid "Ver meta"
+msgstr "View goal"
+
+#: nodus/ui/shell/notices.py
+msgid "Quitar el aviso"
+msgstr "Remove the notification"
+
+#: nodus/ui/shell/notification_panel.py
+msgid "Qué trae"
+msgstr "What's new"
+
+#: nodus/ui/shell/notification_panel.py
+#, python-brace-format
+msgid "Sin revisar: {title}"
+msgstr "Unread: {title}"
+
+#: nodus/ui/shell/notification_panel.py nodus/ui/shell/top_bar.py
+msgid "Notificaciones"
+msgstr "Notifications"
+
+#: nodus/ui/shell/notification_panel.py
+#, python-brace-format
+msgid "{count} sin revisar"
+msgstr "{count} unread"
+
+#: nodus/ui/shell/notification_panel.py
+msgid "Sin novedades."
+msgstr "Nothing new."
+
+#: nodus/ui/shell/sidebar.py
+msgid "Mostrar sus cuentas"
+msgstr "Show its accounts"
+
+#: nodus/ui/shell/sidebar.py
+msgid "Plegar el grupo"
+msgstr "Collapse the group"
+
+#: nodus/ui/shell/sidebar.py
+msgid "Expandir el panel"
+msgstr "Expand the panel"
+
+#: nodus/ui/shell/sidebar.py
+msgid "Contraer el panel"
+msgstr "Collapse the panel"
+
+#: nodus/ui/shell/sidebar.py
+msgid "CUENTAS"
+msgstr "ACCOUNTS"
+
+#: nodus/ui/shell/sidebar.py
+msgid "Todavía no hay cuentas"
+msgstr "No accounts yet"
+
+#: nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
+msgid "Agregar transacción"
+msgstr "Add transaction"
+
+#: nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
+msgid "Enviar comentarios"
+msgstr "Send feedback"
+
+#: nodus/ui/shell/top_bar.py
+#, python-brace-format
+msgid "Ayuda ({key})"
+msgstr "Help ({key})"
+
+#: nodus/ui/shell/top_bar.py
+msgid "Mostrar montos"
+msgstr "Show amounts"
+
+#: nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
+msgid "Ocultar montos"
+msgstr "Hide amounts"
+
+#: nodus/ui/shell/tour.py
+msgid "Las páginas"
+msgstr "The pages"
+
+#: nodus/ui/shell/tour.py
+msgid ""
+"En Transacciones buscas y editas tus movimientos; en Recurrentes, lo que pagas todos los meses. "
+"Presupuestos pone un límite a cada categoría, Metas sigue lo que ahorras y Análisis muestra cómo "
+"cambian tus números mes a mes."
+msgstr ""
+"In Transactions you search and edit your transactions; in Recurring, what you pay every month. "
+"Budgets sets a limit for each category, Goals follows what you save and Analysis shows how your "
+"numbers change month by month."
+
+#: nodus/ui/shell/tour.py
+msgid "Tus cuentas"
+msgstr "Your accounts"
+
+#: nodus/ui/shell/tour.py
+msgid ""
+"Cada una con su saldo de hoy. Un clic abre su página, con su historia y sus movimientos. Los "
+"grupos se pliegan para hacer lugar."
+msgstr ""
+"Each one with today's balance. A click opens its page, with its history and its transactions. "
+"Groups collapse to make room."
+
+#: nodus/ui/shell/tour.py
+msgid ""
+"Las cotizaciones del dólar y del euro, las copias de tus datos, el tema claro u oscuro y el "
+"recordatorio de fin de mes."
+msgstr ""
+"The dollar and euro exchange rates, the backups of your data, the light or dark theme and the "
+"end-of-month reminder."
+
+#: nodus/ui/shell/tour.py
+msgid ""
+"Desde cualquier página: un gasto, un ingreso o una transferencia, también en cuotas o como "
+"reembolso de un gasto."
+msgstr ""
+"From any page: an expense, an income or a transfer, also in installments or as a refund of an "
+"expense."
+
+#: nodus/ui/shell/tour.py
+msgid "El período"
+msgstr "The period"
+
+#: nodus/ui/shell/tour.py
+msgid "Elige qué mira el Inicio: este mes, los últimos 3, 6 o 12 meses, el año o las fechas que quieras."
+msgstr "Choose what Home looks at: this month, the last 3, 6 or 12 months, the year or the dates you want."
+
+#: nodus/ui/shell/tour.py
+msgid "Si alguien mira tu pantalla, el ojo tapa todos los montos. Otro clic los muestra."
+msgstr "If someone is looking at your screen, the eye hides every amount. Another click shows them."
+
+#: nodus/ui/shell/tour.py
+msgid ""
+"Cómo se hace cada cosa y los atajos de teclado. Se abre al costado, en el tema de la página donde"
+" estás. También con F1."
+msgstr ""
+"How to do each thing, and the keyboard shortcuts. It opens on the side, on the topic of the page "
+"you're on. Also with F1."
+
+#: nodus/ui/shell/tour.py
+msgid "¿Algo no anda o se te ocurre una mejora? Este botón abre un formulario para contarlo."
+msgstr "Something not working, or an idea to make it better? This button opens a form to tell us."
+
+#: nodus/ui/shell/tour.py
+msgid "Avisos"
+msgstr "Notifications"
+
+#: nodus/ui/shell/tour.py
+msgid ""
+"Pagos que vencen, presupuestos pasados, metas alcanzadas y versiones nuevas. Para volver a ver "
+"este recorrido, búscalo en la Ayuda o en Ajustes."
+msgstr ""
+"Payments coming due, budgets over their limit, goals reached and new versions. To see this tour "
+"again, look for it in Help or in Settings."
+
+#: nodus/ui/text/error_report.py
+msgid "¿Qué estabas haciendo cuando apareció el error?"
+msgstr "What were you doing when the error appeared?"
+
+#: nodus/ui/text/error_report.py
+msgid "Dónde, del último paso al primero:"
+msgstr "Where, from the last step to the first:"
+
+#: nodus/ui/text/error_report.py
+#, python-brace-format
+msgid "Error: {description}"
+msgstr "Error: {description}"
+
+#: nodus/ui/text/error_report.py
+#, python-brace-format
+msgid "{path}:{line} en {function}"
+msgstr "{path}:{line} in {function}"
+
+#: nodus/ui/text/help_texts.py
+msgid "Empezar"
+msgstr "Getting started"
+
+#: nodus/ui/text/help_texts.py
+msgid "Tu dinero"
+msgstr "Your money"
+
+#: nodus/ui/text/help_texts.py
+msgid "Planificar"
+msgstr "Planning"
+
+#: nodus/ui/text/help_texts.py
+msgid "Ordenar"
+msgstr "Organizing"
+
+#: nodus/ui/text/help_texts.py
+msgid "Tus datos"
+msgstr "Your data"
+
+#: nodus/ui/text/help_texts.py
+msgid "Cómo está organizado Nodus"
+msgstr "How Nodus is organized"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Nodus junta en un solo lugar tus cuentas, lo que gastas y lo que planeas, y el Inicio te lo "
+"resume de un vistazo."
+msgstr ""
+"Nodus brings your accounts, what you spend and what you plan together in one place, and Home sums"
+" it up at a glance."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"A la izquierda están las páginas y tus cuentas con su saldo. Arriba, «Agregar transacción» anota "
+"un movimiento desde cualquier página, el ojo oculta los montos, la campana junta los avisos y el "
+"«?» abre esta ayuda. El número de la campana cuenta los avisos que todavía no miraste, que llevan"
+" un punto: un clic en uno te lleva adonde está el problema y lo marca como visto. Con el clic "
+"derecho, algunos se pueden quitar."
+msgstr ""
+"On the left are the pages and your accounts with their balance. At the top, “Add transaction” "
+"records a transaction from any page, the eye hides the amounts, the bell gathers the "
+"notifications and the “?” opens this help. The number on the bell counts the notifications you "
+"haven't looked at yet, which carry a dot: a click on one takes you to where the problem is and "
+"marks it as seen. With a right-click, some can be removed."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"El Inicio muestra tu patrimonio neto, los próximos pagos, en qué se fue el dinero y tus "
+"presupuestos. Arriba a la derecha eliges el período, y un clic en una categoría o en un pago te "
+"lleva a sus movimientos."
+msgstr ""
+"Home shows your net worth, the upcoming payments, where the money went and your budgets. At the "
+"top right you choose the period, and a click on a category or a payment takes you to its "
+"transactions."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Si quieres ver dónde está cada cosa, «Ver el recorrido», al pie de la lista de temas, te lo "
+"muestra en un minuto."
+msgstr ""
+"If you want to see where everything is, “Take the tour”, at the bottom of the list of topics, "
+"shows you in a minute."
+
+#: nodus/ui/text/help_texts.py
+msgid "Tu primer mes con Nodus"
+msgstr "Your first month with Nodus"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Empieza por lo que ya tienes y deja que Nodus aprenda con el uso: en un mes vas a ver con "
+"claridad a dónde va tu dinero."
+msgstr ""
+"Start with what you already have and let Nodus learn as you use it: in a month you'll see clearly"
+" where your money goes."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Primero, crea una cuenta por cada lugar donde tengas dinero, con el saldo de hoy. Después, anota "
+"tus gastos a medida que ocurren; con unos días de movimientos, el Inicio ya empieza a contar "
+"algo."
+msgstr ""
+"First, create an account for each place where you have money, with today's balance. Then record "
+"your expenses as they happen; after a few days of transactions, Home already starts to tell you "
+"something."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Suma el alquiler, los servicios y las suscripciones en Recurrentes, así Nodus te avisa antes de "
+"que venzan. Cuando tengas un mes de gastos, ponle un límite a las categorías que quieras cuidar "
+"en Presupuestos."
+msgstr ""
+"Add the rent, the utilities and the subscriptions in Recurring, so Nodus reminds you before "
+"they're due. Once you have a month of expenses, set a limit in Budgets for the categories you "
+"want to watch."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Para ver dónde está cada cosa, el botón «Ver el recorrido», al pie de la lista de temas, recorre "
+"la ventana en un minuto."
+msgstr ""
+"To see where everything is, the “Take the tour” button, at the bottom of the list of topics, goes"
+" around the window in a minute."
+
+#: nodus/ui/text/help_texts.py
+msgid "Cuentas y grupos"
+msgstr "Accounts and groups"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa Cuentas para tener a mano cada lugar donde guardas dinero: el banco, el efectivo, una "
+"billetera virtual, tus ahorros en dólares o una tarjeta."
+msgstr ""
+"Use Accounts to keep at hand every place where you keep money: the bank, cash, a digital wallet, "
+"your savings in dollars or a card."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En Cuentas, «Agregar cuenta» te pide el nombre, el tipo, la moneda y el saldo de hoy. Desde ahí, "
+"el saldo se calcula solo a partir de los movimientos."
+msgstr ""
+"In Accounts, “Add account” asks for the name, the type, the currency and today's balance. From "
+"then on, the balance works itself out from the transactions."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Para ordenarlas, arrástralas: el panel lateral sigue ese orden. Si tienes muchas, «Agregar grupo»"
+" las junta en grupos como Bancos o Billeteras. Para pasar una cuenta a otro grupo, arrástrala a "
+"su tarjeta, aunque esté vacía, o usa «Mover a grupo…» en su menú; el aviso ofrece «Deshacer». Un "
+"clic en el nombre de un grupo, en el panel lateral, lo pliega y deja a la vista solo su total."
+msgstr ""
+"To order them, drag them: the side panel follows that order. If you have many, “Add group” puts "
+"them together in groups such as Banks or Wallets. To move an account to another group, drag it to"
+" the group's card, even if it's empty, or use “Move to group…” in its menu; the notice offers "
+"“Undo”. A click on a group's name, in the side panel, collapses it and leaves only its total in "
+"view."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Un clic en una cuenta abre su página: cuánto entró y salió este mes, cómo cambió su saldo y todos"
+" sus movimientos. Una cuenta que ya no usas se archiva desde su menú; deja de sumar en tu "
+"patrimonio neto, pero sus movimientos se conservan."
+msgstr ""
+"A click on an account opens its page: how much came in and went out this month, how its balance "
+"changed and all its transactions. An account you no longer use is archived from its menu; it "
+"stops counting in your net worth, but its transactions are kept."
+
+#: nodus/ui/text/help_texts.py
+msgid "Anotar transacciones"
+msgstr "Recording transactions"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa «Agregar transacción», arriba en cualquier página, para anotar un gasto, un ingreso o una "
+"transferencia en un momento."
+msgstr ""
+"Use “Add transaction”, at the top of any page, to record an expense, an income or a transfer in a"
+" moment."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"El formulario ya trae la última cuenta que usaste. En «Beneficiario», unas letras bastan para "
+"elegir a quién le pagaste, y Nodus completa la categoría que sueles usar con él. Las etiquetas "
+"son opcionales y sirven para juntar lo que va junto, como los gastos de un viaje."
+msgstr ""
+"The form already has the last account you used. In “Payee”, a few letters are enough to choose "
+"who you paid, and Nodus fills in the category you usually use with them. Tags are optional and "
+"bring together what belongs together, such as the expenses of a trip."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Los montos se escriben con coma para los decimales y punto para los miles, como en 1.234,56. Si "
+"escribes uno que se puede leer de dos maneras, como 1,234.56, Nodus no adivina: te muestra cómo "
+"escribirlo."
+msgstr ""
+"Amounts are written with a point for decimals and a comma for thousands, as in 1,234.56. If you "
+"type one that can be read two ways, such as 1.234,56, Nodus doesn't guess: it shows you how to "
+"write it."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Para cambiar una transacción, haz doble clic en ella. Cada fila tiene su menú «⋯», que también se"
+" abre con el clic derecho, con todo lo que puedes hacer con ella."
+msgstr ""
+"To change a transaction, double-click it. Each row has its “⋯” menu, which also opens with a "
+"right-click, with everything you can do with it."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Para cambiar varias a la vez, márcalas con Ctrl + clic o Mayús + clic: la barra que aparece "
+"arriba les cambia la categoría, el beneficiario, la nota o las etiquetas de una vez, o las "
+"elimina juntas."
+msgstr ""
+"To change several at once, select them with Ctrl + click or Shift + click: the bar that appears "
+"at the top changes their category, payee, note or tags in one go, or deletes them together."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Si te equivocaste, el aviso que aparece abajo a la derecha tiene «Deshacer», y Ctrl + Z hace lo "
+"mismo. Eliminar no se deshace: por eso Nodus pregunta antes. Y si cierras un formulario con "
+"cambios, te pregunta si quieres descartarlos."
+msgstr ""
+"If you made a mistake, the notice that appears at the bottom right has “Undo”, and Ctrl + Z does "
+"the same. Deleting can't be undone: that's why Nodus asks first. And if you close a form with "
+"changes, it asks whether you want to discard them."
+
+#: nodus/ui/text/help_texts.py
+msgid "Buscar y filtrar"
+msgstr "Searching and filtering"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa los filtros de Transacciones para responder preguntas como «¿cuánto gasté en el supermercado "
+"este año?»."
+msgstr ""
+"Use the filters in Transactions to answer questions such as “how much did I spend at the "
+"supermarket this year?”."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Arriba eliges el período, y debajo filtras por cuenta, categoría, beneficiario, etiqueta o tipo. "
+"«Buscar…» encuentra texto en la nota y en los nombres del beneficiario y las etiquetas. Al pie, "
+"Nodus suma lo que estás viendo."
+msgstr ""
+"At the top you choose the period, and below you filter by account, category, payee, tag or type. "
+"“Search…” finds text in the note and in the names of the payee and the tags. At the bottom, Nodus"
+" adds up what you're looking at."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Muchas páginas te traen hasta acá ya filtrado: un clic en una categoría del Inicio, en una barra "
+"de Análisis o en «Ver movimientos» del menú de una fila."
+msgstr ""
+"Many pages bring you here already filtered: a click on a category on Home, on a bar in Analysis "
+"or on “View transactions” in a row's menu."
+
+#: nodus/ui/text/help_texts.py
+msgid "«Exportar» guarda lo que ves en un archivo CSV, que se abre en Excel o en cualquier planilla."
+msgstr "“Export” saves what you see in a CSV file, which opens in Excel or any spreadsheet."
+
+#: nodus/ui/text/help_texts.py
+msgid "Transferencias y compra de dólares"
+msgstr "Transfers and buying dollars"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa una transferencia cuando el dinero pasa de una de tus cuentas a otra: así no cuenta como "
+"gasto ni como ingreso, porque sigue siendo tuyo."
+msgstr ""
+"Use a transfer when money goes from one of your accounts to another: that way it counts neither "
+"as an expense nor as income, because it's still yours."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En el formulario, elige «Transferencia», la cuenta de origen en «Cuenta» y la de destino en "
+"«Hacia». Pagar la tarjeta desde el banco también es una transferencia."
+msgstr ""
+"In the form, choose “Transfer”, the source account in “Account” and the destination in “To”. "
+"Paying the card from the bank is also a transfer."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Si las cuentas tienen monedas distintas, como al comprar dólares, aparece «Entra»: anota lo que "
+"salió en «Monto» y lo que llegó en «Entra». Nodus te muestra la cotización que realmente "
+"obtuviste."
+msgstr ""
+"If the accounts have different currencies, as when buying dollars, “Received” appears: enter what"
+" left in “Amount” and what arrived in “Received”. Nodus shows you the exchange rate you really "
+"got."
+
+#: nodus/ui/text/help_texts.py
+msgid "Compras en cuotas"
+msgstr "Purchases in installments"
+
+#: nodus/ui/text/help_texts.py
+msgid "Usa las cuotas para anotar una compra una sola vez y que Nodus reparta cada pago en su mes."
+msgstr "Use installments to record a purchase only once and let Nodus put each payment in its month."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Al anotar un gasto, elige en «Cuotas» en cuántas se paga y si el monto es el «Total» o lo que "
+"vale cada una («Por cuota»). Nodus anota todas las cuotas en sus fechas, y cada una se descuenta "
+"de la cuenta el día que le toca."
+msgstr ""
+"When you record an expense, choose in “Installments” how many it's paid in and whether the amount"
+" is the “Total” or what each one costs (“Per installment”). Nodus records every installment on "
+"its date, and each one is charged to the account on its day."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Recurrentes te muestra cuántas pagaste, la próxima y cuánto se llevan las cuotas cada mes. Abrir "
+"cualquier cuota abre la compra entera, para cambiarla o eliminarla, y su menú tiene «Adelantar "
+"las cuotas que faltan»."
+msgstr ""
+"Recurring shows you how many you've paid, the next one and how much the installments take each "
+"month. Opening any installment opens the whole purchase, to change or delete it, and its menu has"
+" “Pay the remaining installments ahead”."
+
+#: nodus/ui/text/help_texts.py
+msgid "Reembolsos"
+msgstr "Refunds"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa «Reembolso de» cuando un comercio te devuelve dinero o alguien te paga su parte, así tus "
+"gastos muestran lo que realmente gastaste."
+msgstr ""
+"Use “Refund of” when a store gives you money back or someone pays you their share, so your "
+"expenses show what you really spent."
+
+#: nodus/ui/text/help_texts.py
+msgid "Anota el ingreso como siempre y, en «Reembolso de», elige el gasto que devuelve."
+msgstr "Record the income as usual and, in “Refund of”, choose the expense it pays back."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Nodus lo cuenta entonces como un gasto menor, en la categoría del gasto original y en el mes en "
+"que volvió el dinero, y no como un ingreso. Tus presupuestos, el Inicio y Análisis lo tienen en "
+"cuenta."
+msgstr ""
+"Nodus then counts it as a smaller expense, in the category of the original expense and in the "
+"month the money came back, and not as income. Your budgets, Home and Analysis take it into "
+"account."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Si te devuelven más de lo que quedaba, como 1.000 por una parte de 998, Nodus anota como "
+"reembolso lo que quedaba y el resto como un ingreso aparte, en «Otros» o la categoría que elijas."
+msgstr ""
+"If you get back more than was left, such as 1,000 for a share of 998, Nodus records what was left"
+" as a refund and the rest as separate income, in “Other” or the category you choose."
+
+#: nodus/ui/text/help_texts.py
+msgid "Rendimiento de inversiones"
+msgstr "Investment returns"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa «Actualizar valor» para que tus ahorros e inversiones muestren lo que valen hoy, con sus "
+"intereses o sus cambios de precio."
+msgstr ""
+"Use “Update value” so your savings and investments show what they're worth today, with their "
+"interest or their price changes."
+
+#: nodus/ui/text/help_texts.py
+msgid "En la página de la cuenta, «Actualizar valor» te pide cuánto vale hoy, tal como lo muestra su app."
+msgstr "On the account's page, “Update value” asks how much it's worth today, just as its app shows it."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Nodus guarda la diferencia como rendimiento: mueve el saldo y tu patrimonio neto, pero no cuenta "
+"como ingreso. La página de la cuenta te dice cuánto rindió sobre lo que invertiste."
+msgstr ""
+"Nodus keeps the difference as a return: it moves the balance and your net worth, but doesn't "
+"count as income. The account's page tells you how much it earned on what you invested."
+
+#: nodus/ui/text/help_texts.py
+msgid "Pagos recurrentes"
+msgstr "Recurring payments"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa Recurrentes para el alquiler, los servicios y las suscripciones: los anotas una vez y Nodus "
+"te avisa cuando toca pagarlos."
+msgstr ""
+"Use Recurring for the rent, the utilities and the subscriptions: you enter them once and Nodus "
+"lets you know when they're due."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En Recurrentes, «Agregar cargo» te pide cuánto es, cada cuánto se paga y desde qué cuenta. Nodus "
+"te muestra cuánto suman por mes, qué vence pronto y qué está atrasado, y la campana te avisa. Si "
+"ya sabes que viene, «Ya lo vi», en su menú, calla el aviso hasta el día anterior, y abrir su "
+"aviso en la campana hace lo mismo; lo vencido avisa siempre."
+msgstr ""
+"In Recurring, “Add charge” asks how much it is, how often it's paid and from which account. Nodus"
+" shows you how much they add up to per month, what's due soon and what's late, and the bell lets "
+"you know. If you already know it's coming, “Got it”, in its menu, silences the notification until"
+" the day before, and opening its notification in the bell does the same; what's overdue always "
+"notifies."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"«Pagar» registra el gasto y pasa el cargo a su próxima fecha. Si un mes no se paga, «Omitir» lo "
+"salta sin registrar nada. Los dos se pueden deshacer desde el aviso que aparece abajo, o con Ctrl"
+" + Z."
+msgstr ""
+"“Pay” records the expense and moves the charge to its next date. If a month isn't paid, “Skip” "
+"skips it without recording anything. Both can be undone from the notice that appears at the "
+"bottom, or with Ctrl + Z."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Una suscripción en dólares puede pagarse desde una cuenta en pesos: Nodus estima los pesos con tu"
+" último pago, y tú anotas lo que realmente salió."
+msgstr ""
+"A subscription in dollars can be paid from an account in pesos: Nodus estimates the pesos from "
+"your last payment, and you enter what really left."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa Presupuestos para ponerle un límite mensual a las categorías que quieres cuidar y ver a "
+"tiempo si te estás pasando."
+msgstr ""
+"Use Budgets to set a monthly limit for the categories you want to watch and see in time if you're"
+" going over."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En Presupuestos, «Agregar presupuesto» te pide la categoría y el límite. Para elegirlo, Nodus te "
+"sugiere tu promedio de los últimos meses."
+msgstr ""
+"In Budgets, “Add budget” asks for the category and the limit. To help you choose it, Nodus "
+"suggests your average over the last months."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"La barra se pone amarilla cuando gastas más rápido de lo que avanza el mes, y roja cuando te "
+"pasas. Un límite vale desde ese mes en adelante, hasta que lo cambies o lo quites."
+msgstr ""
+"The bar turns yellow when you spend faster than the month goes by, and red when you go over. A "
+"limit applies from that month on, until you change it or remove it."
+
+#: nodus/ui/text/help_texts.py
+msgid "Metas de ahorro"
+msgstr "Savings goals"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa Metas para juntar dinero para algo que quieres: un viaje, una notebook nueva o un fondo para "
+"imprevistos."
+msgstr "Use Goals to save money for something you want: a trip, a new laptop or an emergency fund."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En Metas, «Agregar meta» te pide cuánto quieres juntar y, si quieres, para cuándo. Después eliges"
+" qué cuentas de ahorro cuentan y qué parte de cada una, así una misma cuenta sirve a varias "
+"metas."
+msgstr ""
+"In Goals, “Add goal” asks how much you want to save and, if you like, by when. Then you choose "
+"which savings accounts count and what share of each, so one account can serve several goals."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Las metas nunca mueven dinero: crecen cuando pasas plata a sus cuentas. Cada una te dice si a tu "
+"ritmo llegas a tiempo y, si no, cuánto hace falta por mes. Cuando llegas, la campana te avisa."
+msgstr ""
+"Goals never move money: they grow when you move money into their accounts. Each one tells you "
+"whether you'll make it in time at your pace and, if not, how much is needed per month. When you "
+"get there, the bell lets you know."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa Análisis para tomar distancia y mirar el año completo: cómo cambian tus gastos, cuánto "
+"ahorras y cómo crece lo que tienes."
+msgstr ""
+"Use Analysis to step back and look at the whole year: how your expenses change, how much you save"
+" and how what you have grows."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"«Tendencias» muestra tus gastos, ingresos o ahorro mes a mes, por categoría y frente a tu "
+"promedio, y en qué se fue el dinero por categoría, beneficiario y etiqueta."
+msgstr ""
+"“Trends” shows your expenses, income or savings month by month, by category and against your "
+"average, and where the money went by category, payee and tag."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"«Flujo de caja» compara ingresos, gastos, ahorro y tasa de ahorro con el período anterior, y "
+"«Patrimonio neto» sigue lo que tienes, fin de mes tras fin de mes."
+msgstr ""
+"“Cash flow” compares income, expenses, savings and savings rate with the previous period, and "
+"“Net worth” follows what you have, from the end of one month to the next."
+
+#: nodus/ui/text/help_texts.py
+msgid "Un clic en cualquier barra o fila te lleva a los movimientos que la forman."
+msgstr "A click on any bar or row takes you to the transactions it's made of."
+
+#: nodus/ui/text/help_texts.py
+msgid "Categorías, beneficiarios y etiquetas"
+msgstr "Categories, payees and tags"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Usa estas tres páginas para ordenar tus movimientos: la categoría dice en qué gastaste, el "
+"beneficiario a quién le pagaste y las etiquetas juntan lo que va junto."
+msgstr ""
+"Use these three pages to organize your transactions: the category says what you spent on, the "
+"payee who you paid, and tags bring together what belongs together."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En Categorías, cada una puede tener subcategorías, como Supermercado dentro de Comida, con "
+"«Agregar subcategoría» en su menú. Si eliminas una, sus movimientos pasan a «Otros» y no se "
+"pierden. «Otros» y «Reembolsos» son de sistema: Nodus las usa, así que no se renombran ni se "
+"eliminan. Para el color, además de la paleta, el «+» abre una rueda con cualquier otro, y los "
+"últimos que elegiste ahí quedan a mano después de la paleta, también para las etiquetas."
+msgstr ""
+"In Categories, each one can have subcategories, such as Supermarket inside Food, with “Add "
+"subcategory” in its menu. If you delete one, its transactions move to “Other” and aren't lost. "
+"“Other” and “Refunds” belong to the system: Nodus uses them, so they can't be renamed or deleted."
+" For the color, besides the palette, the “+” opens a wheel with any other, and the last ones you "
+"chose there stay at hand after the palette, for tags too."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Beneficiarios y Etiquetas muestran cuántos movimientos y cuánto dinero suma cada uno; un doble "
+"clic abre su página con todos sus movimientos. Si tienes repetidos, como «Coto» y «Coto Online», "
+"«Unir con…» los junta en uno, y el aviso que aparece abajo te deja deshacerlo."
+msgstr ""
+"Payees and Tags show how many transactions and how much money each one adds up to; a double-click"
+" opens its page with all its transactions. If you have duplicates, such as “Coto” and “Coto "
+"Online”, “Merge with…” combines them into one, and the notice that appears at the bottom lets you"
+" undo it."
+
+#: nodus/ui/text/help_texts.py
+msgid "Monedas y cotizaciones"
+msgstr "Currencies and exchange rates"
+
+#: nodus/ui/text/help_texts.py
+msgid "Usa una cuenta por moneda y deja que Nodus sume todo en tu patrimonio neto, en pesos o en dólares."
+msgstr ""
+"Use one account per currency and let Nodus add everything up in your net worth, in pesos or in "
+"dollars."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En Ajustes, «Cotizaciones» elige de dónde sale el dólar: con MEP, Blue u Oficial, Nodus trae el "
+"valor del día al abrirse; con «Manual», lo cargas tú. El euro y el peso chileno usan su "
+"cotización oficial."
+msgstr ""
+"In Settings, “Exchange rates” chooses where the dollar comes from: with MEP, Blue or Official, "
+"Nodus fetches the day's value when it opens; with “Manual”, you enter it. The euro and the "
+"Chilean peso use their official rate."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En el Inicio, el patrimonio neto se ve en pesos o en dólares con un clic, y te dice cuánto cambió"
+" por la cotización."
+msgstr ""
+"On Home, the net worth is shown in pesos or in dollars with a click, and it tells you how much it"
+" changed because of the exchange rate."
+
+#: nodus/ui/text/help_texts.py
+msgid "Copias de seguridad"
+msgstr "Backups"
+
+#: nodus/ui/text/help_texts.py
+msgid "Tus datos viven solo en tu computadora, así que Nodus los cuida por ti con una copia cada día."
+msgstr "Your data lives only on your computer, so Nodus looks after it for you with a backup every day."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Cada día, al abrirse, Nodus guarda una copia en tu computadora. Conserva las tres más recientes, "
+"una por cada una de las cuatro semanas anteriores y una por cada uno de los seis meses "
+"anteriores, así puedes volver a medio año atrás si notas tarde un error. Antes de borrar una "
+"cuenta, una categoría o muchas transacciones, también guarda una, que se queda un mes."
+msgstr ""
+"Every day, when it opens, Nodus saves a backup on your computer. It keeps the three most recent, "
+"one for each of the four previous weeks and one for each of the six previous months, so you can "
+"go back half a year if you notice a mistake late. Before deleting an account, a category or many "
+"transactions, it also saves one, which stays for a month."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En Ajustes, «Hacer copia» guarda una en el momento y «Restaurar copia…» vuelve a una anterior, "
+"después de guardar cómo están ahora. Nodus revisa la copia entera antes de usarla: si está dañada"
+" o incompleta, te avisa y tus datos quedan como estaban."
+msgstr ""
+"In Settings, “Back up now” saves one right away and “Restore backup…” goes back to an earlier "
+"one, after saving how things are now. Nodus checks the whole backup before using it: if it's "
+"damaged or incomplete, it tells you and your data stays as it was."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Esas copias quedan en el mismo disco, así que una vez al mes conviene guardar una afuera con "
+"«Guardar copia en…», en un pendrive o en una carpeta de Drive. A fin de mes, Nodus te lo "
+"recuerda."
+msgstr ""
+"Those backups stay on the same disk, so once a month it's worth saving one elsewhere with “Save "
+"backup to…”, on a USB drive or in a Drive folder. At the end of the month, Nodus reminds you."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Si el archivo de tus datos se daña, al abrirse Nodus te ofrece volver a la última copia sana, y "
+"guarda aparte el archivo dañado."
+msgstr ""
+"If your data file gets damaged, when it opens Nodus offers to go back to the last healthy backup,"
+" and keeps the damaged file aside."
+
+#: nodus/ui/text/help_texts.py
+msgid "Pasar Nodus a otra computadora"
+msgstr "Moving Nodus to another computer"
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Tus datos pasan enteros a otra computadora con una copia: cuentas, movimientos y ajustes, tal "
+"como estaban."
+msgstr ""
+"Your data moves whole to another computer with a backup: accounts, transactions and settings, "
+"just as they were."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En la computadora de siempre, abre Ajustes y toca «Guardar copia en…». Elige un pendrive o una "
+"carpeta de Drive u OneDrive."
+msgstr ""
+"On your usual computer, open Settings and click “Save backup to…”. Choose a USB drive or a Drive "
+"or OneDrive folder."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"En la nueva, instala Nodus. El Inicio te ofrece «Traer mis datos de otra computadora»: elige la "
+"copia que guardaste y listo. Más tarde, lo mismo se hace desde Ajustes, con «Restaurar copia…»."
+msgstr ""
+"On the new one, install Nodus. Home offers you “Bring my data from another computer”: choose the "
+"backup you saved and you're done. Later, the same is done from Settings, with “Restore backup…”."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Si la copia viene de una versión anterior de Nodus, se actualiza sola al traerla. Una de una "
+"versión más nueva necesita que primero actualices Nodus."
+msgstr ""
+"If the backup comes from an earlier version of Nodus, it updates itself when you bring it in. One"
+" from a newer version needs you to update Nodus first."
+
+#: nodus/ui/text/help_texts.py
+msgid "Privacidad"
+msgstr "Privacy"
+
+#: nodus/ui/text/help_texts.py
+msgid "Nodus no tiene cuentas ni servidores: todo lo que anotas queda en un archivo de tu computadora."
+msgstr "Nodus has no sign-ups and no servers: everything you record stays in a file on your computer."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Si alguien mira tu pantalla, el ojo de la barra de arriba oculta tus saldos y tu patrimonio neto."
+" Vuelve a tocarlo para verlos."
+msgstr ""
+"If someone is looking at your screen, the eye in the top bar hides your balances and your net "
+"worth. Click it again to see them."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Nodus solo se conecta a internet para ver si hay una versión nueva y para traer las cotizaciones,"
+" si elegiste una fuente automática. Las dos cosas se apagan en Ajustes."
+msgstr ""
+"Nodus only connects to the internet to check for a new version and to fetch the exchange rates, "
+"if you chose an automatic source. Both can be turned off in Settings."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Para encontrar un error, Nodus anota lo que hace en un registro, sin montos ni nombres, que queda"
+" en tu computadora. Si algo falla, «Enviar reporte» abre el formulario de comentarios con el "
+"error ya escrito, y lo lees antes de enviarlo."
+msgstr ""
+"To find an error, Nodus writes down what it does in a log, with no amounts or names, that stays "
+"on your computer. If something fails, “Send report” opens the feedback form with the error "
+"already written in, and you read it before sending it."
+
+#: nodus/ui/text/labels.py
+msgid "Cuenta bancaria"
+msgstr "Bank account"
+
+#: nodus/ui/text/labels.py
+msgid "Billetera virtual"
+msgstr "Digital wallet"
+
+#: nodus/ui/text/labels.py
+msgid "Efectivo"
+msgstr "Cash"
+
+#: nodus/ui/text/labels.py
+msgid "Tarjeta de crédito"
+msgstr "Credit card"
+
+#: nodus/ui/text/labels.py
+msgid "Inversión"
+msgstr "Investment"
+
+#: nodus/ui/text/labels.py
+#, python-brace-format
+msgid "En {currency}"
+msgstr "In {currency}"
+
+#: nodus/ui/text/labels.py
+msgid "Sin cotización"
+msgstr "No exchange rate"
+
+#: nodus/ui/text/labels.py
+msgid "Ver el recorrido"
+msgstr "Take the tour"
+
+#: nodus/ui/text/labels.py
+msgid "Semanal"
+msgstr "Weekly"
+
+#: nodus/ui/text/labels.py
+msgid "Quincenal"
+msgstr "Every two weeks"
+
+#: nodus/ui/text/labels.py
+msgid "Mensual"
+msgstr "Monthly"
+
+#: nodus/ui/text/labels.py
+msgid "Trimestral"
+msgstr "Quarterly"
+
+#: nodus/ui/text/labels.py
+msgid "Semestral"
+msgstr "Every six months"
+
+#: nodus/ui/text/labels.py
+msgid "Anual"
+msgstr "Yearly"
+
+#: nodus/ui/text/labels.py
+#, python-brace-format
+msgid "Vencido hace {days} días"
+msgstr "Overdue by {days} days"
+
+#: nodus/ui/text/labels.py
+msgid "Vencido ayer"
+msgstr "Due yesterday"
+
+#: nodus/ui/text/labels.py
+msgid "Hoy"
+msgstr "Today"
+
+#: nodus/ui/text/labels.py
+msgid "Mañana"
+msgstr "Tomorrow"
+
+#: nodus/ui/text/labels.py
+#, python-brace-format
+msgid "en {days} días"
+msgstr "in {days} days"
+
+#: nodus/ui/text/labels.py
+#, python-brace-format
+msgid "{count} movimiento"
+msgid_plural "{count} movimientos"
+msgstr[0] "{count} transaction"
+msgstr[1] "{count} transactions"
+
+#: nodus/ui/text/labels.py
+#, python-brace-format
+msgid "{count} transacción"
+msgid_plural "{count} transacciones"
+msgstr[0] "{count} transaction"
+msgstr[1] "{count} transactions"
+
+#: nodus/ui/text/labels.py
+#, python-brace-format
+msgid "{count} movimiento(s) en otra moneda sin cotización no se incluyen."
+msgid_plural "{count} movimiento(s) en otra moneda sin cotización no se incluyen."
+msgstr[0] "{count} transaction in another currency without an exchange rate isn't included."
+msgstr[1] "{count} transactions in another currency without an exchange rate aren't included."
+
+#: nodus/ui/text/labels.py
+msgid "Último día"
+msgstr "Last day"
+
+#: nodus/ui/text/labels.py
+#, python-brace-format
+msgid "{count} día restante"
+msgid_plural "{count} días restantes"
+msgstr[0] "{count} day left"
+msgstr[1] "{count} days left"
+
+#: nodus/ui/widgets/charts/goal_bar.py
+#, python-brace-format
+msgid "{count} mes"
+msgid_plural "{count} meses"
+msgstr[0] "{count} month"
+msgstr[1] "{count} months"
 

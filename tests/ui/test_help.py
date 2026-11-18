@@ -157,3 +157,21 @@ def test_a_shortcut_answers_its_keys_pressed_alone(shortcut):
         assert shortcut.matches(press(key, Qt.KeyboardModifier.KeypadModifier))
         assert not shortcut.matches(press(key, Qt.KeyboardModifier.ControlModifier))
     assert not shortcut.matches(press(Qt.Key.Key_A))
+
+
+def test_in_english_screen_names_are_bold_between_english_quotes(english):
+    html = topic_html(TOPICS_BY_KEY["goals"])
+
+    assert "“<b>Add goal</b>”" in html
+
+
+def test_in_english_the_window_and_its_help_speak_english(english, window):
+    """The sidebar names its pages in English and the help searches the English text."""
+    panel = window.help_panel
+    window.show_help()
+    panel.show_index()
+
+    panel.search_input.setText("installments ahead")
+
+    assert panel.visible_topics() == ["installments"]
+    assert PageId.BUDGETS.label == "Budgets"

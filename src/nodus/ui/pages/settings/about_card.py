@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import Signal
 
 from nodus import __version__
+from nodus.i18n import _
 from nodus.links import DONATE_URL, REPOSITORY_URL, feedback_url
 from nodus.services.container import Services
 from nodus.ui.browser import open_folder, open_url
@@ -36,7 +37,7 @@ class AboutCard(Card):
         news_row = SettingRow("Novedades", "Lo que trajo cada versión.")
         news_row.add(secondary_button("Ver novedades", self.show_news))
         tour_row = SettingRow("Recorrido guiado", "Dónde está cada cosa, en un minuto.")
-        tour_row.add(secondary_button(TOUR_LABEL, self.tour_requested.emit))
+        tour_row.add(secondary_button(_(TOUR_LABEL), self.tour_requested.emit))
         help_row = SettingRow("Ayuda", "Cómo se hace cada cosa y los atajos. También con F1.")
         help_row.add(secondary_button("Abrir la ayuda", self.help_requested.emit))
         logs_row = SettingRow(

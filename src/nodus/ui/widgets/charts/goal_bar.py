@@ -7,11 +7,12 @@ from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QPainter, QPaintEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
+from nodus.i18n import _, ngettext
 from nodus.models.goal import Goal, GoalProgress, GoalState
 from nodus.models.language_format import format_percent
 from nodus.models.money import Money
 from nodus.models.period import Month, format_date, format_month_in_sentence
-from nodus.ui.text.labels import NO_RATE_TEXT, plural
+from nodus.ui.text.labels import NO_RATE_TEXT
 from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.change_badge import Tone, status_pill
@@ -71,13 +72,15 @@ def goal_sentence(goal: Goal, progress: GoalProgress, hidden: bool = False) -> s
     if state is GoalState.BEHIND:
         assert goal.target_date is not None  # behind means behind its date
         late = Month.of(goal.target_date).months_to(progress.eta)
-        return f"{arrives}, {plural(late, 'mes', 'meses')} tarde." + needed
+        months = ngettext("{count} mes", "{count} meses", late).format(count=late)
+        return f"{arrives}, {months} tarde." + needed
     return f"{arrives}."
 
 
 def goal_pill(progress: GoalProgress) -> QLabel:
     """The goal's state in a pill: green, amber, red or gray."""
-    return status_pill(*STATE_LABELS[progress.state])
+    text, tone = STATE_LABELS[progress.state]
+    return status_pill(_(text), tone)
 
 
 def bar_color(theme: Theme, state: GoalState) -> str:

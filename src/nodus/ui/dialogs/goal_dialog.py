@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.models.account import Account
+from nodus.models.currency import Currency
 from nodus.models.goal import Goal, GoalShare, GoalState
 from nodus.models.language_format import format_percent
 from nodus.models.money import Money
@@ -25,7 +26,7 @@ from nodus.services.container import Services
 from nodus.services.planning.goal_service import GoalDraft
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_AMOUNT, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.text.labels import CURRENCY_LABELS
+from nodus.ui.text.labels import currency_label
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.charts.goal_bar import MISSING_RATE_SENTENCE
 from nodus.ui.widgets.empty_state import EmptyState
@@ -174,8 +175,8 @@ class GoalDialog(FormDialog):
         currency = goal.currency if goal else services.settings.net_worth_currency()
         self.target_input = AmountInput(currency)
         self.currency_input = ComboBox()
-        for option, label in CURRENCY_LABELS.items():
-            self.currency_input.addItem(label, option)
+        for option in Currency:
+            self.currency_input.addItem(currency_label(option), option)
         self.currency_input.setCurrentIndex(self.currency_input.findData(currency))
         self.currency_input.currentIndexChanged.connect(
             lambda: self.target_input.set_currency(self.currency_input.currentData())

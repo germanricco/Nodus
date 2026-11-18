@@ -1,6 +1,7 @@
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from nodus.i18n import _
 from nodus.links import MAX_URL_LENGTH
 from nodus.ui.text.error_report import ASK, MOST_STEPS, error_report, report_url
 
@@ -28,7 +29,7 @@ def detail_of(url: str) -> str:
 
 
 def test_the_report_asks_what_the_user_was_doing_first():
-    assert error_report(failure()).startswith(ASK)
+    assert error_report(failure()).startswith(_(ASK))
 
 
 def test_the_report_says_the_error_and_its_last_steps_first():

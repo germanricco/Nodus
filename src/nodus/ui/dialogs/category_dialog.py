@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QLineEdit, QWidget
 
+from nodus.i18n import _
 from nodus.models.category import Category
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
@@ -45,7 +46,7 @@ class CategoryDialog(FormDialog):
         self.name_input.setPlaceholderText("Ej.: Mascotas, Gimnasio, Alquiler")
         self.kind_input = ComboBox()
         for transaction_type, label in TRANSACTION_TYPE_LABELS.items():
-            self.kind_input.addItem(label, transaction_type)
+            self.kind_input.addItem(_(label), transaction_type)
         self.parent_input = ComboBox()
         self.color_input = color_picker(services)
 

@@ -12,21 +12,25 @@ from dataclasses import dataclass
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
 
+from nodus.i18n import N_
+
 # A key counts when pressed alone; the keypad's Enter is still Enter.
 _ALONE = Qt.KeyboardModifier.NoModifier | Qt.KeyboardModifier.KeypadModifier
 
-ANYWHERE = "En toda la app"
-LISTS = "En las listas"
-FORMS = "En los formularios"
-DETAILS = "En una cuenta, un beneficiario o una etiqueta"
-TOUR = "En el recorrido guiado"
+ANYWHERE = N_("En toda la app")
+LISTS = N_("En las listas")
+FORMS = N_("En los formularios")
+DETAILS = N_("En una cuenta, un beneficiario o una etiqueta")
+TOUR = N_("En el recorrido guiado")
 SHORTCUT_GROUPS = [ANYWHERE, LISTS, FORMS, DETAILS, TOUR]
 
 
 @dataclass(frozen=True)
 class Shortcut:
     """``keys`` are pressed together; each is drawn as a key of its own. ``qt_keys`` are
-    the keys that do it, for the shortcuts a widget answers on its own."""
+    the keys that do it, for the shortcuts a widget answers on its own. ``text``,
+    ``group`` and the keys named with words are marked with ``N_()`` and translated
+    where they are shown; ``label`` keeps the keys as Qt reads them."""
 
     keys: tuple[str, ...]
     text: str
@@ -44,33 +48,33 @@ class Shortcut:
         return "+".join(self.keys)
 
 
-HELP = Shortcut(("F1",), "Abre o cierra la Ayuda.", ANYWHERE)
-UNDO = Shortcut(("Ctrl", "Z"), "Deshace lo último.", ANYWHERE)
-CLOSE_HELP = Shortcut(("Esc",), "Cierra la Ayuda.", ANYWHERE, (Qt.Key.Key_Escape,))
-DELETE_ROWS = Shortcut(("Supr",), "Borra las filas elegidas.", LISTS, (Qt.Key.Key_Delete,))
-CLEAR_SELECTION = Shortcut(("Esc",), "Quita la selección.", LISTS, (Qt.Key.Key_Escape,))
-BACK_TO_LIST = Shortcut(("Esc",), "Vuelve a la lista.", DETAILS, (Qt.Key.Key_Escape,))
+HELP = Shortcut(("F1",), N_("Abre o cierra la Ayuda."), ANYWHERE)
+UNDO = Shortcut(("Ctrl", "Z"), N_("Deshace lo último."), ANYWHERE)
+CLOSE_HELP = Shortcut(("Esc",), N_("Cierra la Ayuda."), ANYWHERE, (Qt.Key.Key_Escape,))
+DELETE_ROWS = Shortcut((N_("Supr"),), N_("Borra las filas elegidas."), LISTS, (Qt.Key.Key_Delete,))
+CLEAR_SELECTION = Shortcut(("Esc",), N_("Quita la selección."), LISTS, (Qt.Key.Key_Escape,))
+BACK_TO_LIST = Shortcut(("Esc",), N_("Vuelve a la lista."), DETAILS, (Qt.Key.Key_Escape,))
 TOUR_NEXT = Shortcut(
     ("→",),
-    "Avanza (también Enter).",
+    N_("Avanza (también Enter)."),
     TOUR,
     (Qt.Key.Key_Right, Qt.Key.Key_Return, Qt.Key.Key_Enter),
 )
-TOUR_BACK = Shortcut(("←",), "Retrocede.", TOUR, (Qt.Key.Key_Left,))
-TOUR_EXIT = Shortcut(("Esc",), "Sale del recorrido.", TOUR, (Qt.Key.Key_Escape,))
+TOUR_BACK = Shortcut(("←",), N_("Retrocede."), TOUR, (Qt.Key.Key_Left,))
+TOUR_EXIT = Shortcut(("Esc",), N_("Sale del recorrido."), TOUR, (Qt.Key.Key_Escape,))
 
 SHORTCUTS = [
     HELP,
     CLOSE_HELP,
     UNDO,
-    Shortcut(("Doble clic",), "Abre o edita la fila.", LISTS),
-    Shortcut(("Clic derecho",), "Abre el menú de la fila.", LISTS),
-    Shortcut(("Ctrl", "clic"), "Suma o quita una fila.", LISTS),
-    Shortcut(("Mayús", "clic"), "Elige hasta esa fila.", LISTS),
+    Shortcut((N_("Doble clic"),), N_("Abre o edita la fila."), LISTS),
+    Shortcut((N_("Clic derecho"),), N_("Abre el menú de la fila."), LISTS),
+    Shortcut(("Ctrl", N_("clic")), N_("Suma o quita una fila."), LISTS),
+    Shortcut((N_("Mayús"), N_("clic")), N_("Elige hasta esa fila."), LISTS),
     DELETE_ROWS,
     CLEAR_SELECTION,
-    Shortcut(("Enter",), "Guarda.", FORMS),
-    Shortcut(("Esc",), "Cierra; pregunta si cambiaste algo.", FORMS),
+    Shortcut(("Enter",), N_("Guarda."), FORMS),
+    Shortcut(("Esc",), N_("Cierra; pregunta si cambiaste algo."), FORMS),
     BACK_TO_LIST,
     TOUR_NEXT,
     TOUR_BACK,

@@ -8,6 +8,7 @@ from weakref import WeakKeyDictionary
 
 from PySide6.QtCore import QObject, Signal
 
+from nodus.i18n import _
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.services.container import Services
 from nodus.ui.background import BackgroundCall
@@ -84,5 +85,5 @@ def updated_text(rates: dict[Currency, Decimal]) -> str:
     """The toast once rates arrive: the dollar's, which is the one people look at."""
     if Currency.USD in rates:
         dollar = rate_text(Currency.USD, HOME_CURRENCY, rates[Currency.USD])
-        return f"Cotización actualizada: {dollar}"
-    return "Cotizaciones actualizadas."
+        return _("Cotización actualizada: {rate}").format(rate=dollar)
+    return _("Cotizaciones actualizadas.")

@@ -243,7 +243,7 @@ class RatesCard(Card):
             currency is not Currency.USD and self._services.rate_feed.is_automatic()
         )
         current = self._services.exchange_rates.rate_on(today, currency)
-        self.current_rate_label.setText(format_rate(current) if current else NO_RATE_TEXT)
+        self.current_rate_label.setText(format_rate(current) if current else _(NO_RATE_TEXT))
         self.current_rate_date_label.setText(format_date(current.rate_date) if current else "")
         clear_layout(self._history)
         history = self._services.exchange_rates.history(currency)

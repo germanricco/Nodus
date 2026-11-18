@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from nodus.i18n import N_, _
 from nodus.services.app.notification_service import Notice, NoticeKind
 from nodus.ui.shell.notices import NOTICES
 from nodus.ui.theme.design import Layout, Space
@@ -21,7 +22,7 @@ from nodus.ui.widgets.style import (
 )
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
 
-NEWS_LABEL = "Qué trae"
+NEWS_LABEL = N_("Qué trae")
 
 
 class NoticeRow(QWidget):
@@ -54,15 +55,17 @@ class NoticeRow(QWidget):
         texts.addWidget(title)
         texts.addWidget(detail)
         layout.addLayout(texts, stretch=1)
-        self.setAccessibleName(f"{'' if notice.seen else 'Sin revisar: '}{notice.title}")
-        install_row_actions(self, self.actions, open_on_click=NOTICES[notice.kind].action_text)
+        self.setAccessibleName(
+            notice.title if notice.seen else _("Sin revisar: {title}").format(title=notice.title)
+        )
+        install_row_actions(self, self.actions, open_on_click=_(NOTICES[notice.kind].action_text))
 
     def actions(self) -> list[RowAction]:
         notice = self.notice
         behavior = NOTICES[notice.kind]
         result = [
             RowAction(
-                behavior.action_text,
+                _(behavior.action_text),
                 lambda: self.opened.emit(notice),
                 default=True,
                 effect=Effect.OPEN,
@@ -70,12 +73,14 @@ class NoticeRow(QWidget):
         ]
         if notice.kind is NoticeKind.UPDATE and notice.notes:
             result.append(
-                RowAction(NEWS_LABEL, lambda: self.news_requested.emit(notice), effect=Effect.OPEN)
+                RowAction(
+                    _(NEWS_LABEL), lambda: self.news_requested.emit(notice), effect=Effect.OPEN
+                )
             )
         if behavior.dismiss_text is not None:
             result.append(
                 RowAction(
-                    behavior.dismiss_text,
+                    _(behavior.dismiss_text),
                     lambda: self.dismissed.emit(notice),
                     # It only puts the notice away: whatever comes next is announced.
                     effect=Effect.TOGGLE,
@@ -105,7 +110,7 @@ class NotificationPanel(QFrame):
         layout.setSpacing(0)
         header = QHBoxLayout()
         header.setContentsMargins(Space.S, 0, Space.S, Space.XS)
-        title = card_title("Notificaciones")
+        title = card_title(_("Notificaciones"))
         header.addWidget(title)
         header.addStretch()
         self.unseen_label = muted_label("")
@@ -120,9 +125,9 @@ class NotificationPanel(QFrame):
         clear_layout(self._rows)
         self.rows = []
         unseen = sum(1 for notice in notices if not notice.seen)
-        self.unseen_label.setText(f"{unseen} sin revisar" if unseen else "")
+        self.unseen_label.setText(_("{count} sin revisar").format(count=unseen) if unseen else "")
         if not notices:
-            self._rows.addWidget(EmptyState("Sin novedades.", compact=True))
+            self._rows.addWidget(EmptyState(_("Sin novedades."), compact=True))
         for index, notice in enumerate(notices):
             if index:
                 self._rows.addWidget(separator())

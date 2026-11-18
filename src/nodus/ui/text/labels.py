@@ -1,8 +1,9 @@
-"""Spanish names for domain values shown in the interface."""
+"""Names for domain values shown in the interface, in the current language."""
 
 from datetime import date
 from decimal import Decimal
 
+from nodus.i18n import N_, _, ngettext
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.language_format import with_symbol
@@ -12,50 +13,57 @@ from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import TransactionType
 
 ACCOUNT_TYPE_LABELS = {
-    AccountType.BANK: "Cuenta bancaria",
-    AccountType.WALLET: "Billetera virtual",
-    AccountType.CASH: "Efectivo",
-    AccountType.CREDIT_CARD: "Tarjeta de crédito",
-    AccountType.SAVINGS: "Ahorro",
-    AccountType.INVESTMENT: "Inversión",
+    AccountType.BANK: N_("Cuenta bancaria"),
+    AccountType.WALLET: N_("Billetera virtual"),
+    AccountType.CASH: N_("Efectivo"),
+    AccountType.CREDIT_CARD: N_("Tarjeta de crédito"),
+    AccountType.SAVINGS: N_("Ahorro"),
+    AccountType.INVESTMENT: N_("Inversión"),
 }
 
-CURRENCY_LABELS = {c: f"{c.name_plural.capitalize()} ({c.value})" for c in Currency}
 
-# Where each part of the net worth is held, as the net worth card names it.
-HELD_IN_LABELS = {c: f"En {c.name_plural}" for c in Currency}
+def currency_label(currency: Currency) -> str:
+    """ "Dólares (USD)", how a currency is offered in a list to choose from."""
+    return f"{currency.name_plural.capitalize()} ({currency.value})"
+
+
+def held_in_label(currency: Currency) -> str:
+    """ "En dólares": where a part of the net worth is held, as the net worth card names
+    it."""
+    return _("En {currency}").format(currency=currency.name_plural)
+
 
 # Shown where an amount cannot be converted for lack of an exchange rate.
-NO_RATE_TEXT = "Sin cotización"
+NO_RATE_TEXT = N_("Sin cotización")
 # The button that starts the guided tour, wherever it is offered.
-TOUR_LABEL = "Ver el recorrido"
+TOUR_LABEL = N_("Ver el recorrido")
 
 TRANSACTION_TYPE_LABELS = {
-    TransactionType.EXPENSE: "Gasto",
-    TransactionType.INCOME: "Ingreso",
+    TransactionType.EXPENSE: N_("Gasto"),
+    TransactionType.INCOME: N_("Ingreso"),
 }
 
 FREQUENCY_LABELS = {
-    Frequency.WEEKLY: "Semanal",
-    Frequency.BIWEEKLY: "Quincenal",
-    Frequency.MONTHLY: "Mensual",
-    Frequency.QUARTERLY: "Trimestral",
-    Frequency.SEMIANNUAL: "Semestral",
-    Frequency.ANNUAL: "Anual",
+    Frequency.WEEKLY: N_("Semanal"),
+    Frequency.BIWEEKLY: N_("Quincenal"),
+    Frequency.MONTHLY: N_("Mensual"),
+    Frequency.QUARTERLY: N_("Trimestral"),
+    Frequency.SEMIANNUAL: N_("Semestral"),
+    Frequency.ANNUAL: N_("Anual"),
 }
 
 
 def due_label(days: int) -> str:
     """When a charge is due, counted from today: "Vencido hace 3 días", "Hoy", "en 5 días"."""
     if days < -1:
-        return f"Vencido hace {-days} días"
+        return _("Vencido hace {days} días").format(days=-days)
     if days == -1:
-        return "Vencido ayer"
+        return _("Vencido ayer")
     if days == 0:
-        return "Hoy"
+        return _("Hoy")
     if days == 1:
-        return "Mañana"
-    return f"en {days} días"
+        return _("Mañana")
+    return _("en {days} días").format(days=days)
 
 
 def estimate_text(amount: Money, estimate: Money | None) -> str:
@@ -79,18 +87,22 @@ def rate_text(base: Currency, quote: Currency, value: Decimal) -> str:
 
 def movements_text(count: int) -> str:
     """ "1 movimiento", "3 movimientos"."""
-    return plural(count, "movimiento", "movimientos")
+    return ngettext("{count} movimiento", "{count} movimientos", count).format(count=count)
 
 
 def transactions_text(count: int) -> str:
     """ "1 transacción", "3 transacciones"."""
-    return plural(count, "transacción", "transacciones")
+    return ngettext("{count} transacción", "{count} transacciones", count).format(count=count)
 
 
 def unconverted_note(count: int) -> str:
     """Why a total may fall short: movements in another currency left out for lack of a
     rate."""
-    return f"{count} movimiento(s) en otra moneda sin cotización no se incluyen."
+    return ngettext(
+        "{count} movimiento(s) en otra moneda sin cotización no se incluyen.",
+        "{count} movimiento(s) en otra moneda sin cotización no se incluyen.",
+        count,
+    ).format(count=count)
 
 
 def days_left_text(month: Month, today: date) -> str | None:
@@ -99,10 +111,5 @@ def days_left_text(month: Month, today: date) -> str | None:
         return None
     days = month.end.day - today.day
     if days == 0:
-        return "Último día"
-    return plural(days, "día restante", "días restantes")
-
-
-def plural(count: int, one: str, many: str) -> str:
-    """``count`` and the word that agrees with it: "1 cuota", "3 cuotas"."""
-    return f"{count} {one if count == 1 else many}"
+        return _("Último día")
+    return ngettext("{count} día restante", "{count} días restantes", days).format(count=days)

@@ -6,6 +6,7 @@ from datetime import date
 
 from PySide6.QtWidgets import QCheckBox, QLabel, QLineEdit, QWidget
 
+from nodus.i18n import _
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.money import Money
 from nodus.models.period import format_date
@@ -85,7 +86,7 @@ class RecurringChargeDialog(FormDialog):
         )
         self.frequency_input = ComboBox()
         for frequency, label in FREQUENCY_LABELS.items():
-            self.frequency_input.addItem(label, frequency)
+            self.frequency_input.addItem(_(label), frequency)
         self.frequency_input.setCurrentIndex(self.frequency_input.findData(Frequency.MONTHLY))
         self.due_input = DateInput()
         self.note_input = QLineEdit()

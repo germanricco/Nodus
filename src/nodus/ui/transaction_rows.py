@@ -9,38 +9,43 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
+from nodus.i18n import N_, _
 from nodus.models.money import Money
 from nodus.models.period import format_date
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 
-TRANSFER_LABEL = "Transferencia"
+TRANSFER_LABEL = N_("Transferencia")
 REFUND_MARK = "↺"
 
 
 def refund_of_text(expense: Transaction, description: str) -> str:
     """ "Reembolso de «Zapatillas» del 20/10/2026"."""
-    return f"Reembolso de «{description}» del {format_date(expense.occurred_on)}"
+    return _("Reembolso de «{description}» del {date}").format(
+        description=description, date=format_date(expense.occurred_on)
+    )
 
 
 def upcoming_text(day: date) -> str:
     """ "Se descuenta el 10/12/2026", for a movement dated later than today."""
-    return f"Se descuenta el {format_date(day)}"
+    return _("Se descuenta el {date}").format(date=format_date(day))
 
 
 def edit_text(transaction: Transaction) -> str:
     """An installment edits, and deletes, its whole purchase; the menus say so."""
-    return "Editar compra" if transaction.installment else "Editar"
+    return _("Editar compra") if transaction.installment else _("Editar")
 
 
 def delete_text(transaction: Transaction) -> str:
-    return "Eliminar compra" if transaction.installment else "Eliminar"
+    return _("Eliminar compra") if transaction.installment else _("Eliminar")
 
 
 def refunded_text(amounts: list[Money]) -> str:
     """ "Reembolsado $ 400,00", or "Reembolsado $ 400,00 + US$ 2,00" across currencies."""
-    return "Reembolsado " + " + ".join(amount.format() for amount in amounts)
+    return _("Reembolsado {amounts}").format(
+        amounts=" + ".join(amount.format() for amount in amounts)
+    )
 
 
 @dataclass(frozen=True)
@@ -157,8 +162,8 @@ class TransactionListBuilder:
             amount_text += f" → {incoming.amount.format()}"
         return TransactionListItem(
             transaction=outgoing,
-            description=outgoing.note or TRANSFER_LABEL,
-            category_name=TRANSFER_LABEL,
+            description=outgoing.note or _(TRANSFER_LABEL),
+            category_name=_(TRANSFER_LABEL),
             category_color=None,
             payee_name="",
             account_text=(

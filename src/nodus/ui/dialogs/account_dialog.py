@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QLineEdit, QWidget
 
+from nodus.i18n import _
 from nodus.models.account import Account, AccountType
-from nodus.models.currency import HOME_CURRENCY
+from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.services.container import Services
 from nodus.ui.dialogs.account_group_dialogs import GroupPicker
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, CURRENCY_LABELS
+from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, currency_label
 from nodus.ui.widgets.inputs.amount_input import AmountInput
 from nodus.ui.widgets.inputs.combo_box import ComboBox
 
@@ -42,10 +43,10 @@ class AccountDialog(FormDialog):
         self.name_input.setPlaceholderText("Ej.: Banco, Efectivo, Dólares")
         self.type_input = ComboBox()
         for account_type, label in ACCOUNT_TYPE_LABELS.items():
-            self.type_input.addItem(label, account_type)
+            self.type_input.addItem(_(label), account_type)
         self.currency_input = ComboBox()
-        for currency, label in CURRENCY_LABELS.items():
-            self.currency_input.addItem(label, currency)
+        for currency in Currency:
+            self.currency_input.addItem(currency_label(currency), currency)
         self.balance_input = AmountInput(HOME_CURRENCY)
         self.currency_input.currentIndexChanged.connect(
             lambda: self.balance_input.set_currency(self.currency_input.currentData())

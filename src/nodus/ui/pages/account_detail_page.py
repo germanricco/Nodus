@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import _, ngettext
 from nodus.models.account import Account
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.language_format import format_percent
@@ -37,7 +38,7 @@ from nodus.ui.navigation import DetailId
 from nodus.ui.pages.base.detail_page import DetailPage, danger_zone
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
 from nodus.ui.text.formatting import signed
-from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, estimate_text, plural
+from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, estimate_text
 from nodus.ui.theme.design import Chart, Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
@@ -249,7 +250,7 @@ class AccountDetailPage(DetailPage):
 
     def _context(self, account: Account) -> str:
         """ "Inversión · ARS · Ahorro e inversiones · Archivada"."""
-        details = [ACCOUNT_TYPE_LABELS[account.type], account.currency.value]
+        details = [_(ACCOUNT_TYPE_LABELS[account.type]), account.currency.value]
         if account.group_id is not None:
             details.append(self._services.account_groups.get(account.group_id).name)
         if account.is_archived:
@@ -289,7 +290,7 @@ class AccountDetailPage(DetailPage):
         if pending is not None:
             self.pending_label.setText(amount_text(pending, hidden))
             left, last = installments.installments_left(account.id, today)
-            count = plural(left, "cuota", "cuotas")
+            count = ngettext("{count} cuota", "{count} cuotas", left).format(count=left)
             self.pending_note.setText(f"{count} · hasta {format_month_in_sentence(Month.of(last))}")
         self.figures.relayout()
 
@@ -330,7 +331,7 @@ class AccountDetailPage(DetailPage):
             link.setObjectName("LinkButton")
             link.setCursor(Qt.CursorShape.PointingHandCursor)
             link.setToolTip("Abrir la meta")
-            link.clicked.connect(lambda _=False, i=goal.id: self.goal_requested.emit(i))
+            link.clicked.connect(lambda _checked=False, i=goal.id: self.goal_requested.emit(i))
             self._goals_layout.addWidget(link)
         self._goals_layout.addStretch()
 

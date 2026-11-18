@@ -7,6 +7,7 @@ from datetime import date, timedelta
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
+from nodus.i18n import _
 from nodus.models.currency import TOTAL_CURRENCIES, Currency
 from nodus.models.language_format import format_percent, with_symbol
 from nodus.models.money import Money
@@ -15,7 +16,7 @@ from nodus.services.container import Services
 from nodus.services.conversion import relative_change
 from nodus.services.reports.net_worth_service import NetWorth, NetWorthPoint, trend_change
 from nodus.ui.text.formatting import format_date, signed
-from nodus.ui.text.labels import HELD_IN_LABELS, NO_RATE_TEXT, rate_text
+from nodus.ui.text.labels import NO_RATE_TEXT, held_in_label, rate_text
 from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -60,7 +61,7 @@ class CurrencyLegend(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.S)
         self.dot = ColorDot(size=ControlSize.DOT_SMALL)
-        name = muted_label(HELD_IN_LABELS[currency])
+        name = muted_label(held_in_label(currency))
         self.amount = AnimatedMoneyLabel()
         self.amount.setObjectName("RowTitle")
         self.share = muted_label("")
@@ -160,7 +161,7 @@ class NetWorthCard(Card):
             column = QVBoxLayout(column_widget)
             column.setContentsMargins(0, 0, 0, 0)
             column.setSpacing(Space.XXS)
-            caption = QLabel(HELD_IN_LABELS[currency].upper())
+            caption = QLabel(held_in_label(currency).upper())
             caption.setObjectName("StatCaption")
             amount = AnimatedMoneyLabel()
             amount.setObjectName("StatValueLarge")
@@ -260,9 +261,9 @@ class NetWorthCard(Card):
                     f"{rate_text(held, rate.quote, rate.rate)} · {format_day_month(rate.rate_date)}"
                 )
             elif held is Currency.USD:
-                texts.append(NO_RATE_TEXT)
+                texts.append(_(NO_RATE_TEXT))
             else:
-                texts.append(with_symbol(held.symbol, NO_RATE_TEXT.lower()))
+                texts.append(with_symbol(held.symbol, _(NO_RATE_TEXT).lower()))
         self.rate_label.setText("    ".join(texts))
 
     def _show_trend(
