@@ -24,6 +24,8 @@ Sin nube, sin cuentas, sin suscripciones.
   <img src="docs/images/dashboard-full-light.png" alt="El Inicio de Nodus: patrimonio neto, próximos pagos, gastos por categoría y presupuestos">
 </picture>
 
+> Nodus está en español y en inglés: el idioma se elige en Ajustes, y los montos y las fechas se escriben como en cada idioma.
+
 ## Por qué Nodus
 
 Las aplicaciones de finanzas personales que se ven bien suelen vivir en la nube: piden crear una cuenta, cobran una suscripción y guardan tu historial financiero en servidores ajenos. Las que funcionan en tu computadora, en cambio, muchas veces parecen de otra época. Nodus busca el punto medio que faltaba: una interfaz cuidada y fluida que corre entera en tu máquina, con todos tus datos en un único archivo que puedes copiar, respaldar o mover cuando quieras.

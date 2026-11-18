@@ -20,11 +20,11 @@ No cloud, no accounts, no subscriptions.
 </div>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-full-dark.png">
-  <img src="docs/images/dashboard-full-light.png" alt="Nodus Home: net worth, upcoming payments, spending by category and budgets">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/dashboard-full-dark.png">
+  <img src="docs/images/en/dashboard-full-light.png" alt="Nodus Home: net worth, upcoming payments, spending by category and budgets">
 </picture>
 
-> The app's interface is in Spanish: Nodus was built for people in Argentina who keep their money in both pesos and US dollars.
+> Nodus speaks English and Spanish: choose the language in Settings, and amounts and dates are written the way that language writes them. It was born in Argentina, for people who keep their money in both pesos and US dollars.
 
 ## Why Nodus
 
@@ -38,109 +38,109 @@ It was born for people who manage money in pesos and dollars at the same time. E
 Home, the first page, answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to see its transactions. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
-  <img src="docs/images/dashboard-light.png" alt="Home: net worth, upcoming payments and spending by category">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/dashboard-dark.png">
+  <img src="docs/images/en/dashboard-light.png" alt="Home: net worth, upcoming payments and spending by category">
 </picture>
 
-The first time, after your first account, Nodus offers a one-minute guided tour that points at each part of the window; you can take it again from Ajustes. For anything else, F1 or the «?» in the top bar opens Ayuda (help) beside the window, on the page you are on: friendly answers on what each part is for and how to use it, from installments and refunds to goals and backups, with the page it talks about lit up in the sidebar, and every keyboard shortcut, grouped by where it works.
+The first time, after your first account, Nodus offers a one-minute guided tour that points at each part of the window; you can take it again from Settings. For anything else, F1 or the “?” in the top bar opens Help beside the window, on the page you are on: friendly answers on what each part is for and how to use it, from installments and refunds to goals and backups, with the page it talks about lit up in the sidebar, and every keyboard shortcut, grouped by where it works.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/tour-dark.png">
-  <img src="docs/images/tour-light.png" alt="The guided tour pointing at «Agregar transacción», with the rest of the window dimmed">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/tour-dark.png">
+  <img src="docs/images/en/tour-light.png" alt="The guided tour pointing at “Add transaction”, with the rest of the window dimmed">
 </picture>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/help-dark.png">
-  <img src="docs/images/help-light.png" alt="Ayuda open beside the window on the savings goals topic, with Metas lit up in the sidebar">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/help-dark.png">
+  <img src="docs/images/en/help-light.png" alt="Help open beside the window on the savings goals topic, with Goals lit up in the sidebar">
 </picture>
 
 ### Keep accounts in pesos and dollars
 Add every place where you keep money, from your bank, cash and virtual wallets like Mercado Pago to dollar savings or a credit card, and balances are always computed from your transactions. Drag them into the order you like, and the sidebar follows it. To keep many accounts tidy, gather them in groups such as Banks, Wallets or Savings and investments, dragging each account onto its group's card: each group shows what it adds up to, and in the sidebar it folds down to that one total. When you buy dollars, Nodus stores both amounts and shows the rate you actually got. Euros and Chilean pesos are welcome too, for travel money or savings abroad, and they add up to your net worth like everything else. Today's exchange rates can be fetched automatically, your choice of dollar plus the official euro and Chilean peso, or entered by hand. Savings and investments grow on their own, with interest or prices: write down what one is worth today, as its app shows it, and Nodus records the difference as a return that moves your balance and net worth without counting as income. Click an account to open its page: how much came in and went out this month and how its balance changed, what an investment returned or a card still owes in installments, the recurring payments due from it, its balance over the last months or its whole life, and every one of its transactions.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">
-  <img src="docs/images/accounts-light.png" alt="Accounts in pesos and dollars with the net worth and an investment's return">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/accounts-dark.png">
+  <img src="docs/images/en/accounts-light.png" alt="Accounts in pesos and dollars with the net worth and an investment's return">
 </picture>
 
 ### Record and find your transactions
-One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, tag, type or text, adds up at the foot the transactions it shows, and whatever you see exports to a file that opens in Excel. Each filter list ends with a shortcut to edit its accounts, categories, payees or tags. Every row in Nodus has a «⋯» menu, also opened with a right click, with everything you can do with it; tick several transactions to edit their category, payee, note or tags at once, or to delete them together, and several payees or tags to merge or delete them. What you do is confirmed by a short notice at the bottom right, and what changes a lot of data in one click, such as a group edit, merging, or skipping or paying a charge, can be undone from that notice or with Ctrl+Z. Deleting still asks first, and a form with changes asks before closing without saving.
+One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, tag, type or text, adds up at the foot the transactions it shows, and whatever you see exports to a file that opens in Excel. Each filter list ends with a shortcut to edit its accounts, categories, payees or tags. Every row in Nodus has a “⋯” menu, also opened with a right click, with everything you can do with it; tick several transactions to edit their category, payee, note or tags at once, or to delete them together, and several payees or tags to merge or delete them. What you do is confirmed by a short notice at the bottom right, and what changes a lot of data in one click, such as a group edit, merging, or skipping or paying a charge, can be undone from that notice or with Ctrl+Z. Deleting still asks first, and a form with changes asks before closing without saving.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/transactions-dark.png">
-  <img src="docs/images/transactions-light.png" alt="The transactions list with its filters and the totals at the foot">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/transactions-dark.png">
+  <img src="docs/images/en/transactions-light.png" alt="The transactions list with its filters and the totals at the foot">
 </picture>
 
 ### Know who your money goes to
 Each expense or income can say who you paid or who paid you: the supermarket, the power company, your employer. Click the field to see the ones you use most lately, or type a few letters to pick one or a new name to add it: the suggestions put first the payees you use most, and those of the category you already chose. Nodus then fills in the category you usually use with it. The Payees page shows how many transactions and how much money went to or came from each one, so a question like "how much do I spend at the supermarket?" takes one click, and a double click opens its own page with every one of its transactions. Duplicates such as "Coto" and "Coto Online" can be merged into one.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/payees-dark.png">
-  <img src="docs/images/payees-light.png" alt="The payees page with transactions and totals for each one">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/payees-dark.png">
+  <img src="docs/images/en/payees-light.png" alt="The payees page with transactions and totals for each one">
 </picture>
 
 ### Tag what belongs together
-A trip mixes flights, a hotel and meals; a side job brings income and the expenses that come with it. Tags group transactions across categories: type a few letters in the form to pick one, or a new name to create it, and give each transaction as many as it needs. The Tags page shows how many transactions and how much money each tag adds up to, each tag has its own page with all of its transactions, the transactions list filters by tag, and Analysis splits your spending by tag too. Tags can be renamed, recolored, merged or deleted without losing a single transaction. Tags and categories take any color you like: beyond the ready-made swatches, a color wheel opens with the «+», and it also accepts a hex code.
+A trip mixes flights, a hotel and meals; a side job brings income and the expenses that come with it. Tags group transactions across categories: type a few letters in the form to pick one, or a new name to create it, and give each transaction as many as it needs. The Tags page shows how many transactions and how much money each tag adds up to, each tag has its own page with all of its transactions, the transactions list filters by tag, and Analysis splits your spending by tag too. Tags can be renamed, recolored, merged or deleted without losing a single transaction. Tags and categories take any color you like: beyond the ready-made swatches, a color wheel opens with the “+”, and it also accepts a hex code.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/tags-dark.png">
-  <img src="docs/images/tags-light.png" alt="The tags page with transactions and totals for each tag">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/tags-dark.png">
+  <img src="docs/images/en/tags-light.png" alt="The tags page with transactions and totals for each tag">
 </picture>
 
 ### Count refunds for what they are
 When a store gives your money back or a friend pays you their share, link that income to the expense it pays back. Nodus then counts it as less spending, in the category of the original expense and in the month the money came back, instead of as income, so your budgets, Home and Analysis show what you really spent. The list marks both sides, and editing the expense shows how much of it was refunded.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/transaction-dialog-refund-dark.png">
-  <img src="docs/images/transaction-dialog-refund-light.png" alt="An income linked as the refund of an expense">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/transaction-dialog-refund-dark.png">
+  <img src="docs/images/en/transaction-dialog-refund-light.png" alt="An income linked as the refund of an expense">
 </picture>
 
 ### Never forget what you pay every month
-Enter rent, utilities or subscriptions once, and Nodus shows what they add up to per month, what is due soon and what is overdue. Paying one takes two clicks: the expense is recorded and the charge moves on to its next date. If you already know it is coming, «Ya lo vi» quiets its warning until the day before it is due. A subscription with a fixed price in dollars can be paid from a peso account: Nodus estimates the pesos at the rate of your last payment, card taxes included, and you write down what actually came out.
+Enter rent, utilities or subscriptions once, and Nodus shows what they add up to per month, what is due soon and what is overdue. Paying one takes two clicks: the expense is recorded and the charge moves on to its next date. If you already know it is coming, “Got it” quiets its warning until the day before it is due. A subscription with a fixed price in dollars can be paid from a peso account: Nodus estimates the pesos at the rate of your last payment, card taxes included, and you write down what actually came out.
 
 Purchases in installments are just as easy. When you record an expense, say it is paid in six installments and whether the amount is the total or what each one costs: Nodus writes down every installment on its date, each one comes off the account on its day, and Recurring shows how many are paid, the next one and what the installments take each month. Any installment opens the whole purchase to change it, pay off the rest early or delete it.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/recurring-dark.png">
-  <img src="docs/images/recurring-light.png" alt="Recurring charges with their next dates and monthly total">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/recurring-dark.png">
+  <img src="docs/images/en/recurring-light.png" alt="Recurring charges with their next dates and monthly total">
 </picture>
 
 ### Put a limit on your spending
 Set a monthly budget for the categories you want to watch and see how much you have spent and how much is left. The bar turns amber when you spend faster than the month goes by and red when you go over, early enough to slow down. To choose a limit, Nodus suggests your average of the last few months.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/budgets-dark.png">
-  <img src="docs/images/budgets-light.png" alt="Monthly budgets with how much has been spent and how much is left">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/budgets-dark.png">
+  <img src="docs/images/en/budgets-light.png" alt="Monthly budgets with how much has been spent and how much is left">
 </picture>
 
 ### Save toward a goal
 A trip, an emergency fund, a new laptop: a goal points the balance of your savings accounts toward an amount, with a date if you want one. You choose which accounts count and how much of each, so one savings account can serve several goals; ticking one offers the share that covers the target, and before saving the form tells you what each account adds today and how much to put aside every month. Each goal then says in one sentence whether your pace gets you there in time and, if not, how much a month it takes. Goals never move money: they grow by themselves when you move money into their accounts, and each one has its own page with how it grew month by month. When you get there, the bell tells you.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/goals-dark.png">
-  <img src="docs/images/goals-light.png" alt="Savings goals with their progress and whether the pace arrives in time">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/goals-dark.png">
+  <img src="docs/images/en/goals-light.png" alt="Savings goals with their progress and whether the pace arrives in time">
 </picture>
 
 ### Look back over the year
 The Analysis page takes the long view, the last twelve months by default. Trends shows your spending, income or savings month by month, stacked by category against your monthly average, along with where the money went by category, by payee and by tag. Cash flow puts income, expenses, savings and your savings rate side by side with the previous period, and Net worth follows how what you own grew, month end by month end, in pesos or in dollars. Click any bar or row to see the transactions behind it.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/analysis-trends-dark.png">
-  <img src="docs/images/analysis-trends-light.png" alt="Analysis: spending month by month, by category, payee and tag">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/analysis-trends-dark.png">
+  <img src="docs/images/en/analysis-trends-light.png" alt="Analysis: spending month by month, by category, payee and tag">
 </picture>
 
 ### Hear about what matters
-A bell gathers what needs your attention: a payment coming due, a budget passed, a stale exchange rate or a new version to install. Its number counts only what you haven't looked at yet, marked with a dot, and a click on each notice takes you to where the problem is. Nodus also backs up your data every day and keeps copies reaching half a year back, so a mistake you notice late can still be undone; before restoring one from Settings, it checks the copy whole. Moving to a new computer takes one copy: the welcome screen offers «Traer mis datos de otra computadora» and everything comes back as it was. Since those copies sit on the same disk, at the end of each month it reminds you to save one off your computer, on a pen drive or in Drive, so your data survives even if the PC is lost. Everything works in light or dark mode, and if movement on screen bothers you, «Reducir animaciones» in Settings makes charts and figures change at once (it starts off the way Windows has it).
+A bell gathers what needs your attention: a payment coming due, a budget passed, a stale exchange rate or a new version to install. Its number counts only what you haven't looked at yet, marked with a dot, and a click on each notice takes you to where the problem is. Nodus also backs up your data every day and keeps copies reaching half a year back, so a mistake you notice late can still be undone; before restoring one from Settings, it checks the copy whole. Moving to a new computer takes one copy: the welcome screen offers “Bring my data from another computer” and everything comes back as it was. Since those copies sit on the same disk, at the end of each month it reminds you to save one off your computer, on a pen drive or in Google Drive, so your data survives even if the PC is lost. Everything works in light or dark mode, and if movement on screen bothers you, “Reduce animations” in Settings makes charts and figures change at once (it starts off the way Windows has it).
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/notifications-dark.png">
-  <img src="docs/images/notifications-light.png" alt="The notifications panel">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/notifications-dark.png">
+  <img src="docs/images/en/notifications-light.png" alt="The notifications panel">
 </picture>
 
 ## Your data stays yours
 
-Everything lives in one file on your computer, `%APPDATA%\Nodus\nodus.db`, with the backups next to it in `%APPDATA%\Nodus\backups`: the 3 most recent, one for each of the 4 weeks before and one for each of the 6 months before, plus one Nodus saves before deleting something large, such as an account. Updating or uninstalling Nodus never touches it, and Nodus opens it only once: opening it again brings forward the window you already had, so two windows never write to the same file at the same time. If that file ever gets damaged, by a power cut or a failing disk, Nodus offers to bring your data back from the newest healthy backup when it opens, and keeps the damaged file aside. And if the file comes from a newer version of Nodus, it does not open it, so as not to damage it, and offers to download that version. The app only goes online for two things, and you can turn both off: checking GitHub for a new version, without sending any of your data (the installer itself is only downloaded when you click «Actualizar»), and fetching exchange rates from [DolarApi](https://dolarapi.com) if you chose an automatic source.
+Everything lives in one file on your computer, `%APPDATA%\Nodus\nodus.db`, with the backups next to it in `%APPDATA%\Nodus\backups`: the 3 most recent, one for each of the 4 weeks before and one for each of the 6 months before, plus one Nodus saves before deleting something large, such as an account. Updating or uninstalling Nodus never touches it, and Nodus opens it only once: opening it again brings forward the window you already had, so two windows never write to the same file at the same time. If that file ever gets damaged, by a power cut or a failing disk, Nodus offers to bring your data back from the newest healthy backup when it opens, and keeps the damaged file aside. And if the file comes from a newer version of Nodus, it does not open it, so as not to damage it, and offers to download that version. The app only goes online for two things, and you can turn both off: checking GitHub for a new version, without sending any of your data (the installer itself is only downloaded when you click “Update”), and fetching exchange rates from [DolarApi](https://dolarapi.com) if you chose an automatic source.
 
-To track down errors, Nodus keeps a short log in `%APPDATA%\Nodus\logs`, with what it did and what failed but never amounts, names or notes. It never leaves your computer on its own. If something goes wrong, Nodus says so and offers «Enviar reporte», which opens the feedback form with the error already written; you read it in your browser and decide whether to send it.
+To track down errors, Nodus keeps a short log in `%APPDATA%\Nodus\logs`, with what it did and what failed but never amounts, names or notes. It never leaves your computer on its own. If something goes wrong, Nodus says so and offers “Send report”, which opens the feedback form with the error already written; you read it in your browser and decide whether to send it.
 
 ## Download and install
 
@@ -150,11 +150,11 @@ Nodus runs on **64-bit Windows 10 and 11**.
 2. Open it and follow the wizard. It installs for your user only, without administrator rights, and shows up in the Start menu.
 3. If Windows says "Windows protected your PC", click "More info" and then "Run anyway". The warning appears because the installer has no commercial code-signing certificate, which costs a yearly fee. Every installer is built automatically on GitHub from the code in this repository.
 
-To update, click «Actualizar» when Nodus announces a new version: it downloads it, checks it arrived intact, installs it without questions and opens again, with your data kept. (Coming from 1.1.0 or earlier, install 1.2.0 over the old version once; from then on it is one click.) Nodus tells you what each new version brings before you install it, and after updating it shows once what changed; the full history is in [CHANGELOG.md](CHANGELOG.md) (in Spanish). If you want it waiting for you every morning, turn on «Abrir Nodus al iniciar Windows» in Settings, and uninstalling turns it off again.
+To update, click “Update” when Nodus announces a new version: it downloads it, checks it arrived intact, installs it without questions and opens again, with your data kept. (Coming from 1.1.0 or earlier, install 1.2.0 over the old version once; from then on it is one click.) Nodus tells you what each new version brings before you install it, and after updating it shows once what changed; the full history is in [CHANGELOG.en.md](CHANGELOG.en.md), and before 1.10 in [CHANGELOG.md](CHANGELOG.md), in Spanish. If you want it waiting for you every morning, turn on “Open Nodus when Windows starts” in Settings, and uninstalling turns it off again.
 
 ## Roadmap
 
-Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the home page, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. **v1.1** added euros and Chilean pesos, virtual wallets, accounts in your own order, any color for categories and tags, opening with Windows, sending feedback from the app and a summary of what's new after each update. **v1.3** brought one-click updates, a menu on every row, choosing several rows at once, a page for each account, payee and tag, and a tidier interface. **v1.4** added purchases paid in installments, the share of net worth's change that comes from the exchange rate, errors shown under the field that causes them, and payee suggestions that put first the ones you use. **v1.5** made the interface easier on the eyes: every text reads on its background in both themes, the smallest labels grew, empty lists all speak the same way, and «Reducir animaciones» stills charts and figures. **v1.6** added savings goals, account groups that fold in the sidebar, a fuller page for each account and a month-end reminder to keep a backup off your computer. **v1.7** helps you get started: a checklist of first steps on the home page, a guided tour of the window, and help beside the window, opened with F1 on the topic of the page you are on. **v1.8** tells you in a short notice what just happened and lets you undo what changes a lot of data in one click, also with Ctrl+Z; forms ask before discarding what you typed, and with the keyboard a ring shows where you are. **v1.9** makes Nodus sturdier: it tells you when something fails and keeps a log to find out why, offers to bring your data back from a backup if the file gets damaged, opens only once, reads amounts without guessing, keeps backups half a year back and checks a copy whole before restoring it. Coming next:
+Nodus grows in small, stable releases. **v1.0**, the first stable one, covers accounts, transactions, dollar exchange rates, investment returns, the home page, recurring charges, budgets, payees, tags, refunds, analysis, backups and export. **v1.1** added euros and Chilean pesos, virtual wallets, accounts in your own order, any color for categories and tags, opening with Windows, sending feedback from the app and a summary of what's new after each update. **v1.3** brought one-click updates, a menu on every row, choosing several rows at once, a page for each account, payee and tag, and a tidier interface. **v1.4** added purchases paid in installments, the share of net worth's change that comes from the exchange rate, errors shown under the field that causes them, and payee suggestions that put first the ones you use. **v1.5** made the interface easier on the eyes: every text reads on its background in both themes, the smallest labels grew, empty lists all speak the same way, and “Reduce animations” stills charts and figures. **v1.6** added savings goals, account groups that fold in the sidebar, a fuller page for each account and a month-end reminder to keep a backup off your computer. **v1.7** helps you get started: a checklist of first steps on the home page, a guided tour of the window, and help beside the window, opened with F1 on the topic of the page you are on. **v1.8** tells you in a short notice what just happened and lets you undo what changes a lot of data in one click, also with Ctrl+Z; forms ask before discarding what you typed, and with the keyboard a ring shows where you are. **v1.9** makes Nodus sturdier: it tells you when something fails and keeps a log to find out why, offers to bring your data back from a backup if the file gets damaged, opens only once, reads amounts without guessing, keeps backups half a year back and checks a copy whole before restoring it. Coming next:
 
 - **Next — Languages:** Nodus in English or Spanish, with amounts and dates written the way each language does.
 - **Then — Linux:** Nodus as an AppImage that updates itself, as on Windows.

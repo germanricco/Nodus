@@ -33,9 +33,11 @@ La forma rápida de probar con tus datos de siempre es `scripts/dev.py`. Copia t
 .venv/Scripts/python -m ruff format .                # formato
 .venv/Scripts/python scripts/screenshot.py --demo    # capturas de cada pantalla, claras y oscuras (--lang en: en inglés)
 .venv/Scripts/python scripts/translations.py extract # suma al catálogo los textos nuevos
+.venv/Scripts/python scripts/translations.py check   # qué texto falta traducir o tiene mal un marcador
+.venv/Scripts/python scripts/translations.py review  # una página con los textos de cada pantalla en los dos idiomas
 ```
 
-Las capturas se generan sobre una base temporal con datos de demostración (`scripts/demo_data.py`), así que muestran todas las pantallas con contenido sin tocar ningún dato real. Después de cambiar la interfaz, conviene generarlas y revisarlas en los dos temas. Las que muestran los README viven en `docs/images/` y se renuevan al cerrar cada versión.
+Las capturas se generan sobre una base temporal con datos de demostración (`scripts/demo_data.py`), así que muestran todas las pantallas con contenido sin tocar ningún dato real. Después de cambiar la interfaz, conviene generarlas y revisarlas en los dos temas. Las que muestran los README viven en `docs/images/`, y las del README en inglés, tomadas con `--lang en`, en `docs/images/en/`; se renuevan al cerrar cada versión.
 
 ## Cómo está organizado el código
 
@@ -54,7 +56,7 @@ Los tests en `tests/` siguen la misma estructura. Algunas reglas que conviene co
 - **Registro:** cada módulo anota con `logging.getLogger(__name__)`, y `config/logs.py` lo escribe en `logs/nodus.log`, junto a los datos. Una línea dice qué pasó o qué tipo de error hubo, nunca montos, nombres ni notas, porque el usuario puede mandar el registro al reportar un problema; los mensajes de error pasan por `scrub`, que tapa lo que va entre comillas, los números largos y las rutas. Un error que nada atrapó llega a `ui/error_reporter.py`, que lo anota y lo muestra con «Enviar reporte».
 - **Migraciones:** el esquema vive en `src/nodus/database/migrations/NNN_nombre.sql` y se aplica con `PRAGMA user_version`. Una migración publicada nunca se edita, porque las bases de los usuarios ya la aplicaron: cada cambio va en un archivo nuevo con el número siguiente.
 - **Tests:** además de los de cada módulo, `tests/test_end_to_end.py` recorre cada área como lo haría una persona: presupuestos, cargos recurrentes, cuotas, reembolsos, metas, grupos de cuentas, deshacer y copias. Lo hace a través de los diálogos y las páginas (`tests/journeys.py`) y termina reabriendo el archivo. Antes de cada `qtbot.addWidget`, `conftest.py` fuerza una recolección de basura, así un objeto que solo sostiene un ciclo de referencias desaparece en el test como desaparecería en la app. Otro test pone un límite al tiempo de arranque con datos de demostración.
-- **Idiomas:** el código, los identificadores y los mensajes de commit van en inglés; los textos que ve el usuario se escriben en español, que es el idioma fuente, y se marcan para traducir con `nodus/i18n.py`: `_("Guardar")`, `ngettext("{n} cuota", "{n} cuotas", n).format(n=n)` para los plurales y una frase entera con marcadores con nombre (`_("Vence el {day}").format(day=…)`), nunca pedazos pegados, porque cada idioma ordena distinto. Los montos, fechas y porcentajes se escriben siempre con `Money.format`, `format_date`, `format_percent` y las demás funciones de `models/language_format.py` y `models/period.py`, que siguen al idioma: en inglés, «$1,234.56», «11/18/2026» y «48%». Un texto se traduce al usarse, nunca al importar el módulo: una tabla de textos guarda `N_("…")` y quien la muestra llama a `_()`. Las traducciones viven en `src/nodus/locale/<idioma>/LC_MESSAGES/nodus.po`; `scripts/translations.py extract` suma los textos nuevos y un test falla mientras alguno no tenga su traducción. El `.mo` que lee la app se compila solo al correr los tests y al compilar (`translations.py compile` lo hace a mano).
+- **Idiomas:** el código, los identificadores y los mensajes de commit van en inglés; los textos que ve el usuario se escriben en español, que es el idioma fuente, y se marcan para traducir con `nodus/i18n.py`: `_("Guardar")`, `ngettext("{n} cuota", "{n} cuotas", n).format(n=n)` para los plurales y una frase entera con marcadores con nombre (`_("Vence el {day}").format(day=…)`), nunca pedazos pegados, porque cada idioma ordena distinto. Nunca va un `_()` dentro de un f-string: el extractor no lo ve y el texto queda sin traducir. Los montos, fechas, horas y porcentajes se escriben siempre con `Money.format`, `format_date`, `format_time`, `format_percent` y las demás funciones de `models/language_format.py` y `models/period.py`, que siguen al idioma: en inglés, «$1,234.56», «11/18/2026» y «48%». Un texto se traduce al usarse, nunca al importar el módulo: una tabla de textos guarda `N_("…")` y quien la muestra llama a `_()`. Las traducciones viven en `src/nodus/locale/<idioma>/LC_MESSAGES/nodus.po`; `scripts/translations.py extract` suma los textos nuevos y un test falla mientras alguno no tenga su traducción. El `.mo` que lee la app se compila solo al correr los tests y al compilar (`translations.py compile` lo hace a mano).
 - **Estilo:** PEP 8 y type hints en todo código nuevo, con un docstring breve en cada módulo, clase y método público.
 
 ## Compilar el instalador
@@ -70,7 +72,7 @@ Cuando el usuario toca «Actualizar», Nodus descarga el instalador del release 
 
 ## Publicar una versión
 
-1. Subir `nodus.__version__` en `src/nodus/__init__.py`, actualizar el README (en inglés y en español) y ponerle la fecha a la sección de la versión en `CHANGELOG.md`.
+1. Subir `nodus.__version__` en `src/nodus/__init__.py`, actualizar el README (en inglés y en español) y ponerle la fecha a la sección de la versión en `CHANGELOG.md` y en `CHANGELOG.en.md`.
 2. Generar las notas del release a partir de esa sección y crear con ellas una etiqueta anotada:
 
    ```
@@ -78,7 +80,7 @@ Cuando el usuario toca «Actualizar», Nodus descarga el instalador del release 
    git tag -a vX.Y.Z -F notas.md
    ```
 
-   `CHANGELOG.md` es la única fuente de las novedades, escrita para usuarios y en español. De ahí salen las notas del release (el mensaje de la etiqueta), el «Qué trae» del aviso de versión nueva y el diálogo de novedades que Nodus muestra una vez al abrir la versión nueva; el programa compilado lo lleva adentro.
+   `CHANGELOG.md` es la única fuente de las novedades, escrita para usuarios y en español, y `CHANGELOG.en.md` dice lo mismo en inglés desde la 1.10, con las mismas versiones y los mismos puntos. De ahí salen las notas del release (el mensaje de la etiqueta), el «Qué trae» del aviso de versión nueva y el diálogo de novedades que Nodus muestra una vez al abrir la versión nueva; el programa compilado los lleva adentro. Las notas llevan primero el español y después, tras `<!-- en -->`, el inglés; el aviso de versión nueva y el diálogo de novedades muestran el idioma en que está Nodus.
 3. Subir el commit y la etiqueta. El flujo `.github/workflows/release.yml` comprueba que la etiqueta coincida con la versión, corre los tests, compila (con la prueba `--smoke-test`), instala el resultado en modo silencioso como lo haría un usuario, vuelve a abrir la copia instalada con `--smoke-test` y solo entonces crea el release. La CI de cada push informa además la cobertura de los tests en la página de la ejecución.
 
 Para probar la compilación sin publicar nada, en GitHub: Actions → Release → Run workflow, que deja el instalador como artefacto de la ejecución.
