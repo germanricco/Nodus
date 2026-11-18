@@ -8,6 +8,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from nodus.config.logs import describe
+from nodus.i18n import N_
 from nodus.links import DOLARAPI_URL, QUOTES_URL
 from nodus.models.currency import Currency
 from nodus.services.accounts.account_service import AccountService
@@ -21,7 +22,8 @@ logger = logging.getLogger(__name__)
 MANUAL = "manual"
 # Where the dollar rate comes from, in the order the settings show them. Keys are
 # DolarApi's "casa" codes; MEP is listed there as "bolsa".
-SOURCES = {MANUAL: "Manual", "bolsa": "MEP", "blue": "Blue", "oficial": "Oficial"}
+# Their names, translated where shown; MEP and Blue are names in both languages.
+SOURCES = {MANUAL: N_("Manual"), "bolsa": "MEP", "blue": "Blue", "oficial": N_("Oficial")}
 DEFAULT_SOURCE = "bolsa"
 _BAD_ANSWER = (
     OSError,

@@ -10,6 +10,7 @@ from datetime import date
 from nodus.database.database import Database
 from nodus.database.repositories.account_group_repository import AccountGroupRepository
 from nodus.database.repositories.account_repository import AccountRepository
+from nodus.i18n import _
 from nodus.models.account import Account
 from nodus.models.account_group import AccountGroup
 from nodus.models.money import Money
@@ -67,7 +68,7 @@ class AccountGroupService:
         return sorted(self._groups.list(), key=lambda g: (g.position, name_sort_key(g.name)))
 
     def get(self, group_id: int) -> AccountGroup:
-        return require_found(self._groups.get(group_id), "El grupo no existe.")
+        return require_found(self._groups.get(group_id), _("El grupo no existe."))
 
     def create(self, name: str) -> AccountGroup:
         """A new group, last in the order."""
@@ -85,7 +86,7 @@ class AccountGroupService:
         """Puts the groups in the order of ``group_ids``, which must name each one once."""
         known = {g.id for g in self._groups.list()}
         if len(group_ids) != len(known) or set(group_ids) != known:
-            raise ValidationError("La lista de grupos no es válida.")
+            raise ValidationError(_("La lista de grupos no es válida."))
         with self._database.transaction():
             self._groups.set_positions({group_id: i for i, group_id in enumerate(group_ids)})
 
@@ -136,7 +137,11 @@ class AccountGroupService:
             self._account_repository.update(
                 dataclasses.replace(account, group_id=group_id, position=at)
             )
-        where = f"ahora está en {group_name}" if group_name else "quedó sin grupo"
+        where = (
+            _("ahora está en {group_name}").format(group_name=group_name)
+            if group_name
+            else _("quedó sin grupo")
+        )
         self._undo.offer(
             f"{account.name} {where}.",
             lambda: self._put_back(before, [a.id for a in order], account_id, group_id),
@@ -150,7 +155,7 @@ class AccountGroupService:
         now = self._accounts.list_accounts(include_archived=True)
         moved = self._accounts.get(account_id)
         if [a.id for a in now] != after or moved.group_id != group_id:
-            raise changed_since(f"El orden de «{moved.name}»")
+            raise changed_since(_("El orden de «{moved}»").format(moved=moved.name))
         original = next(a for a in before if a.id == account_id)
         self._account_repository.set_positions({a.id: a.position for a in before})
         self._account_repository.update(
@@ -195,6 +200,6 @@ class AccountGroupService:
             group.id,
             group.normalized_name,
             self._groups.find_by_normalized,
-            lambda name: f"Ya existe el grupo «{name}».",
+            lambda name: _("Ya existe el grupo «{name}».").format(name=name),
         )
         return group

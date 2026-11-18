@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from nodus.database.repositories.transaction_repository import TransactionRepository
+from nodus.i18n import _
 from nodus.models.money import Money
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.errors import require_found
@@ -42,7 +43,7 @@ class RefundService:
     def summary(self, expense_id: int, ignore_id: int | None = None) -> RefundSummary:
         """What has been refunded of ``expense_id``, leaving out ``ignore_id`` (the refund
         being edited, so its own amount does not count against it)."""
-        expense = require_found(self._transactions.get(expense_id), "La transacción no existe.")
+        expense = require_found(self._transactions.get(expense_id), _("La transacción no existe."))
         refunds = [
             refund
             for refund in self._transactions.list_refunds_of(expense_id)

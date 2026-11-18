@@ -10,6 +10,7 @@ from datetime import date
 from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
+from nodus.i18n import _
 from nodus.models.account import Account
 from nodus.models.money import Money
 from nodus.models.transaction import Transaction, TransactionType, Transfer
@@ -63,7 +64,7 @@ class TransferService:
     def get(self, transfer_id: str) -> Transfer:
         legs = self._transactions.list_transfer_legs(transfer_id)
         if len(legs) != 2:
-            raise ValidationError("La transferencia no existe.")
+            raise ValidationError(_("La transferencia no existe."))
         return _paired(legs)
 
     def get_many(self, transfer_ids: list[str]) -> dict[str, Transfer]:
@@ -83,7 +84,7 @@ class TransferService:
         whose legs keep their ids and may stay in an archived account."""
         if draft.from_account_id == draft.to_account_id:
             raise ValidationError(
-                "La cuenta de origen y la de destino deben ser distintas.", field="to_account_id"
+                _("La cuenta de origen y la de destino deben ser distintas."), field="to_account_id"
             )
         out_leg = current.outgoing if current else None
         in_leg = current.incoming if current else None
@@ -122,14 +123,16 @@ def _incoming_amount(draft: TransferDraft, source: Account, destination: Account
     if source.currency is destination.currency:
         if draft.amount_in is not None and draft.amount_in != draft.amount_out:
             raise ValidationError(
-                "Entre cuentas de la misma moneda, el monto que sale y el que entra"
-                " deben ser iguales.",
+                _(
+                    "Entre cuentas de la misma moneda, el monto que sale y el que entra "
+                    "deben ser iguales."
+                ),
                 field="amount_in",
             )
         return draft.amount_out
     if draft.amount_in is None:
         raise ValidationError(
-            "Indica el monto que entra en la cuenta de destino.", field="amount_in"
+            _("Indica el monto que entra en la cuenta de destino."), field="amount_in"
         )
     return draft.amount_in
 

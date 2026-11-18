@@ -9,6 +9,7 @@ from decimal import Decimal
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
+from nodus.i18n import _
 from nodus.models.currency import FOREIGN_CURRENCIES, HOME_CURRENCY, Currency
 from nodus.models.exchange_rate import ExchangeRate
 from nodus.models.language_format import with_symbol
@@ -107,7 +108,9 @@ class RatesCard(Card):
         self.body.addWidget(self.rate_currency_row)
 
         self.rate_source_row = SettingRow("Fuente")
-        self.rate_source_input = self.rate_source_row.add(SegmentedControl(list(SOURCES.values())))
+        self.rate_source_input = self.rate_source_row.add(
+            SegmentedControl([_(name) for name in SOURCES.values()])
+        )
         self.rate_source_input.changed.connect(self._set_rate_source)
         self.rate_source_input.setToolTip(
             "Con MEP, Blue u Oficial, Nodus trae el valor de venta del día desde DolarApi"

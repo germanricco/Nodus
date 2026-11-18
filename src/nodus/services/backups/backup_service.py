@@ -11,6 +11,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from nodus.database.database import Database, DatabaseError
+from nodus.i18n import _
 from nodus.services.app.settings_service import SettingsService
 from nodus.services.app.undo_service import UndoService
 from nodus.services.backups import restore, retention
@@ -125,9 +126,9 @@ class BackupService:
             backup = self.create(today)
         except BackupError:
             # The system's text stays out of a notice; «Hacer copia» shows it, if it fails again.
-            self.last_error = (
-                "No se pudo hacer la copia del día. Revisa que quede lugar en el disco y toca"
-                " «Hacer copia» en Ajustes."
+            self.last_error = _(
+                "No se pudo hacer la copia del día. Revisa que quede lugar en el disco "
+                "y toca «Hacer copia» en Ajustes."
             )
             return None
         return backup

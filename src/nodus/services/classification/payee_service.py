@@ -10,6 +10,7 @@ from typing import Any
 
 from nodus.database.database import Database
 from nodus.database.repositories.payee_repository import PayeeRepository
+from nodus.i18n import N_, _
 from nodus.models.category import Category
 from nodus.models.money import Money
 from nodus.models.payee import Payee, PayeeUsage
@@ -48,9 +49,9 @@ class PayeeService(NamedRecordService[Payee]):
     """Payees: suggestions while typing, the category each one usually takes, and what
     the user spent or received with each."""
 
-    NOT_FOUND_TEXT = "El beneficiario no existe."
-    NO_OTHER_TEXT = "Elige otro beneficiario para unir."
-    NAME_TAKEN_TEXT = "Ya hay otro beneficiario «{name}», así que no se puede deshacer."
+    NOT_FOUND_TEXT = N_("El beneficiario no existe.")
+    NO_OTHER_TEXT = N_("Elige otro beneficiario para unir.")
+    NAME_TAKEN_TEXT = N_("Ya hay otro beneficiario «{name}», así que no se puede deshacer.")
 
     # How far back use orders the suggestions while typing, and before typing anything:
     # the latter shows only what is used now, a few of them.
@@ -153,7 +154,9 @@ class PayeeService(NamedRecordService[Payee]):
                 self._payees.update(dataclasses.replace(target, default_category_id=inherited))
             merged = self._payees.get(target_id)
         self._undo.offer(
-            f"Se unieron {len(sources) + 1} beneficiarios en {target.name}.",
+            _("Se unieron {count} beneficiarios en {target}.").format(
+                count=len(sources) + 1, target=target.name
+            ),
             lambda: self._unmerge(target, merged, rows, moved),
         )
 
@@ -223,12 +226,12 @@ class PayeeService(NamedRecordService[Payee]):
 
     def _checked(self, payee: Payee) -> Payee:
         """``payee`` if its name is usable and no other payee has it."""
-        hint = "; para juntarlos usa «Unir con…»" if payee.id is not None else ""
+        hint = _("; para juntarlos usa «Unir con…»") if payee.id is not None else ""
         require_free_name(
             payee.id,
             payee.normalized_name,
             self._payees.find_by_normalized,
-            lambda name: f"Ya existe «{name}»{hint}.",
+            lambda name: _("Ya existe «{name}»{hint}.").format(name=name, hint=hint),
         )
         if payee.default_category_id is not None:
             self._categories.get(payee.default_category_id)

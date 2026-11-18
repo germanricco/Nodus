@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from nodus.database.database import Database
 from nodus.database.repositories.exchange_rate_repository import ExchangeRateRepository
+from nodus.i18n import _
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.exchange_rate import ExchangeRate
 from nodus.models.money import Money
@@ -34,7 +35,7 @@ class ExchangeRateService:
         if not currency.is_foreign:
             raise ValueError("The peso has no exchange rate against itself")
         if not pesos_per_unit.is_finite() or pesos_per_unit <= 0:
-            raise ValidationError("La cotización debe ser mayor que cero.")
+            raise ValidationError(_("La cotización debe ser mayor que cero."))
         rate = ExchangeRate(None, rate_date, currency, HOME_CURRENCY, pesos_per_unit)
         with self._database.transaction():
             return self._rates.save(rate)

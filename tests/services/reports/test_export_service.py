@@ -78,3 +78,22 @@ def test_payee_column(services, pesos):
 
     assert HEADER[4] == "Beneficiario"
     assert row[4] == "Coto"
+
+
+def test_in_english_the_csv_has_commas_english_columns_and_decimal_points(
+    english, services, pesos, tmp_path
+):
+    """Excel in English reads "," between columns and a decimal point."""
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("1234.5"), date(2026, 11, 3), note="Dinner")
+    )
+    path = tmp_path / "export.csv"
+
+    services.export.write_csv(all_transactions(services), path)
+
+    with path.open(encoding="utf-8-sig", newline="") as file:
+        header, row = list(csv.reader(file, delimiter=","))
+    assert header[:4] == ["Date", "Type", "Account", "Category"]
+    assert header[-1] == "Refund of"
+    assert row[:2] == ["11/03/2026", "Expense"]
+    assert row[6] == "-1234.50"

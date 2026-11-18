@@ -8,6 +8,7 @@ from datetime import date
 
 from nodus.database.database import Database
 from nodus.database.repositories.budget_repository import BudgetRepository
+from nodus.i18n import _
 from nodus.models.budget import Budget, BudgetState, month_elapsed
 from nodus.models.category import Category
 from nodus.models.currency import HOME_CURRENCY
@@ -84,9 +85,9 @@ class BudgetService:
         """Sets the limit from ``month`` on; earlier months keep the one they had."""
         self._require_budgetable(category_id)
         if amount.currency is not HOME_CURRENCY:
-            raise ValidationError("El límite del presupuesto va en pesos.", field="limit")
+            raise ValidationError(_("El límite del presupuesto va en pesos."), field="limit")
         if amount.cents <= 0:
-            raise ValidationError("El límite tiene que ser mayor que cero.", field="limit")
+            raise ValidationError(_("El límite tiene que ser mayor que cero."), field="limit")
         require_storable(amount, "limit")
         with self._database.transaction():
             self._budgets.set(category_id, month, amount)
@@ -150,9 +151,9 @@ class BudgetService:
     def _require_budgetable(self, category_id: int) -> Category:
         category = self._categories.get(category_id)
         if category.kind is not TransactionType.EXPENSE:
-            raise ValidationError("Solo las categorías de gasto llevan presupuesto.")
+            raise ValidationError(_("Solo las categorías de gasto llevan presupuesto."))
         if category.is_subcategory:
             raise ValidationError(
-                "Los presupuestos van en la categoría principal; sus subcategorías suman a ella."
+                _("Los presupuestos van en la categoría principal; sus subcategorías suman a ella.")
             )
         return category

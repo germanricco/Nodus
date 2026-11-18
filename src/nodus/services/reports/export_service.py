@@ -5,6 +5,8 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+from nodus.i18n import N_, _
+from nodus.models.language_format import current_format
 from nodus.models.period import format_date
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.accounts.account_service import AccountService
@@ -12,19 +14,26 @@ from nodus.services.classification.category_service import CategoryService
 from nodus.services.classification.payee_service import PayeeService
 from nodus.services.transactions.transaction_service import TransactionService
 
+# The columns, translated when the file is written (``header``).
 HEADER = [
-    "Fecha", "Tipo", "Cuenta", "Categoría", "Beneficiario", "Descripción", "Monto", "Moneda",
-    "Reembolso de",
+    N_("Fecha"), N_("Tipo"), N_("Cuenta"), N_("Categoría"), N_("Beneficiario"),
+    N_("Descripción"), N_("Monto"), N_("Moneda"), N_("Reembolso de"),
 ]  # fmt: skip
-TRANSFER_TYPE = "Transferencia"
-_TYPE_NAMES = {TransactionType.EXPENSE: "Gasto", TransactionType.INCOME: "Ingreso"}
+TRANSFER_TYPE = N_("Transferencia")
+_TYPE_NAMES = {TransactionType.EXPENSE: N_("Gasto"), TransactionType.INCOME: N_("Ingreso")}
+
+
+def header() -> list[str]:
+    """The names of the columns, in the language Nodus is in."""
+    return [_(name) for name in HEADER]
 
 
 class ExportService:
     """Turns transactions into rows a spreadsheet understands.
 
-    Excel in Spanish expects ";" between columns and a comma in decimals, and needs the
-    UTF-8 mark (BOM) to show accents right. Each transfer leg is its own row, with the
+    Excel expects what the language it is in writes: ";" between columns and a decimal
+    comma in Spanish, "," and a decimal point in English. It needs the UTF-8 mark (BOM)
+    to show accents right. Each transfer leg is its own row, with the
     amount signed by its effect on the account, so summing a column gives real totals.
     A refund names the expense it pays back by its date and description.
     """
@@ -50,7 +59,7 @@ class ExportService:
         return [
             [
                 format_date(t.occurred_on),
-                TRANSFER_TYPE if t.is_transfer else _TYPE_NAMES[t.type],
+                _(TRANSFER_TYPE if t.is_transfer else _TYPE_NAMES[t.type]),
                 accounts[t.account_id],
                 "" if t.is_transfer else categories[t.category_id],
                 payees.get(t.payee_id, ""),
@@ -71,6 +80,6 @@ class ExportService:
 
     def write_csv(self, transactions: list[Transaction], path: Path) -> None:
         with path.open("w", encoding="utf-8-sig", newline="") as file:
-            writer = csv.writer(file, delimiter=";")
-            writer.writerow(HEADER)
+            writer = csv.writer(file, delimiter=current_format().csv_separator)
+            writer.writerow(header())
             writer.writerows(self.rows(transactions))

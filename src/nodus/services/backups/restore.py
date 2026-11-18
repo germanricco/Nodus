@@ -19,15 +19,16 @@ from nodus.database.database import (
     latest_table_names,
     migration_backups,
 )
+from nodus.i18n import N_, _
 from nodus.services.errors import BackupError, ValidationError
 
 logger = logging.getLogger(__name__)
 
 WORK_NAME = "nodus-restaurando.db"
-NOT_A_COPY_TEXT = "El archivo no es una copia de Nodus."
-UNREADABLE_TEXT = "El archivo no es una copia válida de Nodus."
-NEWER_TEXT = "La copia viene de una versión más nueva de Nodus. Actualiza Nodus para usarla."
-INCOMPLETE_TEXT = "La copia está incompleta o dañada."
+NOT_A_COPY_TEXT = N_("El archivo no es una copia de Nodus.")
+UNREADABLE_TEXT = N_("El archivo no es una copia válida de Nodus.")
+NEWER_TEXT = N_("La copia viene de una versión más nueva de Nodus. Actualiza Nodus para usarla.")
+INCOMPLETE_TEXT = N_("La copia está incompleta o dañada.")
 
 
 def prepared_copy(source: Path, work_dir: Path) -> Database:
@@ -45,7 +46,7 @@ def prepared_copy(source: Path, work_dir: Path) -> Database:
     except DatabaseError as error:
         discard(work_dir)
         logger.warning("Restore refused: the copy could not be read", exc_info=error)
-        raise ValidationError(UNREADABLE_TEXT) from error
+        raise ValidationError(_(UNREADABLE_TEXT)) from error
     except OSError as error:
         discard(work_dir)
         raise BackupError(str(error)) from error
@@ -54,17 +55,17 @@ def prepared_copy(source: Path, work_dir: Path) -> Database:
     except MigrationError as error:
         discard(work_dir)
         logger.error("Restore refused: the copy could not be updated", exc_info=error)
-        raise ValidationError(INCOMPLETE_TEXT) from error
+        raise ValidationError(_(INCOMPLETE_TEXT)) from error
     except DatabaseError as error:
         discard(work_dir)
         logger.warning("Restore refused: the copy is damaged", exc_info=error)
-        raise ValidationError(INCOMPLETE_TEXT) from error
+        raise ValidationError(_(INCOMPLETE_TEXT)) from error
     missing = latest_table_names() - database.table_names()
     if missing or not database.foreign_keys_hold():
         database.close()
         discard(work_dir)
         logger.warning("Restore refused: %d tables missing or broken references", len(missing))
-        raise ValidationError(INCOMPLETE_TEXT)
+        raise ValidationError(_(INCOMPLETE_TEXT))
     return database
 
 
@@ -85,10 +86,10 @@ def _require_copy_of_nodus(source: Path) -> None:
         version = Database.inspect(source)
     except DatabaseError as error:
         logger.warning("Restore refused: not a readable database", exc_info=error)
-        raise ValidationError(UNREADABLE_TEXT) from error
+        raise ValidationError(_(UNREADABLE_TEXT)) from error
     if version == 0:
         logger.warning("Restore refused: an empty database")
-        raise ValidationError(NOT_A_COPY_TEXT)
+        raise ValidationError(_(NOT_A_COPY_TEXT))
     if version > latest_schema_version():
         logger.warning("Restore refused: schema %d is newer than this Nodus", version)
-        raise ValidationError(NEWER_TEXT)
+        raise ValidationError(_(NEWER_TEXT))

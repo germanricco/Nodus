@@ -10,6 +10,7 @@ from decimal import Decimal
 from nodus.database.database import Database
 from nodus.database.repositories.recurring_charge_repository import RecurringChargeRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
+from nodus.i18n import _, quoted
 from nodus.models.account import Account
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.money import Money
@@ -122,7 +123,7 @@ class RecurringChargeService:
         self._save(dataclasses.replace(self.get(charge_id), is_active=active))
 
     def get(self, charge_id: int) -> RecurringCharge:
-        return require_found(self._charges.get(charge_id), "El cargo recurrente no existe.")
+        return require_found(self._charges.get(charge_id), _("El cargo recurrente no existe."))
 
     def list_charges(self) -> list[RecurringCharge]:
         """By next due date, then by name."""
@@ -173,7 +174,10 @@ class RecurringChargeService:
         with self._database.transaction():
             saved = self._transaction_repository.add(transaction)
             self._charges.update(advanced)
-        self._undo.offer(f"Se pagó {charge.name}.", lambda: self._put_back(charge, advanced, saved))
+        self._undo.offer(
+            _("Se pagó {charge}.").format(charge=charge.name),
+            lambda: self._put_back(charge, advanced, saved),
+        )
         return saved
 
     def skip(self, charge_id: int) -> None:
@@ -182,7 +186,10 @@ class RecurringChargeService:
         charge = self._require_active(charge_id)
         advanced = self._advanced(charge)
         self._save(advanced)
-        self._undo.offer(f"Se omitió {charge.name}.", lambda: self._put_back(charge, advanced))
+        self._undo.offer(
+            _("Se omitió {charge}.").format(charge=charge.name),
+            lambda: self._put_back(charge, advanced),
+        )
 
     def is_quiet(self, charge: RecurringCharge, today: date) -> bool:
         """Whether the user already saw this charge due soon, with «Ya lo vi» or in the
@@ -194,7 +201,11 @@ class RecurringChargeService:
         day returned. The next due date, after paying or skipping, warns again."""
         charge = self.get(charge_id)
         if not charge.can_be_seen(today):
-            raise ValidationError(f"«{charge.name}» no tiene un aviso para dejar para después.")
+            raise ValidationError(
+                _("«{charge}» no tiene un aviso para dejar para después.").format(
+                    charge=charge.name
+                )
+            )
         self._seen.mark({charge.seen_key(today)})
         return charge.quiet_until()
 
@@ -216,10 +227,10 @@ class RecurringChargeService:
         """Undoes a skip or a payment: the charge as it was ``before``, and the payment's
         expense gone, if both are still as the action left them."""
         if self._charges.get(before.id) != after:
-            raise changed_since(f"«{before.name}»")
+            raise changed_since(quoted(before.name))
         if payment is not None:
             if self._transaction_repository.get(payment.id) != payment:
-                raise changed_since(f"El pago de «{before.name}»")
+                raise changed_since(_("El pago de «{before}»").format(before=before.name))
             self._transaction_repository.delete(payment.id)
         self._charges.update(before)
 
@@ -245,7 +256,9 @@ class RecurringChargeService:
     def _require_active(self, charge_id: int) -> RecurringCharge:
         charge = self.get(charge_id)
         if not charge.is_active:
-            raise ValidationError(f"«{charge.name}» está en pausa; reanúdalo para pagarlo.")
+            raise ValidationError(
+                _("«{charge}» está en pausa; reanúdalo para pagarlo.").format(charge=charge.name)
+            )
         return charge
 
     def _paid_in_other_currency(self, charge: RecurringCharge) -> bool:
@@ -255,8 +268,10 @@ class RecurringChargeService:
     def _require_dollars_from_pesos(amount: Money, account: Account) -> None:
         if (amount.currency, account.currency) != (Currency.USD, HOME_CURRENCY):
             raise ValidationError(
-                f"Un cargo en {amount.currency.value} se paga desde una cuenta en"
-                f" {amount.currency.value}; solo los cargos en dólares pueden pagarse en pesos."
+                _(
+                    "Un cargo en {currency_value} se paga desde una cuenta en "
+                    "{currency_value}; solo los cargos en dólares pueden pagarse en pesos."
+                ).format(currency_value=amount.currency.value)
             )
 
     def _save(self, charge: RecurringCharge) -> None:

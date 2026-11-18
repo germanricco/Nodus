@@ -89,6 +89,12 @@ def pgettext(context: str, message: str) -> str:
     return _translations.pgettext(context, message)
 
 
+def quoted(name: str) -> str:
+    """A name the user gave, set apart in a sentence the way the language does it:
+    «Sueldo» in Spanish, “Salary” in English."""
+    return _("«{name}»").format(name=name)
+
+
 def N_(message: str) -> str:  # noqa: N802 (the name gettext tools look for)
     """Marks ``message`` for the catalog without translating it yet: for texts kept at
     module level, which are translated with ``_()`` where they are shown."""

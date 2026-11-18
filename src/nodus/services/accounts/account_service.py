@@ -9,6 +9,7 @@ from datetime import date, datetime
 from nodus.database.database import Database
 from nodus.database.repositories.account_repository import AccountRepository
 from nodus.database.repositories.value_adjustment_repository import ValueAdjustmentRepository
+from nodus.i18n import _
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.models.money import Money
@@ -71,7 +72,7 @@ class AccountService:
         existing = self.get(account_id)
         require_storable(initial_balance, "initial_balance")
         if initial_balance.currency is not existing.currency:
-            raise ValidationError("No se puede cambiar la moneda de una cuenta.")
+            raise ValidationError(_("No se puede cambiar la moneda de una cuenta."))
         updated = dataclasses.replace(
             existing, name=clean_name(name), type=account_type, initial_balance=initial_balance
         )
@@ -101,13 +102,15 @@ class AccountService:
             self._accounts.delete(account.id)
 
     def get(self, account_id: int) -> Account:
-        return require_found(self._accounts.get(account_id), "La cuenta no existe.")
+        return require_found(self._accounts.get(account_id), _("La cuenta no existe."))
 
     def _require_new_name(self, account: Account) -> None:
         """No other account, archived or not, has the same name (case and accents aside),
         so a list or a menu never shows two accounts nobody can tell apart."""
         others = (a.name for a in self._accounts.list(include_archived=True) if a.id != account.id)
-        require_unique_name(account.name, others, f"Ya hay una cuenta «{account.name}».")
+        require_unique_name(
+            account.name, others, _("Ya hay una cuenta «{account}».").format(account=account.name)
+        )
 
     def list_accounts(self, include_archived: bool = False) -> list[Account]:
         """Accounts in the order the user gave them; alphabetical among equal positions,
@@ -130,7 +133,7 @@ class AccountService:
         archived ones, when the active list is reordered) keep their order after them."""
         known = {a.id for a in self._accounts.list(include_archived=True)}
         if len(set(account_ids)) != len(account_ids) or not set(account_ids) <= known:
-            raise ValidationError("La lista de cuentas no es válida.")
+            raise ValidationError(_("La lista de cuentas no es válida."))
         rest = [a.id for a in self.list_accounts(include_archived=True) if a.id not in account_ids]
         order = [*account_ids, *rest]
         with self._database.transaction():
@@ -164,12 +167,15 @@ class AccountService:
         """
         account = self.get(account_id)
         if not account.type.changes_value:
-            raise ValidationError("Solo las cuentas de ahorro o inversión cambian de valor.")
+            raise ValidationError(_("Solo las cuentas de ahorro o inversión cambian de valor."))
         if account.is_archived:
-            raise ValidationError("La cuenta está archivada.")
+            raise ValidationError(_("La cuenta está archivada."))
         if value.currency is not account.currency:
             raise ValidationError(
-                f"El valor va en la moneda de la cuenta ({account.currency.value}).", field="value"
+                _("El valor va en la moneda de la cuenta ({currency_value}).").format(
+                    currency_value=account.currency.value
+                ),
+                field="value",
             )
         require_storable(value, "value")
         require_in_calendar(day, "day")
@@ -206,6 +212,6 @@ class AccountService:
         return ValueGain(gain, share)
 
     def delete_adjustment(self, adjustment_id: int) -> None:
-        require_found(self._adjustments.get(adjustment_id), "El ajuste no existe.")
+        require_found(self._adjustments.get(adjustment_id), _("El ajuste no existe."))
         with self._database.transaction():
             self._adjustments.delete(adjustment_id)

@@ -276,3 +276,9 @@ class TestAccountActivity:
         assert (activity.incoming, activity.transfers_in, activity.outgoing) == (
             usd("1"), usd("1"), usd("0"),
         )  # fmt: skip
+
+
+def test_in_english_a_rule_the_user_broke_is_told_in_english(english, services, pesos):
+    """The services write their messages for the user in the language Nodus is in."""
+    with pytest.raises(ValidationError, match="The amount must be greater than zero."):
+        services.transactions.create(expense_draft(services, pesos.id, ars("0"), TODAY))

@@ -6,6 +6,7 @@ from dataclasses import dataclass, replace
 from datetime import date
 from enum import Enum
 
+from nodus.i18n import _, ngettext
 from nodus.models.currency import Currency
 from nodus.models.period import format_date
 from nodus.services.accounts.account_service import AccountService
@@ -151,8 +152,8 @@ class NotificationService:
             notices.append(
                 Notice(
                     NoticeKind.UPDATE,
-                    f"Nodus {release.version} está disponible",
-                    "Se instala en un momento y tus datos se conservan.",
+                    _("Nodus {version} está disponible").format(version=release.version),
+                    _("Se instala en un momento y tus datos se conservan."),
                     release.url,
                     release.notes,
                     items=(_update_key(release.version),),
@@ -167,7 +168,7 @@ class NotificationService:
             notices.append(
                 Notice(
                     NoticeKind.BACKUP_FAILED,
-                    "La copia de hoy falló",
+                    _("La copia de hoy falló"),
                     self._backups.last_error,
                     items=(_backup_failed_key(today),),
                 )
@@ -184,8 +185,8 @@ class NotificationService:
         return [
             Notice(
                 NoticeKind.GOAL_REACHED,
-                f"Alcanzaste «{goal.name}»",
-                "Archívala para usar sus cuentas en otra meta, o súbele el objetivo.",
+                _("Alcanzaste «{goal}»").format(goal=goal.name),
+                _("Archívala para usar sus cuentas en otra meta, o súbele el objetivo."),
                 item_id=goal.id,
                 items=(_goal_key(goal.id),),
             )
@@ -203,13 +204,17 @@ class NotificationService:
             return None
         last = self._backups.last_external_backup()
         since = (
-            f"La última es del {format_date(last)}." if last else "Todavía no guardaste ninguna."
+            _("La última es del {last}.").format(last=format_date(last))
+            if last
+            else _("Todavía no guardaste ninguna.")
         )
         return Notice(
             NoticeKind.BACKUP_REMINDER,
-            "Guarda una copia fuera de esta computadora",
-            f"{since} En un pendrive o en Drive, tus datos se salvan aunque la PC se pierda"
-            " o se rompa.",
+            _("Guarda una copia fuera de esta computadora"),
+            _(
+                "{since} En un pendrive o en Drive, tus datos se salvan aunque la PC "
+                "se pierda o se rompa."
+            ).format(since=since),
             items=(_backup_reminder_key(reminder_start(today)),),
         )
 
@@ -226,8 +231,8 @@ class NotificationService:
         if rate is None:
             return Notice(
                 NoticeKind.STALE_RATE,
-                f"Sin cotización del {name}",
-                f"Cárgala para sumar tus cuentas en {plural} al resto.",
+                _("Sin cotización del {name}").format(name=name),
+                _("Cárgala para sumar tus cuentas en {plural} al resto.").format(plural=plural),
                 items=(_rate_key(currency, None),),
             )
         days = (today - rate.rate_date).days
@@ -235,8 +240,12 @@ class NotificationService:
             return None
         return Notice(
             NoticeKind.STALE_RATE,
-            f"Sin cotización del {name} desde hace {days} días",
-            f"La última es del {format_date(rate.rate_date)}.",
+            ngettext(
+                "Sin cotización del {name} desde hace {days} día",
+                "Sin cotización del {name} desde hace {days} días",
+                days,
+            ).format(name=name, days=days),
+            _("La última es del {rate_date}.").format(rate_date=format_date(rate.rate_date)),
             items=(_rate_key(currency, rate.rate_date),),
         )
 
@@ -253,12 +262,16 @@ class NotificationService:
             return Notice(
                 NoticeKind.CHARGES_DUE,
                 f"{charge.name} {_due_phrase(charge.days_until(today))}",
-                f"{charge.amount.format()} · Regístralo desde Recurrentes.",
+                _("{amount} · Regístralo desde Recurrentes.").format(amount=charge.amount.format()),
                 items=items,
             )
-        title = f"{len(charges)} cargos por pagar"
+        title = ngettext(
+            "{count} cargo por pagar", "{count} cargos por pagar", len(charges)
+        ).format(count=len(charges))
         if overdue:
-            title += f" ({overdue} vencido{'s' if overdue > 1 else ''})"
+            title += " " + ngettext("({count} vencido)", "({count} vencidos)", overdue).format(
+                count=overdue
+            )
         names = ", ".join(c.name for c in charges) + "."
         return Notice(NoticeKind.CHARGES_DUE, title, names, items=items)
 
@@ -273,13 +286,15 @@ class NotificationService:
             budget = over[0]
             return Notice(
                 NoticeKind.BUDGET_OVER,
-                f"{budget.category.name} pasó su límite",
-                f"Excedido en {(-budget.remaining).format()} este mes.",
+                _("{category} pasó su límite").format(category=budget.category.name),
+                _("Excedido en {amount} este mes.").format(amount=(-budget.remaining).format()),
                 items=items,
             )
         return Notice(
             NoticeKind.BUDGET_OVER,
-            f"{len(over)} presupuestos excedidos",
+            ngettext(
+                "{count} presupuesto excedido", "{count} presupuestos excedidos", len(over)
+            ).format(count=len(over)),
             ", ".join(b.category.name for b in over) + ".",
             items=items,
         )
@@ -288,11 +303,13 @@ class NotificationService:
 def _due_phrase(days: int) -> str:
     """ "vence mañana", "venció hace 2 días"…"""
     if days < -1:
-        return f"venció hace {-days} días"
+        return ngettext("venció hace {days} día", "venció hace {days} días", -days).format(
+            days=-days
+        )
     if days == -1:
-        return "venció ayer"
+        return _("venció ayer")
     if days == 0:
-        return "vence hoy"
+        return _("vence hoy")
     if days == 1:
-        return "vence mañana"
-    return f"vence en {days} días"
+        return _("vence mañana")
+    return ngettext("vence en {days} día", "vence en {days} días", days).format(days=days)

@@ -10,6 +10,7 @@ from datetime import date
 
 from nodus.database.database import Database
 from nodus.database.repositories.goal_repository import GoalRepository
+from nodus.i18n import _, quoted
 from nodus.models.account import Account, AccountType
 from nodus.models.goal import PACE_CHANGES, Goal, GoalProgress, GoalShare, goal_progress
 from nodus.models.language_format import format_percent
@@ -76,7 +77,7 @@ class GoalService:
         return sorted(self._goals.list(), key=lambda g: (g.position, name_sort_key(g.name)))
 
     def get(self, goal_id: int) -> Goal:
-        return require_found(self._goals.get(goal_id), "La meta no existe.")
+        return require_found(self._goals.get(goal_id), _("La meta no existe."))
 
     def create(self, draft: GoalDraft, today: date) -> Goal:
         """Adds the goal last in the user's order."""
@@ -271,16 +272,22 @@ class GoalService:
     def _check_share(self, share: GoalShare, goal_id: int | None) -> None:
         account = self._accounts.get(share.account_id)
         if account.type is AccountType.CREDIT_CARD:
-            raise ValidationError("Una tarjeta de crédito no junta dinero para una meta.", "shares")
+            raise ValidationError(
+                _("Una tarjeta de crédito no junta dinero para una meta."), "shares"
+            )
         if not 1 <= share.percent <= 100:
-            raise ValidationError("El porcentaje va de 1 a 100.", field="shares")
+            raise ValidationError(_("El porcentaje va de 1 a 100."), field="shares")
         free = self.free_percent(account.id, goal_id)
         if share.percent > free:
             holders = [g for g in self._others(goal_id) if g.share_of(account.id)]
-            names = ", ".join(f"«{g.name}»" for g in holders)
+            names = ", ".join(quoted(g.name) for g in holders)
             raise ValidationError(
-                f"«{account.name}» ya tiene {format_percent(100 - free)} en {names}: "
-                f"quedan {format_percent(free)}.",
+                _("«{account}» ya tiene {used} en {goals}: quedan {free}.").format(
+                    account=account.name,
+                    used=format_percent(100 - free),
+                    goals=names,
+                    free=format_percent(free),
+                ),
                 field="shares",
             )
 
@@ -291,17 +298,17 @@ class GoalService:
         already has: a goal that ran late keeps it, and only a new date must be ahead."""
         name = clean_name(draft.name)
         if draft.target.cents <= 0:
-            raise ValidationError("El objetivo tiene que ser mayor que cero.", field="target")
+            raise ValidationError(_("El objetivo tiene que ser mayor que cero."), field="target")
         require_storable(draft.target, "target")
         if draft.target_date not in (None, kept_date) and draft.target_date <= today:
-            raise ValidationError("Elige una fecha posterior a hoy.", field="target_date")
+            raise ValidationError(_("Elige una fecha posterior a hoy."), field="target_date")
         if draft.target_date is not None:
             require_in_calendar(draft.target_date, "target_date")
         if not draft.shares:
-            raise ValidationError("Elige al menos una cuenta.", field="shares")
+            raise ValidationError(_("Elige al menos una cuenta."), field="shares")
         ids = [share.account_id for share in draft.shares]
         if len(set(ids)) != len(ids):
-            raise ValidationError("Cada cuenta va una sola vez.", field="shares")
+            raise ValidationError(_("Cada cuenta va una sola vez."), field="shares")
         for share in draft.shares:
             self._check_share(share, goal_id)
         return Goal(None, name, draft.target, draft.target_date, tuple(draft.shares))

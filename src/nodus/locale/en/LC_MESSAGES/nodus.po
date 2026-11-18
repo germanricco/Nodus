@@ -14,6 +14,63 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#: nodus/app.py
+msgid "No se pudieron abrir tus datos."
+msgstr "Your data could not be opened."
+
+#: nodus/app.py
+msgid ""
+"Cierra los programas que puedan estar usando el archivo, como un antivirus o una sincronización, "
+"y vuelve a abrir Nodus. Tus copias de seguridad están en la carpeta «backups», junto a tus datos."
+msgstr ""
+"Close any program that may be using the file, such as an antivirus or a sync app, and open Nodus "
+"again. Your backups are in the “backups” folder, next to your data."
+
+#: nodus/app.py
+msgid "Tus datos son de una versión más nueva de Nodus."
+msgstr "Your data comes from a newer version of Nodus."
+
+#: nodus/app.py
+msgid ""
+"Esta versión no conoce todo lo que guardaste con la nueva, así que no los abre para no dañarlos. "
+"Instala la última versión de Nodus; tus datos siguen intactos."
+msgstr ""
+"This version doesn't know everything you saved with the newer one, so it won't open it, to avoid "
+"damaging it. Install the latest version of Nodus; your data is untouched."
+
+#: nodus/app.py
+msgid "Descargar Nodus"
+msgstr "Download Nodus"
+
+#: nodus/app.py
+msgid "No se pudieron actualizar tus datos a esta versión de Nodus."
+msgstr "Your data could not be updated to this version of Nodus."
+
+#: nodus/app.py
+msgid ""
+"Tus datos siguen como estaban, y Nodus guardó una copia de antes de actualizarlos. Envía el "
+"reporte para que lo arreglemos; mientras tanto, puedes volver a instalar la versión que usabas."
+msgstr ""
+"Your data is as it was, and Nodus saved a backup from before the update. Send the report so we "
+"can fix it; meanwhile, you can reinstall the version you were using."
+
+#: nodus/app.py
+msgid "Nodus ya está abierto."
+msgstr "Nodus is already open."
+
+#: nodus/app.py
+msgid ""
+"Búscalo en la barra de tareas. Si no responde, ciérralo desde el Administrador de tareas y vuelve"
+" a abrirlo."
+msgstr ""
+"Look for it on the taskbar. If it doesn't respond, close it from the Task Manager and open it "
+"again."
+
+#: nodus/i18n.py
+#, python-brace-format
+msgid "«{name}»"
+msgstr "“{name}”"
+
 #: nodus/models/amount_parsing.py
 msgid "El monto es demasiado grande."
 msgstr "The amount is too large."
@@ -122,4 +179,639 @@ msgstr "November"
 #: nodus/models/period.py
 msgid "Diciembre"
 msgstr "December"
+
+#: nodus/models/period.py
+msgid "Mes actual"
+msgstr "This month"
+
+#: nodus/models/period.py
+msgid "Últimos 3 meses"
+msgstr "Last 3 months"
+
+#: nodus/models/period.py
+msgid "Últimos 6 meses"
+msgstr "Last 6 months"
+
+#: nodus/models/period.py
+msgid "Últimos 12 meses"
+msgstr "Last 12 months"
+
+#: nodus/models/period.py
+msgid "Este año"
+msgstr "This year"
+
+#: nodus/models/period.py
+msgid "Año anterior"
+msgstr "Last year"
+
+#: nodus/services/errors.py
+#, python-brace-format
+msgid "La fecha tiene que estar entre {first} y {last}."
+msgstr "The date has to be between {first} and {last}."
+
+#: nodus/services/errors.py
+msgid "El nombre debe tener letras o números."
+msgstr "The name needs letters or numbers."
+
+#: nodus/services/errors.py
+msgid "El nombre no puede estar vacío."
+msgstr "The name can't be empty."
+
+#: nodus/services/accounts/account_group_service.py
+msgid "El grupo no existe."
+msgstr "The group doesn't exist."
+
+#: nodus/services/accounts/account_group_service.py
+msgid "La lista de grupos no es válida."
+msgstr "The list of groups isn't valid."
+
+#: nodus/services/accounts/account_group_service.py
+#, python-brace-format
+msgid "ahora está en {group_name}"
+msgstr "is now in {group_name}"
+
+#: nodus/services/accounts/account_group_service.py
+msgid "quedó sin grupo"
+msgstr "no longer has a group"
+
+#: nodus/services/accounts/account_group_service.py
+#, python-brace-format
+msgid "El orden de «{moved}»"
+msgstr "The order of “{moved}”"
+
+#: nodus/services/accounts/account_group_service.py
+#, python-brace-format
+msgid "Ya existe el grupo «{name}»."
+msgstr "There's already a group “{name}”."
+
+#: nodus/services/accounts/account_service.py
+msgid "No se puede cambiar la moneda de una cuenta."
+msgstr "An account's currency can't be changed."
+
+#: nodus/services/accounts/account_service.py nodus/services/transactions/account_rules.py
+msgid "La cuenta no existe."
+msgstr "The account doesn't exist."
+
+#: nodus/services/accounts/account_service.py
+#, python-brace-format
+msgid "Ya hay una cuenta «{account}»."
+msgstr "There's already an account “{account}”."
+
+#: nodus/services/accounts/account_service.py
+msgid "La lista de cuentas no es válida."
+msgstr "The list of accounts isn't valid."
+
+#: nodus/services/accounts/account_service.py
+msgid "Solo las cuentas de ahorro o inversión cambian de valor."
+msgstr "Only savings and investment accounts change in value."
+
+#: nodus/services/accounts/account_service.py
+msgid "La cuenta está archivada."
+msgstr "The account is archived."
+
+#: nodus/services/accounts/account_service.py
+#, python-brace-format
+msgid "El valor va en la moneda de la cuenta ({currency_value})."
+msgstr "The value goes in the account's currency ({currency_value})."
+
+#: nodus/services/accounts/account_service.py
+msgid "El ajuste no existe."
+msgstr "The adjustment doesn't exist."
+
+#: nodus/services/accounts/exchange_rate_service.py
+msgid "La cotización debe ser mayor que cero."
+msgstr "The exchange rate must be greater than zero."
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "Nodus {version} está disponible"
+msgstr "Nodus {version} is available"
+
+#: nodus/services/app/notification_service.py
+msgid "Se instala en un momento y tus datos se conservan."
+msgstr "It installs in a moment and your data is kept."
+
+#: nodus/services/app/notification_service.py
+msgid "La copia de hoy falló"
+msgstr "Today's backup failed"
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "Alcanzaste «{goal}»"
+msgstr "You reached “{goal}”"
+
+#: nodus/services/app/notification_service.py
+msgid "Archívala para usar sus cuentas en otra meta, o súbele el objetivo."
+msgstr "Archive it to use its accounts for another goal, or raise its target."
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "La última es del {last}."
+msgstr "The last one is from {last}."
+
+#: nodus/services/app/notification_service.py
+msgid "Todavía no guardaste ninguna."
+msgstr "You haven't saved one yet."
+
+#: nodus/services/app/notification_service.py
+msgid "Guarda una copia fuera de esta computadora"
+msgstr "Save a backup outside this computer"
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "{since} En un pendrive o en Drive, tus datos se salvan aunque la PC se pierda o se rompa."
+msgstr "{since} On a USB drive or in Drive, your data is safe even if the computer is lost or breaks."
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "Sin cotización del {name}"
+msgstr "No {name} exchange rate"
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "Cárgala para sumar tus cuentas en {plural} al resto."
+msgstr "Enter it to add your accounts in {plural} to the rest."
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "Sin cotización del {name} desde hace {days} día"
+msgid_plural "Sin cotización del {name} desde hace {days} días"
+msgstr[0] "No {name} exchange rate for {days} day"
+msgstr[1] "No {name} exchange rate for {days} days"
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "La última es del {rate_date}."
+msgstr "The last one is from {rate_date}."
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "{amount} · Regístralo desde Recurrentes."
+msgstr "{amount} · Record it from Recurring."
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "{count} cargo por pagar"
+msgid_plural "{count} cargos por pagar"
+msgstr[0] "{count} charge to pay"
+msgstr[1] "{count} charges to pay"
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "({count} vencido)"
+msgid_plural "({count} vencidos)"
+msgstr[0] "({count} overdue)"
+msgstr[1] "({count} overdue)"
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "{category} pasó su límite"
+msgstr "{category} went over its limit"
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "Excedido en {amount} este mes."
+msgstr "Over by {amount} this month."
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "{count} presupuesto excedido"
+msgid_plural "{count} presupuestos excedidos"
+msgstr[0] "{count} budget over its limit"
+msgstr[1] "{count} budgets over their limit"
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "venció hace {days} día"
+msgid_plural "venció hace {days} días"
+msgstr[0] "was due {days} day ago"
+msgstr[1] "was due {days} days ago"
+
+#: nodus/services/app/notification_service.py
+msgid "venció ayer"
+msgstr "was due yesterday"
+
+#: nodus/services/app/notification_service.py
+msgid "vence hoy"
+msgstr "is due today"
+
+#: nodus/services/app/notification_service.py
+msgid "vence mañana"
+msgstr "is due tomorrow"
+
+#: nodus/services/app/notification_service.py
+#, python-brace-format
+msgid "vence en {days} día"
+msgid_plural "vence en {days} días"
+msgstr[0] "is due in {days} day"
+msgstr[1] "is due in {days} days"
+
+#: nodus/services/app/undo_service.py
+#, python-brace-format
+msgid "{what} cambió después, así que ya no se puede deshacer."
+msgstr "{what} changed afterwards, so it can no longer be undone."
+
+#: nodus/services/app/undo_service.py
+msgid "No hay nada para deshacer."
+msgstr "There's nothing to undo."
+
+#: nodus/services/app/undo_service.py
+msgid "Eso ya se deshizo."
+msgstr "That was already undone."
+
+#: nodus/services/app/undo_service.py
+msgid "Después de restaurar una copia, eso ya no se puede deshacer."
+msgstr "After restoring a backup, that can no longer be undone."
+
+#: nodus/services/backups/backup_service.py
+msgid ""
+"No se pudo hacer la copia del día. Revisa que quede lugar en el disco y toca «Hacer copia» en "
+"Ajustes."
+msgstr ""
+"Today's backup could not be made. Check there's room left on the disk and click “Back up now” in "
+"Settings."
+
+#: nodus/services/backups/restore.py
+msgid "El archivo no es una copia de Nodus."
+msgstr "The file isn't a Nodus backup."
+
+#: nodus/services/backups/restore.py
+msgid "El archivo no es una copia válida de Nodus."
+msgstr "The file isn't a valid Nodus backup."
+
+#: nodus/services/backups/restore.py
+msgid "La copia viene de una versión más nueva de Nodus. Actualiza Nodus para usarla."
+msgstr "The backup comes from a newer version of Nodus. Update Nodus to use it."
+
+#: nodus/services/backups/restore.py
+msgid "La copia está incompleta o dañada."
+msgstr "The backup is incomplete or damaged."
+
+#: nodus/services/classification/category_service.py
+msgid "Ya existe una categoría con ese nombre."
+msgstr "There's already a category with that name."
+
+#: nodus/services/classification/category_service.py nodus/services/transactions/bulk_edit_service.py
+#: nodus/services/transactions/transaction_service.py
+msgid "La categoría no existe."
+msgstr "The category doesn't exist."
+
+#: nodus/services/classification/category_service.py
+#, python-brace-format
+msgid "La categoría «{category}» no se puede modificar."
+msgstr "The category “{category}” can't be changed."
+
+#: nodus/services/classification/category_service.py
+msgid "Una subcategoría no puede tener subcategorías."
+msgstr "A subcategory can't have subcategories."
+
+#: nodus/services/classification/category_service.py
+#, python-brace-format
+msgid "No se pueden agregar subcategorías a «{parent}»."
+msgstr "Subcategories can't be added to “{parent}”."
+
+#: nodus/services/classification/category_service.py
+msgid "Una subcategoría debe ser del mismo tipo que su categoría."
+msgstr "A subcategory must be of the same kind as its category."
+
+#: nodus/services/classification/named_records.py
+#, python-brace-format
+msgid "Algún movimiento de «{name}»"
+msgstr "A transaction of “{name}”"
+
+#: nodus/services/classification/payee_service.py
+msgid "El beneficiario no existe."
+msgstr "The payee doesn't exist."
+
+#: nodus/services/classification/payee_service.py
+msgid "Elige otro beneficiario para unir."
+msgstr "Choose another payee to merge."
+
+#: nodus/services/classification/payee_service.py
+#, python-brace-format
+msgid "Ya hay otro beneficiario «{name}», así que no se puede deshacer."
+msgstr "There's another payee “{name}” now, so it can't be undone."
+
+#: nodus/services/classification/payee_service.py
+#, python-brace-format
+msgid "Se unieron {count} beneficiarios en {target}."
+msgstr "{count} payees were merged into {target}."
+
+#: nodus/services/classification/payee_service.py
+msgid "; para juntarlos usa «Unir con…»"
+msgstr "; to combine them, use “Merge with…”"
+
+#: nodus/services/classification/payee_service.py nodus/services/classification/tag_service.py
+#, python-brace-format
+msgid "Ya existe «{name}»{hint}."
+msgstr "“{name}” already exists{hint}."
+
+#: nodus/services/classification/tag_service.py
+msgid "La etiqueta no existe."
+msgstr "The tag doesn't exist."
+
+#: nodus/services/classification/tag_service.py
+msgid "Elige otra etiqueta para unir."
+msgstr "Choose another tag to merge."
+
+#: nodus/services/classification/tag_service.py
+#, python-brace-format
+msgid "Ya hay otra etiqueta «{name}», así que no se puede deshacer."
+msgstr "There's another tag “{name}” now, so it can't be undone."
+
+#: nodus/services/classification/tag_service.py
+#, python-brace-format
+msgid "Se unieron {count} etiquetas en {target}."
+msgstr "{count} tags were merged into {target}."
+
+#: nodus/services/classification/tag_service.py
+msgid "; para juntarlas usa «Unir con…»"
+msgstr "; to combine them, use “Merge with…”"
+
+#: nodus/services/external/rate_feed_service.py
+msgid "Manual"
+msgstr "Manual"
+
+#: nodus/services/external/rate_feed_service.py
+msgid "Oficial"
+msgstr "Official"
+
+#: nodus/services/external/update_service.py
+msgid "Esta versión no trae un instalador para descargar."
+msgstr "This version has no installer to download."
+
+#: nodus/services/external/update_service.py
+msgid "No se pudo descargar la actualización. Revisa la conexión a internet y vuelve a intentarlo."
+msgstr "The update could not be downloaded. Check your internet connection and try again."
+
+#: nodus/services/external/update_service.py
+msgid "La descarga llegó dañada. Vuelve a intentarlo."
+msgstr "The download arrived damaged. Try again."
+
+#: nodus/services/external/update_service.py
+msgid "Las actualizaciones se instalan desde la versión instalada."
+msgstr "Updates are installed from the installed version."
+
+#: nodus/services/external/update_service.py
+msgid "No se pudo abrir el instalador. Vuelve a intentarlo."
+msgstr "The installer could not be opened. Try again."
+
+#: nodus/services/planning/budget_service.py
+msgid "El límite del presupuesto va en pesos."
+msgstr "The budget limit goes in pesos."
+
+#: nodus/services/planning/budget_service.py
+msgid "El límite tiene que ser mayor que cero."
+msgstr "The limit has to be greater than zero."
+
+#: nodus/services/planning/budget_service.py
+msgid "Solo las categorías de gasto llevan presupuesto."
+msgstr "Only expense categories have a budget."
+
+#: nodus/services/planning/budget_service.py
+msgid "Los presupuestos van en la categoría principal; sus subcategorías suman a ella."
+msgstr "Budgets go on the main category; its subcategories add up to it."
+
+#: nodus/services/planning/goal_service.py
+msgid "La meta no existe."
+msgstr "The goal doesn't exist."
+
+#: nodus/services/planning/goal_service.py
+msgid "Una tarjeta de crédito no junta dinero para una meta."
+msgstr "A credit card doesn't save money for a goal."
+
+#: nodus/services/planning/goal_service.py
+msgid "El porcentaje va de 1 a 100."
+msgstr "The percentage goes from 1 to 100."
+
+#: nodus/services/planning/goal_service.py
+#, python-brace-format
+msgid "«{account}» ya tiene {used} en {goals}: quedan {free}."
+msgstr "“{account}” already has {used} in {goals}: {free} left."
+
+#: nodus/services/planning/goal_service.py
+msgid "El objetivo tiene que ser mayor que cero."
+msgstr "The target has to be greater than zero."
+
+#: nodus/services/planning/goal_service.py
+msgid "Elige una fecha posterior a hoy."
+msgstr "Choose a date after today."
+
+#: nodus/services/planning/goal_service.py
+msgid "Elige al menos una cuenta."
+msgstr "Choose at least one account."
+
+#: nodus/services/planning/goal_service.py
+msgid "Cada cuenta va una sola vez."
+msgstr "Each account goes only once."
+
+#: nodus/services/reports/analysis_service.py
+msgid "Gastos"
+msgstr "Expenses"
+
+#: nodus/services/reports/analysis_service.py
+msgid "Ingresos"
+msgstr "Income"
+
+#: nodus/services/reports/analysis_service.py
+msgid "Ahorro"
+msgstr "Savings"
+
+#: nodus/services/reports/export_service.py
+msgid "Fecha"
+msgstr "Date"
+
+#: nodus/services/reports/export_service.py
+msgid "Tipo"
+msgstr "Type"
+
+#: nodus/services/reports/export_service.py
+msgid "Cuenta"
+msgstr "Account"
+
+#: nodus/services/reports/export_service.py
+msgid "Categoría"
+msgstr "Category"
+
+#: nodus/services/reports/export_service.py
+msgid "Beneficiario"
+msgstr "Payee"
+
+#: nodus/services/reports/export_service.py
+msgid "Descripción"
+msgstr "Description"
+
+#: nodus/services/reports/export_service.py
+msgid "Monto"
+msgstr "Amount"
+
+#: nodus/services/reports/export_service.py
+msgid "Moneda"
+msgstr "Currency"
+
+#: nodus/services/reports/export_service.py
+msgid "Reembolso de"
+msgstr "Refund of"
+
+#: nodus/services/reports/export_service.py
+msgid "Transferencia"
+msgstr "Transfer"
+
+#: nodus/services/reports/export_service.py
+msgid "Gasto"
+msgstr "Expense"
+
+#: nodus/services/reports/export_service.py
+msgid "Ingreso"
+msgstr "Income"
+
+#: nodus/services/transactions/account_rules.py
+#, python-brace-format
+msgid "La cuenta «{account}» está archivada."
+msgstr "The account “{account}” is archived."
+
+#: nodus/services/transactions/account_rules.py
+#, python-brace-format
+msgid "El monto debe estar en {currency_value}, la moneda de «{account}»."
+msgstr "The amount must be in {currency_value}, the currency of “{account}”."
+
+#: nodus/services/transactions/account_rules.py
+msgid "El monto debe ser mayor que cero."
+msgstr "The amount must be greater than zero."
+
+#: nodus/services/transactions/bulk_edit_service.py
+msgid "Completa al menos un campo para cambiar."
+msgstr "Fill in at least one field to change."
+
+#: nodus/services/transactions/bulk_edit_service.py
+#, python-brace-format
+msgid "Se editó {count} transacción."
+msgid_plural "Se editaron {count} transacciones."
+msgstr[0] "{count} transaction was edited."
+msgstr[1] "{count} transactions were edited."
+
+#: nodus/services/transactions/bulk_edit_service.py nodus/services/transactions/refund_service.py
+#: nodus/services/transactions/transaction_service.py
+msgid "La transacción no existe."
+msgstr "The transaction doesn't exist."
+
+#: nodus/services/transactions/bulk_edit_service.py
+msgid "Alguna de esas transacciones"
+msgstr "One of those transactions"
+
+#: nodus/services/transactions/bulk_edit_service.py
+msgid "Las transferencias no tienen categoría."
+msgstr "Transfers have no category."
+
+#: nodus/services/transactions/bulk_edit_service.py
+#, python-brace-format
+msgid "La categoría «{category}» no corresponde a todas las transacciones elegidas."
+msgstr "The category “{category}” doesn't fit all the chosen transactions."
+
+#: nodus/services/transactions/installment_service.py
+msgid "No se puede adelantar antes de la primera cuota."
+msgstr "You can't pay ahead before the first installment."
+
+#: nodus/services/transactions/installment_service.py
+msgid "Se adelantaron las cuotas que faltaban."
+msgstr "The remaining installments were paid ahead."
+
+#: nodus/services/transactions/installment_service.py
+msgid "La compra en cuotas"
+msgstr "The purchase in installments"
+
+#: nodus/services/transactions/installment_service.py
+msgid "La compra en cuotas no existe."
+msgstr "The purchase in installments doesn't exist."
+
+#: nodus/services/transactions/installment_service.py
+msgid "Solo un gasto se paga en cuotas."
+msgstr "Only an expense is paid in installments."
+
+#: nodus/services/transactions/recurring_charge_service.py
+msgid "El cargo recurrente no existe."
+msgstr "The recurring charge doesn't exist."
+
+#: nodus/services/transactions/recurring_charge_service.py
+#, python-brace-format
+msgid "Se pagó {charge}."
+msgstr "{charge} was paid."
+
+#: nodus/services/transactions/recurring_charge_service.py
+#, python-brace-format
+msgid "Se omitió {charge}."
+msgstr "{charge} was skipped."
+
+#: nodus/services/transactions/recurring_charge_service.py
+#, python-brace-format
+msgid "«{charge}» no tiene un aviso para dejar para después."
+msgstr "“{charge}” has no notice to leave for later."
+
+#: nodus/services/transactions/recurring_charge_service.py
+#, python-brace-format
+msgid "El pago de «{before}»"
+msgstr "The payment of “{before}”"
+
+#: nodus/services/transactions/recurring_charge_service.py
+#, python-brace-format
+msgid "«{charge}» está en pausa; reanúdalo para pagarlo."
+msgstr "“{charge}” is paused; resume it to pay it."
+
+#: nodus/services/transactions/recurring_charge_service.py
+#, python-brace-format
+msgid ""
+"Un cargo en {currency_value} se paga desde una cuenta en {currency_value}; solo los cargos en "
+"dólares pueden pagarse en pesos."
+msgstr ""
+"A charge in {currency_value} is paid from an account in {currency_value}; only charges in dollars"
+" can be paid in pesos."
+
+#: nodus/services/transactions/transaction_service.py
+msgid "Ese reembolso no supera lo que queda del gasto."
+msgstr "That refund doesn't exceed what's left of the expense."
+
+#: nodus/services/transactions/transaction_service.py
+msgid "Las transferencias se editan como transferencia."
+msgstr "Transfers are edited as transfers."
+
+#: nodus/services/transactions/transaction_service.py
+msgid "Las cuotas se editan desde su compra."
+msgstr "Installments are edited from their purchase."
+
+#: nodus/services/transactions/transaction_service.py
+#, python-brace-format
+msgid "La categoría «{category}» no corresponde a este tipo de transacción."
+msgstr "The category “{category}” doesn't fit this type of transaction."
+
+#: nodus/services/transactions/transaction_service.py
+msgid "Un reembolso tiene que devolver un gasto."
+msgstr "A refund has to pay back an expense."
+
+#: nodus/services/transactions/transaction_service.py
+#, python-brace-format
+msgid "El reembolso supera lo que queda por reembolsar de ese gasto: {remaining}."
+msgstr "The refund exceeds what's left to refund of that expense: {remaining}."
+
+#: nodus/services/transactions/transaction_service.py
+#, python-brace-format
+msgid "Ya se reembolsaron {refunded} de este gasto: el monto no puede ser menor."
+msgstr "{refunded} of this expense was already refunded: the amount can't be lower."
+
+#: nodus/services/transactions/transfer_service.py
+msgid "La transferencia no existe."
+msgstr "The transfer doesn't exist."
+
+#: nodus/services/transactions/transfer_service.py
+msgid "La cuenta de origen y la de destino deben ser distintas."
+msgstr "The source and destination accounts must be different."
+
+#: nodus/services/transactions/transfer_service.py
+msgid "Entre cuentas de la misma moneda, el monto que sale y el que entra deben ser iguales."
+msgstr ""
+"Between accounts in the same currency, the amount that leaves and the amount that arrives must be"
+" equal."
+
+#: nodus/services/transactions/transfer_service.py
+msgid "Indica el monto que entra en la cuenta de destino."
+msgstr "Enter the amount that arrives in the destination account."
 

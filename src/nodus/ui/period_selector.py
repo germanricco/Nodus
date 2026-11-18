@@ -42,7 +42,7 @@ class PeriodSelector(QWidget):
         self.period_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.quick_menu = QMenu(self)
         for quick in QuickPeriod:
-            action = self.quick_menu.addAction(quick.value)
+            action = self.quick_menu.addAction(quick.label)
             action.triggered.connect(lambda _=False, q=quick: self.choose(q))
         self.quick_menu.addSeparator()
         self.quick_menu.addAction("Personalizado…").triggered.connect(self.choose_range)

@@ -13,6 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from nodus.database.database import Database
+from nodus.i18n import _
 from nodus.services.errors import ValidationError
 
 
@@ -23,7 +24,7 @@ class UndoError(ValidationError):
 
 def changed_since(what: str) -> UndoError:
     """The error for data edited after the action: undoing it would lose that edit."""
-    return UndoError(f"{what} cambió después, así que ya no se puede deshacer.")
+    return UndoError(_("{what} cambió después, así que ya no se puede deshacer.").format(what=what))
 
 
 @dataclass(eq=False)
@@ -70,11 +71,11 @@ class UndoService:
         data changed since."""
         record = record or self.last
         if record is None:
-            raise UndoError("No hay nada para deshacer.")
+            raise UndoError(_("No hay nada para deshacer."))
         if record.undone:
-            raise UndoError("Eso ya se deshizo.")
+            raise UndoError(_("Eso ya se deshizo."))
         if record.forgotten:
-            raise UndoError("Después de restaurar una copia, eso ya no se puede deshacer.")
+            raise UndoError(_("Después de restaurar una copia, eso ya no se puede deshacer."))
         with self._database.transaction():
             record.revert()
         record.undone = True

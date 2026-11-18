@@ -18,6 +18,7 @@ from nodus.database.repositories.transaction_repository import (
     TransactionFilter,
     TransactionRepository,
 )
+from nodus.i18n import _
 from nodus.models.account import Account
 from nodus.models.money import Money
 from nodus.models.period import Month, Period
@@ -130,7 +131,9 @@ class TransactionService:
         refund being edited, if any."""
         excess = self._refunds.excess(draft, transaction_id)
         if excess is None:
-            raise ValidationError("Ese reembolso no supera lo que queda del gasto.", field="amount")
+            raise ValidationError(
+                _("Ese reembolso no supera lo que queda del gasto."), field="amount"
+            )
         refund_draft = dataclasses.replace(draft, amount=draft.amount - excess)
         extra_draft = dataclasses.replace(
             draft, amount=excess, category_id=extra_category_id, refund_of_id=None
@@ -153,9 +156,9 @@ class TransactionService:
         """Transaction ``transaction_id`` as ``draft`` leaves it, checked, not saved."""
         current = self.get(transaction_id)
         if current.is_transfer:
-            raise ValidationError("Las transferencias se editan como transferencia.")
+            raise ValidationError(_("Las transferencias se editan como transferencia."))
         if current.installment is not None:
-            raise ValidationError("Las cuotas se editan desde su compra.")
+            raise ValidationError(_("Las cuotas se editan desde su compra."))
         return self._build_transaction(transaction_id, draft)
 
     def _stage_edit(self, transaction: Transaction, draft: TransactionDraft) -> Transaction:
@@ -191,7 +194,7 @@ class TransactionService:
         return self._tags.tags_for(transaction_ids)
 
     def get(self, transaction_id: int) -> Transaction:
-        return require_found(self._transactions.get(transaction_id), "La transacción no existe.")
+        return require_found(self._transactions.get(transaction_id), _("La transacción no existe."))
 
     def list_transactions(self, criteria: TransactionFilter) -> list[Transaction]:
         return self._transactions.list(criteria)
@@ -238,10 +241,14 @@ class TransactionService:
         account = active_account(self._accounts, draft.account_id, "account_id", kept_id)
         require_amount_for(draft.amount, account, "amount")
         require_in_calendar(draft.occurred_on, "occurred_on")
-        category = require_found(self._categories.get(draft.category_id), "La categoría no existe.")
+        category = require_found(
+            self._categories.get(draft.category_id), _("La categoría no existe.")
+        )
         if category.kind is not draft.type:
             raise ValidationError(
-                f"La categoría «{category.name}» no corresponde a este tipo de transacción.",
+                _("La categoría «{category}» no corresponde a este tipo de transacción.").format(
+                    category=category.name
+                ),
                 field="category_id",
             )
         income = draft.type is TransactionType.INCOME
@@ -266,12 +273,13 @@ class TransactionService:
         currency."""
         expense = self._transactions.get(expense_id)
         if expense is None or expense.is_transfer or expense.type is not TransactionType.EXPENSE:
-            raise ValidationError("Un reembolso tiene que devolver un gasto.")
+            raise ValidationError(_("Un reembolso tiene que devolver un gasto."))
         summary = self._refunds.summary(expense_id, ignore_id=refund_id)
         if amount.currency is expense.amount.currency and amount > summary.remaining:
             raise ValidationError(
-                f"El reembolso supera lo que queda por reembolsar de ese gasto:"
-                f" {summary.remaining.format()}.",
+                _(
+                    "El reembolso supera lo que queda por reembolsar de ese gasto: {remaining}."
+                ).format(remaining=summary.remaining.format()),
                 field="amount",
             )
 
@@ -280,7 +288,8 @@ class TransactionService:
         refunded = self._refunds.summary(expense_id).refunded
         if amount.currency is refunded.currency and amount < refunded:
             raise ValidationError(
-                f"Ya se reembolsaron {refunded.format()} de este gasto:"
-                " el monto no puede ser menor.",
+                _(
+                    "Ya se reembolsaron {refunded} de este gasto: el monto no puede ser menor."
+                ).format(refunded=refunded.format()),
                 field="amount",
             )

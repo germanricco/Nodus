@@ -18,7 +18,7 @@ from nodus.database.database import (
     MigrationError,
     NewerDatabaseError,
 )
-from nodus.i18n import current_language
+from nodus.i18n import N_, _, current_language
 from nodus.links import DOWNLOAD_URL
 from nodus.services.backups.recovery import DataRecovery
 from nodus.services.container import Services
@@ -39,26 +39,26 @@ from nodus.ui.theme.theme_manager import ThemeManager
 
 logger = logging.getLogger(__name__)
 
-OPEN_FAILED = "No se pudieron abrir tus datos."
-OPEN_FAILED_HOW = (
+OPEN_FAILED = N_("No se pudieron abrir tus datos.")
+OPEN_FAILED_HOW = N_(
     "Cierra los programas que puedan estar usando el archivo, como un antivirus o una"
     " sincronización, y vuelve a abrir Nodus. Tus copias de seguridad están en la carpeta"
     " «backups», junto a tus datos."
 )
-NEWER_DATA = "Tus datos son de una versión más nueva de Nodus."
-NEWER_DATA_HOW = (
+NEWER_DATA = N_("Tus datos son de una versión más nueva de Nodus.")
+NEWER_DATA_HOW = N_(
     "Esta versión no conoce todo lo que guardaste con la nueva, así que no los abre para no"
     " dañarlos. Instala la última versión de Nodus; tus datos siguen intactos."
 )
-DOWNLOAD = "Descargar Nodus"
-UPDATE_FAILED = "No se pudieron actualizar tus datos a esta versión de Nodus."
-UPDATE_FAILED_HOW = (
+DOWNLOAD = N_("Descargar Nodus")
+UPDATE_FAILED = N_("No se pudieron actualizar tus datos a esta versión de Nodus.")
+UPDATE_FAILED_HOW = N_(
     "Tus datos siguen como estaban, y Nodus guardó una copia de antes de actualizarlos."
     " Envía el reporte para que lo arreglemos; mientras tanto, puedes volver a instalar la"
     " versión que usabas."
 )
-ALREADY_OPEN = "Nodus ya está abierto."
-ALREADY_OPEN_HOW = (
+ALREADY_OPEN = N_("Nodus ya está abierto.")
+ALREADY_OPEN_HOW = N_(
     "Búscalo en la barra de tareas. Si no responde, ciérralo desde el Administrador de"
     " tareas y vuelve a abrirlo."
 )
@@ -120,7 +120,7 @@ class NodusApp:
             ctypes.windll.user32.AllowSetForegroundWindow(ASFW_ANY)
         if instance.ask_first_to_show():
             return 0
-        user_error(None, self.APPLICATION_NAME, ALREADY_OPEN, ALREADY_OPEN_HOW)
+        user_error(None, self.APPLICATION_NAME, _(ALREADY_OPEN), _(ALREADY_OPEN_HOW))
         return 1
 
     def _open_and_run(self, reporter: ErrorReporter, instance: SingleInstance) -> int:
@@ -156,8 +156,8 @@ class NodusApp:
             UnexpectedErrorDialog(
                 error,
                 visible_path(self._paths.logs_dir),
-                what=UPDATE_FAILED,
-                how=UPDATE_FAILED_HOW,
+                what=_(UPDATE_FAILED),
+                how=_(UPDATE_FAILED_HOW),
             ).exec()
         except DatabaseError as error:
             logger.error("The data could not be opened", exc_info=error)
@@ -166,7 +166,7 @@ class NodusApp:
 
     def _ask_to_update(self, error: DatabaseError) -> None:
         dialog = UserErrorDialog(
-            self.APPLICATION_NAME, NEWER_DATA, NEWER_DATA_HOW, str(error), action=DOWNLOAD
+            self.APPLICATION_NAME, _(NEWER_DATA), _(NEWER_DATA_HOW), str(error), action=_(DOWNLOAD)
         )
         if dialog.exec():
             open_url(DOWNLOAD_URL)
@@ -187,7 +187,7 @@ class NodusApp:
             return None
 
     def _tell_open_failed(self, error: Exception) -> None:
-        user_error(None, self.APPLICATION_NAME, OPEN_FAILED, OPEN_FAILED_HOW, str(error))
+        user_error(None, self.APPLICATION_NAME, _(OPEN_FAILED), _(OPEN_FAILED_HOW), str(error))
 
     def _open_window(self, services: Services) -> None:
         """Tidies the data up, opens the window and starts what runs behind it."""

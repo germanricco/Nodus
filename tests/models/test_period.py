@@ -137,3 +137,7 @@ def test_in_spanish_a_month_inside_a_sentence_is_in_lowercase():
     assert format_month(Month(2026, 11)) == "Noviembre 2026"
     assert format_month_in_sentence(Month(2027, 10)) == "octubre de 2027"
     assert qt_date_format() == "dd/MM/yyyy"
+
+
+def test_in_english_the_ready_made_periods_are_named_in_english(english):
+    assert [quick.label for quick in QuickPeriod][:2] == ["This month", "Last 3 months"]

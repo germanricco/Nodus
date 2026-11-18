@@ -202,14 +202,20 @@ class Period:
 
 
 class QuickPeriod(Enum):
-    """The ready-made periods offered by the period selector, with their Spanish name."""
+    """The ready-made periods offered by the period selector; the value is the name,
+    marked for translation."""
 
-    CURRENT_MONTH = "Mes actual"
-    LAST_3_MONTHS = "Últimos 3 meses"
-    LAST_6_MONTHS = "Últimos 6 meses"
-    LAST_12_MONTHS = "Últimos 12 meses"
-    THIS_YEAR = "Este año"
-    PREVIOUS_YEAR = "Año anterior"
+    CURRENT_MONTH = N_("Mes actual")
+    LAST_3_MONTHS = N_("Últimos 3 meses")
+    LAST_6_MONTHS = N_("Últimos 6 meses")
+    LAST_12_MONTHS = N_("Últimos 12 meses")
+    THIS_YEAR = N_("Este año")
+    PREVIOUS_YEAR = N_("Año anterior")
+
+    @property
+    def label(self) -> str:
+        """Its name in the language Nodus is in."""
+        return _(self.value)
 
     def period(self, today: date) -> Period:
         """The days this choice covers as seen from ``today``."""

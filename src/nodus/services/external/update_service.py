@@ -15,6 +15,7 @@ from typing import Any
 
 from nodus import APP_NAME, USER_AGENT, is_installed
 from nodus.config.logs import describe
+from nodus.i18n import _
 from nodus.links import LATEST_RELEASE_API
 from nodus.models.version import parse_version
 from nodus.services.errors import UpdateError
@@ -132,7 +133,7 @@ class UpdateService:
         """
         installer = release.installer
         if installer is None:
-            raise UpdateError("Esta versión no trae un instalador para descargar.")
+            raise UpdateError(_("Esta versión no trae un instalador para descargar."))
         destination = self.downloads_dir / installer_name(release.version)
         partial = destination.with_suffix(".part")
         digest = hashlib.sha256()
@@ -151,8 +152,10 @@ class UpdateService:
             logger.warning("Update download failed", exc_info=error)
             partial.unlink(missing_ok=True)
             raise UpdateError(
-                "No se pudo descargar la actualización. Revisa la conexión a internet y"
-                " vuelve a intentarlo.",
+                _(
+                    "No se pudo descargar la actualización. Revisa la conexión a internet "
+                    "y vuelve a intentarlo."
+                ),
                 str(error),
             ) from error
         if cancelled():
@@ -161,7 +164,7 @@ class UpdateService:
         if digest.hexdigest() != installer.sha256:
             logger.warning("Update download arrived damaged")
             partial.unlink(missing_ok=True)
-            raise UpdateError("La descarga llegó dañada. Vuelve a intentarlo.")
+            raise UpdateError(_("La descarga llegó dañada. Vuelve a intentarlo."))
         partial.replace(destination)
         return destination
 
@@ -171,13 +174,13 @@ class UpdateService:
         Raises ``UpdateError`` if the installer cannot be started.
         """
         if self._launch is None:
-            raise UpdateError("Las actualizaciones se instalan desde la versión instalada.")
+            raise UpdateError(_("Las actualizaciones se instalan desde la versión instalada."))
         try:
             self._launch([str(installer), *INSTALLER_ARGUMENTS])
         except OSError as error:
             logger.warning("The installer could not start", exc_info=error)
             raise UpdateError(
-                "No se pudo abrir el instalador. Vuelve a intentarlo.",
+                _("No se pudo abrir el instalador. Vuelve a intentarlo."),
                 str(error),
             ) from error
 

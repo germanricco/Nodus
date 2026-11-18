@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import Enum
 
+from nodus.i18n import N_, _
 from nodus.models.category import Category
 from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
@@ -37,11 +38,16 @@ from nodus.services.transactions.transaction_service import TransactionService
 
 
 class Metric(Enum):
-    """What the trends report adds up, with its Spanish name."""
+    """What the trends report adds up; its value is its name, marked for translation."""
 
-    EXPENSES = "Gastos"
-    INCOME = "Ingresos"
-    SAVINGS = "Ahorro"
+    EXPENSES = N_("Gastos")
+    INCOME = N_("Ingresos")
+    SAVINGS = N_("Ahorro")
+
+    @property
+    def label(self) -> str:
+        """Its name in the language Nodus is in."""
+        return _(self.value)
 
     @property
     def kind(self) -> TransactionType | None:

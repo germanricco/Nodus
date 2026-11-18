@@ -9,6 +9,7 @@ from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.database.repositories.tag_repository import TagRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
+from nodus.i18n import _, ngettext
 from nodus.models.bulk_changes import BulkChanges
 from nodus.models.transaction import Transaction
 from nodus.services.app.undo_service import UndoService, changed_since
@@ -44,7 +45,7 @@ class BulkEditService:
         A new category must suit every expense or income chosen. It can be undone.
         """
         if changes.is_empty:
-            raise ValidationError("Completa al menos un campo para cambiar.")
+            raise ValidationError(_("Completa al menos un campo para cambiar."))
         transactions = [self._get(transaction_id) for transaction_id in transaction_ids]
         movements = [t for t in transactions if not t.is_transfer]
         if changes.category_id is not None:
@@ -80,14 +81,14 @@ class BulkEditService:
         new_tags = {tag.id for tag in self._tags.list()} - tags_known
         count = len(transactions)
         self._undo.offer(
-            f"Se editó {count} transacción."
-            if count == 1
-            else f"Se editaron {count} transacciones.",
+            ngettext(
+                "Se editó {count} transacción.", "Se editaron {count} transacciones.", count
+            ).format(count=count),
             lambda: self._unedit(before, after, tags_before, tags_after, new_payees, new_tags),
         )
 
     def _get(self, transaction_id: int) -> Transaction:
-        return require_found(self._transactions.get(transaction_id), "La transacción no existe.")
+        return require_found(self._transactions.get(transaction_id), _("La transacción no existe."))
 
     def _unedit(
         self,
@@ -103,7 +104,7 @@ class BulkEditService:
         edited = [self._transactions.get(t.id) for t in after]
         movements = [t for t in after if t.id in tags_after]
         if edited != after or self._labels.tag_ids_of(movements) != tags_after:
-            raise changed_since("Alguna de esas transacciones")
+            raise changed_since(_("Alguna de esas transacciones"))
         for transaction in before:
             self._transactions.update(transaction)
         for transaction_id, tag_ids in tags_before.items():
@@ -116,10 +117,12 @@ class BulkEditService:
                 self._tags.delete(tag_id)
 
     def _require_category_for(self, category_id: int, movements: list[Transaction]) -> None:
-        category = require_found(self._categories.get(category_id), "La categoría no existe.")
+        category = require_found(self._categories.get(category_id), _("La categoría no existe."))
         if not movements:
-            raise ValidationError("Las transferencias no tienen categoría.")
+            raise ValidationError(_("Las transferencias no tienen categoría."))
         if any(t.type is not category.kind for t in movements):
             raise ValidationError(
-                f"La categoría «{category.name}» no corresponde a todas las transacciones elegidas."
+                _(
+                    "La categoría «{category}» no corresponde a todas las transacciones elegidas."
+                ).format(category=category.name)
             )

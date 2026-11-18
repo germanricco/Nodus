@@ -52,7 +52,7 @@ class TrendsView(AnalysisView):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.L)
 
-        self.metric_input = SegmentedControl([metric.value for metric in METRICS])
+        self.metric_input = SegmentedControl([metric.label for metric in METRICS])
         metric_row = QHBoxLayout()
         metric_row.addWidget(self.metric_input)
         metric_row.addStretch()

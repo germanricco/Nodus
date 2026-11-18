@@ -12,6 +12,7 @@ from datetime import datetime
 
 from nodus.database.database import Database
 from nodus.database.repositories.category_repository import CategoryRepository
+from nodus.i18n import N_, _
 from nodus.models.category import Category
 from nodus.models.names import normalize_name
 from nodus.models.transaction import TransactionType
@@ -24,7 +25,7 @@ from nodus.services.errors import (
 )
 from nodus.services.sorting import name_sort_key
 
-DUPLICATE_TEXT = "Ya existe una categoría con ese nombre."
+DUPLICATE_TEXT = N_("Ya existe una categoría con ese nombre.")
 
 
 @dataclass(frozen=True)
@@ -74,7 +75,7 @@ class CategoryService:
         return self._categories.get_refunds()
 
     def get(self, category_id: int) -> Category:
-        return require_found(self._categories.get(category_id), "La categoría no existe.")
+        return require_found(self._categories.get(category_id), _("La categoría no existe."))
 
     def create(
         self, name: str, kind: TransactionType, color: str, parent_id: int | None = None
@@ -113,7 +114,9 @@ class CategoryService:
     def _require_editable(self, category_id: int) -> Category:
         category = self.get(category_id)
         if category.is_fixed:
-            raise ValidationError(f"La categoría «{category.name}» no se puede modificar.")
+            raise ValidationError(
+                _("La categoría «{category}» no se puede modificar.").format(category=category.name)
+            )
         return category
 
     def _require_new_name(self, category: Category) -> None:
@@ -124,21 +127,22 @@ class CategoryService:
             for other in self._categories.list(category.kind)
             if other.parent_id == category.parent_id and other.id != category.id
         )
-        require_unique_name(category.name, siblings, DUPLICATE_TEXT)
+        require_unique_name(category.name, siblings, _(DUPLICATE_TEXT))
 
     @staticmethod
     def _require_valid_parent(parent: Category, kind: TransactionType) -> None:
         if parent.is_subcategory:
             raise ValidationError(
-                "Una subcategoría no puede tener subcategorías.", field="parent_id"
+                _("Una subcategoría no puede tener subcategorías."), field="parent_id"
             )
         if parent.is_fixed:
             raise ValidationError(
-                f"No se pueden agregar subcategorías a «{parent.name}».", field="parent_id"
+                _("No se pueden agregar subcategorías a «{parent}».").format(parent=parent.name),
+                field="parent_id",
             )
         if parent.kind is not kind:
             raise ValidationError(
-                "Una subcategoría debe ser del mismo tipo que su categoría.", field="parent_id"
+                _("Una subcategoría debe ser del mismo tipo que su categoría."), field="parent_id"
             )
 
     @staticmethod
@@ -148,4 +152,4 @@ class CategoryService:
         try:
             yield
         except sqlite3.IntegrityError as error:
-            raise ValidationError(DUPLICATE_TEXT, field="name") from error
+            raise ValidationError(_(DUPLICATE_TEXT), field="name") from error

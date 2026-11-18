@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import Any, Generic, Protocol, TypeVar
 
 from nodus.database.database import Database
+from nodus.i18n import _, quoted
 from nodus.models.names import normalize_name
 from nodus.services.app.undo_service import UndoError, changed_since
 from nodus.services.errors import ValidationError, require_found
@@ -26,7 +27,7 @@ class NamedRecordService(Generic[R]):
     """The common part of the payee and tag services. A subclass names its texts and says
     how many movements a deletion touches (``_affected``)."""
 
-    NOT_FOUND_TEXT = ""  # "El beneficiario no existe."
+    NOT_FOUND_TEXT = ""  # N_("El beneficiario no existe."), translated here
     NO_OTHER_TEXT = ""  # asked to merge a record into itself alone
     NAME_TAKEN_TEXT = ""  # undoing a merge finds the name taken; {name} is replaced
 
@@ -35,7 +36,7 @@ class NamedRecordService(Generic[R]):
         self._records = records
 
     def get(self, record_id: int) -> R:
-        return require_found(self._records.get(record_id), self.NOT_FOUND_TEXT)
+        return require_found(self._records.get(record_id), _(self.NOT_FOUND_TEXT))
 
     def find(self, name: str) -> R | None:
         """The record called ``name``, ignoring case, accents and signs."""
@@ -67,7 +68,7 @@ class NamedRecordService(Generic[R]):
         """The records to merge, the target left out, and the target; both must exist."""
         sources = [self.get(source_id) for source_id in source_ids if source_id != target_id]
         if not sources:
-            raise ValidationError(self.NO_OTHER_TEXT)
+            raise ValidationError(_(self.NO_OTHER_TEXT))
         return sources, self.get(target_id)
 
     def _require_restorable(
@@ -81,9 +82,9 @@ class NamedRecordService(Generic[R]):
         """Before undoing a merge: the target is as the merge left it, no record took a
         merged name since, and the target still ``held`` every movement ``moved`` to it."""
         if self._records.get(target.id) != merged:
-            raise changed_since(f"«{target.name}»")
+            raise changed_since(quoted(target.name))
         for row, transaction_ids in zip(rows, moved, strict=True):
             if self._records.find_by_normalized(row["normalized_name"]) is not None:
-                raise UndoError(self.NAME_TAKEN_TEXT.format(name=row["name"]))
+                raise UndoError(_(self.NAME_TAKEN_TEXT).format(name=row["name"]))
             if not set(transaction_ids) <= held:
-                raise changed_since(f"Algún movimiento de «{row['name']}»")
+                raise changed_since(_("Algún movimiento de «{name}»").format(name=row["name"]))

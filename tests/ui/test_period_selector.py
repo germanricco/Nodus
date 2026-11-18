@@ -36,7 +36,7 @@ def test_arrows_move_by_the_period_length(qtbot):
 def test_quick_menu_lists_every_choice_and_applies_it(qtbot):
     selector = make_selector(qtbot)
     texts = [action.text() for action in selector.quick_menu.actions()]
-    assert texts == [quick.value for quick in QuickPeriod] + ["", "Personalizado…"]
+    assert texts == [quick.label for quick in QuickPeriod] + ["", "Personalizado…"]
 
     selector.quick_menu.actions()[4].trigger()  # Este año
 

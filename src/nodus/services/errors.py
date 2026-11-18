@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable
 from datetime import date
 from typing import Protocol, TypeVar
 
+from nodus.i18n import N_, _
 from nodus.models.amount_parsing import too_large_text, without_cents_text
 from nodus.models.money import Money
 from nodus.models.names import normalize_name
@@ -16,8 +17,13 @@ from nodus.models.period import FIRST_DAY, LAST_DAY
 
 T = TypeVar("T")
 
-OUT_OF_CALENDAR_TEXT = f"La fecha tiene que estar entre {FIRST_DAY.year} y {LAST_DAY.year}."
-NO_LETTERS_TEXT = "El nombre debe tener letras o números."
+OUT_OF_CALENDAR_TEXT = N_("La fecha tiene que estar entre {first} y {last}.")
+NO_LETTERS_TEXT = N_("El nombre debe tener letras o números.")
+
+
+def out_of_calendar_text() -> str:
+    """«La fecha tiene que estar entre 1900 y 2100.»"""
+    return _(OUT_OF_CALENDAR_TEXT).format(first=FIRST_DAY.year, last=LAST_DAY.year)
 
 
 class Named(Protocol):
@@ -75,7 +81,7 @@ def clean_name(name: str) -> str:
     """Trims a user-typed name and rejects it if nothing is left."""
     cleaned = name.strip()
     if not cleaned:
-        raise ValidationError("El nombre no puede estar vacío.", field="name")
+        raise ValidationError(_("El nombre no puede estar vacío."), field="name")
     return cleaned
 
 
@@ -92,7 +98,7 @@ def require_in_calendar(day: date, field: str | None = None) -> None:
     """Rejects a day outside ``FIRST_DAY``–``LAST_DAY``, from which later dates (the next
     charge, the last installment) could not be computed."""
     if not FIRST_DAY <= day <= LAST_DAY:
-        raise ValidationError(OUT_OF_CALENDAR_TEXT, field=field)
+        raise ValidationError(out_of_calendar_text(), field=field)
 
 
 def require_unique_name(name: str, others: Iterable[str], message: str) -> None:
@@ -114,7 +120,7 @@ def require_free_name(
     ``find`` looks it up by its ``normalize_name`` form, and ``message`` says so with the
     other record's name. The record called ``own_id`` may keep its own name."""
     if not normalized:
-        raise ValidationError(NO_LETTERS_TEXT, field="name")
+        raise ValidationError(_(NO_LETTERS_TEXT), field="name")
     existing = find(normalized)
     if existing is not None and existing.id != own_id:
         raise ValidationError(message(existing.name), field="name")

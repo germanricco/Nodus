@@ -11,6 +11,7 @@ from typing import Any
 
 from nodus.database.database import Database
 from nodus.database.repositories.tag_repository import TagRepository
+from nodus.i18n import N_, _
 from nodus.models.money import Money
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction
@@ -42,9 +43,9 @@ class TagSummary:
 class TagService(NamedRecordService[Tag]):
     """Tags: their colors, suggestions while typing, and what each one adds up to."""
 
-    NOT_FOUND_TEXT = "La etiqueta no existe."
-    NO_OTHER_TEXT = "Elige otra etiqueta para unir."
-    NAME_TAKEN_TEXT = "Ya hay otra etiqueta «{name}», así que no se puede deshacer."
+    NOT_FOUND_TEXT = N_("La etiqueta no existe.")
+    NO_OTHER_TEXT = N_("Elige otra etiqueta para unir.")
+    NAME_TAKEN_TEXT = N_("Ya hay otra etiqueta «{name}», así que no se puede deshacer.")
 
     def __init__(
         self,
@@ -114,7 +115,9 @@ class TagService(NamedRecordService[Tag]):
                 self._tags.delete(source.id)
         merged = self._tags.get(target_id)
         self._undo.offer(
-            f"Se unieron {len(sources) + 1} etiquetas en {target.name}.",
+            _("Se unieron {count} etiquetas en {target}.").format(
+                count=len(sources) + 1, target=target.name
+            ),
             lambda: self._unmerge(target, merged, rows, tagged, target_had),
         )
 
@@ -162,11 +165,11 @@ class TagService(NamedRecordService[Tag]):
 
     def _checked(self, tag: Tag) -> Tag:
         """``tag`` if its name is usable and no other tag has it."""
-        hint = "; para juntarlas usa «Unir con…»" if tag.id is not None else ""
+        hint = _("; para juntarlas usa «Unir con…»") if tag.id is not None else ""
         require_free_name(
             tag.id,
             tag.normalized_name,
             self._tags.find_by_normalized,
-            lambda name: f"Ya existe «{name}»{hint}.",
+            lambda name: _("Ya existe «{name}»{hint}.").format(name=name, hint=hint),
         )
         return tag

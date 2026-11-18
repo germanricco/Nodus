@@ -93,6 +93,34 @@ def test_several_charges_with_overdue_ones(services, pesos):
     assert notice.detail == "Internet, Netflix, Spotify."
 
 
+def test_in_english_the_charges_notice_counts_in_english(english, services, pesos):
+    for name, days in (("Internet", -2), ("Netflix", 0), ("Spotify", 3)):
+        services.recurring.create(
+            charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=days), name=name)
+        )
+
+    assert charges_notice(services).title == "3 charges to pay (1 overdue)"
+
+
+@pytest.mark.parametrize(
+    ("days", "title"),
+    [
+        (-2, "Netflix was due 2 days ago"),
+        (0, "Netflix is due today"),
+        (2, "Netflix is due in 2 days"),
+    ],
+)
+def test_in_english_one_charge_says_when_it_is_due(english, services, pesos, days, title):
+    services.recurring.create(
+        charge_draft(services, pesos.id, ars("8500"), TODAY + timedelta(days=days), name="Netflix")
+    )
+
+    notice = charges_notice(services)
+
+    assert notice.title == title
+    assert notice.detail == "$8,500.00 · Record it from Recurring."
+
+
 def test_no_charges_notice_for_paused_or_distant_charges(services, pesos):
     later = services.recurring.create(
         charge_draft(services, pesos.id, ars("1"), TODAY + timedelta(days=10))

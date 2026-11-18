@@ -9,6 +9,7 @@ from datetime import date
 from nodus.database.database import Database
 from nodus.database.repositories.installment_plan_repository import InstallmentPlanRepository
 from nodus.database.repositories.transaction_repository import TransactionRepository
+from nodus.i18n import _
 from nodus.models.currency import Currency
 from nodus.models.installment_plan import Installment, InstallmentPlan
 from nodus.models.money import Money
@@ -124,16 +125,16 @@ class InstallmentService:
         on that day. ``unsettle`` undoes it, and so does «Deshacer» (``UndoService``)."""
         plan = self._plan(plan_id)
         if day < plan.first_due_on:
-            raise ValidationError("No se puede adelantar antes de la primera cuota.")
+            raise ValidationError(_("No se puede adelantar antes de la primera cuota."))
         settled = dataclasses.replace(plan, settled_on=day)
         self._redate(settled)
         self._undo.offer(
-            "Se adelantaron las cuotas que faltaban.", lambda: self._unsettle(plan, settled)
+            _("Se adelantaron las cuotas que faltaban."), lambda: self._unsettle(plan, settled)
         )
 
     def _unsettle(self, before: InstallmentPlan, after: InstallmentPlan) -> None:
         if self._plans.get(before.id) != after:
-            raise changed_since("La compra en cuotas")
+            raise changed_since(_("La compra en cuotas"))
         self._move_installments(before)
 
     def unsettle(self, plan_id: int) -> None:
@@ -227,12 +228,12 @@ class InstallmentService:
         return sorted(found, key=lambda t: t.installment.number)
 
     def _plan(self, plan_id: int) -> InstallmentPlan:
-        return require_found(self._plans.get(plan_id), "La compra en cuotas no existe.")
+        return require_found(self._plans.get(plan_id), _("La compra en cuotas no existe."))
 
     @staticmethod
     def _require_expense(draft: TransactionDraft) -> None:
         if draft.type is not TransactionType.EXPENSE:
-            raise ValidationError("Solo un gasto se paga en cuotas.")
+            raise ValidationError(_("Solo un gasto se paga en cuotas."))
 
 
 def _kept(old: InstallmentPlan, new: InstallmentPlan) -> date | None:
