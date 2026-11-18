@@ -5,7 +5,7 @@ import logging
 import sys
 from datetime import date, datetime
 
-from PySide6.QtCore import QLibraryInfo, QTimer, QTranslator
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
 from nodus import APP_NAME, APP_USER_MODEL_ID
@@ -18,6 +18,7 @@ from nodus.database.database import (
     MigrationError,
     NewerDatabaseError,
 )
+from nodus.i18n import current_language
 from nodus.links import DOWNLOAD_URL
 from nodus.services.backups.recovery import DataRecovery
 from nodus.services.container import Services
@@ -28,6 +29,7 @@ from nodus.ui.dialogs.recovery_dialog import offer_recovery
 from nodus.ui.dialogs.user_error import UnexpectedErrorDialog, UserErrorDialog, user_error
 from nodus.ui.error_reporter import ErrorReporter
 from nodus.ui.event_bus import EventBus
+from nodus.ui.qt_language import QtLanguage
 from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.shell.single_instance import SingleInstance
 from nodus.ui.theme.design import set_reduced_motion
@@ -63,22 +65,6 @@ ALREADY_OPEN_HOW = (
 ASFW_ANY = -1  # lets any process, here the open Nodus, take the foreground
 
 
-QT_TEXTS = "qtbase_es"  # the only Qt translation the installer keeps (packaging/nodus.spec)
-
-
-def spanish_qt_texts(app: QApplication) -> QTranslator | None:
-    """Qt's own texts in Spanish: the right-click menu of every text field («Copiar»,
-    «Pegar») and any button Qt names itself. The translator is returned to be kept
-    alive; without the file Nodus still opens, in English only there."""
-    translator = QTranslator(app)
-    folder = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
-    if not translator.load(QT_TEXTS, folder):
-        logger.warning("Qt's Spanish texts not found")
-        return None
-    app.installTranslator(translator)
-    return translator
-
-
 class NodusApp:
     """Starts Nodus: makes sure the local database is usable, then opens the main window."""
 
@@ -89,7 +75,8 @@ class NodusApp:
         QApplication.setApplicationName(self.APPLICATION_NAME)
         self._qt_app = QApplication(argv)
         self._qt_app.setWindowIcon(app_icon())
-        self._qt_texts = spanish_qt_texts(self._qt_app)
+        self._qt_language = QtLanguage(self._qt_app)
+        self._qt_language.apply(current_language())
         self._set_taskbar_identity()
         # ``--smoke-test`` checks the built program, over a data folder of its own.
         self._smoke_test = SmokeTest() if SMOKE_TEST_FLAG in argv else None
@@ -215,8 +202,7 @@ class NodusApp:
         window.show()
         if self._smoke_test is not None:
             smoke_test, app = self._smoke_test, self._qt_app
-            spanish = self._qt_texts is not None
-            QTimer.singleShot(0, lambda: smoke_test.finish(app, window, spanish))
+            QTimer.singleShot(0, lambda: smoke_test.finish(app, window))
             return  # nothing from the internet, no dialogs nobody would answer
         window.check_for_updates()
         window.update_exchange_rate()

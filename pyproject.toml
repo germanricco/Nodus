@@ -18,8 +18,8 @@ Releases = "https://github.com/germanricco/Nodus/releases"
 Issues = "https://github.com/germanricco/Nodus/issues"
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-qt>=4.4", "pytest-cov>=6", "ruff>=0.7"]
-build = ["pyinstaller>=6.10", "pillow>=10"]
+dev = ["pytest>=8", "pytest-qt>=4.4", "pytest-cov>=6", "ruff>=0.7", "Babel>=2.14"]
+build = ["pyinstaller>=6.10", "pillow>=10", "Babel>=2.14"]
 
 [project.gui-scripts]
 nodus = "nodus.app:main"
@@ -31,7 +31,12 @@ version = { attr = "nodus.__version__" }
 where = ["src"]
 
 [tool.setuptools.package-data]
-nodus = ["database/migrations/*.sql", "ui/icons/*.svg", "ui/theme/*.qss"]
+nodus = [
+    "database/migrations/*.sql",
+    "ui/icons/*.svg",
+    "ui/theme/*.qss",
+    "locale/*/LC_MESSAGES/*.mo",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -43,4 +48,8 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM", "N"]
+select = ["E", "F", "I", "UP", "B", "SIM", "N", "INT"]
+
+[tool.ruff.lint.flake8-gettext]
+# nodus.i18n: a text to translate is a plain literal, filled in after translating.
+extend-function-names = ["N_", "pgettext"]

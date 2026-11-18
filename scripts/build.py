@@ -22,6 +22,7 @@ import tempfile
 from pathlib import Path
 
 from _common import ROOT
+from translations import compile_catalogs
 
 from nodus import APP_USER_MODEL_ID, __version__
 from nodus.config.paths import AppPaths
@@ -96,6 +97,7 @@ def build_installer(iscc: Path) -> Path:
 
 
 def main() -> int:
+    compile_catalogs()  # the .mo that PyInstaller packs with the program
     executable = build_program()
     if not passes_smoke_test(executable):
         print("El programa compilado no abrió entero: falta algo en nodus.spec.")

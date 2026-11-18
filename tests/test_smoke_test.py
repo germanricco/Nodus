@@ -26,16 +26,19 @@ def window(qtbot, services) -> MainWindow:
 
 
 def test_a_whole_program_has_no_problems(window):
-    assert window_problems(window, has_spanish_texts=True) == []
+    assert window_problems(window) == []
 
 
 def test_it_names_what_is_missing(window, monkeypatch):
     monkeypatch.setattr(smoke_test, "load_changelog", lambda: [])
+    monkeypatch.setattr(smoke_test, "has_catalog", lambda language: language.value == "es")
+    monkeypatch.setattr(smoke_test, "has_qt_texts", lambda language: language.value == "en")
 
-    problems = window_problems(window, has_spanish_texts=False)
+    problems = window_problems(window)
 
     assert problems == [
-        "Qt's Spanish texts are missing",
+        "Qt's es texts are missing",
+        "the en catalog of Nodus's texts is missing",
         f"the changelog has no section for {smoke_test.__version__}",
     ]
 
@@ -52,7 +55,7 @@ def test_a_page_that_fails_is_named_and_the_rest_still_tried(window, monkeypatch
 
     monkeypatch.setattr(window, "show_page", show)
 
-    problems = window_problems(window, has_spanish_texts=True)
+    problems = window_problems(window)
 
     assert problems == ["page BUDGETS did not open: ImportError('budgets_page')"]
     assert shown == list(PageId)

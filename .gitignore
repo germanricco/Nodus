@@ -31,6 +31,9 @@ dist/
 *.qmlc
 *.jsc
 
+# Catálogos compilados: scripts/translations.py los arma desde el .po
+*.mo
+
 # Capturas generadas por scripts/screenshot.py
 screenshots/
 

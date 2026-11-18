@@ -23,8 +23,10 @@ from PySide6.QtWidgets import QApplication
 
 from nodus import __version__
 from nodus.config.paths import AppPaths
+from nodus.i18n import Language, has_catalog
 from nodus.services.app.changelog import load_changelog
 from nodus.ui.navigation import PageId
+from nodus.ui.qt_language import has_qt_texts
 from nodus.ui.shell.main_window import MainWindow
 
 FLAG = "--smoke-test"
@@ -32,15 +34,26 @@ FLAG = "--smoke-test"
 logger = logging.getLogger(__name__)
 
 
-def window_problems(window: MainWindow, has_spanish_texts: bool) -> list[str]:
+def language_problems() -> list[str]:
+    """The files a language needs that the built program lacks: Nodus's catalog for
+    each language but Spanish, and Qt's own texts where Qt does not speak it already."""
+    problems = []
+    for language in Language:
+        if not has_catalog(language):
+            problems.append(f"the {language.value} catalog of Nodus's texts is missing")
+        if not has_qt_texts(language):
+            problems.append(f"Qt's {language.value} texts are missing")
+    return problems
+
+
+def window_problems(window: MainWindow) -> list[str]:
     """What the built program may lack, each told in one line; none when it is whole."""
     problems = []
     if not window.isVisible():
         problems.append("the window did not open")
     if b"svg" not in QImageReader.supportedImageFormats():
         problems.append("Qt's SVG plugin is missing: the icons do not show")
-    if not has_spanish_texts:
-        problems.append("Qt's Spanish texts are missing")
+    problems.extend(language_problems())
     if not any(entry.version == __version__ for entry in load_changelog()):
         problems.append(f"the changelog has no section for {__version__}")
     for page_id in PageId:
@@ -87,9 +100,9 @@ class SmokeTest:
         logger.error("Unexpected error", exc_info=(kind, error, trace))
         self.problems.append(f"unexpected {kind.__name__}: {error}")
 
-    def finish(self, app: QApplication, window: MainWindow, has_spanish_texts: bool) -> None:
+    def finish(self, app: QApplication, window: MainWindow) -> None:
         """Checks the open window and ends the run with its exit code."""
-        self.problems.extend(window_problems(window, has_spanish_texts))
+        self.problems.extend(window_problems(window))
         for problem in self.problems:
             logger.error("Smoke test: %s", problem)
         logger.info("Smoke test %s", "failed" if self.problems else "passed")

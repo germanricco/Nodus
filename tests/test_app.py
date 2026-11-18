@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 from factories import ars, services_for
-from PySide6.QtWidgets import QDialog, QLineEdit
+from PySide6.QtWidgets import QDialog
 
 from nodus import app
 from nodus.app import NEWER_DATA, OPEN_FAILED, UPDATE_FAILED, NodusApp
@@ -35,7 +35,7 @@ def nodus_app(qapp, tmp_path) -> NodusApp:
     nodus._qt_app = qapp
     nodus._paths = AppPaths(tmp_path / "Nodus")
     nodus._smoke_test = None
-    nodus._qt_texts = None
+    nodus._qt_language = None
     return nodus
 
 
@@ -226,23 +226,3 @@ def ask_again(nodus: NodusApp, qtbot) -> int:
     SingleInstance(nodus._paths.data_dir).ask_first_to_show()
     qtbot.waitUntil(lambda: nodus._window.brought_forward == 1)
     return 0
-
-
-def test_the_menus_of_the_text_fields_speak_spanish(qapp):
-    """Qt names those itself, in English unless its Spanish texts are loaded."""
-    translator = app.spanish_qt_texts(qapp)
-    try:
-        field = QLineEdit()
-        menu = field.createStandardContextMenu()
-        texts = [action.text().split("\t")[0].replace("&", "") for action in menu.actions()]
-    finally:
-        qapp.removeTranslator(translator)
-
-    assert "Copiar" in texts and "Pegar" in texts
-
-
-def test_the_installer_keeps_the_spanish_texts():
-    """The installer leaves out Qt's translations (45 MB) but that one."""
-    spec = (Path(__file__).parents[1] / "packaging" / "nodus.spec").read_text(encoding="utf-8")
-
-    assert f"PySide6/translations/{app.QT_TEXTS}.qm" in spec

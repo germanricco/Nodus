@@ -37,7 +37,7 @@ def version_resource() -> vi.VSVersionInfo:
 
 # Qt parts PySide6 brings along that Nodus never loads: QML and Quick (pulled in by the
 # virtual keyboard plugin), PDF (by its image plugin), the software OpenGL fallback and
-# Qt's own translations but qtbase_es (nodus.app.QT_TEXTS), which puts the menus of the
+# Qt's own translations but qtbase_es (nodus.ui.qt_language.QT_TEXTS), which puts the menus of the
 # text fields in Spanish. Leaving them out saves about 45 MB.
 UNUSED_QT = (
     "opengl32sw.dll",
@@ -64,9 +64,11 @@ def unused(destination: str) -> bool:
 analysis = Analysis(
     [str(PACKAGING / "entry.py")],
     pathex=[str(ROOT / "src")],
-    # Migrations, icons and the stylesheet, which the code reads with importlib.resources,
+    # Migrations, icons, the stylesheet and the compiled catalogs (.mo; build.py compiles
+    # them first, and the .po they come from stays out), which the code reads with
+    # importlib.resources,
     # and the changelog, which lives at the repository root but is read from the package.
-    datas=collect_data_files("nodus", excludes=["**/__pycache__"])
+    datas=collect_data_files("nodus", excludes=["**/__pycache__", "**/*.po"])
     + [(str(ROOT / "CHANGELOG.md"), "nodus")],
     excludes=["tkinter"],
 )

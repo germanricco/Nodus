@@ -15,13 +15,31 @@ if sys.platform == "win32":
 
 from factories import ars, data_since, eur, services_for, usd  # noqa: E402
 from qt_cleanup import flush_deleted  # noqa: E402
+from translations import compile_catalogs  # noqa: E402
 
+from nodus import i18n  # noqa: E402
 from nodus.config.paths import AppPaths
 from nodus.database.database import Database  # noqa: E402
 from nodus.models.account import Account, AccountType  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
 from nodus.ui.theme.design import set_reduced_motion  # noqa: E402
+
+
+def pytest_configure(config):
+    """Compiles the catalogs the tests in English read, once: in the main process, not
+    in each of the processes that run the tests in parallel, which would write the same
+    files at once."""
+    if not hasattr(config, "workerinput"):
+        compile_catalogs(only_if_stale=True)
+
+
+@pytest.fixture
+def english():
+    """Nodus in English for one test, then back to Spanish, the language of the rest."""
+    i18n.install(i18n.Language.ENGLISH)
+    yield
+    i18n.install(i18n.Language.SPANISH)
 
 
 @pytest.hookimpl(wrapper=True)

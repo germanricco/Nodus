@@ -32,6 +32,7 @@ La forma rápida de probar con tus datos de siempre es `scripts/dev.py`. Copia t
 .venv/Scripts/python -m ruff check .                 # lint
 .venv/Scripts/python -m ruff format .                # formato
 .venv/Scripts/python scripts/screenshot.py --demo    # capturas de cada pantalla, claras y oscuras
+.venv/Scripts/python scripts/translations.py extract # suma al catálogo los textos nuevos
 ```
 
 Las capturas se generan sobre una base temporal con datos de demostración (`scripts/demo_data.py`), así que muestran todas las pantallas con contenido sin tocar ningún dato real. Después de cambiar la interfaz, conviene generarlas y revisarlas en los dos temas. Las que muestran los README viven en `docs/images/` y se renuevan al cerrar cada versión.
@@ -53,7 +54,7 @@ Los tests en `tests/` siguen la misma estructura. Algunas reglas que conviene co
 - **Registro:** cada módulo anota con `logging.getLogger(__name__)`, y `config/logs.py` lo escribe en `logs/nodus.log`, junto a los datos. Una línea dice qué pasó o qué tipo de error hubo, nunca montos, nombres ni notas, porque el usuario puede mandar el registro al reportar un problema; los mensajes de error pasan por `scrub`, que tapa lo que va entre comillas, los números largos y las rutas. Un error que nada atrapó llega a `ui/error_reporter.py`, que lo anota y lo muestra con «Enviar reporte».
 - **Migraciones:** el esquema vive en `src/nodus/database/migrations/NNN_nombre.sql` y se aplica con `PRAGMA user_version`. Una migración publicada nunca se edita, porque las bases de los usuarios ya la aplicaron: cada cambio va en un archivo nuevo con el número siguiente.
 - **Tests:** además de los de cada módulo, `tests/test_end_to_end.py` recorre cada área como lo haría una persona: presupuestos, cargos recurrentes, cuotas, reembolsos, metas, grupos de cuentas, deshacer y copias. Lo hace a través de los diálogos y las páginas (`tests/journeys.py`) y termina reabriendo el archivo. Antes de cada `qtbot.addWidget`, `conftest.py` fuerza una recolección de basura, así un objeto que solo sostiene un ciclo de referencias desaparece en el test como desaparecería en la app. Otro test pone un límite al tiempo de arranque con datos de demostración.
-- **Idiomas:** el código, los identificadores y los mensajes de commit van en inglés; los textos que ve el usuario, en español.
+- **Idiomas:** el código, los identificadores y los mensajes de commit van en inglés; los textos que ve el usuario se escriben en español, que es el idioma fuente, y se marcan para traducir con `nodus/i18n.py`: `_("Guardar")`, `ngettext("{n} cuota", "{n} cuotas", n).format(n=n)` para los plurales y una frase entera con marcadores con nombre (`_("Vence el {day}").format(day=…)`), nunca pedazos pegados, porque cada idioma ordena distinto. Un texto se traduce al usarse, nunca al importar el módulo: una tabla de textos guarda `N_("…")` y quien la muestra llama a `_()`. Las traducciones viven en `src/nodus/locale/<idioma>/LC_MESSAGES/nodus.po`; `scripts/translations.py extract` suma los textos nuevos y un test falla mientras alguno no tenga su traducción. El `.mo` que lee la app se compila solo al correr los tests y al compilar (`translations.py compile` lo hace a mano).
 - **Estilo:** PEP 8 y type hints en todo código nuevo, con un docstring breve en cada módulo, clase y método público.
 
 ## Compilar el instalador

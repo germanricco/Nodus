@@ -3,6 +3,7 @@
 # Qt or PyInstaller reaches the installer only when someone raises it here and the tests pass.
 # Regenerate: in a fresh venv, pip install -e ".[dev,build]" and pip freeze --exclude-editable.
 altgraph==0.17.5
+babel==2.18.0
 colorama==0.4.6
 coverage==7.17.3
 iniconfig==2.3.1
