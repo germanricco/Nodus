@@ -2,6 +2,10 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.10.0
+
+- Arreglo: los íconos de Categorías y Etiquetas estaban intercambiados. Ahora Etiquetas muestra una etiqueta y Categorías el «#».
+
 ## 1.9.0 — 2026-11-18
 
 - Si algo falla en Nodus, ya no pasa en silencio: un aviso te dice que lo que estabas haciendo puede no haberse guardado y ofrece «Enviar reporte», que abre el formulario de comentarios con el error ya escrito. Lo lees en el navegador antes de enviarlo, y no lleva montos, nombres ni rutas de tu computadora.

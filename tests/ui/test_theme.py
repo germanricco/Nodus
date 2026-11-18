@@ -1,7 +1,8 @@
 import pytest
 from factories import ars
 
-from nodus.ui.theme.icons import APP_ICON_SIZES, app_icon, tinted_pixmap
+from nodus.ui.navigation import PageId
+from nodus.ui.theme.icons import APP_ICON_SIZES, _svg, app_icon, tinted_pixmap
 from nodus.ui.theme.theme import DARK, LIGHT, ThemeMode
 from nodus.ui.widgets.money_label import MoneyLabel
 
@@ -53,6 +54,14 @@ def test_unknown_theme_setting_falls_back_to_system():
     assert ThemeMode.from_setting(None) is ThemeMode.SYSTEM
     assert ThemeMode.from_setting("sepia") is ThemeMode.SYSTEM
     assert ThemeMode.from_setting("dark") is ThemeMode.DARK
+
+
+def test_tags_and_categories_have_their_own_drawings():
+    """Etiquetas shows a tag, the shape with a hole at its tip, and Categorías a «#»."""
+    tag = _svg(PageId.TAGS.icon_name)
+    hash_sign = _svg(PageId.CATEGORIES.icon_name)
+    assert "<circle" in tag and "<line" not in tag
+    assert hash_sign.count("<line") == 4 and "<circle" not in hash_sign
 
 
 def test_app_icon_has_every_windows_size(qapp):
