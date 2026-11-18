@@ -8,8 +8,9 @@ from PySide6.QtGui import QPainter, QPaintEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.models.goal import Goal, GoalProgress, GoalState
+from nodus.models.language_format import format_percent
 from nodus.models.money import Money
-from nodus.models.period import MONTH_NAMES, Month, format_date
+from nodus.models.period import Month, format_date, format_month_in_sentence
 from nodus.ui.text.labels import NO_RATE_TEXT, plural
 from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme import Theme
@@ -31,17 +32,13 @@ STATE_LABELS = {
 MISSING_RATE_SENTENCE = "Falta la cotización para sumar las cuentas en otras monedas."
 
 
-def month_phrase(month: Month) -> str:
-    """ "febrero de 2027", as it reads inside a sentence."""
-    return f"{MONTH_NAMES[month.month - 1].lower()} de {month.year}"
-
-
 def saved_of_target(progress: GoalProgress, hidden: bool) -> str:
     """ "US$ 820,00 de US$ 2.000,00 · 41 %"; without a rate, "— de US$ 2.000,00"."""
     target = amount_text(progress.target, hidden)
     if progress.saved is None:
         return f"— de {target}"
-    return f"{amount_text(progress.saved, hidden)} de {target} · {progress.percent} %"
+    percent = format_percent(progress.percent)
+    return f"{amount_text(progress.saved, hidden)} de {target} · {percent}"
 
 
 def goal_sentence(goal: Goal, progress: GoalProgress, hidden: bool = False) -> str:
@@ -68,7 +65,7 @@ def goal_sentence(goal: Goal, progress: GoalProgress, hidden: bool = False) -> s
         return "Todavía no hay 3 meses para medir tu ritmo." + needed
     if progress.eta is None:  # saving nothing, or less every month
         return "Tu ahorro no viene creciendo en los últimos meses." + needed
-    arrives = f"A este ritmo llegas en {month_phrase(progress.eta)}"
+    arrives = f"A este ritmo llegas en {format_month_in_sentence(progress.eta)}"
     if state is GoalState.ON_TRACK:
         return f"Vas bien: {arrives[0].lower()}{arrives[1:]}."
     if state is GoalState.BEHIND:

@@ -400,3 +400,21 @@ def test_proportion_bar_parts_follow_their_key(qtbot):
     bar.set_segments([Segment("#0f0", 1, "ars"), Segment("#f00", 1, "usd")])
 
     assert bar._shares(0) == [0.25, 0.5]
+
+
+@pytest.mark.parametrize(
+    ("cents", "currency", "text"),
+    [
+        (293_827_885, Currency.ARS, "$2.9M"),
+        (1_500_000, Currency.USD, "US$15K"),
+        (95_000, Currency.ARS, "$950"),
+        (-120_000_000, Currency.ARS, "-$1.2M"),
+    ],
+)
+def test_format_compact_in_english(english, cents, currency, text):
+    assert format_compact(cents, currency) == text
+
+
+def test_format_change_in_english(english):
+    assert format_change(-0.095) == "↘ 9.5%"
+    assert format_change(-0.05, "pp") == "↘ 5 pp"

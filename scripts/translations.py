@@ -153,6 +153,7 @@ def check() -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    sys.stdout.reconfigure(encoding="utf-8")  # the texts have accents; Windows' console not
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("command", choices=["extract", "compile", "check"])
     command = parser.parse_args(argv).command

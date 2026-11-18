@@ -24,7 +24,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from nodus.models.currency import Currency
-from nodus.models.money import Money
+from nodus.models.language_format import current_format, format_decimal, with_symbol
 from nodus.ui.theme.design import (
     Easing,
     Line,
@@ -84,17 +84,17 @@ def with_alpha(color: str, alpha: float) -> QColor:
 
 
 def format_compact(cents: float, currency: Currency) -> str:
-    """Short axis labels: "$ 2,9 M", "US$ 15 k", "$ 950"."""
+    """Short axis labels: "$ 2,9 M", "US$ 15 k", "$ 950" ("$2.9M", "US$15K" in English)."""
     amount = cents / 100
-    symbol = Money.zero(currency).format().split(" ")[0].lstrip("-")
     sign = "-" if amount < 0 else ""
     amount = abs(amount)
-    for limit, suffix in ((1_000_000, "M"), (1_000, "k")):
+    language = current_format()
+    for limit, suffix in ((1_000_000, "M"), (1_000, language.thousand_suffix)):
         if amount >= limit:
             value = amount / limit
-            text = f"{value:.1f}" if value < 10 else f"{value:.0f}"
-            return f"{sign}{symbol} {text.replace('.', ',').removesuffix(',0')} {suffix}"
-    return f"{sign}{symbol} {amount:.0f}"
+            number = format_decimal(value, 1 if value < 10 else 0, drop_zero=True)
+            return sign + with_symbol(currency.symbol, f"{number}{language.space}{suffix}")
+    return sign + with_symbol(currency.symbol, f"{amount:.0f}")
 
 
 class AnimatedChart(QWidget):

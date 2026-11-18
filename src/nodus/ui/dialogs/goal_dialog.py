@@ -18,15 +18,16 @@ from PySide6.QtWidgets import (
 
 from nodus.models.account import Account
 from nodus.models.goal import Goal, GoalShare, GoalState
+from nodus.models.language_format import format_percent
 from nodus.models.money import Money
-from nodus.models.period import Month
+from nodus.models.period import Month, format_month_in_sentence
 from nodus.services.container import Services
 from nodus.services.planning.goal_service import GoalDraft
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_AMOUNT, TYPE_NAME, FormDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.text.labels import CURRENCY_LABELS
 from nodus.ui.theme.design import Space
-from nodus.ui.widgets.charts.goal_bar import MISSING_RATE_SENTENCE, month_phrase
+from nodus.ui.widgets.charts.goal_bar import MISSING_RATE_SENTENCE
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.inputs.amount_input import AmountInput
 from nodus.ui.widgets.inputs.combo_box import ComboBox
@@ -102,7 +103,7 @@ class ShareRow(QWidget):
         elif self.free <= 0:
             self.hint.setText("usada al 100 % en otras metas")
         elif self.free < 100:
-            self.hint.setText(f"quedan {self.free} % libres")
+            self.hint.setText(f"quedan {format_percent(self.free)} libres")
         else:
             self.hint.setText("")
 
@@ -307,7 +308,7 @@ class GoalDialog(FormDialog):
         if preview.target_date is None or progress.needed_per_month is None:
             assert progress.remaining is not None
             return f"Faltan {amount_text(progress.remaining, self._hidden)} para {target}."
-        month = month_phrase(Month.of(preview.target_date))
+        month = format_month_in_sentence(Month.of(preview.target_date))
         needed = amount_text(progress.needed_per_month, self._hidden)
         return f"Para llegar a {target} en {month} hacen falta unos {needed} por mes."
 

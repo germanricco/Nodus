@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.models.language_format import with_symbol
 from nodus.models.money import Money
 from nodus.models.period import Month
 from nodus.models.recurring_charge import Frequency
@@ -73,7 +74,7 @@ def charge_amount_text(amount: Money, estimate: Money | None) -> str:
 
 def rate_text(base: Currency, quote: Currency, value: Decimal) -> str:
     """ "US$ 1 = $ 1.215,50", how a rate is quoted: one unit of ``base`` in ``quote``."""
-    return f"{base.symbol} 1 = {Money.from_decimal(value, quote).format()}"
+    return f"{with_symbol(base.symbol, '1')} = {Money.from_decimal(value, quote).format()}"
 
 
 def movements_text(count: int) -> str:

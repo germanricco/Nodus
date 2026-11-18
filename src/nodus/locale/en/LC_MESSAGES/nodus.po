@@ -14,3 +14,112 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#: nodus/models/amount_parsing.py
+msgid "El monto es demasiado grande."
+msgstr "The amount is too large."
+
+#: nodus/models/amount_parsing.py
+#, python-brace-format
+msgid "«{text}» no es un monto válido."
+msgstr "“{text}” is not a valid amount."
+
+#: nodus/models/amount_parsing.py
+#, python-brace-format
+msgid "Usa coma para los decimales: {example}."
+msgstr "Use a dot for decimals: {example}."
+
+#: nodus/models/amount_parsing.py
+#, python-brace-format
+msgid "Un monto lleva hasta {decimals} decimales, como en {example}."
+msgstr "An amount has up to {decimals} decimals, as in {example}."
+
+#: nodus/models/amount_parsing.py
+#, python-brace-format
+msgid "Los puntos separan los miles, de a tres cifras: {example}."
+msgstr "Commas group thousands, three digits at a time: {example}."
+
+#: nodus/models/amount_parsing.py
+#, python-brace-format
+msgid "Los {currency} no llevan centavos."
+msgstr "{currency} have no cents."
+
+#: nodus/models/currency.py
+msgid "peso"
+msgstr "peso"
+
+#: nodus/models/currency.py
+msgid "pesos"
+msgstr "pesos"
+
+#: nodus/models/currency.py
+msgid "dólar"
+msgstr "dollar"
+
+#: nodus/models/currency.py
+msgid "dólares"
+msgstr "dollars"
+
+#: nodus/models/currency.py
+msgid "euro"
+msgstr "euro"
+
+#: nodus/models/currency.py
+msgid "euros"
+msgstr "euros"
+
+#: nodus/models/currency.py
+msgid "peso chileno"
+msgstr "Chilean peso"
+
+#: nodus/models/currency.py
+msgid "pesos chilenos"
+msgstr "Chilean pesos"
+
+#: nodus/models/period.py
+msgid "Enero"
+msgstr "January"
+
+#: nodus/models/period.py
+msgid "Febrero"
+msgstr "February"
+
+#: nodus/models/period.py
+msgid "Marzo"
+msgstr "March"
+
+#: nodus/models/period.py
+msgid "Abril"
+msgstr "April"
+
+#: nodus/models/period.py
+msgid "Mayo"
+msgstr "May"
+
+#: nodus/models/period.py
+msgid "Junio"
+msgstr "June"
+
+#: nodus/models/period.py
+msgid "Julio"
+msgstr "July"
+
+#: nodus/models/period.py
+msgid "Agosto"
+msgstr "August"
+
+#: nodus/models/period.py
+msgid "Septiembre"
+msgstr "September"
+
+#: nodus/models/period.py
+msgid "Octubre"
+msgstr "October"
+
+#: nodus/models/period.py
+msgid "Noviembre"
+msgstr "November"
+
+#: nodus/models/period.py
+msgid "Diciembre"
+msgstr "December"
+

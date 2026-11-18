@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWi
 
 from nodus.models.currency import FOREIGN_CURRENCIES, HOME_CURRENCY, Currency
 from nodus.models.exchange_rate import ExchangeRate
+from nodus.models.language_format import with_symbol
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.services.external.rate_feed_service import SOURCES
@@ -233,7 +234,7 @@ class RatesCard(Card):
         currency = self.rate_currency()
         self.rate_error_label.hide()
         self.rate_date_input.set_day(today)
-        self.rate_unit_label.setText(f"{currency.symbol} 1 =")
+        self.rate_unit_label.setText(with_symbol(currency.symbol, "1") + " =")
         self.rate_value_input.line_edit.setPlaceholderText(RATE_PLACEHOLDERS[currency])
         self.official_rate_label.setVisible(
             currency is not Currency.USD and self._services.rate_feed.is_automatic()

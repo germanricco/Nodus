@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.models.language_format import format_decimal
 from nodus.services.errors import UpdateError
 from nodus.services.external.update_service import Release, UpdateService
 from nodus.ui.background import BackgroundCall
@@ -27,7 +28,7 @@ MEBIBYTE = 1024 * 1024  # what Windows calls a MB
 
 def megabytes(size: int) -> str:
     """``size`` bytes the way Windows shows them, in Spanish: "23,4"."""
-    return f"{size / MEBIBYTE:.1f}".replace(".", ",")
+    return format_decimal(size / MEBIBYTE, 1)
 
 
 class UpdateDialog(QDialog):

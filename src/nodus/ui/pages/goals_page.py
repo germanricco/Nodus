@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 
 from nodus.models.account import Account
 from nodus.models.goal import Goal, GoalProgress, GoalState
+from nodus.models.language_format import format_percent
 from nodus.services.container import Services
 from nodus.ui.actions.goals import delete_goal, toggle_goal_archived
 from nodus.ui.dialogs.goal_dialog import GoalDialog
@@ -44,7 +45,7 @@ def accounts_text(services: Services, goal: Goal) -> str:
     if len(goal.shares) > 1:
         return f"{len(goal.shares)} cuentas"
     [share] = goal.shares
-    return f"{services.accounts.get(share.account_id).name} ({share.percent} %)"
+    return f"{services.accounts.get(share.account_id).name} ({format_percent(share.percent)})"
 
 
 class GoalRow(QWidget):

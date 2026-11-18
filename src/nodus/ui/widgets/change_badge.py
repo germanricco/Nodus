@@ -6,6 +6,7 @@ from enum import Enum
 
 from PySide6.QtWidgets import QLabel, QWidget
 
+from nodus.models.language_format import format_decimal, format_percent
 from nodus.ui.widgets.style import set_style_property
 
 
@@ -13,18 +14,18 @@ def format_change(change: float, unit: str = "%") -> str:
     """ "↗ 12 %", "↘ 9,5 %" or "→ 0 %", with one decimal only below 10. ``unit`` "pp"
     shows a change of a rate in percentage points."""
     arrow = "↗" if change > 0 else "↘" if change < 0 else "→"
-    return f"{arrow} {_percent_number(change)} {unit}"
+    number = _percent_number(change)
+    return f"{arrow} " + (format_percent(number) if unit == "%" else f"{number} {unit}")
 
 
 def format_signed_percent(change: float) -> str:
     """ "+1,2 %" or "-0,4 %": a part of a change, written as the badge writes it."""
-    return f"{'-' if change < 0 else '+'}{_percent_number(change)} %"
+    return f"{'-' if change < 0 else '+'}{format_percent(_percent_number(change))}"
 
 
 def _percent_number(change: float) -> str:
     percent = abs(change) * 100
-    text = f"{percent:.1f}" if percent < 10 else f"{percent:.0f}"
-    return text.replace(".", ",").removesuffix(",0")
+    return format_decimal(percent, 1 if percent < 10 else 0, drop_zero=True)
 
 
 class Tone(Enum):

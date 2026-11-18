@@ -27,6 +27,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QScrollArea, QWidget  # noq
 from nodus import APP_NAME  # noqa: E402
 from nodus.config.paths import AppPaths  # noqa: E402
 from nodus.database.database import Database  # noqa: E402
+from nodus.i18n import Language, install  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
 from nodus.models.money import Money  # noqa: E402
 from nodus.models.period import Month  # noqa: E402
@@ -51,6 +52,7 @@ from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog  # no
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.navigation import DetailId, PageId  # noqa: E402
 from nodus.ui.pages.accounts_page import AccountRow  # noqa: E402
+from nodus.ui.qt_language import QtLanguage  # noqa: E402
 from nodus.ui.shell.main_window import MainWindow  # noqa: E402
 from nodus.ui.shell.tour import ADD_TRANSACTION  # noqa: E402
 from nodus.ui.text.help_texts import TOPICS_BY_KEY  # noqa: E402
@@ -688,12 +690,17 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=Path("screenshots"))
     parser.add_argument("--demo", action="store_true", help="load sample accounts and movements")
     parser.add_argument("--today", type=date.fromisoformat, default=date.today())
+    parser.add_argument("--lang", choices=[language.value for language in Language], default="es")
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
     # Charts are captured in their final state, not halfway through their transitions.
     set_reduced_motion(True)
     app = QApplication(sys.argv)
+    language = Language(args.lang)
+    install(language)
+    qt_language = QtLanguage(app)
+    qt_language.apply(language)
     with tempfile.TemporaryDirectory() as data_dir:
         paths = AppPaths(Path(data_dir))
         database = Database.open(paths.database_path)

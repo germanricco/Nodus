@@ -1,6 +1,8 @@
 """The date field: a click anywhere on it opens its calendar, the date can still be
 typed, and the calendar takes its measures from the design scale (``Popup``)."""
 
+from datetime import date
+
 from factories import transaction_dialog
 from menus import click_at
 from PySide6.QtCore import Qt
@@ -67,3 +69,11 @@ def test_the_calendar_keeps_to_the_days_a_date_can_take(qtbot):
     field = DateInput()
     qtbot.addWidget(field)
     assert (field.minimumDate().toPython(), field.maximumDate().toPython()) == (FIRST_DAY, LAST_DAY)
+
+
+def test_in_english_the_date_field_writes_the_month_first(qtbot, english):
+    field = DateInput()
+    qtbot.addWidget(field)
+    field.set_day(date(2026, 11, 5))
+
+    assert field.text() == "11/05/2026"

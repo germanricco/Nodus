@@ -7,6 +7,7 @@ from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.models.budget import Budget, BudgetState, used_percent_label
+from nodus.models.language_format import format_percent
 from nodus.ui.theme.design import ControlSize, Line, Opacity
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.change_badge import Tone, status_pill
@@ -93,7 +94,7 @@ class BudgetBar(ProgressStrip):
         super().__init__(theme, self.HEIGHT + 2 * self.MARK_OVERHANG, start, parent)
         self.budget = budget
         if self.shows_pace:
-            self.setToolTip(f"Ritmo del mes: {round(budget.elapsed * 100)} %")
+            self.setToolTip(f"Ritmo del mes: {format_percent(round(budget.elapsed * 100))}")
         self._begin()
 
     @property

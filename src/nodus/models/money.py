@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from decimal import ROUND_HALF_EVEN, Decimal
 
 from nodus.models.currency import Currency
+from nodus.models.language_format import current_format, grouped, with_symbol
 
 CENTS_PER_UNIT = 100
 # The largest amount accepted, in units: far above any personal balance, and small enough
@@ -97,16 +98,17 @@ class Money:
         return self.cents < other.cents
 
     def format(self) -> str:
-        """Formats in Argentine style: "$ 1.234,56", "-US$ 10,00"."""
-        return f"{self._sign}{self.currency.symbol} {self._unsigned_number()}"
+        """As the language writes it: "$ 1.234,56" and "-US$ 10,00" in Spanish, "$1,234.56"
+        and "-US$10.00" in English."""
+        return f"{self._sign}{with_symbol(self.currency.symbol, self._unsigned_number())}"
 
     def format_number(self) -> str:
-        """The number alone, without symbol: "1.234,56", "-10,00"."""
+        """The number alone, without symbol: "1.234,56", "-10,00" (or "1,234.56")."""
         return f"{self._sign}{self._unsigned_number()}"
 
     def format_plain(self) -> str:
-        """The number without thousands separators: "-1234,56". Spreadsheets in Spanish read
-        it as a number, while "1.234,56" may be taken as text."""
+        """The number without thousands separators: "-1234,56" (or "-1234.56").
+        Spreadsheets read it as a number, while "1.234,56" may be taken as text."""
         units, cents = divmod(abs(self.cents), CENTS_PER_UNIT)
         return f"{self._sign}{units}{self._decimal_part(cents)}"
 
@@ -116,12 +118,11 @@ class Money:
 
     def _unsigned_number(self) -> str:
         units, cents = divmod(abs(self.cents), CENTS_PER_UNIT)
-        grouped_units = f"{units:,}".replace(",", ".")
-        return f"{grouped_units}{self._decimal_part(cents)}"
+        return f"{grouped(units)}{self._decimal_part(cents)}"
 
     def _decimal_part(self, cents: int) -> str:
-        """ ",56", or nothing for a currency without cents."""
-        return f",{cents:02d}" if self.currency.decimals else ""
+        """ ",56" (or ".56"), or nothing for a currency without cents."""
+        return f"{current_format().decimal}{cents:02d}" if self.currency.decimals else ""
 
     def __str__(self) -> str:
         return self.format()

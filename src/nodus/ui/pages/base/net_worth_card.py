@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from nodus.models.currency import TOTAL_CURRENCIES, Currency
+from nodus.models.language_format import format_percent, with_symbol
 from nodus.models.money import Money
 from nodus.models.period import Period, format_day_month
 from nodus.services.container import Services
@@ -47,7 +48,7 @@ def rate_effect_text(effect: Money | None, start: Money | None) -> str:
 
 def share_text(share: float | None) -> str:
     """A currency's rounded share of the net worth; empty without one."""
-    return "" if share is None else f"{round(100 * share)} %"
+    return "" if share is None else format_percent(round(100 * share))
 
 
 class CurrencyLegend(QWidget):
@@ -261,7 +262,7 @@ class NetWorthCard(Card):
             elif held is Currency.USD:
                 texts.append(NO_RATE_TEXT)
             else:
-                texts.append(f"{held.symbol} {NO_RATE_TEXT.lower()}")
+                texts.append(with_symbol(held.symbol, NO_RATE_TEXT.lower()))
         self.rate_label.setText("    ".join(texts))
 
     def _show_trend(

@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable
 from datetime import date
 from typing import Protocol, TypeVar
 
-from nodus.models.amount_parsing import TOO_LARGE_TEXT, without_cents_text
+from nodus.models.amount_parsing import too_large_text, without_cents_text
 from nodus.models.money import Money
 from nodus.models.names import normalize_name
 from nodus.models.period import FIRST_DAY, LAST_DAY
@@ -83,7 +83,7 @@ def require_storable(amount: Money, field: str | None = None) -> None:
     """Rejects an amount beyond ``MAX_UNITS``, which saved would break the balances, and
     one with cents in a currency without them, which no screen could show as it is."""
     if not amount.is_storable:
-        raise ValidationError(TOO_LARGE_TEXT, field=field)
+        raise ValidationError(too_large_text(), field=field)
     if not amount.is_whole_for_currency:
         raise ValidationError(without_cents_text(amount.currency), field=field)
 

@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from enum import Enum
 
+from nodus.i18n import N_, _
+
 
 class Currency(Enum):
     """A currency an account can hold. The value is its ISO 4217 code, as stored in the database.
@@ -29,12 +31,12 @@ class Currency(Enum):
     @property
     def name_singular(self) -> str:
         """Its name in a sentence, as in «Sin cotización del dólar»."""
-        return _DETAILS[self].singular
+        return _(_DETAILS[self].singular)
 
     @property
     def name_plural(self) -> str:
         """Its name for amounts held in it, as in «Tus cuentas en dólares»."""
-        return _DETAILS[self].plural
+        return _(_DETAILS[self].plural)
 
     @property
     def is_foreign(self) -> bool:
@@ -51,10 +53,10 @@ class _Details:
 
 
 _DETAILS = {
-    Currency.ARS: _Details("$", 2, "peso", "pesos"),
-    Currency.USD: _Details("US$", 2, "dólar", "dólares"),
-    Currency.EUR: _Details("€", 2, "euro", "euros"),
-    Currency.CLP: _Details("CLP$", 0, "peso chileno", "pesos chilenos"),
+    Currency.ARS: _Details("$", 2, N_("peso"), N_("pesos")),
+    Currency.USD: _Details("US$", 2, N_("dólar"), N_("dólares")),
+    Currency.EUR: _Details("€", 2, N_("euro"), N_("euros")),
+    Currency.CLP: _Details("CLP$", 0, N_("peso chileno"), N_("pesos chilenos")),
 }
 
 # Every exchange rate is stored against the peso; other pairs go through it.

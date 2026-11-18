@@ -10,8 +10,9 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from nodus.models.goal import Goal, GoalProgress, GoalState
+from nodus.models.language_format import format_percent
 from nodus.models.money import Money
-from nodus.models.period import Month
+from nodus.models.period import Month, format_month_in_sentence
 from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
 from nodus.services.planning.goal_service import GoalContribution
@@ -23,7 +24,7 @@ from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
-from nodus.ui.widgets.charts.goal_bar import goal_pill, goal_sentence, month_phrase
+from nodus.ui.widgets.charts.goal_bar import goal_pill, goal_sentence
 from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint, money_formats
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
@@ -50,7 +51,7 @@ class ContributionRow(QWidget):
         name.setObjectName("RowTitle")
         balance = amount_text(contribution.balance, hidden)
         texts.addWidget(name)
-        texts.addWidget(muted_label(f"{contribution.percent} % de {balance}"))
+        texts.addWidget(muted_label(f"{format_percent(contribution.percent)} de {balance}"))
         layout.addLayout(texts, stretch=1)
         counted = contribution.counted
         self.counted_label = QLabel("—" if counted is None else amount_text(counted, hidden))
@@ -195,7 +196,9 @@ class GoalDetailPage(DetailPage):
 
         self.target_label.setText(shown(goal.target))
         self.target_note.setText(
-            f"para {month_phrase(Month.of(goal.target_date))}" if goal.target_date else "Sin fecha"
+            f"para {format_month_in_sentence(Month.of(goal.target_date))}"
+            if goal.target_date
+            else "Sin fecha"
         )
         self.saved_label.setText(shown(progress.saved))
         self.change_note.setText(month_change_text(progress.month_change, hidden))
@@ -206,7 +209,9 @@ class GoalDetailPage(DetailPage):
             self.pace_note.setText("")
         else:
             self.pace_label.setText(f"≈ {shown(progress.pace_per_month)}")
-            self.pace_note.setText(f"llega en {month_phrase(progress.eta)}" if progress.eta else "")
+            self.pace_note.setText(
+                f"llega en {format_month_in_sentence(progress.eta)}" if progress.eta else ""
+            )
         self.figures.relayout()
 
     def _show_status(self, goal: Goal, progress: GoalProgress) -> None:

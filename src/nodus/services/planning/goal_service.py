@@ -12,6 +12,7 @@ from nodus.database.database import Database
 from nodus.database.repositories.goal_repository import GoalRepository
 from nodus.models.account import Account, AccountType
 from nodus.models.goal import PACE_CHANGES, Goal, GoalProgress, GoalShare, goal_progress
+from nodus.models.language_format import format_percent
 from nodus.models.money import Money
 from nodus.models.period import Month
 from nodus.services.accounts.account_service import AccountService
@@ -278,7 +279,8 @@ class GoalService:
             holders = [g for g in self._others(goal_id) if g.share_of(account.id)]
             names = ", ".join(f"«{g.name}»" for g in holders)
             raise ValidationError(
-                f"«{account.name}» ya tiene {100 - free} % en {names}: quedan {free} %.",
+                f"«{account.name}» ya tiene {format_percent(100 - free)} en {names}: "
+                f"quedan {format_percent(free)}.",
                 field="shares",
             )
 

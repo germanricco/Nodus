@@ -3,7 +3,16 @@ from datetime import date
 import pytest
 from factories import TODAY
 
-from nodus.models.period import Month, Period, QuickPeriod
+from nodus.models.period import (
+    Month,
+    Period,
+    QuickPeriod,
+    format_date,
+    format_day_month,
+    format_month,
+    format_month_in_sentence,
+    qt_date_format,
+)
 
 
 def test_month_shifts_across_years():
@@ -111,3 +120,20 @@ def test_months_to_counts_whole_calendar_months():
     assert Month(2026, 11).months_to(Month(2027, 3)) == 4
     assert Month(2026, 11).months_to(Month(2026, 11)) == 0
     assert Month(2027, 3).months_to(Month(2026, 11)) == -4
+
+
+def test_in_english_dates_go_month_first_and_months_are_in_english(english):
+    day = date(2026, 11, 5)
+
+    assert format_date(day) == "11/05/2026"
+    assert format_day_month(day) == "11/05"
+    assert qt_date_format() == "MM/dd/yyyy"
+    assert format_month(Month(2026, 11)) == "November 2026"
+    assert format_month_in_sentence(Month(2027, 10)) == "October 2027"
+    assert Month(2026, 9).short_name == "Sep"
+
+
+def test_in_spanish_a_month_inside_a_sentence_is_in_lowercase():
+    assert format_month(Month(2026, 11)) == "Noviembre 2026"
+    assert format_month_in_sentence(Month(2027, 10)) == "octubre de 2027"
+    assert qt_date_format() == "dd/MM/yyyy"

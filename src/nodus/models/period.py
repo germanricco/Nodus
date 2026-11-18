@@ -1,4 +1,4 @@
-"""Calendar periods used to group transactions, and how they are written in Spanish."""
+"""Calendar periods used to group transactions, and how they are written in each language."""
 
 from __future__ import annotations
 
@@ -7,11 +7,14 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from enum import Enum
 
+from nodus.i18n import N_, _
+from nodus.models.language_format import current_format
+
+# Translated where shown (month_name), in the language Nodus is in by then.
 MONTH_NAMES = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+    N_("Enero"), N_("Febrero"), N_("Marzo"), N_("Abril"), N_("Mayo"), N_("Junio"),
+    N_("Julio"), N_("Agosto"), N_("Septiembre"), N_("Octubre"), N_("Noviembre"), N_("Diciembre"),
 ]  # fmt: skip
-SHORT_MONTH_NAMES = [name[:3] for name in MONTH_NAMES]
 
 # The days a date can take: room for old records and long plans, while every date
 # computed from one (the next charge, the last installment) stays a valid date.
@@ -19,24 +22,38 @@ FIRST_DAY = date(1900, 1, 1)
 LAST_DAY = date(2100, 12, 31)
 
 
-# Day/month/year, as dates are written in Argentina. DateInput writes it as Qt does.
-DATE_FORMAT = "%d/%m/%Y"
-QT_DATE_FORMAT = "dd/MM/yyyy"
-
-
 def format_date(day: date) -> str:
-    """The whole date: "05/11/2026"."""
-    return day.strftime(DATE_FORMAT)
+    """The whole date: "05/11/2026" in Spanish, "11/05/2026" in English."""
+    return day.strftime(current_format().date)
+
+
+def qt_date_format() -> str:
+    """The whole date as a date field writes it, in Qt's terms: "dd/MM/yyyy"."""
+    return current_format().qt_date
 
 
 def format_day_month(day: date) -> str:
-    """Day and month, where the year goes without saying: "05/11"."""
-    return day.strftime("%d/%m")
+    """Day and month, where the year goes without saying: "05/11" (or "11/05")."""
+    return day.strftime(current_format().day_month)
+
+
+def month_name(month: int) -> str:
+    """ "Noviembre", or "November": the name of month 1 to 12 as it starts a title."""
+    return _(MONTH_NAMES[month - 1])
 
 
 def format_month(month: Month) -> str:
-    """Month name and year, e.g. "Noviembre 2026"."""
-    return f"{MONTH_NAMES[month.month - 1]} {month.year}"
+    """Month name and year, as a title: "Noviembre 2026"."""
+    return f"{month_name(month.month)} {month.year}"
+
+
+def format_month_in_sentence(month: Month) -> str:
+    """Month and year inside a sentence: "octubre de 2027", "October 2027"."""
+    language = current_format()
+    name = month_name(month.month)
+    return language.month_in_sentence.format(
+        month=name.lower() if language.lowercase_months else name, year=month.year
+    )
 
 
 @dataclass(frozen=True, order=True)
@@ -66,7 +83,7 @@ class Month:
     @property
     def short_name(self) -> str:
         """ "Nov", for chart axes."""
-        return SHORT_MONTH_NAMES[self.month - 1]
+        return month_name(self.month)[:3]
 
     def day(self, day_of_month: int) -> date:
         """That day of this month, or its last day when the month is shorter: what a monthly

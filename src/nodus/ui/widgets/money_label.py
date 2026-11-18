@@ -6,6 +6,7 @@ from PySide6.QtCore import QSize, QVariantAnimation
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
+from nodus.models.language_format import with_symbol
 from nodus.models.money import Money
 from nodus.services.accounts.account_group_service import GroupTotal
 from nodus.ui.theme.design import Easing, Motion, motion_ms
@@ -15,7 +16,7 @@ from nodus.ui.widgets.style import RIGHT_ALIGNED, set_style_property
 
 def masked(money: Money) -> str:
     """ "$ ••••": only the currency of an amount the user chose to hide."""
-    return f"{money.currency.symbol} ••••"
+    return with_symbol(money.currency.symbol, "••••")
 
 
 def amount_text(money: Money, hidden: bool) -> str:

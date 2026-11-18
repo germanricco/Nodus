@@ -104,3 +104,11 @@ class TestCurrencyWithoutCents:
 
     def test_euro_keeps_its_cents(self):
         assert Money.from_decimal("10.5", Currency.EUR).format() == "€ 10,50"
+
+
+def test_in_english_amounts_have_a_decimal_point_and_no_space(english):
+    assert Money(123_456, Currency.ARS).format() == "$1,234.56"
+    assert Money(-1_000, Currency.USD).format() == "-US$10.00"
+    assert Money(-123_456, Currency.ARS).format_number() == "-1,234.56"
+    assert Money(-123_456, Currency.ARS).format_plain() == "-1234.56"
+    assert Money(1_500_000, Currency.CLP).format() == "CLP$15,000"

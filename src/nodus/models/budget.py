@@ -7,6 +7,7 @@ from datetime import date
 from enum import Enum
 
 from nodus.models.category import Category
+from nodus.models.language_format import format_percent
 from nodus.models.money import Money
 from nodus.models.period import Month
 
@@ -37,11 +38,11 @@ def used_percent_label(used: float) -> str:
     """The share of the limit spent, as people read it: "<1 %" for a token amount, and
     never "100 %" while some money is left."""
     if 0 < used < 0.01:
-        return "<1 %"
+        return format_percent("<1")
     percent = round(used * 100)
     if percent >= 100 and used < 1:
         percent = 99
-    return f"{percent} %"
+    return format_percent(percent)
 
 
 @dataclass(frozen=True)

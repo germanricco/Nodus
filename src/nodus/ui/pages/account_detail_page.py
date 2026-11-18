@@ -16,8 +16,9 @@ from PySide6.QtWidgets import (
 
 from nodus.models.account import Account
 from nodus.models.currency import HOME_CURRENCY, Currency
+from nodus.models.language_format import format_percent
 from nodus.models.money import Money
-from nodus.models.period import Month
+from nodus.models.period import Month, format_month_in_sentence
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
@@ -41,7 +42,6 @@ from nodus.ui.theme.design import Chart, Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import format_signed_percent
-from nodus.ui.widgets.charts.goal_bar import month_phrase
 from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint, money_formats
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
@@ -290,7 +290,7 @@ class AccountDetailPage(DetailPage):
             self.pending_label.setText(amount_text(pending, hidden))
             left, last = installments.installments_left(account.id, today)
             count = plural(left, "cuota", "cuotas")
-            self.pending_note.setText(f"{count} · hasta {month_phrase(Month.of(last))}")
+            self.pending_note.setText(f"{count} · hasta {format_month_in_sentence(Month.of(last))}")
         self.figures.relayout()
 
     def _transfers_note(self, transfers: Money, preposition: str) -> str:
@@ -326,7 +326,7 @@ class AccountDetailPage(DetailPage):
             return
         self._goals_layout.addWidget(muted_label("Aporta a:"))
         for goal, percent in goals:
-            link = QPushButton(f"{goal.name} ({percent} %)")
+            link = QPushButton(f"{goal.name} ({format_percent(percent)})")
             link.setObjectName("LinkButton")
             link.setCursor(Qt.CursorShape.PointingHandCursor)
             link.setToolTip("Abrir la meta")
