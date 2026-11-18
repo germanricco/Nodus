@@ -3,6 +3,7 @@
 import ctypes
 import logging
 import sys
+from collections.abc import Callable
 from datetime import date, datetime
 
 from PySide6.QtCore import QTimer
@@ -18,10 +19,13 @@ from nodus.database.database import (
     MigrationError,
     NewerDatabaseError,
 )
-from nodus.i18n import N_, _, current_language
+from nodus.database.repositories.settings_repository import SettingsRepository
+from nodus.i18n import N_, Language, _, install
 from nodus.links import DOWNLOAD_URL
+from nodus.services.app.settings_service import SettingsService
 from nodus.services.backups.recovery import DataRecovery
 from nodus.services.container import Services
+from nodus.services.external.process import launch_detached, restart_command
 from nodus.smoke_test import FLAG as SMOKE_TEST_FLAG
 from nodus.smoke_test import SmokeTest
 from nodus.ui.browser import open_url
@@ -29,7 +33,8 @@ from nodus.ui.dialogs.recovery_dialog import offer_recovery
 from nodus.ui.dialogs.user_error import UnexpectedErrorDialog, UserErrorDialog, user_error
 from nodus.ui.error_reporter import ErrorReporter
 from nodus.ui.event_bus import EventBus
-from nodus.ui.qt_language import QtLanguage
+from nodus.ui.qt_language import QtLanguage, system_language
+from nodus.ui.restart import RESTART_EXIT_CODE
 from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.shell.single_instance import SingleInstance
 from nodus.ui.theme.design import set_reduced_motion
@@ -70,13 +75,18 @@ class NodusApp:
 
     APPLICATION_NAME = APP_NAME
 
-    def __init__(self, argv: list[str]) -> None:
+    def __init__(
+        self, argv: list[str], launch: Callable[[list[str]], None] = launch_detached
+    ) -> None:
         # Must be set before AppPaths, which derives the data folder from it.
         QApplication.setApplicationName(self.APPLICATION_NAME)
         self._qt_app = QApplication(argv)
         self._qt_app.setWindowIcon(app_icon())
         self._qt_language = QtLanguage(self._qt_app)
-        self._qt_language.apply(current_language())
+        # Until the data says otherwise: the dialogs before it opens speak the system's.
+        self._speak(system_language())
+        self._argv = argv
+        self._launch = launch
         self._set_taskbar_identity()
         # ``--smoke-test`` checks the built program, over a data folder of its own.
         self._smoke_test = SmokeTest() if SMOKE_TEST_FLAG in argv else None
@@ -103,7 +113,7 @@ class NodusApp:
             self._smoke_test.install()
         logger.info("Starting: %s", system_line())
         try:
-            return self._open_and_run(reporter, instance)
+            code = self._open_and_run(reporter, instance)
         finally:
             logger.info("Closed")
             reporter.uninstall()
@@ -111,6 +121,11 @@ class NodusApp:
             instance.release()
             if self._smoke_test is not None:
                 self._smoke_test.close()
+        if code == RESTART_EXIT_CODE:
+            # Only now: the new one finds the data and the single instance free.
+            self._launch(restart_command(self._argv))
+            return 0
+        return code
 
     def _show_the_open_one(self, instance: SingleInstance) -> int:
         """This run ends here: the Nodus that is open comes to the front, or, if it does
@@ -129,6 +144,7 @@ class NodusApp:
             return 1
         try:
             try:
+                self._speak_the_data_language(database)
                 self._open_window(Services.create(database, self._paths.backups_dir))
             except Exception as error:  # noqa: BLE001 - shown instead of a silent exit
                 logger.error("Nodus could not start", exc_info=error)
@@ -139,6 +155,18 @@ class NodusApp:
             return self._qt_app.exec()
         finally:
             database.close()
+
+    def _speak(self, language: Language) -> None:
+        install(language)
+        self._qt_language.apply(language)
+
+    def _speak_the_data_language(self, database: Database) -> None:
+        """Nodus's language as the data keeps it, before anything is built: texts are
+        translated when shown, and new data names its categories in it."""
+        settings = SettingsService(database, SettingsRepository(database))
+        language = settings.startup_language(database.created, system_language())
+        logger.info("Language: %s", language.value)
+        self._speak(language)
 
     def _open_data(self) -> Database | None:
         """The data, opened; or None, after telling the user why it could not be, in the

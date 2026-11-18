@@ -6,7 +6,6 @@ import hashlib
 import json
 import logging
 import shutil
-import subprocess
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -20,6 +19,7 @@ from nodus.links import LATEST_RELEASE_API
 from nodus.models.version import parse_version
 from nodus.services.errors import UpdateError
 from nodus.services.external.http import Fetch, Stream, downloader, streamer
+from nodus.services.external.process import launch_detached
 
 logger = logging.getLogger(__name__)
 
@@ -62,12 +62,6 @@ def _installer(version: str, assets: list[dict[str, Any]]) -> Installer | None:
     return None
 
 
-def _launch_detached(command: list[str]) -> None:
-    """Starts ``command`` as its own process, so it outlives Nodus closing."""
-    flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
-    subprocess.Popen(command, creationflags=flags, close_fds=True)
-
-
 class UpdateService:
     """Asks GitHub for the latest release, and downloads and starts its installer.
 
@@ -93,7 +87,7 @@ class UpdateService:
     def for_this_program(cls, current_version: str) -> UpdateService:
         """Installs updates only when running as the installed program on Windows; run
         from the source code there is nothing to replace, so the release page opens."""
-        return cls(current_version, launch=_launch_detached if is_installed() else None)
+        return cls(current_version, launch=launch_detached if is_installed() else None)
 
     def check(self) -> Release | None:
         """The latest release if it is newer than the running version, otherwise None.

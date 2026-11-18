@@ -61,6 +61,14 @@ def install(language: Language) -> None:
         logger.warning("No %s catalog found: texts stay in Spanish", language.value)
 
 
+def language_from_code(code: str | None) -> Language | None:
+    """The language saved as ``code`` ("es", "en"), or None if unknown or missing."""
+    try:
+        return Language(code)
+    except ValueError:
+        return None
+
+
 def has_catalog(language: Language) -> bool:
     """Whether ``language`` can be shown: the source always, any other with its catalog."""
     if language is SOURCE_LANGUAGE:

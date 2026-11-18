@@ -10,6 +10,7 @@ from nodus.config.paths import AppPaths, visible_path
 from nodus.config.system import windows_animations_on
 from nodus.database.database import Database
 from nodus.database.repositories.settings_repository import SettingsRepository
+from nodus.i18n import SOURCE_LANGUAGE, Language, language_from_code
 from nodus.models.currency import HOME_CURRENCY, TOTAL_CURRENCIES, Currency
 from nodus.models.palette import PALETTE
 
@@ -25,6 +26,7 @@ class SettingsService:
     """
 
     THEME_KEY = "theme"
+    LANGUAGE_KEY = "language"
     CHECK_UPDATES_KEY = "check_updates"
     RATE_SOURCE_KEY = "rate_source"
     LAST_ACCOUNT_KEY = "last_account_id"
@@ -58,6 +60,26 @@ class SettingsService:
     def logs_folder(self) -> Path:
         """Where Nodus writes down what happened, next to the data file."""
         return visible_path(AppPaths(self._database.path.parent).logs_dir)
+
+    def language(self) -> Language | None:
+        """The language Nodus speaks with this data, or None if never chosen."""
+        return language_from_code(self._settings.get(self.LANGUAGE_KEY))
+
+    def set_language(self, language: Language) -> None:
+        """Saves the language for the next start: it applies when Nodus reopens."""
+        self._save(self.LANGUAGE_KEY, language.value)
+
+    def startup_language(self, new_data: bool, system: Language) -> Language:
+        """The language to open in, saved the first time so it never changes by itself.
+
+        New data takes the system's language. Data from before languages existed was
+        used in Spanish, so it stays in Spanish whatever the system speaks.
+        """
+        language = self.language()
+        if language is None:
+            language = system if new_data else SOURCE_LANGUAGE
+            self.set_language(language)
+        return language
 
     def theme_preference(self) -> str | None:
         """The saved theme ("light", "dark" or "system"), or None if never chosen."""

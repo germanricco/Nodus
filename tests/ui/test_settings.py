@@ -5,7 +5,9 @@ from decimal import Decimal
 import pytest
 from factories import FakeRegistry, ars, eur, expense_draft, in_view
 from menus import run_action
+from PySide6.QtWidgets import QPushButton
 
+from nodus.i18n import Language
 from nodus.models.account import AccountType
 from nodus.models.currency import FOREIGN_CURRENCIES, Currency
 from nodus.services.errors import BackupError
@@ -13,8 +15,8 @@ from nodus.services.external.startup_service import StartupService
 from nodus.ui import browser
 from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs import export, external_backup, restore_copy
-from nodus.ui.pages.settings import data_card
-from nodus.ui.pages.settings.general_card import THEME_MODES
+from nodus.ui.pages.settings import data_card, general_card
+from nodus.ui.pages.settings.general_card import LANGUAGES, THEME_MODES
 from nodus.ui.pages.settings.rates_card import RateRow
 from nodus.ui.pages.settings.settings_page import SettingsPage
 from nodus.ui.theme.design import Motion, motion_ms, set_reduced_motion
@@ -308,3 +310,27 @@ def test_the_log_folder_opens_next_to_the_data(page, services, monkeypatch):
     assert opened[0].toLocalFile() == str(services.settings.logs_folder).replace("\\", "/")
     assert services.settings.logs_folder == services.settings.data_file.parent / "logs"
     assert services.settings.logs_folder.is_dir()
+
+
+class TestLanguage:
+    def choose_english(self, page, monkeypatch, restart_now: bool) -> list[bool]:
+        restarts: list[bool] = []
+        monkeypatch.setattr(general_card, "ask", lambda *args: restart_now)
+        monkeypatch.setattr(general_card, "restart", lambda: restarts.append(True))
+        page.general.language_input.set_index(LANGUAGES.index(Language.ENGLISH))
+        return restarts
+
+    def test_each_language_is_offered_by_its_own_name(self, page):
+        buttons = page.general.language_input.findChildren(QPushButton)
+        assert [button.text() for button in buttons] == ["Español", "English"]
+        assert page.general.language_input.index() == LANGUAGES.index(Language.SPANISH)
+
+    def test_choosing_one_saves_it_and_restarts_when_asked(self, services, page, monkeypatch):
+        assert self.choose_english(page, monkeypatch, restart_now=True) == [True]
+        assert services.settings.language() is Language.ENGLISH
+
+    def test_later_keeps_it_saved_for_the_next_start(self, services, page, monkeypatch):
+        assert self.choose_english(page, monkeypatch, restart_now=False) == []
+        assert services.settings.language() is Language.ENGLISH
+        page.general.refresh()
+        assert page.general.language_input.index() == LANGUAGES.index(Language.ENGLISH)

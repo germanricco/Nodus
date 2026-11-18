@@ -40,6 +40,14 @@ def has_qt_texts(language: Language) -> bool:
     return language not in QT_TEXTS or _loaded_texts(language) is not None
 
 
+def system_language() -> Language:
+    """Spanish if Windows speaks Spanish; English for any other language, since it is
+    the one more people read."""
+    if QLocale.system().language() is QLocale.Language.Spanish:
+        return Language.SPANISH
+    return Language.ENGLISH
+
+
 class QtLanguage:
     """Puts Qt in a language, and keeps its translator alive while it is in use."""
 

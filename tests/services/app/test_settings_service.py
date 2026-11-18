@@ -1,5 +1,6 @@
 import pytest
 
+from nodus.i18n import Language
 from nodus.models.palette import PALETTE
 from nodus.services.app import settings_service
 
@@ -73,3 +74,19 @@ class TestRecentColors:
         services.settings.add_recent_color(PALETTE[0].upper())
 
         assert services.settings.recent_colors() == []
+
+
+@pytest.mark.parametrize(
+    ("new_data", "language"), [(True, Language.ENGLISH), (False, Language.SPANISH)]
+)
+def test_the_first_start_language_is_the_system_one_only_for_new_data(services, new_data, language):
+    assert services.settings.language() is None
+
+    assert services.settings.startup_language(new_data, Language.ENGLISH) is language
+    assert services.settings.language() is language
+
+
+def test_a_chosen_language_is_kept_whatever_the_system_speaks(services):
+    services.settings.set_language(Language.ENGLISH)
+
+    assert services.settings.startup_language(True, Language.SPANISH) is Language.ENGLISH

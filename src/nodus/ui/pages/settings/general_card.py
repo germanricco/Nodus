@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from nodus.i18n import N_, _
+from nodus.i18n import N_, Language, _, current_language
 from nodus.services.container import Services
+from nodus.ui.dialogs.confirm import ask
+from nodus.ui.restart import restart
 from nodus.ui.theme.design import set_reduced_motion
 from nodus.ui.theme.theme import ThemeMode
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -16,6 +18,8 @@ from nodus.ui.widgets.setting_row import SettingRow
 THEME_MODES = [ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM]
 THEME_LABELS = [N_("Claro"), N_("Oscuro"), N_("Según el sistema")]
 
+LANGUAGES = list(Language)
+
 
 class GeneralCard(Card):
     """The preferences of how Nodus looks and opens."""
@@ -24,6 +28,14 @@ class GeneralCard(Card):
         super().__init__(_("General"))
         self._services = services
         self._theme_manager = theme_manager
+
+        # Each language by its own name, so whoever cannot read the current one finds theirs.
+        language_row = SettingRow(_("Idioma"), _("Se aplica al reiniciar Nodus."))
+        self.language_input = language_row.add(
+            SegmentedControl([language.native_name for language in LANGUAGES])
+        )
+        self.language_input.changed.connect(self._set_language)
+        self.body.addWidget(language_row)
 
         theme_row = SettingRow(
             _("Tema"), _("«Según el sistema» sigue el modo claro u oscuro de Windows.")
@@ -55,9 +67,26 @@ class GeneralCard(Card):
         self.body.addWidget(motion_row)
 
     def refresh(self) -> None:
+        chosen = self._services.settings.language() or current_language()
+        self.language_input.set_index(LANGUAGES.index(chosen))
         self.theme_input.set_index(THEME_MODES.index(self._theme_manager.mode))
         self.startup_input.setChecked(self._services.startup.is_enabled())
         self.reduce_motion_input.setChecked(self._services.settings.reduce_motion())
+
+    def _set_language(self, index: int) -> None:
+        """Saves the language and offers to restart now, since it applies on start."""
+        language = LANGUAGES[index]
+        if language is (self._services.settings.language() or current_language()):
+            return
+        self._services.settings.set_language(language)
+        if ask(
+            self,
+            _("Cambiar el idioma"),
+            _("Para cambiar el idioma, Nodus se reinicia."),
+            _("Reiniciar ahora"),
+            _("Más tarde"),
+        ):
+            restart()
 
     def _set_reduce_motion(self, reduced: bool) -> None:
         self._services.settings.set_reduce_motion(reduced)

@@ -18,24 +18,35 @@ from nodus.database.database import (
     MigrationError,
     latest_schema_version,
 )
+from nodus.i18n import Language, current_language
 from nodus.links import DOWNLOAD_URL
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.services.external.process import restart_command
 from nodus.ui import error_reporter
 from nodus.ui.dialogs import user_error as user_error_module
 from nodus.ui.dialogs.recovery_dialog import DAMAGED
 from nodus.ui.dialogs.user_error import UnexpectedErrorDialog, UserErrorDialog
+from nodus.ui.restart import RESTART_EXIT_CODE
 from nodus.ui.shell.single_instance import SingleInstance
 
 
 @pytest.fixture
-def nodus_app(qapp, tmp_path) -> NodusApp:
-    """A ``NodusApp`` over ``tmp_path``, on the tests' QApplication: there can be one."""
+def launched() -> list[list[str]]:
+    return []
+
+
+@pytest.fixture
+def nodus_app(qapp, tmp_path, launched) -> NodusApp:
+    """A ``NodusApp`` over ``tmp_path``, on the tests' QApplication: there can be one.
+    What it launches lands in ``launched`` instead of starting."""
     nodus = NodusApp.__new__(NodusApp)
     nodus._qt_app = qapp
     nodus._paths = AppPaths(tmp_path / "Nodus")
     nodus._smoke_test = None
-    nodus._qt_language = None
+    nodus._qt_language = SimpleNamespace(apply=lambda language: None)
+    nodus._argv = ["nodus"]
+    nodus._launch = launched.append
     return nodus
 
 
@@ -226,3 +237,69 @@ def ask_again(nodus: NodusApp, qtbot) -> int:
     SingleInstance(nodus._paths.data_dir).ask_first_to_show()
     qtbot.waitUntil(lambda: nodus._window.brought_forward == 1)
     return 0
+
+
+def saved_language(paths: AppPaths):
+    database = Database.open(paths.database_path)
+    try:
+        return services_for(database).settings.language()
+    finally:
+        database.close()
+
+
+def test_new_data_speaks_the_system_language_and_keeps_it(nodus_app, opened, monkeypatch):
+    """A first start on an English Windows opens in English, with its categories in
+    English, and saves the choice so it never changes by itself."""
+    monkeypatch.setattr(app, "system_language", lambda: Language.ENGLISH)
+    names: list[str] = []
+    monkeypatch.setattr(
+        nodus_app,
+        "_open_window",
+        lambda services: (
+            names.extend(c.name for c in services.categories.list_categories())
+            or setattr(nodus_app, "_window", MainWindowStandIn())
+        ),
+    )
+
+    assert nodus_app.run() == 0
+    assert current_language() is Language.ENGLISH
+    assert "Groceries" in names
+    assert saved_language(nodus_app._paths) is Language.ENGLISH
+
+
+def test_data_from_before_languages_stays_in_spanish(nodus_app, opened, monkeypatch):
+    """Whoever used Nodus before it spoke English keeps it in Spanish, whatever the
+    system speaks."""
+    nodus_app._paths.ensure_data_dir()
+    Database.open(nodus_app._paths.database_path).close()
+    monkeypatch.setattr(app, "system_language", lambda: Language.ENGLISH)
+
+    assert nodus_app.run() == 0
+    assert current_language() is Language.SPANISH
+    assert saved_language(nodus_app._paths) is Language.SPANISH
+
+
+def test_asking_for_a_restart_opens_nodus_again_once_the_data_is_free(
+    nodus_app, launched, monkeypatch
+):
+    """The new Nodus starts only after this one let go of the data, or it would find
+    another Nodus open and just bring it forward."""
+    data_dir = nodus_app._paths.data_dir
+    free_when_launched: list[bool] = []
+
+    def launch(command: list[str]) -> None:
+        other = SingleInstance(data_dir)
+        free_when_launched.append(other.acquire())
+        other.release()
+        launched.append(command)
+
+    nodus_app._launch = launch
+    monkeypatch.setattr(nodus_app, "_open_and_run", lambda reporter, instance: RESTART_EXIT_CODE)
+
+    assert nodus_app.run() == 0
+    assert launched == [restart_command(["nodus"])]
+    assert free_when_launched == [True]
+
+
+def test_the_restart_command_reopens_from_the_code_with_the_same_arguments():
+    assert restart_command(["nodus", "--flag"])[1:] == ["-m", "nodus", "--flag"]

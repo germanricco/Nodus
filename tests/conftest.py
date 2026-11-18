@@ -34,6 +34,16 @@ def pytest_configure(config):
         compile_catalogs(only_if_stale=True)
 
 
+@pytest.fixture(autouse=True)
+def spanish_system(monkeypatch):
+    """The tests speak Spanish, whatever the computer that runs them speaks (the CI's is
+    in English): Nodus opening new data takes the system's language. Whatever a test
+    installs, the next one starts in Spanish."""
+    monkeypatch.setattr("nodus.app.system_language", lambda: i18n.Language.SPANISH)
+    yield
+    i18n.install(i18n.Language.SPANISH)
+
+
 @pytest.fixture
 def english():
     """Nodus in English for one test, then back to Spanish, the language of the rest."""

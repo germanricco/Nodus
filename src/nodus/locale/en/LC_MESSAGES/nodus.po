@@ -3237,6 +3237,14 @@ msgid "General"
 msgstr "General"
 
 #: nodus/ui/pages/settings/general_card.py
+msgid "Idioma"
+msgstr "Language"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Se aplica al reiniciar Nodus."
+msgstr "Applies when Nodus restarts."
+
+#: nodus/ui/pages/settings/general_card.py
 msgid "Tema"
 msgstr "Theme"
 
@@ -3267,6 +3275,22 @@ msgstr "Reduce animations"
 #: nodus/ui/pages/settings/general_card.py
 msgid "Los gráficos y las cifras cambian de una vez, sin moverse."
 msgstr "Charts and figures change all at once, without moving."
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Cambiar el idioma"
+msgstr "Change the language"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Para cambiar el idioma, Nodus se reinicia."
+msgstr "To change the language, Nodus restarts."
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Reiniciar ahora"
+msgstr "Restart now"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Más tarde"
+msgstr "Later"
 
 #: nodus/ui/pages/settings/rates_card.py
 #, python-brace-format

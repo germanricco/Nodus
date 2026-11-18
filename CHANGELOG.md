@@ -4,6 +4,8 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 
 ## 1.10.0
 
+- Nodus habla inglés. El idioma se elige en Ajustes, en «Idioma», y se aplica al reiniciar. Junto con los textos cambian los montos y las fechas: en inglés se escriben «$1,234.56» y «11/18/2026». La primera vez, Nodus abre en el idioma de tu Windows; si ya lo usabas, sigue en español.
+- Al exportar a CSV, las columnas y el separador siguen al idioma, así la planilla se abre bien en el Excel de cada uno.
 - Arreglo: los íconos de Categorías y Etiquetas estaban intercambiados. Ahora Etiquetas muestra una etiqueta y Categorías el «#».
 
 ## 1.9.0 — 2026-11-18
