@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import calendar
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from enum import Enum
 
 from nodus.i18n import N_, _
@@ -25,6 +25,15 @@ LAST_DAY = date(2100, 12, 31)
 def format_date(day: date) -> str:
     """The whole date: "05/11/2026" in Spanish, "11/05/2026" in English."""
     return day.strftime(current_format().date)
+
+
+def format_time(moment: datetime) -> str:
+    """The time of day: "09:30" in Spanish, "9:30 AM" in English. Written by hand, not
+    with ``%p``, which follows the system's locale rather than Nodus's language."""
+    if not current_format().twelve_hour_clock:
+        return f"{moment:%H:%M}"
+    hour = moment.hour % 12 or 12
+    return f"{hour}:{moment:%M} {'AM' if moment.hour < 12 else 'PM'}"
 
 
 def qt_date_format() -> str:

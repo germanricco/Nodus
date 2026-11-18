@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 import pytest
 from factories import TODAY
@@ -11,6 +11,7 @@ from nodus.models.period import (
     format_day_month,
     format_month,
     format_month_in_sentence,
+    format_time,
     qt_date_format,
 )
 
@@ -127,15 +128,19 @@ def test_in_english_dates_go_month_first_and_months_are_in_english(english):
 
     assert format_date(day) == "11/05/2026"
     assert format_day_month(day) == "11/05"
+    assert format_time(datetime(2026, 11, 5, 9, 30)) == "9:30 AM"
+    assert format_time(datetime(2026, 11, 5, 0, 5)) == "12:05 AM"
+    assert format_time(datetime(2026, 11, 5, 21, 30)) == "9:30 PM"
     assert qt_date_format() == "MM/dd/yyyy"
     assert format_month(Month(2026, 11)) == "November 2026"
     assert format_month_in_sentence(Month(2027, 10)) == "October 2027"
     assert Month(2026, 9).short_name == "Sep"
 
 
-def test_in_spanish_a_month_inside_a_sentence_is_in_lowercase():
+def test_in_spanish_months_inside_a_sentence_are_lowercase_and_hours_go_to_24():
     assert format_month(Month(2026, 11)) == "Noviembre 2026"
     assert format_month_in_sentence(Month(2027, 10)) == "octubre de 2027"
+    assert format_time(datetime(2026, 11, 5, 9, 30)) == "09:30"
     assert qt_date_format() == "dd/MM/yyyy"
 
 

@@ -14,9 +14,10 @@ from typing import Any
 
 from nodus import APP_NAME, USER_AGENT, is_installed
 from nodus.config.logs import describe
-from nodus.i18n import _
+from nodus.i18n import _, current_language
 from nodus.links import LATEST_RELEASE_API
 from nodus.models.version import parse_version
+from nodus.services.app.changelog import notes_in
 from nodus.services.errors import UpdateError
 from nodus.services.external.http import Fetch, Stream, downloader, streamer
 from nodus.services.external.process import launch_detached
@@ -99,7 +100,8 @@ class UpdateService:
             data = json.loads(self._fetch(LATEST_RELEASE_API))
             version = data["tag_name"].removeprefix("v")
             # The notes open with the tag's subject line, which repeats the version.
-            notes = (data.get("body") or "").strip().removeprefix(f"Nodus {version}").strip()
+            body = (data.get("body") or "").strip().removeprefix(f"Nodus {version}").strip()
+            notes = notes_in(current_language(), body)
             installer = _installer(version, data.get("assets") or [])
             latest = Release(version, data["html_url"], notes, installer)
             is_newer = parse_version(latest.version) > parse_version(self.current_version)

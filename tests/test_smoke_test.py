@@ -10,6 +10,7 @@ from factories import light_theme
 
 from nodus import smoke_test
 from nodus.config.paths import AppPaths
+from nodus.services.app.changelog import changelog_files
 from nodus.smoke_test import SmokeTest, window_problems
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
@@ -30,7 +31,16 @@ def test_a_whole_program_has_no_problems(window):
 
 
 def test_it_names_what_is_missing(window, monkeypatch):
-    monkeypatch.setattr(smoke_test, "load_changelog", lambda: [])
+    monkeypatch.setattr(smoke_test, "load_changelog", lambda language: [])
+    english_missing = {"en": [Path("nowhere/CHANGELOG.en.md")]}
+    monkeypatch.setattr(
+        smoke_test,
+        "changelog_files",
+        lambda: {
+            language: english_missing.get(language.value, files)
+            for language, files in changelog_files().items()
+        },
+    )
     monkeypatch.setattr(smoke_test, "has_catalog", lambda language: language.value == "es")
     monkeypatch.setattr(smoke_test, "has_qt_texts", lambda language: language.value == "en")
 
@@ -40,6 +50,7 @@ def test_it_names_what_is_missing(window, monkeypatch):
         "Qt's es texts are missing",
         "the en catalog of Nodus's texts is missing",
         f"the changelog has no section for {smoke_test.__version__}",
+        "the en changelog is missing",
     ]
 
 

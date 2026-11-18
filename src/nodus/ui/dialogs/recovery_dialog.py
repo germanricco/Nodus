@@ -6,7 +6,7 @@ from pathlib import Path
 
 from nodus import APP_NAME
 from nodus.i18n import N_, _
-from nodus.models.period import format_date
+from nodus.models.period import format_date, format_time
 from nodus.services.backups.recovery import RecoveryCopy
 from nodus.ui.dialogs.user_error import UserErrorDialog, user_error
 
@@ -20,7 +20,7 @@ def recovery_text(copy: RecoveryCopy) -> str:
         "Nodus puede traer tus datos de vuelta desde la última copia sana, del"
         " {date} a las {time}. Lo que anotaste después"
         " no va a estar. El archivo dañado queda guardado aparte, junto a tus datos."
-    ).format(date=format_date(copy.saved.date()), time=f"{copy.saved:%H:%M}")
+    ).format(date=format_date(copy.saved.date()), time=format_time(copy.saved))
 
 
 def no_copy_text(backups_dir: Path) -> str:

@@ -59,6 +59,15 @@ def test_release_notes_come_without_the_repeated_subject_line():
     assert release.notes == "Novedades:\n\n- Algo nuevo."
 
 
+def test_the_notes_come_in_the_language_nodus_is_in(english):
+    body = "Nodus 1.10.0\n\n- Algo nuevo.\n\n---\n\n<!-- en -->\n\n- Something new."
+    data = {"tag_name": "v1.10.0", "html_url": RELEASE_PAGE, "body": body}
+
+    release = UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check()
+
+    assert release.notes == "- Something new."
+
+
 def test_release_without_notes_has_empty_notes():
     assert UpdateService("0.2.0", lambda _url: answer("v0.3.0")).check().notes == ""
 

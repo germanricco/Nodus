@@ -67,9 +67,9 @@ analysis = Analysis(
     # Migrations, icons, the stylesheet and the compiled catalogs (.mo; build.py compiles
     # them first, and the .po they come from stays out), which the code reads with
     # importlib.resources,
-    # and the changelog, which lives at the repository root but is read from the package.
+    # and the changelogs, which live at the repository root but are read from the package.
     datas=collect_data_files("nodus", excludes=["**/__pycache__", "**/*.po"])
-    + [(str(ROOT / "CHANGELOG.md"), "nodus")],
+    + [(str(ROOT / name), "nodus") for name in ("CHANGELOG.md", "CHANGELOG.en.md")],
     excludes=["tkinter"],
 )
 analysis.binaries = [entry for entry in analysis.binaries if not unused(entry[0])]

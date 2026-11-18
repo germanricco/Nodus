@@ -20,7 +20,7 @@ from _common import use_offscreen_qt  # noqa: E402
 
 use_offscreen_qt()
 
-from demo_data import load_demo_data  # noqa: E402
+from demo_data import load_demo_data, shown  # noqa: E402
 from PySide6.QtCore import Qt, QTimer  # noqa: E402
 from PySide6.QtWidgets import QApplication, QDialog, QScrollArea, QWidget  # noqa: E402
 
@@ -29,6 +29,7 @@ from nodus.config.paths import AppPaths  # noqa: E402
 from nodus.database.database import Database  # noqa: E402
 from nodus.i18n import Language, _, install  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
+from nodus.models.language_format import grouped  # noqa: E402
 from nodus.models.money import Money  # noqa: E402
 from nodus.models.period import Month  # noqa: E402
 from nodus.models.transaction import Transaction, TransactionType  # noqa: E402
@@ -180,9 +181,11 @@ def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) ->
     """A transfer from pesos to dollars, to show the implied exchange rate."""
     dialog = TransactionDialog(services, event_bus, window.theme_manager, parent=window)
     dialog.mode_input.set_index(TRANSFER_MODE)
-    dialog.account_input.setCurrentIndex(dialog.account_input.findText("Banco"))
-    dialog.amount_input.line_edit.setText("121.550")
-    dialog.to_account_input.setCurrentIndex(dialog.to_account_input.findText("Ahorro en dólares"))
+    dialog.account_input.setCurrentIndex(dialog.account_input.findText(shown("Banco")))
+    dialog.amount_input.line_edit.setText(grouped(121550))
+    dialog.to_account_input.setCurrentIndex(
+        dialog.to_account_input.findText(shown("Ahorro en dólares"))
+    )
     dialog.amount_in_input.line_edit.setText("100")
     return dialog
 
@@ -275,8 +278,9 @@ def capture_toasts(shots: Shots) -> None:
     window = shots.window
     # Toasts on Recurrentes: one that just tells, and one with «Deshacer».
     window.show_page(PageId.RECURRING)
-    window.toast("Copia guardada.")
-    window.toast("Se omitió Internet.", "Deshacer", lambda: None)
+    window.toast(_("Copia guardada."))
+    skipped = _("Se omitió {charge}.").format(charge=shown("Internet"))
+    window.toast(skipped, _("Deshacer"), lambda: None)
     shots.save(window, "toast")
     for toast in list(window.toasts.toasts):
         toast.dismiss()
@@ -493,10 +497,12 @@ def capture_messages(shots: Shots) -> None:
     update.close()
     # An error that says what to do, with the system's text unfolded.
     error = UserErrorDialog(
-        "Copia fuera de la PC",
-        "No se pudo guardar la copia.",
-        r"Revisa que la carpeta E:\Nodus exista y que el pendrive o el disco sigan"
-        " conectados y con lugar libre. Después vuelve a intentarlo.",
+        _("Copia fuera de la PC"),
+        _("No se pudo guardar la copia."),
+        _(
+            "Revisa que la carpeta {folder} exista y que el pendrive o el disco sigan"
+            " conectados y con lugar libre. Después vuelve a intentarlo."
+        ).format(folder=r"E:\Nodus"),
         r"[Errno 28] No space left on device: 'E:\Nodus\nodus-2026-11-14.db'",
         parent=window,
     )
@@ -630,7 +636,7 @@ def capture_seen(app: QApplication, window: MainWindow, out: Path, mode: ThemeMo
 def capture_empty_group(app: QApplication, window: MainWindow, out: Path, mode: ThemeMode) -> None:
     """Cuentas with an empty group: where an account can be dragged. Deleted after."""
     services = window._services
-    group = services.account_groups.create("Para más adelante")
+    group = services.account_groups.create(shown("Para más adelante"))
     window._event_bus.accounts_changed.emit()
     window.show_page(PageId.ACCOUNTS)
     page = window.page(PageId.ACCOUNTS)
@@ -656,7 +662,7 @@ def capture_discard(
     dialog = CategoryDialog(services, event_bus, parent=window)
     dialog.show()
     app.processEvents()
-    dialog.name_input.setText("Mascotas")
+    dialog.name_input.setText(shown("Mascotas"))
 
     def capture_question() -> None:
         question = QApplication.activeModalWidget()

@@ -23,8 +23,8 @@ from PySide6.QtWidgets import QApplication
 
 from nodus import __version__
 from nodus.config.paths import AppPaths
-from nodus.i18n import Language, has_catalog
-from nodus.services.app.changelog import load_changelog
+from nodus.i18n import SOURCE_LANGUAGE, Language, has_catalog
+from nodus.services.app.changelog import changelog_files, load_changelog
 from nodus.ui.navigation import PageId
 from nodus.ui.qt_language import has_qt_texts
 from nodus.ui.shell.main_window import MainWindow
@@ -32,6 +32,15 @@ from nodus.ui.shell.main_window import MainWindow
 FLAG = "--smoke-test"
 
 logger = logging.getLogger(__name__)
+
+
+def changelog_problems() -> list[str]:
+    """The changelogs the built program lacks: the news are read in Nodus's language."""
+    return [
+        f"the {language.value} changelog is missing"
+        for language, files in changelog_files().items()
+        if not any(file.is_file() for file in files)
+    ]
 
 
 def language_problems() -> list[str]:
@@ -54,8 +63,9 @@ def window_problems(window: MainWindow) -> list[str]:
     if b"svg" not in QImageReader.supportedImageFormats():
         problems.append("Qt's SVG plugin is missing: the icons do not show")
     problems.extend(language_problems())
-    if not any(entry.version == __version__ for entry in load_changelog()):
+    if not any(entry.version == __version__ for entry in load_changelog(SOURCE_LANGUAGE)):
         problems.append(f"the changelog has no section for {__version__}")
+    problems.extend(changelog_problems())
     for page_id in PageId:
         try:
             window.show_page(page_id)

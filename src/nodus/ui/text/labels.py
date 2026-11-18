@@ -99,8 +99,8 @@ def unconverted_note(count: int) -> str:
     """Why a total may fall short: movements in another currency left out for lack of a
     rate."""
     return ngettext(
-        "{count} movimiento(s) en otra moneda sin cotización no se incluyen.",
-        "{count} movimiento(s) en otra moneda sin cotización no se incluyen.",
+        "{count} movimiento en otra moneda sin cotización no se incluye.",
+        "{count} movimientos en otra moneda sin cotización no se incluyen.",
         count,
     ).format(count=count)
 

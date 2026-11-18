@@ -66,6 +66,15 @@ ENGLISH = {
     "Fondo de emergencia": "Emergency fund",
     "Notebook nueva": "New laptop",
     "Vacaciones {year}": "Vacation {year}",
+    # Argentine stores and cards, as their English-speaking counterparts.
+    "Coto": "Walmart",
+    "Día": "Aldi",
+    "Frávega": "Best Buy",
+    "SUBE": "Transit card",
+    "Edenor": "Con Edison",
+    "Mascotas": "Pets",
+    "Farmacity": "CVS",
+    "Para más adelante": "For later",
 }
 
 
@@ -151,7 +160,7 @@ class DemoData:
         self.categories[(EXPENSE, shown("Alquiler"))] = alquiler.id
         for supermarket in ("Coto", "Día"):
             services.payees.create(
-                supermarket, self.categories[(EXPENSE, shown("Supermercado y comida"))]
+                shown(supermarket), self.categories[(EXPENSE, shown("Supermercado y comida"))]
             )
         accounts = services.accounts
         self.banco = accounts.create(shown("Banco"), AccountType.BANK, Currency.ARS, ars("420000"))
@@ -295,7 +304,7 @@ class DemoData:
         self.services.installments.create(
             TransactionDraft(self.visa.id, EXPENSE, ars("750000"), first_installment,
                              self.categories[(EXPENSE, shown("Vivienda"))],
-                             shown("Heladera"), "Frávega"),
+                             shown("Heladera"), shown("Frávega")),
             InstallmentPlan(None, 6, ars("750000"), first_installment),
         )  # fmt: skip
 

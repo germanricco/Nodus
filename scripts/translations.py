@@ -8,11 +8,13 @@ and is ignored by git.
     python scripts/translations.py extract   # brings the .po up to date with the code
     python scripts/translations.py compile   # writes the .mo
     python scripts/translations.py check     # what is missing or wrong, if anything
+    python scripts/translations.py review    # a page to read each screen's texts side by side
 """
 
 from __future__ import annotations
 
 import argparse
+import html
 import re
 import sys
 from collections.abc import Iterable
@@ -152,15 +154,69 @@ def check() -> list[str]:
     ]
 
 
+REVIEW_STYLE = """
+body { font: 14px/1.45 "Segoe UI", sans-serif; margin: 24px; color: #222; }
+h2 { margin-top: 32px; font-size: 16px; border-bottom: 1px solid #ccc; }
+table { border-collapse: collapse; width: 100%; }
+td { vertical-align: top; padding: 6px 8px; border-bottom: 1px solid #eee; width: 50%; }
+.shots img { width: 49%; border: 1px solid #ddd; margin: 4px 0; }
+"""
+
+
+def screen_of(message: Message) -> str:
+    """Where a text shows, by the first file that uses it: "pages/budgets_page"."""
+    path = Path(sorted(message.locations)[0][0])
+    parts = path.with_suffix("").parts
+    return "/".join(parts[parts.index("nodus") + 1 :]).removeprefix("ui/")
+
+
+def review(language: str, shots: Path | None) -> str:
+    """A page with every text of the catalog, Spanish beside ``language``, grouped by the
+    screen that shows it; with ``shots`` (the ``es`` and ``en`` folders of
+    ``screenshot.py``), each capture in both languages at the end."""
+    screens: dict[str, list[Message]] = {}
+    for message in read_catalog(language):
+        if message.id:
+            screens.setdefault(screen_of(message), []).append(message)
+    out = [f"<!doctype html><meta charset=utf-8><title>Nodus: {language}</title>"]
+    out.append(f"<style>{REVIEW_STYLE}</style><h1>Nodus en español y {language}</h1>")
+    for screen, messages in sorted(screens.items()):
+        out.append(f"<h2>{html.escape(screen)}</h2><table>")
+        for message in messages:
+            source = message.id if isinstance(message.id, str) else " | ".join(message.id)
+            target = translations_of(message)
+            out.append(
+                f"<tr><td>{html.escape(source)}</td><td>{html.escape(' | '.join(target))}</td></tr>"
+            )
+        out.append("</table>")
+    if shots is not None:
+        out.append("<h2>Capturas</h2>")
+        for spanish in sorted((shots / "es").glob("*-light.png")):
+            other = shots / language / spanish.name
+            out.append(
+                f"<div class=shots><p>{spanish.stem}</p>"
+                f"<img src='{spanish.as_uri()}'> <img src='{other.as_uri()}'></div>"
+            )
+    return "\n".join(out)
+
+
 def main(argv: list[str] | None = None) -> int:
     sys.stdout.reconfigure(encoding="utf-8")  # the texts have accents; Windows' console not
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("command", choices=["extract", "compile", "check"])
-    command = parser.parse_args(argv).command
+    parser.add_argument("command", choices=["extract", "compile", "check", "review"])
+    parser.add_argument("--out", type=Path, default=Path("screenshots/traduccion.html"))
+    parser.add_argument("--shots", type=Path, help="screenshots taken in es/ and en/")
+    args = parser.parse_args(argv)
+    command = args.command
     if command == "extract":
         extract()
     elif command == "compile":
         compile_catalogs()
+    elif command == "review":
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        shots = args.shots.resolve() if args.shots else None
+        args.out.write_text(review(LANGUAGES[0], shots), encoding="utf-8")
+        print(f"Revisión escrita en {args.out}")
     else:
         found = check()
         for problem in found:

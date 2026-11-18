@@ -27,6 +27,7 @@ class LanguageFormat:
     qt_date: str  # the whole date as a date field writes it, for Qt
     month_in_sentence: str  # a month and its year inside a sentence: «octubre de 2027»
     lowercase_months: bool  # inside a sentence: Spanish does, English never
+    twelve_hour_clock: bool  # «9:30 AM» rather than «09:30»
     csv_separator: str  # between columns, as Excel in that language expects
 
 
@@ -41,6 +42,7 @@ FORMATS = {
         qt_date="dd/MM/yyyy",
         month_in_sentence="{month} de {year}",
         lowercase_months=True,
+        twelve_hour_clock=False,
         csv_separator=";",
     ),
     Language.ENGLISH: LanguageFormat(
@@ -53,6 +55,7 @@ FORMATS = {
         qt_date="MM/dd/yyyy",
         month_in_sentence="{month} {year}",
         lowercase_months=False,
+        twelve_hour_clock=True,
         csv_separator=",",
     ),
 }

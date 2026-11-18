@@ -23,13 +23,13 @@ def tag_delete_warning(services: Services, summaries: list[TagSummary]) -> str:
     if count:
         if len(summaries) == 1:
             lose = ngettext(
-                "{count} movimiento la pierden; los movimientos no se borran.",
+                "{count} movimiento la pierde; los movimientos no se borran.",
                 "{count} movimientos la pierden; los movimientos no se borran.",
                 count,
             )
         else:
             lose = ngettext(
-                "{count} movimiento pierden alguna; los movimientos no se borran.",
+                "{count} movimiento pierde alguna; los movimientos no se borran.",
                 "{count} movimientos pierden alguna; los movimientos no se borran.",
                 count,
             )
