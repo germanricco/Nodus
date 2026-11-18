@@ -100,6 +100,58 @@ msgstr "Commas group thousands, three digits at a time: {example}."
 msgid "Los {currency} no llevan centavos."
 msgstr "{currency} have no cents."
 
+#: nodus/models/category.py
+msgid "Otros"
+msgstr "Other"
+
+#: nodus/models/category.py nodus/ui/pages/transactions_page.py nodus/ui/text/help_texts.py
+msgid "Reembolsos"
+msgstr "Refunds"
+
+#: nodus/models/category.py
+msgid "Supermercado y comida"
+msgstr "Groceries"
+
+#: nodus/models/category.py
+msgid "Vivienda"
+msgstr "Housing"
+
+#: nodus/models/category.py
+msgid "Servicios"
+msgstr "Utilities"
+
+#: nodus/models/category.py
+msgid "Transporte"
+msgstr "Transportation"
+
+#: nodus/models/category.py
+msgid "Salud"
+msgstr "Health"
+
+#: nodus/models/category.py
+msgid "Educación"
+msgstr "Education"
+
+#: nodus/models/category.py
+msgid "Proyectos"
+msgstr "Projects"
+
+#: nodus/models/category.py
+msgid "Ocio"
+msgstr "Entertainment"
+
+#: nodus/models/category.py
+msgid "Ropa"
+msgstr "Clothing"
+
+#: nodus/models/category.py
+msgid "Sueldo"
+msgstr "Salary"
+
+#: nodus/models/category.py
+msgid "Trabajo freelance"
+msgstr "Freelance work"
+
 #: nodus/models/currency.py
 msgid "peso"
 msgstr "peso"
@@ -2655,10 +2707,6 @@ msgstr "tag"
 #: nodus/ui/pages/transactions_page.py
 msgid "Transferencias"
 msgstr "Transfers"
-
-#: nodus/ui/pages/transactions_page.py nodus/ui/text/help_texts.py
-msgid "Reembolsos"
-msgstr "Refunds"
 
 #: nodus/ui/pages/transactions_page.py
 msgid "Exportar"

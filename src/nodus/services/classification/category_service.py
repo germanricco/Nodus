@@ -13,7 +13,7 @@ from datetime import datetime
 from nodus.database.database import Database
 from nodus.database.repositories.category_repository import CategoryRepository
 from nodus.i18n import N_, _
-from nodus.models.category import Category
+from nodus.models.category import DEFAULT_NAMES, Category
 from nodus.models.names import normalize_name
 from nodus.models.transaction import TransactionType
 from nodus.services.backups.backup_service import BackupService
@@ -45,6 +45,16 @@ class CategoryService:
         self._database = database
         self._categories = categories
         self._backups = backups
+
+    def name_defaults(self) -> None:
+        """Gives the categories the first migration created the names of the language
+        Nodus is in. Only for a new database: in one already used, the names are the
+        user's, even the ones nobody changed."""
+        with self._database.transaction():
+            for category in self._categories.list():
+                shown = _(category.name)
+                if category.name in DEFAULT_NAMES and shown != category.name:
+                    self._categories.update(dataclasses.replace(category, name=shown))
 
     def list_categories(self, kind: TransactionType | None = None) -> list[Category]:
         """Categories in alphabetical order, with the system "Otros" last."""

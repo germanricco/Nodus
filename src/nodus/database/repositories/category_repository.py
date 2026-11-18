@@ -6,7 +6,7 @@ import dataclasses
 import sqlite3
 
 from nodus.database.repositories.base import Repository
-from nodus.models.category import Category
+from nodus.models.category import Category, fixed_name
 from nodus.models.transaction import TransactionType
 
 
@@ -83,12 +83,13 @@ class CategoryRepository(Repository):
 
     @staticmethod
     def _from_row(row: sqlite3.Row) -> Category:
+        is_system, is_refunds = bool(row["is_system"]), bool(row["is_refunds"])
         return Category(
             id=row["id"],
-            name=row["name"],
+            name=fixed_name(is_system, is_refunds) or row["name"],
             kind=TransactionType(row["kind"]),
             color=row["color"],
             parent_id=row["parent_id"],
-            is_system=bool(row["is_system"]),
-            is_refunds=bool(row["is_refunds"]),
+            is_system=is_system,
+            is_refunds=is_refunds,
         )

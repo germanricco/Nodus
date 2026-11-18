@@ -4,6 +4,7 @@ import random
 from datetime import date, timedelta
 from decimal import Decimal
 
+from nodus.i18n import Language, _, current_language
 from nodus.models.account import Account, AccountType
 from nodus.models.currency import Currency
 from nodus.models.goal import GoalShare
@@ -22,7 +23,57 @@ from nodus.services.transactions.transfer_service import TransferDraft
 # Months of history before the current one, so the dashboard has trends to show.
 HISTORY_MONTHS = 5
 INCOME, EXPENSE = TransactionType.INCOME, TransactionType.EXPENSE
-WORK = ("Trabajo",)
+
+
+# The demo's own words in English; the categories Nodus creates come from its catalog,
+# so they match the names a new database gets.
+ENGLISH = {
+    "Banco": "Bank",
+    "Efectivo": "Cash",
+    "Ahorro en dólares": "Dollar savings",
+    "Euros del viaje": "Travel euros",
+    "Inversiones": "Investments",
+    "Bancos": "Banks",
+    "Billeteras": "Wallets",
+    "Ahorro e inversiones": "Savings and investments",
+    "Alquiler": "Rent",
+    "Trabajo": "Work",
+    "Empresa S.A.": "Acme Inc.",
+    "Sueldo del mes": "Monthly salary",
+    "Proyecto freelance": "Freelance project",
+    "Luz": "Electricity",
+    "Compra de la semana": "Weekly groceries",
+    "Carga": "Card top-up",
+    "Salidas": "Going out",
+    "Farmacia": "Pharmacy",
+    "Pasajes y hotel": "Flights and hotel",
+    "Excursiones": "Excursions",
+    "Ropa de verano": "Summer clothes",
+    "Compra de dólares MEP": "MEP dollar purchase",
+    "Extracción": "Cash withdrawal",
+    "Diseño web": "Web design",
+    "Alquiler de noviembre": "Rent for November",
+    "Reintegro con tarjeta": "Card cashback",
+    "Devolución de una campera": "Jacket returned",
+    "Cine": "Movies",
+    "Entradas recital": "Concert tickets",
+    "Curso de inglés": "Language course",
+    "Heladera": "Fridge",
+    "Gimnasio": "Gym",
+    "Seguro del auto": "Car insurance",
+    "Suscripción en dólares": "Dollar subscription",
+    "Vacaciones en Brasil": "Trip to Brazil",
+    "Fondo de emergencia": "Emergency fund",
+    "Notebook nueva": "New laptop",
+    "Vacaciones {year}": "Vacation {year}",
+}
+
+
+def shown(text: str) -> str:
+    """``text`` in the language Nodus is in, so the screenshots in English show English."""
+    if current_language() is not Language.ENGLISH or not text:
+        return text
+    return ENGLISH.get(text) or _(text)
 
 
 def ars(amount: str | int) -> Money:
@@ -50,6 +101,7 @@ class DemoData:
         self.today = today
         self.current = Month.of(today)
         self.categories = {(c.kind, c.name): c.id for c in services.categories.list_categories()}
+        self.work = (shown("Trabajo"),)
 
     def load(self) -> None:
         self.add_accounts()
@@ -77,8 +129,9 @@ class DemoData:
         refund_of: Transaction | None = None,
     ) -> Transaction:
         return self.services.transactions.create(
-            TransactionDraft(account_id, kind, amount, day, self.categories[(kind, category)],
-                             note, payee, refund_of_id=refund_of.id if refund_of else None,
+            TransactionDraft(account_id, kind, amount, day,
+                             self.categories[(kind, shown(category))], shown(note),
+                             shown(payee), refund_of_id=refund_of.id if refund_of else None,
                              tag_names=tuple(tags))
         )  # fmt: skip
 
@@ -90,28 +143,35 @@ class DemoData:
         grows a little each month, brought up to date at each month end."""
         services = self.services
         alquiler = services.categories.create(
-            "Alquiler", EXPENSE, PALETTE[1], parent_id=self.categories[(EXPENSE, "Vivienda")]
+            shown("Alquiler"),
+            EXPENSE,
+            PALETTE[1],
+            parent_id=self.categories[(EXPENSE, shown("Vivienda"))],
         )
-        self.categories[(EXPENSE, "Alquiler")] = alquiler.id
+        self.categories[(EXPENSE, shown("Alquiler"))] = alquiler.id
         for supermarket in ("Coto", "Día"):
-            services.payees.create(supermarket, self.categories[(EXPENSE, "Supermercado y comida")])
+            services.payees.create(
+                supermarket, self.categories[(EXPENSE, shown("Supermercado y comida"))]
+            )
         accounts = services.accounts
-        self.banco = accounts.create("Banco", AccountType.BANK, Currency.ARS, ars("420000"))
-        self.efectivo = accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("60000"))
+        self.banco = accounts.create(shown("Banco"), AccountType.BANK, Currency.ARS, ars("420000"))
+        self.efectivo = accounts.create(
+            shown("Efectivo"), AccountType.CASH, Currency.ARS, ars("60000")
+        )
         self.mercado_pago = accounts.create(
             "Mercado Pago", AccountType.WALLET, Currency.ARS, ars("45000")
         )
         self.ahorro = accounts.create(
-            "Ahorro en dólares", AccountType.SAVINGS, Currency.USD, usd("400")
+            shown("Ahorro en dólares"), AccountType.SAVINGS, Currency.USD, usd("400")
         )
         self.euros = accounts.create(
-            "Euros del viaje",
+            shown("Euros del viaje"),
             AccountType.CASH,
             Currency.EUR,
             Money.from_decimal("150", Currency.EUR),
         )
         self.inversiones = accounts.create(
-            "Inversiones", AccountType.INVESTMENT, Currency.ARS, ars("800000")
+            shown("Inversiones"), AccountType.INVESTMENT, Currency.ARS, ars("800000")
         )
         value = 800_000
         for back in range(HISTORY_MONTHS, 0, -1):
@@ -123,7 +183,9 @@ class DemoData:
         back, and dollars bought each month."""
         record, banco, efectivo = self.record, self.banco.id, self.efectivo.id
         trip_month = 2  # months back
-        self.trip = (f"Vacaciones {self.current.shifted(-trip_month).year}",)
+        self.trip = (
+            shown("Vacaciones {year}").format(year=self.current.shifted(-trip_month).year),
+        )
         random_ = random.Random(7)
         for back in range(HISTORY_MONTHS, 0, -1):
             month = self.current.shifted(-back)
@@ -135,7 +197,7 @@ class DemoData:
             record(banco, INCOME, "Sueldo", ars(salary), on(3), "Sueldo del mes", "Empresa S.A.")
             if back % 2 == 0:
                 record(banco, INCOME, "Trabajo freelance", ars(random_.randrange(150, 320) * 1000),
-                       on(18), "Proyecto freelance", tags=WORK)  # fmt: skip
+                       on(18), "Proyecto freelance", tags=self.work)  # fmt: skip
             record(banco, EXPENSE, "Alquiler", ars(380_000 + 8_000 * (HISTORY_MONTHS - back)),
                    on(5), "Alquiler")  # fmt: skip
             record(banco, EXPENSE, "Servicios", ars(random_.randrange(32, 48) * 1000), on(10),
@@ -158,10 +220,10 @@ class DemoData:
                                              "Ropa de verano", tags=self.trip)  # fmt: skip
             self.services.transfers.create(
                 TransferDraft(banco, self.ahorro.id, ars(int(rate * 150)), on(20),
-                              amount_in=usd(150), note="Compra de dólares MEP")
+                              amount_in=usd(150), note=shown("Compra de dólares MEP"))
             )  # fmt: skip
             self.services.transfers.create(
-                TransferDraft(banco, efectivo, ars("120000"), on(4), note="Extracción")
+                TransferDraft(banco, efectivo, ars("120000"), on(4), note=shown("Extracción"))
             )  # fmt: skip
 
     def add_this_month(self) -> None:
@@ -173,7 +235,7 @@ class DemoData:
         record(banco, INCOME, "Sueldo", ars("1450000"), days_ago(4), "Sueldo del mes",
                "Empresa S.A.")  # fmt: skip
         record(banco, INCOME, "Trabajo freelance", ars("280000"), days_ago(2), "Diseño web",
-               tags=WORK)  # fmt: skip
+               tags=self.work)  # fmt: skip
         record(banco, EXPENSE, "Alquiler", ars("420000"), days_ago(3), "Alquiler de noviembre")
         record(banco, EXPENSE, "Servicios", ars("38500.40"), days_ago(3), "Luz", "Edenor")
         groceries = record(banco, EXPENSE, "Supermercado y comida", ars("96320.75"),
@@ -186,10 +248,10 @@ class DemoData:
         record(efectivo, EXPENSE, "Ocio", ars("18500"), days_ago(1), "Cine")
         record(banco, EXPENSE, "Ocio", ars("52000"), days_ago(0), "Entradas recital")
         record(banco, EXPENSE, "Educación", ars("65000"), days_ago(0), "Curso de inglés",
-               tags=WORK)  # fmt: skip
+               tags=self.work)  # fmt: skip
         self.services.transfers.create(
             TransferDraft(banco, self.ahorro.id, ars("243100"), days_ago(1),
-                          amount_in=usd("200"), note="Compra de dólares MEP")
+                          amount_in=usd("200"), note=shown("Compra de dólares MEP"))
         )  # fmt: skip
 
     def add_charges(self) -> None:
@@ -201,8 +263,9 @@ class DemoData:
             due: date,
         ) -> RecurringCharge:  # fmt: skip
             return self.services.recurring.create(
-                RecurringChargeDraft(name, amount, account.id,
-                                     self.categories[(EXPENSE, category)], frequency, due)
+                RecurringChargeDraft(shown(name), amount, account.id,
+                                     self.categories[(EXPENSE, shown(category))], frequency,
+                                     due)
             )  # fmt: skip
 
         monthly = Frequency.MONTHLY
@@ -231,7 +294,8 @@ class DemoData:
         first_installment = self.current.shifted(-2).day(10)
         self.services.installments.create(
             TransactionDraft(self.visa.id, EXPENSE, ars("750000"), first_installment,
-                             self.categories[(EXPENSE, "Vivienda")], "Heladera", "Frávega"),
+                             self.categories[(EXPENSE, shown("Vivienda"))],
+                             shown("Heladera"), "Frávega"),
             InstallmentPlan(None, 6, ars("750000"), first_installment),
         )  # fmt: skip
 
@@ -239,9 +303,9 @@ class DemoData:
         """Groups as a user would make them: the banks with their card, the wallet apart,
         and what is put aside; cash stays in no group."""
         groups = self.services.account_groups
-        for name, members in (("Bancos", (self.banco, self.visa)),
-                              ("Billeteras", (self.mercado_pago,)),
-                              ("Ahorro e inversiones", (self.ahorro, self.inversiones,
+        for name, members in ((shown("Bancos"), (self.banco, self.visa)),
+                              (shown("Billeteras"), (self.mercado_pago,)),
+                              (shown("Ahorro e inversiones"), (self.ahorro, self.inversiones,
                                                         self.euros))):  # fmt: skip
             group = groups.create(name)
             for account in members:
@@ -251,9 +315,9 @@ class DemoData:
         """Goals in three states: the dollar savings fill a trip on time and have already
         paid for a laptop; the investments alone fall behind an emergency fund."""
         for name, target, months, shares in (
-            ("Vacaciones en Brasil", usd("2000"), 14, ((self.ahorro, 70),)),
-            ("Fondo de emergencia", ars("1500000"), 10, ((self.inversiones, 100),)),
-            ("Notebook nueva", usd("300"), None, ((self.ahorro, 30),)),
+            (shown("Vacaciones en Brasil"), usd("2000"), 14, ((self.ahorro, 70),)),
+            (shown("Fondo de emergencia"), ars("1500000"), 10, ((self.inversiones, 100),)),
+            (shown("Notebook nueva"), usd("300"), None, ((self.ahorro, 30),)),
         ):
             target_date = self.current.shifted(months).end if months else None
             self.services.goals.create(
@@ -270,6 +334,6 @@ class DemoData:
         for category, amount in (("Supermercado y comida", "350000"), ("Ocio", "60000"),
                                  ("Servicios", "45000"), ("Transporte", "25000"),
                                  ("Salud", "50000")):  # fmt: skip
-            budgets.set_limit(categories[(EXPENSE, category)], since, ars(amount))
-        budgets.set_limit(categories[(EXPENSE, "Supermercado y comida")], self.current,
+            budgets.set_limit(categories[(EXPENSE, shown(category))], since, ars(amount))
+        budgets.set_limit(categories[(EXPENSE, shown("Supermercado y comida"))], self.current,
                           ars("400000"))  # fmt: skip

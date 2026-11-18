@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QApplication
 
 from nodus.config.paths import AppPaths
 from nodus.database.database import Database
+from nodus.i18n import _
 from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.recurring_charge import Frequency
@@ -39,8 +40,11 @@ def clp(amount: str) -> Money:
 
 
 def category_id(services: Services, name: str, kind: TransactionType) -> int:
-    """Id of a default category, looked up by name."""
-    return next(c.id for c in services.categories.list_categories(kind) if c.name == name)
+    """Id of a default category, looked up by its Spanish name, also in a database that
+    was created in English and so named it in English."""
+    return next(
+        c.id for c in services.categories.list_categories(kind) if c.name in (name, _(name))
+    )
 
 
 def expense_draft(

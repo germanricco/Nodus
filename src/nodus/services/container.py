@@ -100,6 +100,8 @@ class Services:
         )
         exchange_rates = ExchangeRateService(database, ExchangeRateRepository(database))
         categories = CategoryService(database, category_repository, backups)
+        if database.created:
+            categories.name_defaults()
         transaction_repository = TransactionRepository(database)
         payee_repository = PayeeRepository(database)
         tag_repository = TagRepository(database)

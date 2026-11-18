@@ -1,6 +1,7 @@
 import pytest
-from factories import ars, category_id, expense_draft
+from factories import ars, category_id, expense_draft, services_for
 
+from nodus.database.database import Database
 from nodus.models.transaction import TransactionType
 from nodus.services.errors import ValidationError
 
@@ -165,3 +166,34 @@ class TestRefundsCategory:
             else:
                 services.categories.create("Amigos", INCOME, "#000000", parent_id=refunds.id)
         assert services.categories.refunds_category() == refunds
+
+
+def test_a_new_database_in_english_names_its_categories_in_english(english, services):
+    expenses = names(services, TransactionType.EXPENSE)
+
+    assert "Groceries" in expenses and "Housing" in expenses
+    assert expenses[-1] == "Other"
+    assert "Refunds" in names(services, TransactionType.INCOME)
+
+
+def test_a_database_already_used_keeps_the_names_it_has(database, english):
+    """Opened again in English, the categories the user knew keep their Spanish names;
+    only the fixed ones, which Nodus names, follow the language."""
+    path = database.path
+    database.close()
+    reopened = Database.open(path)
+    try:
+        services = services_for(reopened)
+        assert "Vivienda" in names(services, TransactionType.EXPENSE)
+        assert names(services, TransactionType.EXPENSE)[-1] == "Other"
+        assert "Refunds" in names(services, TransactionType.INCOME)
+    finally:
+        reopened.close()
+
+
+def test_in_spanish_a_fixed_category_keeps_the_name_the_database_has(services, database):
+    """Before migration 012, the refunds mark went to the category the user had renamed."""
+    with database.transaction() as connection:
+        connection.execute("UPDATE categories SET name = 'Devoluciones' WHERE is_refunds = 1")
+
+    assert "Devoluciones" in names(services, TransactionType.INCOME)
