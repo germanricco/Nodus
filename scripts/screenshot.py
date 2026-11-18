@@ -12,7 +12,7 @@ import argparse
 import sys
 import tempfile
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -24,6 +24,7 @@ from demo_data import load_demo_data  # noqa: E402
 from PySide6.QtCore import Qt, QTimer  # noqa: E402
 from PySide6.QtWidgets import QApplication, QDialog, QScrollArea, QWidget  # noqa: E402
 
+from nodus import APP_NAME  # noqa: E402
 from nodus.config.paths import AppPaths  # noqa: E402
 from nodus.database.database import Database  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
@@ -31,6 +32,7 @@ from nodus.models.money import Money  # noqa: E402
 from nodus.models.period import Month  # noqa: E402
 from nodus.models.transaction import Transaction, TransactionType  # noqa: E402
 from nodus.models.transaction_filter import TransactionFilter  # noqa: E402
+from nodus.services.backups.recovery import RecoveryCopy  # noqa: E402
 from nodus.services.container import Services  # noqa: E402
 from nodus.services.external.update_service import Installer, Release  # noqa: E402
 from nodus.services.transactions.transaction_service import TransactionDraft  # noqa: E402
@@ -39,11 +41,12 @@ from nodus.ui.dialogs.budget_dialog import BudgetDialog  # noqa: E402
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog  # noqa: E402
 from nodus.ui.dialogs.category_dialog import CategoryDialog  # noqa: E402
 from nodus.ui.dialogs.goal_dialog import GoalDialog  # noqa: E402
+from nodus.ui.dialogs.recovery_dialog import DAMAGED, RESTORE, recovery_text  # noqa: E402
 from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog  # noqa: E402
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog  # noqa: E402
 from nodus.ui.dialogs.transaction_dialog import TRANSFER_MODE, TransactionDialog  # noqa: E402
 from nodus.ui.dialogs.update_dialog import UpdateDialog  # noqa: E402
-from nodus.ui.dialogs.user_error import UserErrorDialog  # noqa: E402
+from nodus.ui.dialogs.user_error import UnexpectedErrorDialog, UserErrorDialog  # noqa: E402
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog  # noqa: E402
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.navigation import DetailId, PageId  # noqa: E402
@@ -499,6 +502,24 @@ def capture_messages(shots: Shots) -> None:
     shots.settle()
     shots.save(error, "user-error")
     error.close()
+    # A fault of Nodus, with «Enviar reporte» and the folder of the log.
+    try:
+        raise KeyError("category_id")
+    except KeyError as fault:
+        unexpected = UnexpectedErrorDialog(fault, Path("C:/Nodus/logs"), parent=window)
+    unexpected.show()
+    shots.settle()
+    shots.save(unexpected, "unexpected-error")
+    unexpected.close()
+    # The data file damaged: the newest whole copy, offered before any window.
+    copy = RecoveryCopy(Path("nodus-2026-11-16.db"), datetime(2026, 11, 16, 9, 30))
+    recovery = UserErrorDialog(
+        APP_NAME, DAMAGED, recovery_text(copy), "file is not a database", action=RESTORE
+    )
+    recovery.show()
+    shots.settle()
+    shots.save(recovery, "recovery-dialog")
+    recovery.close()
 
 
 # In order: some leave the window as the next one expects it (taller, on a page).
