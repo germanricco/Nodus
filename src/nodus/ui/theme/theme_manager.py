@@ -7,12 +7,22 @@ from pathlib import Path
 from string import Template
 
 from PySide6.QtCore import QObject, Qt, Signal
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtGui import QColor, QFontDatabase, QPalette
 from PySide6.QtWidgets import QApplication
 
-from nodus.ui.theme.design import design_tokens
+from nodus.ui.theme.design import FONT_FAMILY, design_tokens
 from nodus.ui.theme.focus import use_keyboard_focus_style
 from nodus.ui.theme.theme import DARK, LIGHT, Theme, ThemeMode
+
+
+def load_bundled_fonts() -> None:
+    """Registers the fonts Nodus brings (``ui/fonts``) when the system lacks the typeface
+    of the design; on Windows, Segoe UI is already there and nothing is loaded."""
+    if FONT_FAMILY in QFontDatabase.families():
+        return
+    for font in resources.files("nodus.ui.fonts").iterdir():
+        if font.name.endswith(".ttf"):
+            QFontDatabase.addApplicationFontFromData(font.read_bytes())
 
 
 class ThemeManager(QObject):
@@ -33,6 +43,7 @@ class ThemeManager(QObject):
         )
         # The stylesheet loads images by file path, e.g. the arrow of drop-down fields.
         self._icons_dir = Path(str(resources.files("nodus.ui.icons"))).as_posix()
+        load_bundled_fonts()
         # Fusion renders stylesheets the same on every OS, unlike the native Windows style.
         use_keyboard_focus_style(app)
         app.styleHints().colorSchemeChanged.connect(self._on_system_scheme_changed)

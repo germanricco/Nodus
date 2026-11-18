@@ -1,6 +1,8 @@
-"""The General card of Ajustes: theme, opening with Windows and motion."""
+"""The General card of Ajustes: language, theme, opening at sign-in and motion."""
 
 from __future__ import annotations
+
+import sys
 
 from nodus.i18n import N_, Language, _, current_language
 from nodus.services.container import Services
@@ -37,8 +39,13 @@ class GeneralCard(Card):
         self.language_input.changed.connect(self._set_language)
         self.body.addWidget(language_row)
 
+        # On Windows, the names its users know; on Linux, what every desktop has.
+        on_windows = sys.platform == "win32"
         theme_row = SettingRow(
-            _("Tema"), _("«Según el sistema» sigue el modo claro u oscuro de Windows.")
+            _("Tema"),
+            _("«Según el sistema» sigue el modo claro u oscuro de Windows.")
+            if on_windows
+            else _("«Según el sistema» sigue el modo claro u oscuro del sistema."),
         )
         self.theme_input = theme_row.add(SegmentedControl([_(label) for label in THEME_LABELS]))
         self.theme_input.changed.connect(self._set_theme)
@@ -46,7 +53,9 @@ class GeneralCard(Card):
 
         startup = services.startup
         startup_row = SettingRow(
-            _("Abrir Nodus al iniciar Windows"),
+            _("Abrir Nodus al iniciar Windows")
+            if on_windows
+            else _("Abrir Nodus al iniciar sesión"),
             _("Te espera abierto al encender la computadora.")
             if startup.is_available()
             else _("Disponible en la versión instalada."),

@@ -2,6 +2,7 @@
 
 import os
 import sqlite3
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -303,3 +304,12 @@ def test_asking_for_a_restart_opens_nodus_again_once_the_data_is_free(
 
 def test_the_restart_command_reopens_from_the_code_with_the_same_arguments():
     assert restart_command(["nodus", "--flag"])[1:] == ["-m", "nodus", "--flag"]
+
+
+def test_the_appimage_reopens_the_appimage_not_the_folder_it_runs_from(monkeypatch):
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setattr(sys, "executable", "/tmp/.mount_NodusX/usr/bin/nodus")
+    monkeypatch.setenv("APPIMAGE", "/home/ana/Nodus.AppImage")
+
+    assert restart_command(["nodus", "--flag"]) == ["/home/ana/Nodus.AppImage", "--flag"]

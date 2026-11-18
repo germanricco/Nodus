@@ -3253,8 +3253,16 @@ msgid "«Según el sistema» sigue el modo claro u oscuro de Windows."
 msgstr "“System default” follows Windows' light or dark mode."
 
 #: nodus/ui/pages/settings/general_card.py
+msgid "«Según el sistema» sigue el modo claro u oscuro del sistema."
+msgstr "“System default” follows your system's light or dark mode."
+
+#: nodus/ui/pages/settings/general_card.py
 msgid "Abrir Nodus al iniciar Windows"
 msgstr "Open Nodus when Windows starts"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Abrir Nodus al iniciar sesión"
+msgstr "Open Nodus when you sign in"
 
 #: nodus/ui/pages/settings/general_card.py
 msgid "Te espera abierto al encender la computadora."

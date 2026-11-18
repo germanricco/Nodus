@@ -49,6 +49,12 @@ def run_log(tmp_path):
         ),
         (r"no access to 'E:\Pendrive Juan'", "no access to '…'"),
         ("C:\\Users\\Ana\\x.db\nnext line", "….db\nnext line"),
+        ("/home/ana/.local/share/Nodus/nodus.db: locked", "….db: locked"),
+        ("open ~/Mis datos/Caja Galicia.db: not a database", "open ….db: not a database"),
+        ("no access to '/media/juan/Pendrive Juan'", "no access to '…'"),
+        ("copy failed (/tmp/nodus-x/nodus.db)", "copy failed (….db)"),
+        ("read and/or write at 10 km/h", "read and/or write at 10 km/h"),
+        ("GET https://dolarapi.com/v1 failed", "GET https://dolarapi.com/v1 failed"),
     ],
 )
 def test_scrub_hides_what_could_be_data(text, expected):

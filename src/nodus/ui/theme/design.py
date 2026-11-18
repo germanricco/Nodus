@@ -12,12 +12,15 @@ Light and dark themes share this scale; only colors differ between them (``theme
 
 from __future__ import annotations
 
+import sys
 from enum import Enum, IntEnum
 
 from PySide6.QtCore import QEasingCurve
 from PySide6.QtGui import QFont
 
-FONT_FAMILY = "Segoe UI"
+# Windows brings Segoe UI; elsewhere Nodus brings Inter (``ui/fonts``), so it looks the same
+# on every Linux distribution instead of taking whatever font each one has.
+FONT_FAMILY = "Segoe UI" if sys.platform == "win32" else "Inter"
 
 REGULAR, SEMIBOLD, BOLD = 400, 600, 700
 

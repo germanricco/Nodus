@@ -1,7 +1,9 @@
 import pytest
 from factories import ars
+from PySide6.QtGui import QFontDatabase
 
 from nodus.ui.navigation import PageId
+from nodus.ui.theme import theme_manager as theme_manager_module
 from nodus.ui.theme.icons import APP_ICON_SIZES, _svg, app_icon, tinted_pixmap
 from nodus.ui.theme.theme import DARK, LIGHT, ThemeMode
 from nodus.ui.widgets.money_label import MoneyLabel
@@ -68,3 +70,16 @@ def test_app_icon_has_every_windows_size(qapp):
     sizes = {size.width() for size in app_icon().availableSizes()}
 
     assert sizes == set(APP_ICON_SIZES)
+
+
+def test_where_the_design_font_is_missing_nodus_brings_inter(qapp, monkeypatch):
+    monkeypatch.setattr(theme_manager_module, "FONT_FAMILY", "Inter")
+
+    theme_manager_module.load_bundled_fonts()
+
+    assert "Inter" in QFontDatabase.families()
+    assert {QFontDatabase.weight("Inter", style) for style in QFontDatabase.styles("Inter")} >= {
+        400,
+        600,
+        700,
+    }

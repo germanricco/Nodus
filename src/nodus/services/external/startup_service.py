@@ -1,14 +1,20 @@
-"""Opening Nodus when Windows starts, through the user's Run key in the registry."""
+"""Opening Nodus when the user signs in: through the Run key of the registry on Windows,
+and an autostart entry of the desktop on Linux."""
 
 from __future__ import annotations
 
+import os
 import sys
+from collections.abc import Mapping
+from pathlib import Path
 from typing import Protocol
 
-from nodus import APP_NAME, is_installed
+from nodus import APP_NAME, is_installed, program_path
 
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 VALUE_NAME = APP_NAME
+AUTOSTART_FILE = "nodus.desktop"
+EXEC_KEY = "Exec="
 
 
 class StartupRegistry(Protocol):
@@ -59,12 +65,44 @@ class WindowsRunKey:
             pass
 
 
+def autostart_folder(environ: Mapping[str, str] = os.environ) -> Path:
+    """``$XDG_CONFIG_HOME/autostart``, by default ``~/.config/autostart``."""
+    config = environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
+    return Path(config) / "autostart"
+
+
+class XdgAutostart:
+    """``nodus.desktop`` in the autostart folder: GNOME, KDE, XFCE and the other Linux
+    desktops open what its ``Exec`` line names when the user signs in. Per user, like the
+    Run key; ``folder`` can be replaced so tests use a throwaway one."""
+
+    def __init__(self, folder: Path | None = None) -> None:
+        self._file = (folder or autostart_folder()) / AUTOSTART_FILE
+
+    def read(self) -> str | None:
+        try:
+            lines = self._file.read_text(encoding="utf-8").splitlines()
+        except FileNotFoundError:
+            return None
+        commands = [line.removeprefix(EXEC_KEY) for line in lines if line.startswith(EXEC_KEY)]
+        return commands[0] if commands else None
+
+    def write(self, command: str) -> None:
+        self._file.parent.mkdir(parents=True, exist_ok=True)
+        entry = ["[Desktop Entry]", "Type=Application", f"Name={APP_NAME}", EXEC_KEY + command]
+        self._file.write_text("\n".join([*entry, "Terminal=false", ""]), encoding="utf-8")
+
+    def delete(self) -> None:
+        self._file.unlink(missing_ok=True)
+
+
 class StartupService:
     """Turns opening at sign-in on and off.
 
     Only the installed program offers it: run from the source code, the executable is
     Python itself, and registering it would open a bare interpreter at every sign-in.
-    The state lives in the registry, not in the data file, because it belongs to the
+    The state lives in the system (the registry or the autostart folder), not in the
+    data file, because it belongs to the
     computer: copying the data to another PC does not carry it along.
     """
 
@@ -74,16 +112,19 @@ class StartupService:
 
     @classmethod
     def for_this_program(cls) -> StartupService:
-        """Available only when running as the installed program on Windows."""
-        return cls(WindowsRunKey() if is_installed() else None, sys.executable)
+        """Available only when running as the installed program or the AppImage."""
+        if not is_installed():
+            return cls(None, program_path())
+        registry = WindowsRunKey() if sys.platform == "win32" else XdgAutostart()
+        return cls(registry, program_path())
 
     def is_available(self) -> bool:
-        """Only the installed program can open with Windows: a copy run from the code has
-        no fixed place to start from."""
+        """Only the installed program can open at sign-in: a copy run from the code has no
+        fixed place to start from."""
         return self._registry is not None
 
     def is_enabled(self) -> bool:
-        """Whether Windows opens Nodus when the user signs in."""
+        """Whether the system opens Nodus when the user signs in."""
         return self._registry is not None and self._registry.read() is not None
 
     def set_enabled(self, enabled: bool) -> None:

@@ -1,11 +1,12 @@
 import dataclasses
+import sys
 from datetime import date
 from decimal import Decimal
 
 import pytest
 from factories import FakeRegistry, ars, eur, expense_draft, in_view
 from menus import run_action
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QLabel, QPushButton
 
 from nodus.i18n import Language
 from nodus.models.account import AccountType
@@ -235,6 +236,18 @@ class TestStartWithWindows:
         assert registry.value == r'"C:\Nodus\Nodus.exe"'
         settings.general.startup_input.click()
         assert registry.value is None
+
+    def test_on_linux_it_speaks_of_signing_in(
+        self, qtbot, monkeypatch, services, event_bus, theme_manager
+    ):
+        monkeypatch.setattr(sys, "platform", "linux")
+        settings = SettingsPage(services, event_bus, theme_manager)
+        qtbot.addWidget(settings)
+
+        texts = [label.text() for label in settings.general.findChildren(QLabel)]
+
+        assert "Abrir Nodus al iniciar sesión" in texts
+        assert not any("Windows" in text for text in texts)
 
 
 def test_reduce_motion_is_saved_and_applied_at_once(services, page):

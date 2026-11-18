@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 
-from nodus import is_installed
+from nodus import is_installed, program_path
 
 
 def launch_detached(command: list[str]) -> None:
@@ -18,5 +18,5 @@ def restart_command(argv: list[str]) -> list[str]:
     """The command that opens this same Nodus again, with the same arguments: the
     program itself when installed, ``python -m nodus`` when run from the code."""
     if is_installed():
-        return [sys.executable, *argv[1:]]
+        return [program_path(), *argv[1:]]
     return [sys.executable, "-m", "nodus", *argv[1:]]

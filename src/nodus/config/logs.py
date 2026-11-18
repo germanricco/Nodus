@@ -32,7 +32,11 @@ KEPT_FILES = 3  # besides the current one
 HIDDEN = "…"
 # Up to the ": " that follows a path in a message, a quote or the end of the line: folders
 # and file names may have spaces, and both are the user's.
-_WINDOWS_PATH = re.compile(r"[A-Za-z]:[\\/].*?(?=: |['\"«»]|$)", re.MULTILINE)
+# A drive letter on its own, so the "s:/" of a web address is not taken for one.
+_WINDOWS_PATH = re.compile(r"(?<!\w)[A-Za-z]:[\\/].*?(?=: |['\"«»]|$)", re.MULTILINE)
+# The same on Linux: "~/…", or "/home/ana/…" with two parts at least, after a space or a
+# bracket, so that "and/or", "km/h" and the "//" of a link stay as they are.
+_POSIX_PATH = re.compile(r"(?<![^\s(\[=])(?:~/|/[^\s/'\"«»]+/).*?(?=: |['\"«»]|$)", re.MULTILINE)
 _QUOTED = re.compile(r"'[^']*'|\"[^\"]*\"|«[^»]*»")
 # Three characters or more: amounts, ids and dates; a one or two digit count stays.
 _LONG_NUMBER = re.compile(r"\d[\d.,]{2,}")
@@ -51,7 +55,8 @@ def system_line() -> str:
 def scrub(text: str) -> str:
     """``text`` without what could be the user's data: quoted values, long numbers and
     paths, of which only the kind of file stays ("….db")."""
-    text = _WINDOWS_PATH.sub(lambda m: HIDDEN + Path(m.group()).suffix, text)
+    for path in (_WINDOWS_PATH, _POSIX_PATH):
+        text = path.sub(lambda m: HIDDEN + Path(m.group()).suffix, text)
     text = _QUOTED.sub(lambda m: f"{m.group()[0]}{HIDDEN}{m.group()[-1]}", text)
     return _LONG_NUMBER.sub(HIDDEN, text)
 
