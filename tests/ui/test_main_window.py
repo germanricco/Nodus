@@ -1,14 +1,19 @@
+import time
 from datetime import date
 from decimal import Decimal
 
 from demo_data import load_demo_data
-from factories import ars, expense_draft
+from factories import ars, expense_draft, services_for
 from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtWidgets import QApplication, QLabel, QWidget
 from qt_cleanup import flush_deleted
 
+from nodus.config.paths import AppPaths
+from nodus.database.database import Database
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.services.container import Services
+from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.shell.sidebar import Sidebar, SidebarAccountRow
@@ -294,3 +299,29 @@ class TestPagesOnDemand:
         event_bus.accounts_changed.emit()
 
         assert refreshed == [True]
+
+
+START_LIMIT_SECONDS = 2.0  # opens in 0.1 to 0.4 s; the margin is for the CI and -n auto
+
+
+def test_opens_quickly_over_a_year_of_data(qtbot, tmp_path, theme_manager):
+    """From the file to the painted window, as at every start, over the demo data (a year
+    of movements, budgets, charges and goals): what makes it slow shows here first."""
+    path = AppPaths(tmp_path).database_path
+    database = Database.open(path)
+    load_demo_data(services_for(database), date.today())
+    services_for(database).settings.set_tour_offered(True)
+    database.close()
+
+    started = time.perf_counter()
+    database = Database.open(path)
+    services = Services.create(database, AppPaths(tmp_path).backups_dir)
+    services.backups.create_if_due(date.today())
+    window = MainWindow(services, EventBus(), theme_manager)
+    qtbot.addWidget(window)
+    window.show()
+    QApplication.processEvents()
+    elapsed = time.perf_counter() - started
+
+    database.close()
+    assert elapsed < START_LIMIT_SECONDS, f"Nodus took {elapsed:.2f} s to open"

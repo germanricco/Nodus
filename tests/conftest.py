@@ -1,10 +1,12 @@
 """Shared test setup."""
 
+import gc
 import os
 import sys
 from datetime import date
 
 import pytest
+from pytestqt.qtbot import QtBot
 
 # Render Qt widgets without a visible window, so tests run headless and in CI.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -30,6 +32,22 @@ def pytest_runtest_teardown(item):
     result = yield
     flush_deleted()
     return result
+
+
+@pytest.fixture(autouse=True)
+def collected_like_the_app(monkeypatch):
+    """Python collects right after a widget is built, as it may in the app. A button or
+    a model nobody kept a reference to was collected in Nodus and vanished from its
+    dialog, while the tests, which seldom collect, still saw it; every widget a test
+    registers with ``qtbot.addWidget``, which they do right after building it, now goes
+    through a collection first."""
+    add_widget = QtBot.addWidget
+
+    def collected_then_added(bot, widget, *args, **kwargs):
+        gc.collect()
+        return add_widget(bot, widget, *args, **kwargs)
+
+    monkeypatch.setattr(QtBot, "addWidget", collected_then_added)
 
 
 @pytest.fixture(autouse=True)
