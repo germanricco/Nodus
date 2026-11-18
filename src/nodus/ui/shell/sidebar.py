@@ -143,6 +143,7 @@ class Sidebar(QFrame):
         layout.addStretch()  # keeps the buttons on top while the accounts are hidden
         # At the foot, as in Windows apps: it is visited rarely, not every day.
         layout.addWidget(self._nav_buttons[PageId.SETTINGS])
+        mark_target(self._nav_buttons[PageId.SETTINGS], tour.SETTINGS)
 
         layout.addLayout(self._build_footer())
 

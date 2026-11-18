@@ -10,7 +10,7 @@ from nodus.models.budget import Budget, BudgetState, used_percent_label
 from nodus.ui.theme.design import ControlSize, Line, Opacity
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.change_badge import Tone, status_pill
-from nodus.ui.widgets.charts.chart_base import AnimatedChart, format_compact, lerp, with_alpha
+from nodus.ui.widgets.charts.chart_base import ProgressStrip, format_compact, with_alpha
 
 STATE_TONES = {
     BudgetState.ON_TRACK: Tone.GOOD,
@@ -72,7 +72,7 @@ def paint_progress(
         )
 
 
-class BudgetBar(AnimatedChart):
+class BudgetBar(ProgressStrip):
     """The spent part of the limit fills the bar in the budget's state color.
 
     Over the limit the whole bar turns pale red and the stretch past the limit, at the
@@ -83,13 +83,22 @@ class BudgetBar(AnimatedChart):
     HEIGHT = ControlSize.PROGRESS_HEIGHT
     MARK_OVERHANG = 3  # geometry: the mark of today, above and below the bar
 
-    def __init__(self, theme: Theme, budget: Budget, parent: QWidget | None = None) -> None:
-        super().__init__(theme, parent)
+    def __init__(
+        self,
+        theme: Theme,
+        budget: Budget,
+        start: float | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(theme, self.HEIGHT + 2 * self.MARK_OVERHANG, start, parent)
         self.budget = budget
-        self.make_strip(self.HEIGHT + 2 * self.MARK_OVERHANG)
         if self.shows_pace:
             self.setToolTip(f"Ritmo del mes: {round(budget.elapsed * 100)} %")
-        self._start_transition()
+        self._begin()
+
+    @property
+    def fraction(self) -> float:
+        return self.budget.used
 
     @property
     def shows_pace(self) -> bool:
@@ -101,7 +110,7 @@ class BudgetBar(AnimatedChart):
         painter.setPen(Qt.PenStyle.NoPen)
         track = QRectF(0, self.MARK_OVERHANG, self.width(), self.HEIGHT)
         radius = self.HEIGHT / 2
-        used = lerp(0.0, self.budget.used, self.progress)
+        used = self.shown_fraction
         color = state_color(self._theme, self.budget.state)
         if used > 1:
             painter.setBrush(with_alpha(self._theme.expense, Opacity.OVER))

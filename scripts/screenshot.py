@@ -52,6 +52,7 @@ from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.navigation import DetailId, PageId  # noqa: E402
 from nodus.ui.pages.accounts_page import AccountRow  # noqa: E402
 from nodus.ui.shell.main_window import MainWindow  # noqa: E402
+from nodus.ui.shell.tour import ADD_TRANSACTION  # noqa: E402
 from nodus.ui.text.help_texts import TOPICS_BY_KEY  # noqa: E402
 from nodus.ui.theme.design import set_reduced_motion  # noqa: E402
 from nodus.ui.theme.theme import ThemeMode  # noqa: E402
@@ -249,10 +250,10 @@ def capture_pages(shots: Shots) -> None:
 def capture_tour_and_help(shots: Shots) -> None:
     """The guided tour, and Ayuda with its topics and shortcuts."""
     window = shots.window
-    # The guided tour, on its third step.
+    # The guided tour on «Agregar transacción», as the READMEs describe it.
     tour = window.start_tour()
-    tour.next()
-    tour.next()
+    while tour.steps[tour.index].target != ADD_TRANSACTION:
+        tour.next()
     shots.save(window, "tour")
     tour.finish()
     # Ayuda at the side, on Metas from Inicio (Metas lit up in the sidebar), its

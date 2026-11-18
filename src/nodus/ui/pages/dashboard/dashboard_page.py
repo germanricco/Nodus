@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from datetime import date
+from enum import Enum, auto
 from pathlib import Path
 
-from PySide6.QtCore import QCoreApplication, QEvent, QTimer, Signal
-from PySide6.QtGui import QResizeEvent
+from PySide6.QtCore import QCoreApplication, QEvent, QObject, QTimer, Signal
 from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
@@ -39,10 +39,22 @@ from nodus.ui.pages.dashboard.upcoming_payments_card import UpcomingPaymentsCard
 from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.shell import tour
 from nodus.ui.shell.coach_marks import mark_target
-from nodus.ui.theme.design import Layout, Space
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.style import muted_label, scrolling, secondary_button
+
+# The columns of the wide grid; narrower, the cards take two.
+GRID_COLUMNS = 6
+
+
+class Shape(Enum):
+    """How the cards are laid out, from the widest window to the narrowest."""
+
+    WIDE = auto()  # six columns: two cards side by side in every row
+    NARROW = auto()  # one card per row, but the top's side cards together
+    STACKED = auto()  # one card per row
+
 
 # A card's place in the grid: (card, row, column, rows spanned, columns spanned).
 Placement = tuple[QWidget, int, int, int, int]
@@ -126,12 +138,15 @@ class DashboardPage(Page):
         self._grid = QGridLayout(grid_page)
         self._grid.setContentsMargins(0, 0, 0, 0)
         self._grid.setSpacing(Space.L)
-        self._layout: tuple[bool, bool, bool] | None = None
+        self._layout: tuple[Shape, bool, bool] | None = None
         # Owned by the grid page from the start, so a card left out of the grid (upcoming
         # payments without charges) never becomes a window of its own when shown.
         for card in self._cards():
             card.setParent(grid_page)
         scroll = self._scroll = scrolling(grid_page, horizontal=False)
+        # The cards follow the width they are shown in, which the scroll area learns
+        # after the page does: arranging on the page's resize would read the old one.
+        scroll.viewport().installEventFilter(self)
 
         self._stack = QStackedWidget()
         self._welcome = self._welcome_card()
@@ -182,9 +197,10 @@ class DashboardPage(Page):
 
     # Layout
 
-    def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802
-        super().resizeEvent(event)
-        self._arrange()
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802
+        if watched is self._scroll.viewport() and event.type() == QEvent.Type.Resize:
+            self._arrange()
+        return super().eventFilter(watched, event)
 
     def _arrange(self) -> None:
         """Places the cards for the available width.
@@ -193,19 +209,23 @@ class DashboardPage(Page):
         latest movements beside it. Below come expenses by category next to the comparison
         with the previous period, which belong together, and last the month-by-month cash
         flow, for a closer look, with the budgets beside it when there are any. In a narrow
-        window everything goes one card per row, except the top's side cards.
-        The page scrolls instead of squeezing the cards.
+        window everything goes one card per row, except the top's side cards, and in a
+        narrower one those too. The widest shape where every card has room for its
+        minimum is chosen, so no card is ever cut; the page scrolls instead.
         """
-        narrow = self.width() < Layout.NARROW_WIDTH
         upcoming = self.upcoming_card.isVisibleTo(self)
         budgets = self.budgets_card.isVisibleTo(self)
-        # Expenses take the full width when narrow, four of the six columns otherwise.
         width = self._scroll.viewport().width()
-        column = (width - 5 * self._grid.spacing()) / 6
-        expenses_width = width if narrow else 4 * column + 3 * self._grid.spacing()
-        beside = self.expenses_card.fits_legend_beside(expenses_width)
-        self.expenses_card.set_legend_beside(beside)
-        layout = (narrow, upcoming, budgets)
+        # Expenses take four of the six columns when wide, the full width otherwise.
+        expenses_width = self._span_width(width, 4)
+        self.expenses_card.set_legend_beside(self.expenses_card.fits_legend_beside(expenses_width))
+        shape = next(
+            (s for s in Shape if self._fits(self._placements(s, upcoming, budgets), width)),
+            Shape.STACKED,
+        )
+        if shape is not Shape.WIDE:
+            self.expenses_card.set_legend_beside(self.expenses_card.fits_legend_beside(width))
+        layout = (shape, upcoming, budgets)
         if layout != self._layout:
             self._layout = layout
             grid = self._grid
@@ -213,35 +233,64 @@ class DashboardPage(Page):
                 grid.removeWidget(card)
             for card, row, column, rows, columns in self._placements(*layout):
                 grid.addWidget(card, row, column, rows, columns)
-            for column in range(6):
-                grid.setColumnStretch(column, 1 if column < (2 if narrow else 6) else 0)
+            used = GRID_COLUMNS if shape is Shape.WIDE else 2
+            for column in range(GRID_COLUMNS):
+                grid.setColumnStretch(column, 1 if column < used else 0)
         self._remeasure()
 
-    def _placements(self, narrow: bool, upcoming: bool, budgets: bool) -> list[Placement]:
+    def _placements(self, shape: Shape, upcoming: bool, budgets: bool) -> list[Placement]:
         """Where each card goes, as (card, row, column, rows spanned, columns spanned):
-        six columns wide, two when narrow. Both layouts are here, so a new card is placed
-        in one function."""
+        six columns wide, two otherwise. Every shape is here, so a new card is placed in
+        one function."""
         side = [self.upcoming_card, self.latest_card] if upcoming else [self.latest_card]
         bottom = [self.flow_card, self.budgets_card] if budgets else [self.flow_card]
-        if narrow:
-            rows = [[self.net_worth_card], side, [self.expenses_card], [self.comparison_card]]
-            rows += [[card] for card in bottom]
+        if shape is Shape.WIDE:
             return [
-                (card, row, column * 2 // len(cards), 1, 2 // len(cards))
-                for row, cards in enumerate(rows)
-                for column, card in enumerate(cards)
+                (self.net_worth_card, 0, 0, 2, 4),
+                *((card, row, 4, 2 // len(side), 2) for row, card in enumerate(side)),
+                (self.expenses_card, 2, 0, 1, 4),
+                (self.comparison_card, 2, 4, 1, 2),
+                *(
+                    [(self.flow_card, 3, 0, 1, 4), (self.budgets_card, 3, 4, 1, 2)]
+                    if budgets
+                    else [(self.flow_card, 3, 0, 1, GRID_COLUMNS)]
+                ),
             ]
+        together = [side] if shape is Shape.NARROW else [[card] for card in side]
+        rows = [[self.net_worth_card], *together, [self.expenses_card], [self.comparison_card]]
+        rows += [[card] for card in bottom]
         return [
-            (self.net_worth_card, 0, 0, 2, 4),
-            *((card, row, 4, 2 // len(side), 2) for row, card in enumerate(side)),
-            (self.expenses_card, 2, 0, 1, 4),
-            (self.comparison_card, 2, 4, 1, 2),
-            *(
-                [(self.flow_card, 3, 0, 1, 4), (self.budgets_card, 3, 4, 1, 2)]
-                if budgets
-                else [(self.flow_card, 3, 0, 1, 6)]
-            ),
+            (card, row, column * 2 // len(cards), 1, 2 // len(cards))
+            for row, cards in enumerate(rows)
+            for column, card in enumerate(cards)
         ]
+
+    def _span_width(self, width: float, columns: int) -> float:
+        """How wide a card spanning ``columns`` of the six is, in a grid ``width`` wide."""
+        spacing = self._grid.spacing()
+        column = (width - (GRID_COLUMNS - 1) * spacing) / GRID_COLUMNS
+        return columns * column + (columns - 1) * spacing
+
+    def _fits(self, placements: list[Placement], width: float) -> bool:
+        """Whether a grid ``width`` wide has room for the minimum width of every card.
+
+        Rows share their columns, so the left edge of each column is pushed right by the
+        widest card ending before it, whatever its row: the grid needs where the last
+        column ends.
+        """
+        spacing = self._grid.spacing()
+        last = max(column + columns for _card, _row, column, _rows, columns in placements)
+        edges = [0] * (last + 1)  # where each column can start, at the least
+        for end in range(1, last + 1):
+            edges[end] = edges[end - 1]
+            for card, _row, column, _rows, columns in placements:
+                if column + columns == end:
+                    gap = spacing if column else 0
+                    # As the grid takes it: a minimum set on the card, else its hint.
+                    least = max(card.minimumWidth(), card.minimumSizeHint().width())
+                    needed = edges[column] + gap + least
+                    edges[end] = max(edges[end], needed)
+        return edges[last] <= width
 
     def _cards(self) -> list[QWidget]:
         return [

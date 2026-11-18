@@ -29,6 +29,7 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.charts.budget_bar import budget_pill, usage_text
+from nodus.ui.widgets.charts.chart_base import shown_fractions
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.style import amount_label, clear_layout, hint_label, muted_label
@@ -50,8 +51,8 @@ class BudgetPageRow(BudgetRow):
     edit_requested = Signal()
     remove_requested = Signal()
 
-    def __init__(self, budget: Budget, theme: Theme) -> None:
-        super().__init__(budget, theme)
+    def __init__(self, budget: Budget, theme: Theme, start: float | None = None) -> None:
+        super().__init__(budget, theme, start)
         self.usage_label = self.line.add(muted_label(usage_text(budget)))
         self.pill = self.line.add(budget_pill(budget))
         self.more_button = self.line.add(MoreButton(self.actions))
@@ -96,6 +97,7 @@ class BudgetsPage(Page):
 
         self._sections = self.scrolling_body()
         self.rows: list[BudgetPageRow] = []
+        self._shown: dict[int | None, float] = {}  # each bar, where its next one starts
         self.unbudgeted_rows: list[CategoryLine] = []
         self.limit_label = QLabel()
         self.spent_label = QLabel()
@@ -116,6 +118,7 @@ class BudgetsPage(Page):
         real date is used."""
         self._today = today = today or self._today
         today = today or date.today()
+        self._shown = shown_fractions({row.budget.category.id: row.bar for row in self.rows})
         clear_layout(self._sections)
         self.rows, self.unbudgeted_rows = [], []
         month = self._services.budgets.month_budgets(self.month, today)
@@ -184,7 +187,7 @@ class BudgetsPage(Page):
         card = Card(title)
         theme = self._theme_manager.theme
         for budget in month.budgets:
-            row = BudgetPageRow(budget, theme)
+            row = BudgetPageRow(budget, theme, self._shown.get(budget.category.id))
             category = budget.category
             row.clicked.connect(lambda c=category: self._show_transactions(c))
             row.edit_requested.connect(lambda c=category: self.open_budget_dialog(c))

@@ -13,6 +13,7 @@ from nodus.ui.text.labels import days_left_text
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header, see_all_link
 from nodus.ui.widgets.charts.budget_bar import spent_of_limit
+from nodus.ui.widgets.charts.chart_base import shown_fractions
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.budget_row import BudgetRow
 
@@ -45,11 +46,12 @@ class BudgetsCard(Card):
         budgets = self._services.budgets.month_budgets(month, today)
         self.setVisible(bool(budgets.budgets))
         self.when_label.setText(days_left_text(month, today) or format_month(month))
+        shown = shown_fractions({row.budget.category.id: row.bar for row in self.rows})
         clear_layout(self._rows)
         self.rows = []
         theme = self._theme_manager.theme
         for budget in budgets.budgets[:BUDGETS_COUNT]:
-            row = BudgetRow(budget, theme)
+            row = BudgetRow(budget, theme, shown.get(budget.category.id))
             row.line.add(muted_label(spent_of_limit(budget, compact=True)))
             row.clicked.connect(lambda c=budget.category.id: self.category_clicked.emit(c))
             self._rows.addWidget(row)

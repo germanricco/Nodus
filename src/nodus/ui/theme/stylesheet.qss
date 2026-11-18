@@ -456,6 +456,12 @@ QPushButton#HelpTopic {
     background: transparent;
 }
 
+#ShortcutGroup {
+    background: $surface;
+    border: $line_thin solid $border;
+    border-radius: $radius_l;
+}
+
 #KeyCap {
     background: $background;
     border: $line_thin solid $border;

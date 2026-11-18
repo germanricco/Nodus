@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
+import pytest
 from factories import (
     ars,
     category_id,
@@ -21,7 +22,10 @@ from nodus.models.transaction import TransactionType
 from nodus.ui.actions import recurring as recurring_actions
 from nodus.ui.dialogs import restore_copy
 from nodus.ui.navigation import PageId, TransactionFocus
+from nodus.ui.pages.dashboard.dashboard_page import Shape
 from nodus.ui.pages.dashboard.latest_transactions_card import LatestTransactionRow
+from nodus.ui.shell import main_window
+from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.text.formatting import percent
 from nodus.ui.widgets.elided_label import ElidedLabel
 
@@ -54,13 +58,14 @@ def test_a_new_computer_brings_the_data_from_the_old_one(
     old = services_for(old_computer)
     old.accounts.create("Banco", AccountType.BANK, Currency.ARS, ars("1000"))
     old.settings.set_amounts_hidden(True)
-    old.settings.set_tour_offered(True)  # it was offered on the old computer
     pen_drive = tmp_path / "pendrive"
     pen_drive.mkdir()
     copy = old.backups.export_to(pen_drive, date.today())
     old_computer.close()
     monkeypatch.setattr(restore_copy.QFileDialog, "getOpenFileName", lambda *_a: (str(copy), ""))
     monkeypatch.setattr(restore_copy, "confirm", lambda *_a, **_k: True)
+    asked = []
+    monkeypatch.setattr(main_window, "ask", lambda _p, _t, text, *_: asked.append(text))
     page = dashboard(window)
     page.refresh()
 
@@ -69,6 +74,10 @@ def test_a_new_computer_brings_the_data_from_the_old_one(
     assert [a.name for a in services.accounts.list_accounts()] == ["Banco"]
     assert services.settings.amounts_hidden()
     assert "Te damos la bienvenida a Nodus" not in visible_texts(page)
+    # The copy predates the tour, but whoever brings their data has used Nodus.
+    qtbot.wait(10)
+    assert asked == []
+    assert services.settings.tour_offered()
 
 
 def test_shows_month_flow_and_latest_movements(qtbot, window, services, event_bus, pesos):
@@ -270,10 +279,45 @@ def test_cards_rearrange_for_narrow_windows(qtbot, window, services, pesos):
     # Expenses and the comparison with the previous period sit side by side.
     assert grid_cell(page, page.expenses_card)[0] == grid_cell(page, page.comparison_card)[0]
 
-    window.resize(900, 900)
+    window.resize(1100, 900)
+    window.toggle_help()  # Ayuda beside it leaves the page too narrow for two columns
 
-    qtbot.waitUntil(lambda: grid_cell(page, page.upcoming_card) == (1, 0, 1, 1))
+    qtbot.waitUntil(lambda: grid_cell(page, page.upcoming_card)[:2] == (1, 0))
     assert grid_cell(page, page.comparison_card)[0] > grid_cell(page, page.expenses_card)[0]
+
+
+def test_opens_with_the_shape_of_its_window(qtbot, services, event_bus, theme_manager, pesos):
+    """The shape is chosen once the page has its real width, with no resize to fix it:
+    a page built before the window is shown must not keep its first, narrow guess."""
+    window = MainWindow(services, event_bus, theme_manager)
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitExposed(window)
+    page = dashboard(window)
+
+    qtbot.waitUntil(lambda: page._layout is not None and page._layout[0] is Shape.WIDE)
+
+
+@pytest.mark.parametrize("width", range(1500, 1080, -40))
+def test_no_card_is_cut_at_any_width(qtbot, window, services, event_bus, pesos, width):
+    """The cards change shape before any of them gets less than its minimum width: the
+    grid never asks for more than the page shows. Long names and amounts make a side
+    card this wide, which the six columns of a 1280-wide window cannot hold."""
+    services.recurring.create(charge_draft(services, pesos.id, ars("24900"), date.today()))
+    food = category_id(services, "Supermercado y comida", TransactionType.EXPENSE)
+    services.budgets.set_limit(food, Month.of(date.today()), ars("1000"))
+    event_bus.budgets_changed.emit()
+    page = dashboard(window)
+    page.upcoming_card.setMinimumWidth(420)
+    page.refresh()
+
+    window.resize(width, 900)
+
+    def fits() -> bool:
+        needed = page._scroll.widget().minimumSizeHint().width()
+        return needed <= page._scroll.viewport().width()
+
+    qtbot.waitUntil(fits)
 
 
 def test_budgets_card_sits_beside_the_cash_flow_when_there_are_budgets(
@@ -342,12 +386,12 @@ def test_expenses_legend_goes_beside_the_ring_when_it_fits(qtbot, window, pesos)
     assert card.fits_legend_beside(700)
     assert not card.fits_legend_beside(400)
 
-    window.resize(1000, 900)  # narrow layout: expenses take the full width
+    window.resize(1400, 900)  # four of six columns are enough for both
     page.refresh()
     qtbot.waitUntil(lambda: card.legend_beside)
 
-    window.resize(1280, 900)  # four of six columns are enough for both
-    qtbot.waitUntil(lambda: card.legend_beside)
+    window.resize(1100, 900)  # four of six columns are not: the legend goes below
+    qtbot.waitUntil(lambda: not card.legend_beside)
 
 
 def test_many_currencies_never_push_the_cards_off_the_window(

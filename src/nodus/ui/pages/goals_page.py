@@ -26,6 +26,7 @@ from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.charts.chart_base import shown_fractions
 from nodus.ui.widgets.charts.goal_bar import GoalBar, goal_pill, goal_sentence, saved_of_target
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.style import clear_layout, muted_label
@@ -57,7 +58,13 @@ class GoalRow(QWidget):
     rate_requested = Signal()
 
     def __init__(
-        self, goal: Goal, progress: GoalProgress, accounts: str, theme: Theme, hidden: bool
+        self,
+        goal: Goal,
+        progress: GoalProgress,
+        accounts: str,
+        theme: Theme,
+        hidden: bool,
+        start: float | None = None,
     ) -> None:
         super().__init__()
         self.goal = goal
@@ -83,7 +90,7 @@ class GoalRow(QWidget):
         top.addWidget(self.more_button)
         layout.addLayout(top)
 
-        self.bar = GoalBar(theme, progress)
+        self.bar = GoalBar(theme, progress, start)
         layout.addWidget(self.bar)
         bottom = QHBoxLayout()
         self.sentence_label = muted_label(goal_sentence(goal, progress, hidden))
@@ -143,6 +150,7 @@ class GoalsPage(Page):
 
         self._sections = self.scrolling_body()
         self.rows: list[GoalRow] = []
+        self._shown: dict[int | None, float] = {}  # each bar, where its next one starts
         self.section_titles: list[str] = []
 
     def refresh(self, today: date | None = None) -> None:
@@ -150,6 +158,7 @@ class GoalsPage(Page):
         real date is used."""
         self._today = today = today or self._today
         today = today or date.today()
+        self._shown = shown_fractions({row.goal.id: row.bar for row in self.rows})
         clear_layout(self._sections)
         self.rows, self.section_titles = [], []
         goals = self._services.goals.list_goals()
@@ -197,7 +206,12 @@ class GoalsPage(Page):
         hidden = self._services.settings.amounts_hidden()
         for goal in goals:
             row = GoalRow(
-                goal, progress[goal.id], accounts_text(self._services, goal), theme, hidden
+                goal,
+                progress[goal.id],
+                accounts_text(self._services, goal),
+                theme,
+                hidden,
+                self._shown.get(goal.id),
             )
             row.detail_requested.connect(lambda goal: self.detail_requested.emit(goal.id))
             row.edit_requested.connect(self.open_goal_dialog)

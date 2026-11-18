@@ -445,3 +445,39 @@ class TestReachedNotice:
         assert window.current_page is window.detail(DetailId.GOAL)
         assert services.goals.get(goal.id).reached_seen
         assert services.goals.get(goal.id).reached_on == date.today()
+
+
+class TestBarsAcrossRefreshes:
+    """Every refresh builds the rows anew; a bar starts where the one it replaces was."""
+
+    def test_hiding_amounts_leaves_the_bar_still(
+        self, qtbot, page, services, event_bus, animations
+    ):
+        account = services.accounts.create("Ahorro", AccountType.BANK, Currency.USD, usd("500"))
+        make_goal(services, account)
+        page.refresh(TODAY)
+        page.show()
+        qtbot.waitUntil(lambda: page.rows[0].bar.progress == 1)
+
+        services.settings.set_amounts_hidden(True)
+        event_bus.amounts_hidden_changed.emit(True)
+
+        assert page.rows[0].bar.progress == 1
+
+    def test_a_new_figure_moves_from_the_old_one(
+        self, qtbot, page, services, event_bus, animations
+    ):
+        account = services.accounts.create("Ahorro", AccountType.BANK, Currency.USD, usd("500"))
+        make_goal(services, account)
+        page.refresh(TODAY)
+        page.show()
+        qtbot.waitUntil(lambda: page.rows[0].bar.progress == 1)
+
+        services.transactions.create(income_draft(services, account.id, usd("500"), TODAY))
+        event_bus.transactions_changed.emit()
+
+        bar = page.rows[0].bar
+        assert bar.progress < 1
+        assert bar.shown_fraction == pytest.approx(0.25, abs=0.05)  # from 25 % toward 50 %
+        qtbot.waitUntil(lambda: bar.progress == 1)
+        assert bar.shown_fraction == 0.5

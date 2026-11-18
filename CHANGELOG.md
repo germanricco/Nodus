@@ -21,6 +21,8 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - «Reembolsos» pasa a ser una categoría de sistema, como «Otros»: Nodus la usa para ofrecer «Reembolso de», así que ya no se renombra ni se elimina. Si la habías renombrado, Nodus reconoce la tuya por los reembolsos que tiene; si la habías eliminado, vuelve.
 - Esc cierra la Ayuda, y la lista de atajos lo dice.
 - Con muchos años de movimientos, la lista de transacciones se arma más rápido: los reembolsos y las transferencias se leen juntos, no uno por fila.
+- El recorrido guiado cuenta para qué sirve cada parte, suma Ajustes y «Enviar comentarios», y recorre la ventana en el orden en que se lee: primero la barra lateral, de arriba abajo, y después la barra de arriba, de izquierda a derecha.
+- La lista de atajos de teclado se lee de un vistazo: cada grupo en un recuadro, lo que hace cada atajo a la izquierda y sus teclas a la derecha.
 - Arreglo: una compra en cuotas en pesos chilenos se repartía con centavos, que la moneda no tiene y que ninguna pantalla mostraba. Ahora cada cuota va en pesos enteros y la primera lleva lo que no se divide parejo, así las cuotas suman el total justo.
 - Arreglo: después de archivar una cuenta, sus movimientos viejos ya no se podían editar uno por uno, ni para cambiarles la categoría o la nota. Ahora se corrigen como cualquier otro; lo que una cuenta archivada sigue sin aceptar son movimientos nuevos.
 - Arreglo: una meta cuya fecha ya pasó no se podía renombrar ni cambiarle el objetivo, porque Nodus pedía una fecha posterior a hoy. Ahora conserva su fecha, y solo una fecha nueva tiene que ser futura.
@@ -35,6 +37,9 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Arreglo: un monto absurdo, de 17 cifras o más, hacía fallar el guardado, y varios así podían impedir que Nodus abriera. Ahora cualquier campo de monto te avisa «El monto es demasiado grande.» antes de guardar.
 - Arreglo: buscar «%» o «_» en Transacciones encontraba casi todo, porque se leían como comodines. Ahora se buscan tal cual, así que «50%» encuentra «descuento 50%» y no «pago 500».
 - Arreglo: el calendario llegaba hasta el año 9999, y omitir o pagar un pago con una fecha así fallaba. Ahora las fechas van de 1900 a 2100.
+- Arreglo: ocultar o mostrar los montos, o cambiar el tema, volvía a animar desde cero las barras de Metas y de Presupuestos. Ahora se quedan quietas, y cuando una cifra cambia, la barra avanza desde donde estaba.
+- Arreglo: al achicar la ventana, las tarjetas del Inicio se cortaban por la derecha antes de reacomodarse. Ahora el Inicio cambia de forma apenas una tarjeta no entra.
+- Arreglo: traer tus datos desde una copia ofrecía el recorrido guiado, como si fuera la primera vez.
 
 ## 1.8.0 — 2026-11-15
 

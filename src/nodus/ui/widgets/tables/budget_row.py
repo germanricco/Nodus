@@ -14,11 +14,12 @@ from nodus.ui.widgets.tables.category_line import CategoryLine
 
 class BudgetRow(QWidget):
     """A budgeted category with its bar underneath; clicking it opens the category's
-    transactions of the month. Callers add details to the right of the name on ``line``."""
+    transactions of the month. Callers add details to the right of the name on ``line``;
+    ``start`` is where its bar begins (``ProgressStrip``)."""
 
     clicked = Signal()
 
-    def __init__(self, budget: Budget, theme: Theme) -> None:
+    def __init__(self, budget: Budget, theme: Theme, start: float | None = None) -> None:
         super().__init__()
         self.budget = budget
         layout = QVBoxLayout(self)
@@ -27,7 +28,7 @@ class BudgetRow(QWidget):
         self.line = CategoryLine(budget.category.color, budget.category.name)
         self.line.hovered.connect(self.line.set_highlighted)
         self.line.clicked.connect(self.clicked)
-        self.bar = BudgetBar(theme, budget)
+        self.bar = BudgetBar(theme, budget, start)
         bar_row = QHBoxLayout()
         bar_row.setContentsMargins(Space.XXL, 0, Space.S, 0)  # under the name, past the color dot
         bar_row.addWidget(self.bar)

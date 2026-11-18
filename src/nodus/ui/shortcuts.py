@@ -18,7 +18,7 @@ _ALONE = Qt.KeyboardModifier.NoModifier | Qt.KeyboardModifier.KeypadModifier
 ANYWHERE = "En toda la app"
 LISTS = "En las listas"
 FORMS = "En los formularios"
-DETAILS = "En la página de una cuenta, un beneficiario o una etiqueta"
+DETAILS = "En una cuenta, un beneficiario o una etiqueta"
 TOUR = "En el recorrido guiado"
 SHORTCUT_GROUPS = [ANYWHERE, LISTS, FORMS, DETAILS, TOUR]
 
@@ -44,17 +44,15 @@ class Shortcut:
         return "+".join(self.keys)
 
 
-HELP = Shortcut(("F1",), "Abre o cierra la Ayuda, en el tema de la página donde estás.", ANYWHERE)
-UNDO = Shortcut(("Ctrl", "Z"), "Deshace lo último que hiciste, si avisó «Deshacer».", ANYWHERE)
+HELP = Shortcut(("F1",), "Abre o cierra la Ayuda.", ANYWHERE)
+UNDO = Shortcut(("Ctrl", "Z"), "Deshace lo último.", ANYWHERE)
 CLOSE_HELP = Shortcut(("Esc",), "Cierra la Ayuda.", ANYWHERE, (Qt.Key.Key_Escape,))
-DELETE_ROWS = Shortcut(
-    ("Supr",), "Elimina las filas elegidas, después de preguntar.", LISTS, (Qt.Key.Key_Delete,)
-)
+DELETE_ROWS = Shortcut(("Supr",), "Borra las filas elegidas.", LISTS, (Qt.Key.Key_Delete,))
 CLEAR_SELECTION = Shortcut(("Esc",), "Quita la selección.", LISTS, (Qt.Key.Key_Escape,))
 BACK_TO_LIST = Shortcut(("Esc",), "Vuelve a la lista.", DETAILS, (Qt.Key.Key_Escape,))
 TOUR_NEXT = Shortcut(
     ("→",),
-    "Avanza; también con Enter.",
+    "Avanza (también Enter).",
     TOUR,
     (Qt.Key.Key_Right, Qt.Key.Key_Return, Qt.Key.Key_Enter),
 )
@@ -65,14 +63,14 @@ SHORTCUTS = [
     HELP,
     CLOSE_HELP,
     UNDO,
-    Shortcut(("Doble clic",), "Hace lo principal de la fila: abrirla o editarla.", LISTS),
-    Shortcut(("Clic derecho",), "Abre el menú de la fila, igual que «⋯».", LISTS),
-    Shortcut(("Ctrl", "clic"), "Suma o quita una fila de la selección.", LISTS),
-    Shortcut(("Mayús", "clic"), "Elige todas las filas hasta esa.", LISTS),
+    Shortcut(("Doble clic",), "Abre o edita la fila.", LISTS),
+    Shortcut(("Clic derecho",), "Abre el menú de la fila.", LISTS),
+    Shortcut(("Ctrl", "clic"), "Suma o quita una fila.", LISTS),
+    Shortcut(("Mayús", "clic"), "Elige hasta esa fila.", LISTS),
     DELETE_ROWS,
     CLEAR_SELECTION,
     Shortcut(("Enter",), "Guarda.", FORMS),
-    Shortcut(("Esc",), "Cierra sin guardar; si cambiaste algo, pregunta antes.", FORMS),
+    Shortcut(("Esc",), "Cierra; pregunta si cambiaste algo.", FORMS),
     BACK_TO_LIST,
     TOUR_NEXT,
     TOUR_BACK,

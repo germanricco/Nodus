@@ -40,6 +40,7 @@ class TopBar(QFrame):
 
         self.feedback_button = self._icon_button("Enviar comentarios")
         self.feedback_button.clicked.connect(self.feedback_requested)
+        mark_target(self.feedback_button, tour.FEEDBACK)
         self.notifications_button = self._icon_button("Notificaciones")
         self.notifications_button.clicked.connect(self.notifications_requested)
         mark_target(self.notifications_button, tour.NOTIFICATIONS)

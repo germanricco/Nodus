@@ -202,6 +202,44 @@ class AnimatedChart(QWidget):
         painter.restore()
 
 
+class ProgressStrip(AnimatedChart):
+    """A thin bar filled to ``fraction``: a budget's, a goal's.
+
+    Pages build their rows anew on every refresh, so a strip starts from what the strip
+    it replaces was showing (``start``, from ``shown_fractions``): one whose figure did
+    not change stays still, as when amounts are hidden or the theme changes, and one that
+    changed moves from its old figure. A strip seen for the first time grows from empty.
+    """
+
+    def __init__(
+        self, theme: Theme, height: int, start: float | None, parent: QWidget | None = None
+    ) -> None:
+        super().__init__(theme, parent)
+        self.make_strip(height)
+        self._start = 0.0 if start is None else start
+
+    @property
+    def fraction(self) -> float:
+        """How full the strip ends up; past 1 for a budget over its limit."""
+        raise NotImplementedError
+
+    @property
+    def shown_fraction(self) -> float:
+        """How full the strip is painted now, partway through its transition."""
+        return lerp(self._start, self.fraction, self.progress)
+
+    def _begin(self) -> None:
+        """Called by subclasses once their data is stored."""
+        if self._start != self.fraction:
+            self._start_transition()
+
+
+def shown_fractions(strips: Mapping[K, ProgressStrip]) -> dict[K, float]:
+    """What each strip shows now, by the key of what it stands for (a goal, a category),
+    for the strips that replace them to start from."""
+    return {key: strip.shown_fraction for key, strip in strips.items()}
+
+
 class ColumnHoverChart(AnimatedChart):
     """A chart of one column per point, the one under the mouse in ``hover_index``.
     Subclasses say which column an x falls in through ``index_at``."""

@@ -15,7 +15,7 @@ from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.change_badge import Tone, status_pill
 from nodus.ui.widgets.charts.budget_bar import paint_progress
-from nodus.ui.widgets.charts.chart_base import AnimatedChart, lerp
+from nodus.ui.widgets.charts.chart_base import ProgressStrip
 from nodus.ui.widgets.money_label import amount_text
 
 # The pill of each state, and its tone (the colors of ``ChangeBadge``).
@@ -93,17 +93,22 @@ def bar_color(theme: Theme, state: GoalState) -> str:
     }.get(state, theme.accent)
 
 
-class GoalBar(AnimatedChart):
+class GoalBar(ProgressStrip):
     """The saved part of the target fills the bar, in the color of the goal's state; past
     the target it stays full."""
 
     HEIGHT = ControlSize.PROGRESS_HEIGHT
 
-    def __init__(self, theme: Theme, progress: GoalProgress, parent: QWidget | None = None) -> None:
-        super().__init__(theme, parent)
+    def __init__(
+        self,
+        theme: Theme,
+        progress: GoalProgress,
+        start: float | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(theme, self.HEIGHT, start, parent)
         self.goal_progress = progress
-        self.make_strip(self.HEIGHT)
-        self._start_transition()
+        self._begin()
 
     @property
     def fraction(self) -> float:
@@ -116,7 +121,7 @@ class GoalBar(AnimatedChart):
         paint_progress(
             painter,
             QRectF(0, 0, self.width(), self.HEIGHT),
-            lerp(0.0, self.fraction, self.progress),
+            self.shown_fraction,
             bar_color(self._theme, self.goal_progress.state),
             self._theme.border,
         )

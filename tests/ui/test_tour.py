@@ -27,6 +27,19 @@ def test_every_step_points_at_something_on_screen(tour):
         assert tour.rect().contains(tour.bubble.geometry())
 
 
+def test_steps_go_as_the_window_reads(window, tour):
+    """The sidebar from top to bottom, then the bar above from left to right: moving a
+    button cannot leave the tour jumping back and forth."""
+    for bar, axis in ((window.sidebar, "y"), (window.top_bar, "x")):
+        places = []
+        for index, step in enumerate(tour.steps):
+            tour.index = index
+            if all(bar.isAncestorOf(widget) for widget in tour._targets(step)):
+                places.append(getattr(tour.hole().topLeft(), axis)())
+        assert len(places) > 1, bar
+        assert places == sorted(places), (bar, places)
+
+
 def test_buttons_go_forward_and_back(tour):
     assert tour.count_label.text() == f"1 de {len(TOUR_STEPS)}"
     assert not tour.back_button.isEnabled()

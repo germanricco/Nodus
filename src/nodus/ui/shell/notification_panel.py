@@ -7,12 +7,18 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from nodus.services.app.notification_service import Notice, NoticeKind
 from nodus.ui.shell.notices import NOTICES
-from nodus.ui.theme.design import Layout, Line, Space
+from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import active_theme
 from nodus.ui.widgets.card import card_title
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.style import clear_layout, muted_label, set_style_property, show_below
+from nodus.ui.widgets.style import (
+    clear_layout,
+    muted_label,
+    separator,
+    set_style_property,
+    show_below,
+)
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
 
 NEWS_LABEL = "Qué trae"
@@ -119,10 +125,7 @@ class NotificationPanel(QFrame):
             self._rows.addWidget(EmptyState("Sin novedades.", compact=True))
         for index, notice in enumerate(notices):
             if index:
-                separator = QFrame()
-                separator.setObjectName("Separator")
-                separator.setFixedHeight(Line.THIN)
-                self._rows.addWidget(separator)
+                self._rows.addWidget(separator())
             row = NoticeRow(notice)
             row.opened.connect(self._act)
             row.news_requested.connect(self._show_news)

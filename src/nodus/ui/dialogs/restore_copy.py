@@ -58,6 +58,9 @@ def restore_copy(
             str(error),
         )
         return False
+    # Whoever brings their data back has used Nodus: the tour is not offered, even
+    # when the copy predates it.
+    services.tour.mark_tour_offered()
     theme_manager.set_mode(ThemeMode.from_setting(services.settings.theme_preference()))
     event_bus.emit_all()
     show_toast(parent, "Copia restaurada.")

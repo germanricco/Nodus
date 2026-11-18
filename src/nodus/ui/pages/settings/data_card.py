@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QFrame, QPushButton
+from PySide6.QtWidgets import QPushButton
 
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.backups.retention import DAILY, MONTHLY, WEEKLY
@@ -18,13 +18,13 @@ from nodus.ui.dialogs.restore_copy import restore_copy
 from nodus.ui.dialogs.user_error import user_error
 from nodus.ui.event_bus import EventBus
 from nodus.ui.text.formatting import format_date
-from nodus.ui.theme.design import Line, Space
+from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.busy import busy
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.inputs.toggle_switch import ToggleSwitch
 from nodus.ui.widgets.setting_row import SettingRow
-from nodus.ui.widgets.style import secondary_button
+from nodus.ui.widgets.style import secondary_button, separator
 from nodus.ui.widgets.toast import show_toast
 
 
@@ -82,11 +82,8 @@ class DataCard(Card):
             self.body.addWidget(row)
 
         # Apart from the everyday actions, since it replaces all the data.
-        separator = QFrame()
-        separator.setObjectName("Separator")
-        separator.setFixedHeight(Line.THIN)
         self.body.addSpacing(Space.XS)
-        self.body.addWidget(separator)
+        self.body.addWidget(separator())
         restore_row = SettingRow(
             "Restaurar una copia",
             "Reemplaza tus datos actuales por los de una copia. Antes se guarda una copia de"

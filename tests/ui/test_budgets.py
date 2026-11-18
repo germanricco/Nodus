@@ -164,3 +164,26 @@ def test_page_is_in_the_sidebar(window):
     window.show_page(PageId.BUDGETS)
 
     assert isinstance(window.current_page, BudgetsPage)
+
+
+def test_a_refresh_with_the_same_figures_leaves_the_bars_still(
+    qtbot, page, services, event_bus, pesos, animations
+):
+    """The rows are built anew, but each bar starts where the one it replaces was."""
+    food = expense("Supermercado y comida", services)
+    services.budgets.set_limit(food, NOVEMBER, ars("1000"))
+    spend(services, pesos.id, "400", food)
+    page.refresh(TODAY)
+    page.show()
+    qtbot.waitUntil(lambda: page.rows[0].bar.progress == 1)
+
+    services.settings.set_amounts_hidden(True)
+    event_bus.amounts_hidden_changed.emit(True)
+    assert page.rows[0].bar.progress == 1
+
+    spend(services, pesos.id, "200", food)
+    event_bus.transactions_changed.emit()
+    bar = page.rows[0].bar
+    assert bar.shown_fraction == pytest.approx(0.4, abs=0.05)  # from 40 % toward 60 %
+    qtbot.waitUntil(lambda: bar.progress == 1)
+    assert bar.shown_fraction == pytest.approx(0.6)

@@ -5,6 +5,7 @@ from collections.abc import Callable
 from PySide6.QtCore import QEasingCurve, QObject, QPoint, Qt, QVariantAnimation
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
+    QFrame,
     QGraphicsDropShadowEffect,
     QLabel,
     QLayout,
@@ -14,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.models.money import Money
-from nodus.ui.theme.design import Elevation, Opacity, Popup
+from nodus.ui.theme.design import Elevation, Line, Opacity, Popup
 from nodus.ui.theme.theme import Theme
 
 # Figures line up at their right edge, centered in their row.
@@ -73,6 +74,14 @@ def elevate(widget: QWidget, theme: Theme) -> None:
     shadow.setOffset(0, Elevation.OFFSET)
     shadow.setColor(color)
     widget.setGraphicsEffect(shadow)
+
+
+def separator() -> QFrame:
+    """A thin line across, between rows or groups of a list."""
+    line = QFrame()
+    line.setObjectName("Separator")
+    line.setFixedHeight(Line.THIN)
+    return line
 
 
 def muted_label(text: str) -> QLabel:

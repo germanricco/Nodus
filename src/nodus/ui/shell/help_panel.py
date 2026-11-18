@@ -13,7 +13,6 @@ from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import (
     QFrame,
-    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -23,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.ui.shortcuts import CLOSE_HELP, SHORTCUT_GROUPS, SHORTCUTS
+from nodus.ui.shortcuts import CLOSE_HELP, SHORTCUT_GROUPS, SHORTCUTS, Shortcut
 from nodus.ui.text.help_texts import HELP_SECTIONS, HELP_TOPICS, TOPICS_BY_KEY, HelpTopic
 from nodus.ui.text.labels import TOUR_LABEL
 from nodus.ui.theme.design import IconSize, Layout, Space
@@ -31,7 +30,7 @@ from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.style import muted_label, scrolling, secondary_button
+from nodus.ui.widgets.style import muted_label, scrolling, secondary_button, separator
 
 INDEX, TOPIC, SHORTCUTS_VIEW = range(3)
 SHORTCUTS_TITLE = "Atajos de teclado"
@@ -297,29 +296,39 @@ class HelpPanel(QFrame):
 
         table = QWidget()
         table.setObjectName("HelpBody")
-        grid = QGridLayout(table)
-        grid.setContentsMargins(0, 0, Space.S, 0)
-        grid.setHorizontalSpacing(Space.L)
-        grid.setVerticalSpacing(Space.S)
-        row = 0
+        groups = QVBoxLayout(table)
+        groups.setContentsMargins(0, 0, Space.S, 0)
+        groups.setSpacing(Space.XS)
         for group in SHORTCUT_GROUPS:
             label = QLabel(group.upper())
             label.setObjectName("SectionLabel")
             label.setWordWrap(True)
-            grid.addWidget(label, row, 0, 1, 2)
-            row += 1
-            for shortcut in SHORTCUTS:
-                if shortcut.group != group:
-                    continue
-                grid.addLayout(self._keys(shortcut.keys), row, 0, Qt.AlignmentFlag.AlignTop)
-                text = QLabel(shortcut.text)
-                text.setWordWrap(True)
-                grid.addWidget(text, row, 1, Qt.AlignmentFlag.AlignTop)
-                row += 1
-        grid.setColumnStretch(1, 1)
-        grid.setRowStretch(row, 1)
+            groups.addWidget(label)
+            groups.addWidget(self._shortcut_group([s for s in SHORTCUTS if s.group == group]))
+        groups.addStretch()
         layout.addWidget(scrolling(table, horizontal=False), stretch=1)
         return view
+
+    @classmethod
+    def _shortcut_group(cls, shortcuts: list[Shortcut]) -> QFrame:
+        """The shortcuts of one group in a box, as a menu reads: what each does on the
+        left, its keys on the right, a thin line between them."""
+        box = QFrame()
+        box.setObjectName("ShortcutGroup")
+        rows = QVBoxLayout(box)
+        rows.setContentsMargins(Space.M, Space.XS, Space.M, Space.XS)
+        rows.setSpacing(Space.XS)
+        for index, shortcut in enumerate(shortcuts):
+            if index:
+                rows.addWidget(separator())
+            row = QHBoxLayout()
+            row.setSpacing(Space.M)
+            text = QLabel(shortcut.text)
+            text.setWordWrap(True)
+            row.addWidget(text, stretch=1)
+            row.addLayout(cls._keys(shortcut.keys))
+            rows.addLayout(row)
+        return box
 
     @staticmethod
     def _keys(keys: tuple[str, ...]) -> QHBoxLayout:
@@ -333,7 +342,6 @@ class HelpPanel(QFrame):
             cap = QLabel(key)
             cap.setObjectName("KeyCap")
             row.addWidget(cap)
-        row.addStretch()
         return row
 
     def _apply_theme(self, theme: Theme) -> None:
