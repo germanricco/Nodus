@@ -6,6 +6,7 @@ from html import escape
 
 from PySide6.QtWidgets import QHeaderView
 
+from nodus.i18n import _
 from nodus.models.money import Money
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
@@ -62,9 +63,9 @@ def selection_totals_text(totals: FilteredTotals) -> str:
         return ""
     return " · ".join(
         [
-            f"Ingresos {totals.income.format()}",
-            f"Gastos {totals.expenses.format()}",
-            f"Neto {totals.net.format()}",
+            _("Ingresos {amount}").format(amount=totals.income.format()),
+            _("Gastos {amount}").format(amount=totals.expenses.format()),
+            _("Neto {amount}").format(amount=totals.net.format()),
         ]
     )
 
@@ -75,14 +76,16 @@ def selection_totals_html(totals: FilteredTotals, theme: Theme) -> str:
     if not (totals.income.cents or totals.expenses.cents):
         return ""
 
-    def part(label: str, money: Money, color: str) -> str:
-        return f'{label} <span style="color:{color}">{escape(money.format())}</span>'
+    def part(text: str, money: Money, color: str) -> str:
+        """``text`` with its ``{amount}`` in ``color``."""
+        amount = escape(money.format())
+        return escape(text).replace("{amount}", f'<span style="color:{color}">{amount}</span>')
 
     return " · ".join(
         [
-            part("Ingresos", totals.income, theme.income),
-            part("Gastos", totals.expenses, theme.expense),
-            part("Neto", totals.net, theme.amount_color(totals.net)),
+            part(_("Ingresos {amount}"), totals.income, theme.income),
+            part(_("Gastos {amount}"), totals.expenses, theme.expense),
+            part(_("Neto {amount}"), totals.net, theme.amount_color(totals.net)),
         ]
     )
 
@@ -110,13 +113,15 @@ class TransactionListView(Card):
         self._page = page
         self._builder = TransactionListBuilder(services)
 
-        self.selection_bar = SelectionBar("seleccionadas")
-        self.edit_button = self.selection_bar.add_action("Editar…", self.edit_selected)
-        self.edit_button.setToolTip("Cambia la categoría, el beneficiario, la nota o las etiquetas")
-        self.delete_button = self.selection_bar.add_action(
-            "Eliminar", self.delete_selected, destructive=True
+        self.selection_bar = SelectionBar(_("seleccionadas"))
+        self.edit_button = self.selection_bar.add_action(_("Editar…"), self.edit_selected)
+        self.edit_button.setToolTip(
+            _("Cambia la categoría, el beneficiario, la nota o las etiquetas")
         )
-        self.delete_button.setToolTip(DELETE_KEY_HINT)
+        self.delete_button = self.selection_bar.add_action(
+            _("Eliminar"), self.delete_selected, destructive=True
+        )
+        self.delete_button.setToolTip(_(DELETE_KEY_HINT))
         self.selection_bar.cleared.connect(lambda: self.table.clearSelection())
         page.set_selection_bar(self.selection_bar)
 

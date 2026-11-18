@@ -7,6 +7,7 @@ from datetime import date
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from nodus.i18n import _
 from nodus.models.period import Period
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
@@ -106,8 +107,8 @@ class LatestTransactionsCard(Card):
         self._services = services
         self._theme_manager = theme_manager
         self._builder = TransactionListBuilder(services)
-        header = card_header(self, "Últimas transacciones")
-        self.see_all_button = see_all_link(header, "Ver todas", self.see_all_requested)
+        header = card_header(self, _("Últimas transacciones"))
+        self.see_all_button = see_all_link(header, _("Ver todas"), self.see_all_requested)
         self._rows = QVBoxLayout()
         self._rows.setSpacing(0)
         self.body.addLayout(self._rows)
@@ -123,7 +124,7 @@ class LatestTransactionsCard(Card):
         )
         items = self._builder.build(transactions)[:count]
         if not items:
-            self._rows.addWidget(EmptyState(NO_MOVEMENTS_TEXT, compact=True))
+            self._rows.addWidget(EmptyState(_(NO_MOVEMENTS_TEXT), compact=True))
         transfer_color = self._theme_manager.theme.text_muted
         for item in items:
             row = LatestTransactionRow(item, transfer_color)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from nodus.i18n import N_, _
 from nodus.services.classification.payee_service import PayeeSummary
 from nodus.services.container import Services
 from nodus.services.sorting import name_sort_key
@@ -14,16 +15,16 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.inputs.color import color_icon
 
 CATEGORY = TOTAL + 1
-NO_PAYEES_TEXT = (
+NO_PAYEES_TEXT = N_(
     "Todavía no hay beneficiarios: se crean al escribir uno nuevo al cargar un movimiento."
 )
-NO_MATCHES_TEXT = "Ningún beneficiario coincide con la búsqueda."
+NO_MATCHES_TEXT = N_("Ningún beneficiario coincide con la búsqueda.")
 
 
 class PayeeTableModel(SummaryTableModel[PayeeSummary]):
     """Payee summaries, with the category used most with each."""
 
-    TITLES = [*SummaryTableModel.TITLES, "Categoría habitual"]
+    TITLES = [*SummaryTableModel.TITLES, N_("Categoría habitual")]
 
     def name(self, summary: PayeeSummary) -> str:
         return summary.payee.name
@@ -49,12 +50,12 @@ class PayeesPage(SummaryPage[PayeeSummary]):
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
         super().__init__(
-            "Beneficiarios",
-            "beneficiario",
+            _("Beneficiarios"),
+            N_("beneficiario"),
             (NO_PAYEES_TEXT, NO_MATCHES_TEXT),
             PayeeTableModel(theme_manager.theme),
             theme_manager,
-            chosen_word="seleccionados",
+            chosen_word=N_("seleccionados"),
         )
         self._services = services
         self._event_bus = event_bus

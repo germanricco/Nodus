@@ -8,6 +8,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QWidget
 
+from nodus.i18n import N_, _, ngettext
 from nodus.models.installment_plan import MAX_INSTALLMENTS, MIN_INSTALLMENTS, InstallmentPlan
 from nodus.models.money import Money
 from nodus.services.errors import ValidationError
@@ -18,12 +19,10 @@ from nodus.ui.widgets.inputs.input_error import InputError
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 
 TOTAL, PER_INSTALLMENT = range(2)
-AMOUNT_MODES = ["Total", "Por cuota"]
+AMOUNT_MODES = [N_("Total"), N_("Por cuota")]
 # What card purchases are usually paid in; any other count is typed after «Otra cantidad».
 COMMON_COUNTS = (1, 3, 6, 9, 12, 18)
-OTHER_COUNT = "Otra cantidad…"
-# What «Otra cantidad» asks for while it has no usable number.
-ASK_COUNT = f"Escribe en cuántas cuotas, de {MIN_INSTALLMENTS} a {MAX_INSTALLMENTS}."
+OTHER_COUNT = N_("Otra cantidad…")
 
 
 class InstallmentFields(QWidget):
@@ -41,19 +40,19 @@ class InstallmentFields(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.count_input = ComboBox()
-        self.count_input.setAccessibleName("Cuotas")
-        self.count_input.setToolTip("En cuántas cuotas se paga")
+        self.count_input.setAccessibleName(_("Cuotas"))
+        self.count_input.setToolTip(_("En cuántas cuotas se paga"))
         for count in COMMON_COUNTS:
             self.count_input.addItem(count_text(count), count)
         self.count_input.insertSeparator(self.count_input.count())
-        self.count_input.addItem(OTHER_COUNT, None)
+        self.count_input.addItem(_(OTHER_COUNT), None)
         self.other_input = QLineEdit()
-        self.other_input.setPlaceholderText("Cuántas")
-        self.other_input.setAccessibleName("Otra cantidad de cuotas")
+        self.other_input.setPlaceholderText(_("Cuántas"))
+        self.other_input.setAccessibleName(_("Otra cantidad de cuotas"))
         self.other_input.setValidator(QIntValidator(1, MAX_INSTALLMENTS, self.other_input))
         self.other_input.hide()
-        self.amount_mode = SegmentedControl(AMOUNT_MODES)
-        self.amount_mode.setToolTip("El monto es el total de la compra o lo que vale cada cuota")
+        self.amount_mode = SegmentedControl([_(mode) for mode in AMOUNT_MODES])
+        self.amount_mode.setToolTip(_("El monto es el total de la compra o lo que vale cada cuota"))
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -94,7 +93,7 @@ class InstallmentFields(QWidget):
             self.count_input.setCurrentIndex(index)
             return
         self.other_input.setText(str(count))
-        self.count_input.setCurrentIndex(self.count_input.findText(OTHER_COUNT))
+        self.count_input.setCurrentIndex(self.count_input.findText(_(OTHER_COUNT)))
 
     def set_plan(self, plan: InstallmentPlan) -> None:
         """Shows a saved purchase: its count, with the amount read as the total."""
@@ -105,7 +104,7 @@ class InstallmentFields(QWidget):
         """The plan for ``amount`` read as this row says; None for a single payment."""
         count = self.count
         if count is None:
-            raise InputError(ASK_COUNT, self.other_input)
+            raise InputError(ask_count(), self.other_input)
         if count == 1:
             return None
         try:
@@ -114,7 +113,12 @@ class InstallmentFields(QWidget):
             return InstallmentPlan(None, count, amount, first_due_on)
         except ValueError as error:
             raise ValidationError(
-                f"El monto no alcanza para {count} cuotas.", field="amount"
+                ngettext(
+                    "El monto no alcanza para {count} cuota.",
+                    "El monto no alcanza para {count} cuotas.",
+                    count,
+                ).format(count=count),
+                field="amount",
             ) from error
 
     def hint_text(self, amount: Money | None, first_due_on: date) -> str | None:
@@ -140,16 +144,33 @@ class InstallmentFields(QWidget):
         self.changed.emit()
 
 
+def ask_count() -> str:
+    """What «Otra cantidad» asks for while it has no usable number."""
+    return _("Escribe en cuántas cuotas, de {low} a {high}.").format(
+        low=MIN_INSTALLMENTS, high=MAX_INSTALLMENTS
+    )
+
+
 def count_text(count: int) -> str:
-    return "1 pago" if count == 1 else f"{count} cuotas"
+    if count == 1:
+        return _("1 pago")
+    return ngettext("{count} cuota", "{count} cuotas", count).format(count=count)
 
 
 def _hint_text(plan: InstallmentPlan, per_installment: bool) -> str:
-    last = f"la última, el {format_date(plan.due_dates()[-1])}"
+    last = _("la última, el {date}").format(date=format_date(plan.due_dates()[-1]))
     if per_installment:
-        return f"Total {plan.total.format()} · {last}"
+        return _("Total {amount} · {last}").format(amount=plan.total.format(), last=last)
     amounts = plan.amounts()
-    what = f"{plan.count} cuotas de {amounts[-1].format()}"
+    count, amount = plan.count, amounts[-1].format()
     if amounts[0] != amounts[-1]:
-        what += f" (la primera, {amounts[0].format()})"
+        what = ngettext(
+            "{count} cuota de {amount} (la primera, {first})",
+            "{count} cuotas de {amount} (la primera, {first})",
+            count,
+        ).format(count=count, amount=amount, first=amounts[0].format())
+    else:
+        what = ngettext("{count} cuota de {amount}", "{count} cuotas de {amount}", count).format(
+            count=count, amount=amount
+        )
     return f"{what} · {last}"

@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QTableView,
 )
 
+from nodus.i18n import N_
 from nodus.ui.shortcuts import DELETE_ROWS
 from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.theme_manager import active_theme
@@ -47,7 +48,7 @@ def configure_record_table(
     header.setSectionResizeMode(stretch_column, QHeaderView.ResizeMode.Stretch)
 
 
-DELETE_KEY_HINT = "También con la tecla Supr"
+DELETE_KEY_HINT = N_("También con la tecla Supr")
 
 
 class _DeleteKeyFilter(QObject):

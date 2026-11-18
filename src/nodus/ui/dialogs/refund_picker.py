@@ -8,6 +8,7 @@ from datetime import date
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLayout, QLineEdit, QPushButton, QWidget
 
+from nodus.i18n import _
 from nodus.models.period import Period, format_date
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
@@ -38,7 +39,7 @@ class RefundPickerDialog(FormDialog):
         linked_id: int | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__("Elegir el gasto que se reembolsa", parent, "Vincular")
+        super().__init__(_("Elegir el gasto que se reembolsa"), parent, _("Vincular"))
         # A list, not a form: it opens large and the user can resize it.
         self.layout().setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
         self.setMinimumSize(*Layout.PICKER_MIN_SIZE)
@@ -49,8 +50,8 @@ class RefundPickerDialog(FormDialog):
 
         self.period_selector = PeriodSelector(Period.last_months(CANDIDATE_MONTHS, date.today()))
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Buscar…")
-        self.search_input.setToolTip("Busca en la nota, el beneficiario y las etiquetas")
+        self.search_input.setPlaceholderText(_("Buscar…"))
+        self.search_input.setToolTip(_("Busca en la nota, el beneficiario y las etiquetas"))
         self.search_input.setClearButtonEnabled(True)
         row = QHBoxLayout()
         row.addWidget(self.period_selector)
@@ -61,7 +62,9 @@ class RefundPickerDialog(FormDialog):
         self.table = record_table(self.model, DESCRIPTION)
         self.table.hideColumn(TAGS)  # the picker only needs to recognize the expense
         self.table.doubleClicked.connect(lambda _index: self._on_save())
-        self.empty_label = EmptyState("Sin gastos para reembolsar en este período.", compact=True)
+        self.empty_label = EmptyState(
+            _("Sin gastos para reembolsar en este período."), compact=True
+        )
         self.form.addRow(self.table)
         self.form.addRow(self.empty_label)
 
@@ -88,7 +91,7 @@ class RefundPickerDialog(FormDialog):
     def save(self) -> None:
         rows = self.table.selectionModel().selectedRows()
         if not rows:
-            raise InputError("Elige el gasto que se reembolsa.", self.table)
+            raise InputError(_("Elige el gasto que se reembolsa."), self.table)
         self.chosen = self.model.item(rows[0].row()).transaction
 
 
@@ -113,14 +116,14 @@ class RefundField(QWidget):
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        self.link_button = QPushButton("Vincular a un gasto…")
+        self.link_button = QPushButton(_("Vincular a un gasto…"))
         self.link_button.setObjectName("SecondaryButton")
-        self.link_button.setToolTip("Si este ingreso devuelve un gasto, lo resta de lo gastado")
+        self.link_button.setToolTip(_("Si este ingreso devuelve un gasto, lo resta de lo gastado"))
         self.summary_label = QLabel()
         self.summary_label.setWordWrap(True)
-        self.unlink_button = QPushButton("Quitar")
+        self.unlink_button = QPushButton(_("Quitar"))
         self.unlink_button.setObjectName("SecondaryButton")
-        self.unlink_button.setToolTip("Deja de ser un reembolso")
+        self.unlink_button.setToolTip(_("Deja de ser un reembolso"))
         layout.addWidget(self.link_button)
         layout.addWidget(self.summary_label, stretch=1)
         layout.addWidget(self.unlink_button)
@@ -144,8 +147,12 @@ class RefundField(QWidget):
                 expense.id, ignore_id=self._refund_id
             ).remaining
             self.summary_label.setText(
-                f"{item.description} · {format_date(expense.occurred_on)} · "
-                f"{expense.amount.format()} (queda {remaining.format()})"
+                _("{description} · {date} · {amount} (queda {remaining})").format(
+                    description=item.description,
+                    date=format_date(expense.occurred_on),
+                    amount=expense.amount.format(),
+                    remaining=remaining.format(),
+                )
             )
         self.changed.emit()
 

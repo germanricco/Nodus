@@ -11,10 +11,10 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-from nodus.i18n import ngettext
+from nodus.i18n import N_, _, ngettext
 from nodus.models.budget import Budget, BudgetState
 from nodus.models.category import Category
-from nodus.models.period import Month, Period, format_month
+from nodus.models.period import Month, Period, format_month, format_month_in_sentence
 from nodus.services.container import Services
 from nodus.services.planning.budget_service import MonthBudgets
 from nodus.services.reports.dashboard_service import CategoryTotal
@@ -38,7 +38,7 @@ from nodus.ui.widgets.tables.budget_row import BudgetRow
 from nodus.ui.widgets.tables.category_line import CategoryLine
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 
-EMPTY_TEXT = (
+EMPTY_TEXT = N_(
     "Ponle un límite mensual a las categorías que quieres cuidar, como el supermercado o "
     "las salidas. Nodus te muestra cuánto llevas gastado, si vas más rápido que el mes y "
     "te avisa cuando te pasas."
@@ -65,11 +65,11 @@ class BudgetPageRow(BudgetRow):
         """Its movements first, as a click on the row; then changing or removing it."""
         return [
             RowAction(
-                "Ver movimientos", self.clicked.emit, "list", default=True, effect=Effect.OPEN
+                _("Ver movimientos"), self.clicked.emit, "list", default=True, effect=Effect.OPEN
             ),
-            RowAction("Cambiar límite", self.edit_requested.emit, "pencil", effect=Effect.OPEN),
+            RowAction(_("Cambiar límite"), self.edit_requested.emit, "pencil", effect=Effect.OPEN),
             RowAction(
-                "Quitar presupuesto",
+                _("Quitar presupuesto"),
                 self.remove_requested.emit,
                 "trash",
                 destructive=True,
@@ -93,7 +93,7 @@ class BudgetsPage(Page):
         self._theme_manager = theme_manager
         self.month_selector = PeriodSelector(quick_choices=False)
         self.add_header_widget(self.month_selector)
-        self.create_button = self.add_header_button("Agregar presupuesto", primary=True)
+        self.create_button = self.add_header_button(_("Agregar presupuesto"), primary=True)
         self.create_button.clicked.connect(lambda: self.open_budget_dialog())
 
         self._sections = self.scrolling_body()
@@ -140,13 +140,13 @@ class BudgetsPage(Page):
         ).exec()
 
     def remove_budget(self, category: Category) -> None:
-        text = (
-            f"«{category.name}» deja de tener presupuesto desde "
-            f"{format_month(self.month).lower()}. Los meses anteriores conservan su límite."
-        )
+        text = _(
+            "«{name}» deja de tener presupuesto desde {month}. Los meses anteriores "
+            "conservan su límite."
+        ).format(name=category.name, month=format_month_in_sentence(self.month))
         delete_with_confirm(
             self.window(),
-            "Quitar presupuesto",
+            _("Quitar presupuesto"),
             text,
             lambda: self._services.budgets.remove(category.id, self.month),
             self._event_bus.budgets_changed,
@@ -169,9 +169,9 @@ class BudgetsPage(Page):
         tiles = QHBoxLayout()
         tiles.setSpacing(Space.S)
         for caption, value in (
-            ("Presupuestado", self.limit_label),
-            ("Gastado", self.spent_label),
-            ("Excedido en" if over else "Quedan", self.remaining_label),
+            (_("Presupuestado"), self.limit_label),
+            (_("Gastado"), self.spent_label),
+            (_("Excedido en") if over else _("Quedan"), self.remaining_label),
         ):
             tiles.addWidget(FigureTile(caption, value), stretch=1)
         card.body.addLayout(tiles)
@@ -182,7 +182,7 @@ class BudgetsPage(Page):
 
     def _budgets_card(self, month: MonthBudgets) -> Card:
         over = sum(1 for b in month.budgets if b.state is BudgetState.OVER)
-        title = f"Presupuestos ({len(month.budgets)})"
+        title = _("Presupuestos ({count})").format(count=len(month.budgets))
         if over:
             title += " · " + ngettext("{count} excedido", "{count} excedidos", over).format(
                 count=over
@@ -200,8 +200,8 @@ class BudgetsPage(Page):
         return card
 
     def _unbudgeted_card(self, totals: list[CategoryTotal]) -> Card:
-        card = Card("Sin presupuesto")
-        hint = hint_label("Lo gastado en el mes en categorías sin límite.")
+        card = Card(_("Sin presupuesto"))
+        hint = hint_label(_("Lo gastado en el mes en categorías sin límite."))
         card.body.addWidget(hint)
         for total in totals:
             category = total.category
@@ -210,14 +210,14 @@ class BudgetsPage(Page):
             line.clicked.connect(lambda c=category: self._show_transactions(c))
             amount = amount_label(total.total)
             line.add(amount)
-            button = QPushButton("Poner límite")
+            button = QPushButton(_("Poner límite"))
             button.setObjectName("SmallButton")
-            button.clicked.connect(lambda _=False, c=category: self.open_budget_dialog(c))
+            button.clicked.connect(lambda _checked=False, c=category: self.open_budget_dialog(c))
             line.add(button)
             card.body.addWidget(line)
             self.unbudgeted_rows.append(line)
         return card
 
     def _empty_state(self) -> Card:
-        card, _state = empty_page_card("Todavía no hay presupuestos", EMPTY_TEXT)
+        card, _state = empty_page_card(_("Todavía no hay presupuestos"), _(EMPTY_TEXT))
         return card

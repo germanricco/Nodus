@@ -4,20 +4,21 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QWidget
 
+from nodus.i18n import N_, _
 from nodus.models.goal import Goal
 from nodus.services.container import Services
 from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.event_bus import EventBus
 
-DELETE_TEXT = "Se elimina la meta «{name}». Las cuentas y sus movimientos no se tocan."
+DELETE_TEXT = N_("Se elimina la meta «{name}». Las cuentas y sus movimientos no se tocan.")
 
 
 def delete_goal(parent: QWidget, services: Services, event_bus: EventBus, goal: Goal) -> bool:
     """Deletes ``goal`` once the user confirms; True if it was deleted."""
     return delete_with_confirm(
         parent,
-        "Eliminar meta",
-        DELETE_TEXT.format(name=goal.name),
+        _("Eliminar meta"),
+        _(DELETE_TEXT).format(name=goal.name),
         lambda: services.goals.delete(goal.id),
         event_bus.goals_changed,
     )

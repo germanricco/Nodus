@@ -6,6 +6,7 @@ from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QEnterEvent, QMouseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
 
+from nodus.i18n import _
 from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.elided_label import ElidedLabel
@@ -42,7 +43,7 @@ class CategoryLine(QFrame):
         self._clickable = clickable
         if clickable:
             self.setCursor(Qt.CursorShape.PointingHandCursor)
-            self.setToolTip("Ver sus transacciones")
+            self.setToolTip(_("Ver sus transacciones"))
 
     def add(self, widget: QWidget) -> QWidget:
         self._layout.addWidget(widget)

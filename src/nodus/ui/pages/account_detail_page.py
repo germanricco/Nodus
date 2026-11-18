@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.i18n import _, ngettext
+from nodus.i18n import N_, _, ngettext
 from nodus.models.account import Account
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.language_format import format_percent
@@ -54,7 +54,11 @@ from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
 from nodus.ui.widgets.tables.transaction_table import ACCOUNT
 
 # How far back the balance chart looks: months, or None for the account's whole life.
-CHART_RANGES: tuple[tuple[int | None, str], ...] = ((6, "6 meses"), (12, "1 año"), (None, "Todo"))
+CHART_RANGES: tuple[tuple[int | None, str], ...] = (
+    (6, N_("6 meses")),
+    (12, N_("1 año")),
+    (None, N_("Todo")),
+)
 
 
 def chart_since(months: int | None, today: date) -> date | None:
@@ -107,19 +111,19 @@ class AccountDetailPage(DetailPage):
         self.list_view.setMinimumHeight(Layout.DETAIL_LIST_MIN_HEIGHT)
         body.addWidget(self.list_view, stretch=1)
 
-        self.danger_card, self.delete_button = danger_zone("", "Eliminar cuenta", self.delete)
+        self.danger_card, self.delete_button = danger_zone("", _("Eliminar cuenta"), self.delete)
         self._danger_text = self.danger_card.findChild(QLabel, "FieldHint")
         body.addWidget(self.danger_card)
 
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
     def _add_header_buttons(self) -> None:
-        self.value_button = self.add_header_button("Actualizar valor")
+        self.value_button = self.add_header_button(_("Actualizar valor"))
         self.value_button.setToolTip(
-            "Anota lo que vale hoy; la diferencia es rendimiento, no un ingreso"
+            _("Anota lo que vale hoy; la diferencia es rendimiento, no un ingreso")
         )
         self.value_button.clicked.connect(self.update_value)
-        self.edit_button = self.add_header_button("Editar")
+        self.edit_button = self.add_header_button(_("Editar"))
         self.edit_button.clicked.connect(self.edit)
         self.more_button = MoreButton(self.more_actions)
         self.add_header_widget(self.more_button)
@@ -136,17 +140,19 @@ class AccountDetailPage(DetailPage):
         # What is still to come off the account in installments, as a card's statement
         # lists the installments ahead.
         self.pending_label, self.pending_note = QLabel(), muted_label("")
-        self.balance_tile = FigureTile("Saldo", self.balance_label, self.balance_note, large=True)
-        self.converted_tile = FigureTile("En pesos", self.converted_label, large=True)
+        self.balance_tile = FigureTile(
+            _("Saldo"), self.balance_label, self.balance_note, large=True
+        )
+        self.converted_tile = FigureTile(_("En pesos"), self.converted_label, large=True)
         self.incoming_tile = FigureTile(
-            "Entró este mes", self.incoming_label, self.incoming_note, large=True
+            _("Entró este mes"), self.incoming_label, self.incoming_note, large=True
         )
         self.outgoing_tile = FigureTile(
-            "Salió este mes", self.outgoing_label, self.outgoing_note, large=True
+            _("Salió este mes"), self.outgoing_label, self.outgoing_note, large=True
         )
-        self.gain_tile = FigureTile("Rendimiento", self.gain_label, self.gain_note, large=True)
+        self.gain_tile = FigureTile(_("Rendimiento"), self.gain_label, self.gain_note, large=True)
         self.pending_tile = FigureTile(
-            "Cuotas por pagar", self.pending_label, self.pending_note, large=True
+            _("Cuotas por pagar"), self.pending_label, self.pending_note, large=True
         )
         tiles = (
             self.balance_tile, self.converted_tile, self.incoming_tile, self.outgoing_tile,
@@ -158,7 +164,7 @@ class AccountDetailPage(DetailPage):
 
     def _payments_card(self) -> Card:
         """The recurring charges paid from this account, each with its «Pagar»."""
-        self.payments_card = Card("Próximos pagos")
+        self.payments_card = Card(_("Próximos pagos"))
         self._payment_rows = QVBoxLayout()
         self._payment_rows.setSpacing(0)
         self.payments_card.body.addLayout(self._payment_rows)
@@ -167,8 +173,8 @@ class AccountDetailPage(DetailPage):
 
     def _chart_card(self, services: Services, theme_manager: ThemeManager) -> Card:
         chart_card = Card()
-        header = card_header(chart_card, "Saldo en el tiempo")
-        self.range_input = SegmentedControl([label for _months, label in CHART_RANGES])
+        header = card_header(chart_card, _("Saldo en el tiempo"))
+        self.range_input = SegmentedControl([_(label) for _months, label in CHART_RANGES])
         months = services.settings.account_chart_months()
         self.range_input.set_index(
             next(i for i, (m, _label) in enumerate(CHART_RANGES) if m == months)
@@ -206,13 +212,13 @@ class AccountDetailPage(DetailPage):
 
     def _set_empty_message(self, account: Account) -> None:
         """An active account offers its first movement; an archived one takes none."""
-        text = "Esta cuenta todavía no tiene movimientos."
+        text = _("Esta cuenta todavía no tiene movimientos.")
         if account.is_archived:
             self.list_view.empty_state.set_message(text)
             return
         start = TransactionStart(account_id=account.id)
         self.list_view.empty_state.set_message(
-            text, "Agregar transacción", lambda: self.new_transaction_requested.emit(start)
+            text, _("Agregar transacción"), lambda: self.new_transaction_requested.emit(start)
         )
 
     def more_actions(self) -> list[RowAction]:
@@ -221,7 +227,7 @@ class AccountDetailPage(DetailPage):
             return []
         return [
             RowAction(
-                "Desarchivar" if account.is_archived else "Archivar",
+                _("Desarchivar") if account.is_archived else _("Archivar"),
                 self.toggle_archived,
                 "archive",
                 effect=Effect.TOGGLE,
@@ -254,7 +260,7 @@ class AccountDetailPage(DetailPage):
         if account.group_id is not None:
             details.append(self._services.account_groups.get(account.group_id).name)
         if account.is_archived:
-            details.append("Archivada")
+            details.append(_("Archivada"))
         return " · ".join(details)
 
     def _show_figures(self, account: Account, today: date) -> None:
@@ -270,9 +276,13 @@ class AccountDetailPage(DetailPage):
 
         activity = self._services.transactions.account_activity(account, month.start, today)
         self.incoming_label.setText(amount_text(activity.incoming, hidden))
-        self.incoming_note.setText(self._transfers_note(activity.transfers_in, "de"))
+        self.incoming_note.setText(
+            self._transfers_note(activity.transfers_in, _("{amount} de otras cuentas"))
+        )
         self.outgoing_label.setText(amount_text(activity.outgoing, hidden))
-        self.outgoing_note.setText(self._transfers_note(activity.transfers_out, "a"))
+        self.outgoing_note.setText(
+            self._transfers_note(activity.transfers_out, _("{amount} a otras cuentas"))
+        )
 
         gain = accounts.value_gain(account, balance)
         self.gain_tile.setVisible(gain is not None)
@@ -281,7 +291,7 @@ class AccountDetailPage(DetailPage):
             self.gain_note.setText(
                 ""
                 if gain.share is None
-                else f"{format_signed_percent(gain.share)} sobre lo invertido"
+                else _("{share} sobre lo invertido").format(share=format_signed_percent(gain.share))
             )
 
         installments = self._services.installments
@@ -291,15 +301,19 @@ class AccountDetailPage(DetailPage):
             self.pending_label.setText(amount_text(pending, hidden))
             left, last = installments.installments_left(account.id, today)
             count = ngettext("{count} cuota", "{count} cuotas", left).format(count=left)
-            self.pending_note.setText(f"{count} · hasta {format_month_in_sentence(Month.of(last))}")
+            self.pending_note.setText(
+                _("{installments} · hasta {month}").format(
+                    installments=count, month=format_month_in_sentence(Month.of(last))
+                )
+            )
         self.figures.relayout()
 
-    def _transfers_note(self, transfers: Money, preposition: str) -> str:
+    def _transfers_note(self, transfers: Money, sentence: str) -> str:
         """ "US$ 100,00 de otras cuentas" / "… a otras cuentas": how much of the month's
         money in or out was only moved between the user's accounts."""
         if transfers.is_zero:
             return ""
-        return f"{amount_text(transfers, self._hidden)} {preposition} otras cuentas"
+        return sentence.format(amount=amount_text(transfers, self._hidden))
 
     def _show_converted(self, balance: Money, today: date) -> None:
         """A foreign balance also in pesos, at today's rate, as the net worth counts it."""
@@ -309,11 +323,11 @@ class AccountDetailPage(DetailPage):
         converted = self._services.exchange_rates.convert(balance, HOME_CURRENCY, today)
         if converted is None:
             self.converted_label.setText("—")
-            self.converted_label.setToolTip("Sin cotización para pasarlo a pesos")
+            self.converted_label.setToolTip(_("Sin cotización para pasarlo a pesos"))
         else:
             self.converted_label.setText(f"≈ {amount_text(converted, self._hidden)}")
             self.converted_label.setToolTip(
-                "Con la cotización de hoy, como lo cuenta el patrimonio"
+                _("Con la cotización de hoy, como lo cuenta el patrimonio")
             )
         self.converted_tile.show()
 
@@ -325,12 +339,12 @@ class AccountDetailPage(DetailPage):
         self.goals_line.setVisible(bool(goals))
         if not goals:
             return
-        self._goals_layout.addWidget(muted_label("Aporta a:"))
+        self._goals_layout.addWidget(muted_label(_("Aporta a:")))
         for goal, percent in goals:
             link = QPushButton(f"{goal.name} ({format_percent(percent)})")
             link.setObjectName("LinkButton")
             link.setCursor(Qt.CursorShape.PointingHandCursor)
-            link.setToolTip("Abrir la meta")
+            link.setToolTip(_("Abrir la meta"))
             link.clicked.connect(lambda _checked=False, i=goal.id: self.goal_requested.emit(i))
             self._goals_layout.addWidget(link)
         self._goals_layout.addStretch()

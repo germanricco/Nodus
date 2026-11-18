@@ -9,7 +9,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.category_dialog import CategoryDialog
-from nodus.ui.dialogs.confirm import ask, confirm, delete_title, delete_with_confirm, tell
+from nodus.ui.dialogs.confirm import ask, confirm, delete_with_confirm, tell
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES
 
 
@@ -126,12 +126,6 @@ class TestDeleteWithConfirm:
 
         assert result is True
         assert order == ["deleted", "tags", "transactions"]
-
-    @pytest.mark.parametrize(
-        ("count", "title"), [(1, "Eliminar etiqueta"), (3, "Eliminar 3 etiquetas")]
-    )
-    def test_the_title_counts_what_goes(self, count, title):
-        assert delete_title(count, "etiqueta", "etiquetas") == title
 
 
 def test_a_notice_answers_in_spanish(qtbot):

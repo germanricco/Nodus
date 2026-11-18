@@ -24,33 +24,40 @@ class AboutCard(Card):
     help_requested = Signal()
 
     def __init__(self, services: Services) -> None:
-        super().__init__("Acerca de Nodus")
+        super().__init__(_("Acerca de Nodus"))
         self._services = services
-        version_row = SettingRow(f"Versión {__version__}", "El código fuente, abierto a todos.")
-        version_row.add(secondary_button("Ver en GitHub", lambda: open_url(REPOSITORY_URL)))
+        version_row = SettingRow(
+            _("Versión {version}").format(version=__version__),
+            _("El código fuente, abierto a todos."),
+        )
+        version_row.add(secondary_button(_("Ver en GitHub"), lambda: open_url(REPOSITORY_URL)))
         updates_row = SettingRow(
-            "Buscar actualizaciones al iniciar",
-            "Consulta en GitHub cuál es la última versión publicada. No envía ningún dato tuyo.",
+            _("Buscar actualizaciones al iniciar"),
+            _("Consulta en GitHub cuál es la última versión publicada. No envía ningún dato tuyo."),
         )
         self.check_updates_input = updates_row.add(ToggleSwitch())
         self.check_updates_input.clicked.connect(services.settings.set_check_updates)
-        news_row = SettingRow("Novedades", "Lo que trajo cada versión.")
-        news_row.add(secondary_button("Ver novedades", self.show_news))
-        tour_row = SettingRow("Recorrido guiado", "Dónde está cada cosa, en un minuto.")
+        news_row = SettingRow(_("Novedades"), _("Lo que trajo cada versión."))
+        news_row.add(secondary_button(_("Ver novedades"), self.show_news))
+        tour_row = SettingRow(_("Recorrido guiado"), _("Dónde está cada cosa, en un minuto."))
         tour_row.add(secondary_button(_(TOUR_LABEL), self.tour_requested.emit))
-        help_row = SettingRow("Ayuda", "Cómo se hace cada cosa y los atajos. También con F1.")
-        help_row.add(secondary_button("Abrir la ayuda", self.help_requested.emit))
+        help_row = SettingRow(_("Ayuda"), _("Cómo se hace cada cosa y los atajos. También con F1."))
+        help_row.add(secondary_button(_("Abrir la ayuda"), self.help_requested.emit))
         logs_row = SettingRow(
-            "Registro de errores",
-            "Lo que anota Nodus para encontrar un error. Queda en tu computadora.",
+            _("Registro de errores"),
+            _("Lo que anota Nodus para encontrar un error. Queda en tu computadora."),
         )
         self.logs_button = logs_row.add(
-            secondary_button("Abrir carpeta", lambda: open_folder(services.settings.logs_folder))
+            secondary_button(_("Abrir carpeta"), lambda: open_folder(services.settings.logs_folder))
         )
-        feedback_row = SettingRow("Comentarios", "Una idea o un error, sin crear una cuenta.")
-        feedback_row.add(secondary_button("Enviar comentarios", lambda: open_url(feedback_url())))
-        donate_row = SettingRow("Apoyar el proyecto", "Nodus es gratis y lo va a seguir siendo.")
-        donate_row.add(secondary_button("Invitar un cafecito", lambda: open_url(DONATE_URL)))
+        feedback_row = SettingRow(_("Comentarios"), _("Una idea o un error, sin crear una cuenta."))
+        feedback_row.add(
+            secondary_button(_("Enviar comentarios"), lambda: open_url(feedback_url()))
+        )
+        donate_row = SettingRow(
+            _("Apoyar el proyecto"), _("Nodus es gratis y lo va a seguir siendo.")
+        )
+        donate_row.add(secondary_button(_("Invitar un cafecito"), lambda: open_url(DONATE_URL)))
         for row in (
             version_row,
             updates_row,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from nodus.i18n import N_, _
 from nodus.services.classification.tag_service import TagSummary
 from nodus.services.container import Services
 from nodus.ui.actions.tags import delete_tags
@@ -12,8 +13,10 @@ from nodus.ui.pages.base.summary_page import NAME, SummaryPage, SummaryTableMode
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.inputs.color import color_icon
 
-NO_TAGS_TEXT = "Todavía no hay etiquetas: se crean al escribir una nueva al cargar un movimiento."
-NO_MATCHES_TEXT = "Ninguna etiqueta coincide con la búsqueda."
+NO_TAGS_TEXT = N_(
+    "Todavía no hay etiquetas: se crean al escribir una nueva al cargar un movimiento."
+)
+NO_MATCHES_TEXT = N_("Ninguna etiqueta coincide con la búsqueda.")
 
 
 class TagTableModel(SummaryTableModel[TagSummary]):
@@ -34,8 +37,8 @@ class TagsPage(SummaryPage[TagSummary]):
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
         super().__init__(
-            "Etiquetas",
-            "etiqueta",
+            _("Etiquetas"),
+            N_("etiqueta"),
             (NO_TAGS_TEXT, NO_MATCHES_TEXT),
             TagTableModel(theme_manager.theme),
             theme_manager,

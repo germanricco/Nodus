@@ -23,15 +23,16 @@ from PySide6.QtWidgets import (
 
 from nodus import APP_NAME
 from nodus.config.logs import error_lines
+from nodus.i18n import N_, _
 from nodus.ui.browser import open_folder, open_url
 from nodus.ui.text.error_report import report_url
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.style import secondary_button
 
-SHOW_DETAIL = "Ver detalle"
-HIDE_DETAIL = "Ocultar detalle"
-UNEXPECTED_WHAT = "Algo falló en Nodus."
-UNEXPECTED_HOW = (
+SHOW_DETAIL = N_("Ver detalle")
+HIDE_DETAIL = N_("Ocultar detalle")
+UNEXPECTED_WHAT = N_("Algo falló en Nodus.")
+UNEXPECTED_HOW = N_(
     "Lo que estabas haciendo puede no haberse guardado: revísalo. Envía el reporte para que"
     " lo arreglemos: se abre en el navegador y lo lees antes de enviarlo."
 )
@@ -48,7 +49,7 @@ class ErrorDetail(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.S)
-        self.toggle_button = QPushButton(SHOW_DETAIL)
+        self.toggle_button = QPushButton(_(SHOW_DETAIL))
         self.toggle_button.setObjectName("LinkButton")
         self.toggle_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.toggle_button.clicked.connect(self.toggle)
@@ -57,7 +58,7 @@ class ErrorDetail(QWidget):
         self.text.setReadOnly(True)
         self.text.setMaximumHeight(Layout.ERROR_DETAIL_HEIGHT)
         layout.addWidget(self.text)
-        self.copy_button = secondary_button("Copiar", self.copy)
+        self.copy_button = secondary_button(_("Copiar"), self.copy)
         layout.addWidget(self.copy_button, alignment=Qt.AlignmentFlag.AlignLeft)
         self.set_detail("")
 
@@ -71,13 +72,13 @@ class ErrorDetail(QWidget):
 
     def copy(self) -> None:
         QGuiApplication.clipboard().setText(self.text.toPlainText())
-        self.copy_button.setText("Copiado")
+        self.copy_button.setText(_("Copiado"))
 
     def _unfold(self, unfolded: bool) -> None:
         self.text.setVisible(unfolded)
         self.copy_button.setVisible(unfolded)
-        self.copy_button.setText("Copiar")
-        self.toggle_button.setText(HIDE_DETAIL if unfolded else SHOW_DETAIL)
+        self.copy_button.setText(_("Copiar"))
+        self.toggle_button.setText(_(HIDE_DETAIL) if unfolded else _(SHOW_DETAIL))
 
 
 class UserErrorDialog(QDialog):
@@ -116,7 +117,7 @@ class UserErrorDialog(QDialog):
         layout.addWidget(self.detail)
         self.buttons = QHBoxLayout()
         self.buttons.addStretch()
-        self.close_button = QPushButton("Cerrar")
+        self.close_button = QPushButton(_("Cerrar"))
         self.buttons.addWidget(self.close_button)
         main_button = self.close_button
         if action is None:
@@ -147,17 +148,20 @@ class UnexpectedErrorDialog(UserErrorDialog):
         logs_dir: Path,
         parent: QWidget | None = None,
         *,
-        what: str = UNEXPECTED_WHAT,
-        how: str = UNEXPECTED_HOW,
+        what: str | None = None,
+        how: str | None = None,
     ) -> None:
         detail = "\n".join(error_lines(error))
-        super().__init__(APP_NAME, what, how, detail, parent)
-        self.logs_button = secondary_button("Abrir registros", lambda: open_folder(logs_dir))
-        self.logs_button.setToolTip("La carpeta donde Nodus anota lo que pasó")
+        what = what or _(UNEXPECTED_WHAT)
+        super().__init__(APP_NAME, what, how or _(UNEXPECTED_HOW), detail, parent)
+        self.logs_button = secondary_button(_("Abrir registros"), lambda: open_folder(logs_dir))
+        self.logs_button.setToolTip(_("La carpeta donde Nodus anota lo que pasó"))
         self.buttons.insertWidget(0, self.logs_button)
-        self.report_button = secondary_button("Enviar reporte", lambda: open_url(report_url(error)))
+        self.report_button = secondary_button(
+            _("Enviar reporte"), lambda: open_url(report_url(error))
+        )
         self.report_button.setToolTip(
-            "Abre el formulario de comentarios con el reporte; lo lees antes de enviarlo"
+            _("Abre el formulario de comentarios con el reporte; lo lees antes de enviarlo")
         )
         self.buttons.insertWidget(self.buttons.indexOf(self.close_button), self.report_button)
 

@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import _
 from nodus.ui.theme.design import Line, Opacity, Radius, Space
 from nodus.ui.widgets.style import set_style_property
 
@@ -52,7 +53,7 @@ class DragHandle(QWidget):
         super().__init__(parent)
         self.setFixedWidth(self.width_for())
         self.setCursor(Qt.CursorShape.OpenHandCursor)
-        self.setToolTip("Arrastrar para ordenar")
+        self.setToolTip(_("Arrastrar para ordenar"))
         self._press: QPoint | None = None
 
     @classmethod
@@ -270,7 +271,7 @@ class ReorderableList(QWidget):
         mime = event.mimeData()
         if not mime.hasFormat(ROW_MIME_TYPE):
             return None
-        owner_id, _, index = bytes(mime.data(ROW_MIME_TYPE)).decode().partition(":")
+        owner_id, _separator, index = bytes(mime.data(ROW_MIME_TYPE)).decode().partition(":")
         owner = _LISTS.get(int(owner_id))
         if owner is None:
             return None

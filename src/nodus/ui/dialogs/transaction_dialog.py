@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 
+from nodus.i18n import N_, _
 from nodus.models.account import Account
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.exchange_rate import ImpliedRate, implied_rate
@@ -26,7 +27,7 @@ from nodus.ui.dialogs.form_dialog import (
     TYPE_AMOUNT,
     FormDialog,
 )
-from nodus.ui.dialogs.installment_fields import ASK_COUNT, InstallmentFields
+from nodus.ui.dialogs.installment_fields import InstallmentFields, ask_count
 from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog
 from nodus.ui.dialogs.refund_picker import RefundField
 from nodus.ui.event_bus import EventBus
@@ -43,8 +44,8 @@ from nodus.ui.widgets.style import hint_label
 
 # Segment order of the mode selector.
 EXPENSE_MODE, INCOME_MODE, TRANSFER_MODE = range(3)
-MODE_LABELS = ["Gasto", "Ingreso", "Transferencia"]
-FIRST_INSTALLMENT_LABEL = "Primera cuota"
+MODE_LABELS = [N_("Gasto"), N_("Ingreso"), N_("Transferencia")]
+FIRST_INSTALLMENT_LABEL = N_("Primera cuota")
 _MODE_TYPES = {EXPENSE_MODE: TransactionType.EXPENSE, INCOME_MODE: TransactionType.INCOME}
 # The default income category for refunds.
 
@@ -85,9 +86,9 @@ class TransactionDialog(FormDialog):
         start: TransactionStart | None = None,
     ) -> None:
         super().__init__(
-            "Editar transacción" if transaction else "Nueva transacción",
+            _("Editar transacción") if transaction else _("Nueva transacción"),
             parent,
-            SAVE_CHANGES if transaction else "Agregar transacción",
+            _(SAVE_CHANGES) if transaction else _("Agregar transacción"),
         )
         self._services = services
         self._event_bus = event_bus
@@ -106,14 +107,14 @@ class TransactionDialog(FormDialog):
     def _create_fields(
         self, services: Services, theme_manager: ThemeManager, transaction: Transaction | None
     ) -> None:
-        self.mode_input = SegmentedControl(MODE_LABELS)
+        self.mode_input = SegmentedControl([_(label) for label in MODE_LABELS])
         self.add_above_form(self.mode_input)
         # Nothing stands chosen that the user did not choose: only the account comes
         # filled in, with the last one used.
         self.account_input = AccountComboBox()
-        self.account_input.set_placeholder(ACCOUNT_PLACEHOLDER)
+        self.account_input.set_placeholder(_(ACCOUNT_PLACEHOLDER))
         self.to_account_input = AccountComboBox()
-        self.to_account_input.set_placeholder(ACCOUNT_PLACEHOLDER)
+        self.to_account_input.set_placeholder(_(ACCOUNT_PLACEHOLDER))
         self.amount_input = AmountInput(HOME_CURRENCY)
         self.amount_in_input = AmountInput(Currency.USD)
         self.installment_fields = InstallmentFields()
@@ -123,10 +124,10 @@ class TransactionDialog(FormDialog):
         self.rate_hint = hint_label()
         self.payee_input = PayeeInput(services.payees, self._payee_context)
         self.category_input = CategoryComboBox()
-        self.category_input.set_placeholder(CATEGORY_PLACEHOLDER)
+        self.category_input.set_placeholder(_(CATEGORY_PLACEHOLDER))
         self.date_input = DateInput()
         self.note_input = QLineEdit()
-        self.note_input.setPlaceholderText("Opcional")
+        self.note_input.setPlaceholderText(_("Opcional"))
         self.tag_input = TagInput(services.tags)
         self.refund_input = RefundField(
             services, theme_manager, transaction.id if transaction else None
@@ -134,11 +135,11 @@ class TransactionDialog(FormDialog):
         self.refunded_hint = hint_label()
 
     def _lay_out(self) -> None:
-        self.form.addRow("Cuenta", self.account_input)
-        self.form.addRow("Hacia", self.to_account_input)
+        self.form.addRow(_("Cuenta"), self.account_input)
+        self.form.addRow(_("Hacia"), self.to_account_input)
         # How it is paid before how much: the amount then reads as the total or as one
         # installment, and what the installments come to is said once, under it.
-        self.form.addRow("Cuotas", self.installment_fields)
+        self.form.addRow(_("Cuotas"), self.installment_fields)
         # «Total | Por cuota» says how to read the amount, so it goes next to it, and
         # the hint right under it.
         self.amount_row = QWidget()
@@ -151,15 +152,15 @@ class TransactionDialog(FormDialog):
         amount_line.addWidget(self.installment_fields.amount_mode)
         amount_layout.addLayout(amount_line)
         amount_layout.addWidget(self.installments_hint)
-        self.form.addRow("Monto", self.amount_row)
-        self.form.addRow("Entra", self.amount_in_input)
+        self.form.addRow(_("Monto"), self.amount_row)
+        self.form.addRow(_("Entra"), self.amount_in_input)
         self.form.addRow("", self.rate_hint)
-        self.form.addRow("Beneficiario", self.payee_input)
-        self.form.addRow("Categoría", self.category_input)
-        self.form.addRow("Fecha", self.date_input)
-        self.form.addRow("Nota", self.note_input)
-        self.form.addRow("Etiquetas", self.tag_input)
-        self.form.addRow("Reembolso de", self.refund_input)
+        self.form.addRow(_("Beneficiario"), self.payee_input)
+        self.form.addRow(_("Categoría"), self.category_input)
+        self.form.addRow(_("Fecha"), self.date_input)
+        self.form.addRow(_("Nota"), self.note_input)
+        self.form.addRow(_("Etiquetas"), self.tag_input)
+        self.form.addRow(_("Reembolso de"), self.refund_input)
         self.form.addRow("", self.refunded_hint)
 
         # The names the services give these fields in their errors.
@@ -193,7 +194,7 @@ class TransactionDialog(FormDialog):
         switch.show()
         self.amount_row.setMinimumWidth(self.amount_row.sizeHint().width())
         switch.setHidden(hidden)
-        self.form.labelForField(self.date_input).setText(FIRST_INSTALLMENT_LABEL)
+        self.form.labelForField(self.date_input).setText(_(FIRST_INSTALLMENT_LABEL))
         super().showEvent(event)  # gives every label the width of the longest
         self._update_installments()
         # The amount is what is always typed, so it is ready for the keyboard.
@@ -283,7 +284,9 @@ class TransactionDialog(FormDialog):
         summary = self._services.refunds.summary(transaction.id)
         if summary.refunds:
             self.refunded_hint.setText(
-                f"Reembolsado {summary.refunded.format()} de {transaction.amount.format()}"
+                _("Reembolsado {refunded} de {amount}").format(
+                    refunded=summary.refunded.format(), amount=transaction.amount.format()
+                )
             )
 
     def _legs(self, transaction: Transaction) -> list[Transaction]:
@@ -296,7 +299,7 @@ class TransactionDialog(FormDialog):
 
     def _update_mode(self) -> None:
         transfer = self.is_transfer_mode
-        self.form.labelForField(self.account_input).setText("Desde" if transfer else "Cuenta")
+        self.form.labelForField(self.account_input).setText(_("Desde") if transfer else _("Cuenta"))
         self.form.setRowVisible(self.to_account_input, transfer)
         self.form.setRowVisible(self.payee_input, not transfer)
         self.form.setRowVisible(self.category_input, not transfer)
@@ -346,14 +349,14 @@ class TransactionDialog(FormDialog):
         fields = self.installment_fields
         in_installments = self.mode_input.index() == EXPENSE_MODE and fields.in_installments
         fields.amount_mode.setVisible(in_installments)
-        amount_label = "Monto"
+        amount_label = _("Monto")
         if in_installments:
-            amount_label = "Cuota" if fields.is_per_installment else "Total"
+            amount_label = _("Cuota") if fields.is_per_installment else _("Total")
         elif self.is_transfer_mode:
-            amount_label = "Sale"
+            amount_label = _("Sale")
         self.form.labelForField(self.amount_row).setText(amount_label)
         self.form.labelForField(self.date_input).setText(
-            FIRST_INSTALLMENT_LABEL if in_installments else "Fecha"
+            _(FIRST_INSTALLMENT_LABEL) if in_installments else _("Fecha")
         )
         try:
             amount = self.amount_input.money()
@@ -388,7 +391,7 @@ class TransactionDialog(FormDialog):
         rate = self._implied_rate() if self.form.isRowVisible(self.amount_in_input) else None
         if rate is not None:
             text = rate_text(rate.base, rate.quote, rate.value)
-            self.rate_hint.setText(f"Cotización implícita: {text}")
+            self.rate_hint.setText(_("Cotización implícita: {rate}").format(rate=text))
         self.form.setRowVisible(self.rate_hint, rate is not None)
 
     def _implied_rate(self) -> ImpliedRate | None:
@@ -403,12 +406,12 @@ class TransactionDialog(FormDialog):
         """What each mode needs: rows the mode hides are left out by ``required``."""
         fields = self.installment_fields
         return self.required(
-            (self.account_input, CHOOSE_ACCOUNT),
-            (self.to_account_input, "Elige la cuenta de destino."),
-            (fields.other_input if fields.is_other else fields.count_input, ASK_COUNT),
-            (self.amount_input, TYPE_AMOUNT),
-            (self.amount_in_input, "Escribe el monto que entra."),
-            (self.category_input, CHOOSE_CATEGORY),
+            (self.account_input, _(CHOOSE_ACCOUNT)),
+            (self.to_account_input, _("Elige la cuenta de destino.")),
+            (fields.other_input if fields.is_other else fields.count_input, ask_count()),
+            (self.amount_input, _(TYPE_AMOUNT)),
+            (self.amount_in_input, _("Escribe el monto que entra.")),
+            (self.category_input, _(CHOOSE_CATEGORY)),
         )
 
     def save(self) -> None:

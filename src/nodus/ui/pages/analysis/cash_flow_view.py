@@ -6,6 +6,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout
 
+from nodus.i18n import N_, _
 from nodus.models.period import Month, Period, format_month
 from nodus.services.container import Services
 from nodus.services.reports.analysis_service import CashFlowReport
@@ -32,9 +33,9 @@ from nodus.ui.widgets.style import RIGHT_ALIGNED
 from nodus.ui.widgets.tables.table import fit_rows, make_link_rows, record_table
 
 # Shown, without a pill, where there is no previous period to compare with.
-NO_PREVIOUS_TEXT = "Período anterior: sin datos"
+NO_PREVIOUS_TEXT = N_("Período anterior: sin datos")
 INCOME, EXPENSES, SAVINGS, RATE = range(1, 5)
-FLOW_COLUMNS = ["Mes", "Ingresos", "Gastos", "Ahorro", "Tasa de ahorro"]
+FLOW_COLUMNS = [N_("Mes"), N_("Ingresos"), N_("Gastos"), N_("Ahorro"), N_("Tasa de ahorro")]
 
 
 class CashFlowTableModel(QAbstractTableModel):
@@ -66,7 +67,7 @@ class CashFlowTableModel(QAbstractTableModel):
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = 0) -> object:  # noqa: N802
         if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            return FLOW_COLUMNS[section]
+            return _(FLOW_COLUMNS[section])
         if role == Qt.ItemDataRole.TextAlignmentRole and section != MONTH:
             return RIGHT_ALIGNED
         return None
@@ -106,7 +107,7 @@ class CashFlowView(AnalysisView):
     """Income, expenses, savings and savings rate of the period against the previous one,
     with the bars and the table of each month. A bar or a row opens that month."""
 
-    DESCRIPTION = "Lo que entra contra lo que sale cada mes, y cuánto te queda."
+    DESCRIPTION = N_("Lo que entra contra lo que sale cada mes, y cuánto te queda.")
 
     def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
         super().__init__()
@@ -120,37 +121,38 @@ class CashFlowView(AnalysisView):
         self.expenses_label = AnimatedMoneyLabel()
         self.savings_label = AnimatedMoneyLabel(highlight_positive=True)
         self.rate_label = QLabel()
-        self.income_badge = ChangeBadge(none_text=NO_PREVIOUS_TEXT)
-        self.expenses_badge = ChangeBadge(higher_is_better=False, none_text=NO_PREVIOUS_TEXT)
-        self.savings_badge = ChangeBadge(none_text=NO_PREVIOUS_TEXT)
-        self.rate_badge = ChangeBadge(none_text=NO_PREVIOUS_TEXT, unit="pp")
-        self.rate_badge.setToolTip("Diferencia en puntos porcentuales")
+        no_previous = _(NO_PREVIOUS_TEXT)
+        self.income_badge = ChangeBadge(none_text=no_previous)
+        self.expenses_badge = ChangeBadge(higher_is_better=False, none_text=no_previous)
+        self.savings_badge = ChangeBadge(none_text=no_previous)
+        self.rate_badge = ChangeBadge(none_text=no_previous, unit="pp")
+        self.rate_badge.setToolTip(_("Diferencia en puntos porcentuales"))
         tiles = QHBoxLayout()
         tiles.setSpacing(Space.L)
         for caption, value, badge in (
-            ("Ingresos", self.income_label, self.income_badge),
-            ("Gastos", self.expenses_label, self.expenses_badge),
-            ("Ahorro", self.savings_label, self.savings_badge),
-            ("Tasa de ahorro", self.rate_label, self.rate_badge),
+            (_("Ingresos"), self.income_label, self.income_badge),
+            (_("Gastos"), self.expenses_label, self.expenses_badge),
+            (_("Ahorro"), self.savings_label, self.savings_badge),
+            (_("Tasa de ahorro"), self.rate_label, self.rate_badge),
         ):
-            badge.setToolTip(badge.toolTip() or VERSUS_PREVIOUS_TEXT)
+            badge.setToolTip(badge.toolTip() or _(VERSUS_PREVIOUS_TEXT))
             tiles.addWidget(FigureTile(caption, value, badge, large=True), stretch=1)
         layout.addLayout(tiles)
 
         self.chart = BarChart(theme_manager.theme)
         self.chart.setMinimumHeight(Chart.STACKED_MIN_HEIGHT)
         self.chart.clicked.connect(lambda index: self._open_month(self._report.months[index]))
-        card, self.empty_label, self.unconverted_label = chart_card("Mes a mes", self.chart)
+        card, self.empty_label, self.unconverted_label = chart_card(_("Mes a mes"), self.chart)
         layout.addWidget(card)
 
         table_card = self.table_card = Card()
-        card_header(table_card, "Detalle por mes")
+        card_header(table_card, _("Detalle por mes"))
         self.model = CashFlowTableModel(theme_manager.theme)
         self.table = record_table(self.model, MONTH)
         make_link_rows(
             self.table,
             lambda row: self._open_month(self.model.month(row)),
-            "Ver los movimientos del mes",
+            _("Ver los movimientos del mes"),
         )
         table_card.body.addWidget(self.table)
         layout.addWidget(table_card)

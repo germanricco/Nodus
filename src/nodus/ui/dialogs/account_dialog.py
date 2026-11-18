@@ -31,16 +31,16 @@ class AccountDialog(FormDialog):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(
-            "Editar cuenta" if account else "Nueva cuenta",
+            _("Editar cuenta") if account else _("Nueva cuenta"),
             parent,
-            SAVE_CHANGES if account else "Agregar cuenta",
+            _(SAVE_CHANGES) if account else _("Agregar cuenta"),
         )
         self._services = services
         self._event_bus = event_bus
         self._account = account
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Ej.: Banco, Efectivo, Dólares")
+        self.name_input.setPlaceholderText(_("Ej.: Banco, Efectivo, Dólares"))
         self.type_input = ComboBox()
         for account_type, label in ACCOUNT_TYPE_LABELS.items():
             self.type_input.addItem(_(label), account_type)
@@ -52,10 +52,10 @@ class AccountDialog(FormDialog):
             lambda: self.balance_input.set_currency(self.currency_input.currentData())
         )
 
-        self.form.addRow("Nombre", self.name_input)
-        self.form.addRow("Tipo", self.type_input)
-        self.form.addRow("Moneda", self.currency_input)
-        self.form.addRow("Saldo inicial", self.balance_input)
+        self.form.addRow(_("Nombre"), self.name_input)
+        self.form.addRow(_("Tipo"), self.type_input)
+        self.form.addRow(_("Moneda"), self.currency_input)
+        self.form.addRow(_("Saldo inicial"), self.balance_input)
         self.bind_field(self.name_input, "name")
         self.bind_field(self.balance_input, "initial_balance")
         self.group_picker = GroupPicker(self, services, account.group_id if account else None)
@@ -71,7 +71,7 @@ class AccountDialog(FormDialog):
         self.balance_input.set_money(account.initial_balance)
 
     def missing(self) -> dict[QWidget, str]:
-        return self.required((self.name_input, TYPE_NAME), self.group_picker.required())
+        return self.required((self.name_input, _(TYPE_NAME)), self.group_picker.required())
 
     def save(self) -> None:
         name = self.name_input.text()

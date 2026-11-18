@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nodus.i18n import _
+from nodus.i18n import _, ngettext
 from nodus.models.account import Account
 from nodus.models.account_group import AccountGroup
 from nodus.models.money import Money
@@ -85,7 +85,7 @@ class AccountRow(QWidget):
         details = [_(ACCOUNT_TYPE_LABELS[account.type]), account.currency.value]
         if value_change is not None and not value_change.is_zero:
             change = masked(value_change) if hide_balance else signed(value_change)
-            details.append(f"Rendimiento {change}")
+            details.append(_("Rendimiento {amount}").format(amount=change))
         subtitle = muted_label(" · ".join(details))
         texts.addWidget(name)
         texts.addWidget(subtitle)
@@ -101,7 +101,7 @@ class AccountRow(QWidget):
         layout.addWidget(self.more_button)
         chevron = muted_label("›")
         layout.addWidget(chevron)
-        install_row_actions(self, self.actions, open_on_click="Abrir la cuenta")
+        install_row_actions(self, self.actions, open_on_click=_("Abrir la cuenta"))
 
     @property
     def can_update_value(self) -> bool:
@@ -113,13 +113,13 @@ class AccountRow(QWidget):
         account = self.account
         result = [
             RowAction(
-                "Abrir",
+                _("Abrir"),
                 lambda: self.detail_requested.emit(account),
                 default=True,
                 effect=Effect.OPEN,
             ),
             RowAction(
-                "Ver movimientos",
+                _("Ver movimientos"),
                 lambda: self.transactions_requested.emit(account),
                 "list",
                 enabled=self.has_movements,
@@ -129,7 +129,7 @@ class AccountRow(QWidget):
         if self.can_update_value:
             result.append(
                 RowAction(
-                    "Actualizar valor",
+                    _("Actualizar valor"),
                     lambda: self.value_update_requested.emit(account),
                     "trend",
                     effect=Effect.OPEN,
@@ -138,7 +138,7 @@ class AccountRow(QWidget):
         if self.can_update_value:  # what a savings goal is filled with
             result.append(
                 RowAction(
-                    "Usar en una meta…",
+                    _("Usar en una meta…"),
                     lambda: self.goal_requested.emit(account),
                     "goal",
                     effect=Effect.OPEN,
@@ -146,13 +146,13 @@ class AccountRow(QWidget):
             )
         result.append(
             RowAction(
-                "Editar", lambda: self.edit_requested.emit(account), "pencil", effect=Effect.OPEN
+                _("Editar"), lambda: self.edit_requested.emit(account), "pencil", effect=Effect.OPEN
             )
         )
         if not account.is_archived:  # archived accounts show apart from every group
             result.append(
                 RowAction(
-                    "Mover a grupo…",
+                    _("Mover a grupo…"),
                     lambda: self.move_requested.emit(account),
                     "folder",
                     effect=Effect.OPEN,
@@ -160,13 +160,13 @@ class AccountRow(QWidget):
             )
         return result + [
             RowAction(
-                "Desarchivar" if account.is_archived else "Archivar",
+                _("Desarchivar") if account.is_archived else _("Archivar"),
                 lambda: self.archive_toggled.emit(account),
                 "archive",
                 effect=Effect.TOGGLE,
             ),
             RowAction(
-                "Eliminar",
+                _("Eliminar"),
                 lambda: self.delete_requested.emit(account),
                 "trash",
                 destructive=True,
@@ -177,11 +177,15 @@ class AccountRow(QWidget):
 
 def group_delete_warning(group: AccountGroup, count: int) -> str:
     """What deleting ``group`` does: its accounts stay, in no group."""
-    sentence = f"Se va a eliminar el grupo «{group.name}»."
     if count == 0:
-        return f"{sentence} No tiene cuentas."
-    accounts = "Su cuenta queda" if count == 1 else f"Sus {count} cuentas quedan"
-    return f"{sentence} {accounts} sin grupo; no se elimina ninguna cuenta ni movimiento."
+        return _("Se va a eliminar el grupo «{name}». No tiene cuentas.").format(name=group.name)
+    return ngettext(
+        "Se va a eliminar el grupo «{name}». Su cuenta queda sin grupo; no se elimina "
+        "ninguna cuenta ni movimiento.",
+        "Se va a eliminar el grupo «{name}». Sus {count} cuentas quedan sin grupo; no se "
+        "elimina ninguna cuenta ni movimiento.",
+        count,
+    ).format(name=group.name, count=count)
 
 
 class AccountsPage(Page):
@@ -203,9 +207,9 @@ class AccountsPage(Page):
         super().__init__(PageId.ACCOUNTS.label)
         self._services = services
         self._event_bus = event_bus
-        self.create_button = self.add_header_button("Agregar cuenta", primary=True)
+        self.create_button = self.add_header_button(_("Agregar cuenta"), primary=True)
         self.create_button.clicked.connect(lambda: self.open_account_dialog())
-        self.create_group_button = self.add_header_button("Agregar grupo")
+        self.create_group_button = self.add_header_button(_("Agregar grupo"))
         self.create_group_button.clicked.connect(lambda: self.open_group_dialog())
 
         page_layout = self.scrolling_body()
@@ -247,10 +251,10 @@ class AccountsPage(Page):
                 self._sections.addWidget(self._group_card(section, balances))
         else:
             self._sections.addWidget(
-                self._accounts_card("Cuentas activas", active, balances, reorderable=True)
+                self._accounts_card(_("Cuentas activas"), active, balances, reorderable=True)
             )
         if archived:
-            self._sections.addWidget(self._accounts_card("Archivadas", archived, balances))
+            self._sections.addWidget(self._accounts_card(_("Archivadas"), archived, balances))
 
     def open_account_dialog(self, account: Account | None = None) -> None:
         edit_account(self, self._services, self._event_bus, account)
@@ -279,7 +283,7 @@ class AccountsPage(Page):
         there is more than one."""
         card = Card(title)
         if not accounts:
-            card.body.addWidget(EmptyState("No hay cuentas activas.", compact=True))
+            card.body.addWidget(EmptyState(_("No hay cuentas activas."), compact=True))
         self._add_rows(card, accounts, balances, reorderable)
         return card
 
@@ -291,7 +295,7 @@ class AccountsPage(Page):
         header = QHBoxLayout()
         header.setSpacing(Space.M)  # as in the rows, so the subtotal sits over their amounts
         header.setContentsMargins(0, 0, Space.S, 0)
-        title = card_title(group.name if group else "Sin grupo")
+        title = card_title(group.name if group else _("Sin grupo"))
         header.addWidget(title, stretch=1)
         total = self._services.account_groups.total(section.accounts, balances, date.today())
         text, tooltip = total_text(total, self._services.settings.amounts_hidden())
@@ -315,7 +319,7 @@ class AccountsPage(Page):
         rows = self._add_rows(
             card, section.accounts, balances, reorderable=True, key=group_id, family=ACCOUNTS_FAMILY
         )
-        rows.set_placeholder("Sin cuentas. Arrastra una aquí o usa «Mover a grupo…».")
+        rows.set_placeholder(_("Sin cuentas. Arrastra una aquí o usa «Mover a grupo…»."))
         rows.row_received.connect(
             lambda account_id, gap: self._place_account(account_id, group_id, gap)
         )
@@ -327,22 +331,22 @@ class AccountsPage(Page):
         index = group_ids.index(group.id)
         return [
             RowAction(
-                "Renombrar", lambda: self.open_group_dialog(group), "pencil", effect=Effect.OPEN
+                _("Renombrar"), lambda: self.open_group_dialog(group), "pencil", effect=Effect.OPEN
             ),
             RowAction(
-                "Subir",
+                _("Subir"),
                 lambda: self._move_group(group_ids, index, -1),
                 enabled=index > 0,
                 effect=Effect.TOGGLE,
             ),
             RowAction(
-                "Bajar",
+                _("Bajar"),
                 lambda: self._move_group(group_ids, index, 1),
                 enabled=index < len(group_ids) - 1,
                 effect=Effect.TOGGLE,
             ),
             RowAction(
-                "Eliminar grupo",
+                _("Eliminar grupo"),
                 lambda: self.delete_group(group),
                 "trash",
                 destructive=True,
@@ -360,7 +364,7 @@ class AccountsPage(Page):
         count = self._services.account_groups.account_count(group.id)
         delete_with_confirm(
             self.window(),
-            "Eliminar grupo",
+            _("Eliminar grupo"),
             group_delete_warning(group, count),
             lambda: self._services.account_groups.delete(group.id),
             self._event_bus.accounts_changed,
@@ -430,9 +434,9 @@ class AccountsPage(Page):
 
     def _empty_state(self) -> Card:
         card, state = empty_page_card(
-            "Todavía no hay cuentas",
-            "Una por cada lugar donde tengas dinero: banco, efectivo, dólares.",
-            "Agregar cuenta",
+            _("Todavía no hay cuentas"),
+            _("Una por cada lugar donde tengas dinero: banco, efectivo, dólares."),
+            _("Agregar cuenta"),
             lambda: self.open_account_dialog(),
         )
         self.empty_create_button = state.action_button

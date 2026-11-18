@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QVBoxLayout, QWidget
 
+from nodus.i18n import _, quoted
 from nodus.models.names import normalize_name
 from nodus.models.palette import NEW_TAG_COLOR
 from nodus.services.classification.tag_service import TagService
@@ -18,10 +19,10 @@ def new_names_hint(names: list[str]) -> str:
     """ "Se creará «Viaje»", or "Se crearán «Viaje» y «Mudanza»"."""
     if not names:
         return ""
-    quoted = [f"«{name}»" for name in names]
-    if len(quoted) == 1:
-        return f"Se creará {quoted[0]}"
-    return f"Se crearán {', '.join(quoted[:-1])} y {quoted[-1]}"
+    if len(names) == 1:
+        return _("Se creará «{name}»").format(name=names[0])
+    shown = [quoted(name) for name in names]
+    return _("Se crearán {names} y {last}").format(names=", ".join(shown[:-1]), last=shown[-1])
 
 
 class TagInput(QWidget):
@@ -45,7 +46,7 @@ class TagInput(QWidget):
         self._chips_layout.setContentsMargins(0, 0, 0, 0)
         self._chips_layout.setSpacing(Space.XS)
         self.line_edit = QLineEdit()
-        self.line_edit.setPlaceholderText("Opcional · Enter para agregar")
+        self.line_edit.setPlaceholderText(_("Opcional · Enter para agregar"))
         self.names_completer = NameCompleter(
             self.line_edit,
             lambda text: [t.name for t in tags.matches(text) if not self._has(t.name)],
@@ -124,7 +125,7 @@ class TagInput(QWidget):
             chip.setText(f"{name}  ✕")
             chip.setIcon(color_icon(tag.color if tag else NEW_TAG_COLOR, ControlSize.DOT_SMALL))
             chip.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-            chip.setToolTip("Quitar")
+            chip.setToolTip(_("Quitar"))
             chip.setCursor(Qt.CursorShape.PointingHandCursor)
             chip.clicked.connect(lambda _checked=False, n=name: self.remove(n))
             self._chips_layout.addWidget(chip)

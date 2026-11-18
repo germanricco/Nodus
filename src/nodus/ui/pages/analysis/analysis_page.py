@@ -7,6 +7,7 @@ from datetime import date
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QScrollArea, QStackedWidget
 
+from nodus.i18n import _
 from nodus.models.period import Period
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
@@ -43,8 +44,8 @@ class AnalysisPage(Page):
             net_worth,
         ]
         self.tabs = self.set_tabs(
-            ["Tendencias", "Flujo de caja", "Patrimonio neto"],
-            [view.DESCRIPTION for view in self.views],
+            [_("Tendencias"), _("Flujo de caja"), _("Patrimonio neto")],
+            [_(view.DESCRIPTION) for view in self.views],
         )
         self.period_selector = PeriodSelector(Period.last_months(DEFAULT_MONTHS, date.today()))
         self.add_header_widget(self.period_selector)

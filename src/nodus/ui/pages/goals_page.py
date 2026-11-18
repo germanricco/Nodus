@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import N_, _, ngettext
 from nodus.models.account import Account
 from nodus.models.goal import Goal, GoalProgress, GoalState
 from nodus.models.language_format import format_percent
@@ -33,8 +34,8 @@ from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 
-EMPTY_TITLE = "Todavía no hay metas"
-EMPTY_TEXT = (
+EMPTY_TITLE = N_("Todavía no hay metas")
+EMPTY_TEXT = N_(
     "Una meta junta el saldo de tus cuentas de ahorro hacia un monto, con fecha si quieres. "
     "Nodus te dice cuánto apartar por mes y si a tu ritmo llegas a tiempo."
 )
@@ -43,7 +44,8 @@ EMPTY_TEXT = (
 def accounts_text(services: Services, goal: Goal) -> str:
     """ "Ahorro USD (100 %)" for one account, "2 cuentas" for more."""
     if len(goal.shares) > 1:
-        return f"{len(goal.shares)} cuentas"
+        count = len(goal.shares)
+        return ngettext("{count} cuenta", "{count} cuentas", count).format(count=count)
     [share] = goal.shares
     return f"{services.accounts.get(share.account_id).name} ({format_percent(share.percent)})"
 
@@ -98,31 +100,34 @@ class GoalRow(QWidget):
         self.sentence_label.setWordWrap(True)
         bottom.addWidget(self.sentence_label, stretch=1)
         if progress.state is GoalState.NO_RATE:
-            self.rate_button = QPushButton("Cargar cotización")
+            self.rate_button = QPushButton(_("Cargar cotización"))
             self.rate_button.setObjectName("SmallButton")
             self.rate_button.clicked.connect(self.rate_requested)
             bottom.addWidget(self.rate_button)
         layout.addLayout(bottom)
 
-        install_row_actions(self, self.actions, open_on_click="Abrir la meta")
+        install_row_actions(self, self.actions, open_on_click=_("Abrir la meta"))
 
     def actions(self) -> list[RowAction]:
         goal = self.goal
         return [
             RowAction(
-                "Abrir", lambda: self.detail_requested.emit(goal), default=True, effect=Effect.OPEN
+                _("Abrir"),
+                lambda: self.detail_requested.emit(goal),
+                default=True,
+                effect=Effect.OPEN,
             ),
             RowAction(
-                "Editar", lambda: self.edit_requested.emit(goal), "pencil", effect=Effect.OPEN
+                _("Editar"), lambda: self.edit_requested.emit(goal), "pencil", effect=Effect.OPEN
             ),
             RowAction(
-                "Desarchivar" if goal.is_archived else "Archivar",
+                _("Desarchivar") if goal.is_archived else _("Archivar"),
                 lambda: self.archive_toggled.emit(goal),
                 "archive",
                 effect=Effect.TOGGLE,
             ),
             RowAction(
-                "Eliminar",
+                _("Eliminar"),
                 lambda: self.delete_requested.emit(goal),
                 "trash",
                 destructive=True,
@@ -146,7 +151,7 @@ class GoalsPage(Page):
         self._event_bus = event_bus
         self._theme_manager = theme_manager
         self._today: date | None = None
-        self.create_button = self.add_header_button("Agregar meta", primary=True)
+        self.create_button = self.add_header_button(_("Agregar meta"), primary=True)
         self.create_button.clicked.connect(lambda: self.open_goal_dialog())
 
         self._sections = self.scrolling_body()
@@ -165,7 +170,7 @@ class GoalsPage(Page):
         goals = self._services.goals.list_goals()
         if not goals:
             card, _state = empty_page_card(
-                EMPTY_TITLE, EMPTY_TEXT, "Agregar meta", self.open_goal_dialog
+                _(EMPTY_TITLE), _(EMPTY_TEXT), _("Agregar meta"), self.open_goal_dialog
             )
             self._sections.addWidget(card)
             self._sections.addStretch()
@@ -174,9 +179,9 @@ class GoalsPage(Page):
         active = [g for g in goals if not g.is_archived]
         reached = [g for g in active if progress[g.id].state is GoalState.REACHED]
         sections = (
-            ("En curso", [g for g in active if g not in reached]),
-            ("Alcanzadas", reached),
-            ("Archivadas", [g for g in goals if g.is_archived]),
+            (_("En curso"), [g for g in active if g not in reached]),
+            (_("Alcanzadas"), reached),
+            (_("Archivadas"), [g for g in goals if g.is_archived]),
         )
         for title, section in sections:
             if section:

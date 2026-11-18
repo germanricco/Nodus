@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from nodus.i18n import _
 from nodus.models.account import Account
 from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import CHOOSE_ACCOUNT
@@ -24,5 +25,5 @@ def required_account(combo: AccountComboBox) -> Account:
     """The chosen account; ``InputError`` under ``combo`` when none is."""
     account = combo.current_account()
     if account is None:
-        raise InputError(CHOOSE_ACCOUNT, combo)
+        raise InputError(_(CHOOSE_ACCOUNT), combo)
     return account

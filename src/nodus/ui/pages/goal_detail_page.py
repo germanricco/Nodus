@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from nodus.i18n import _
 from nodus.models.goal import Goal, GoalProgress, GoalState
 from nodus.models.language_format import format_percent
 from nodus.models.money import Money
@@ -51,7 +52,13 @@ class ContributionRow(QWidget):
         name.setObjectName("RowTitle")
         balance = amount_text(contribution.balance, hidden)
         texts.addWidget(name)
-        texts.addWidget(muted_label(f"{format_percent(contribution.percent)} de {balance}"))
+        texts.addWidget(
+            muted_label(
+                _("{percent} de {balance}").format(
+                    percent=format_percent(contribution.percent), balance=balance
+                )
+            )
+        )
         layout.addLayout(texts, stretch=1)
         counted = contribution.counted
         self.counted_label = QLabel("—" if counted is None else amount_text(counted, hidden))
@@ -59,7 +66,7 @@ class ContributionRow(QWidget):
         layout.addWidget(self.counted_label)
         make_hoverable(self)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip("Abrir la cuenta")
+        self.setToolTip(_("Abrir la cuenta"))
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         super().mouseReleaseEvent(event)
@@ -89,7 +96,7 @@ class GoalDetailPage(DetailPage):
         self.goal: Goal | None = None
         self.today: date | None = None
 
-        self.edit_button = self.add_header_button("Editar")
+        self.edit_button = self.add_header_button(_("Editar"))
         self.edit_button.clicked.connect(self.edit)
         self.more_button = MoreButton(self.more_actions)
         self.add_header_widget(self.more_button)
@@ -101,11 +108,11 @@ class GoalDetailPage(DetailPage):
         self.needed_label = QLabel()
         self.pace_label, self.pace_note = QLabel(), muted_label("")
         for tile in (
-            FigureTile("Objetivo", self.target_label, self.target_note, large=True),
-            FigureTile("Ahorrado", self.saved_label, self.change_note, large=True),
-            FigureTile("Falta", self.remaining_label, large=True),
-            FigureTile("Por mes", self.needed_label, large=True),
-            FigureTile("Ritmo por mes", self.pace_label, self.pace_note, large=True),
+            FigureTile(_("Objetivo"), self.target_label, self.target_note, large=True),
+            FigureTile(_("Ahorrado"), self.saved_label, self.change_note, large=True),
+            FigureTile(_("Falta"), self.remaining_label, large=True),
+            FigureTile(_("Por mes"), self.needed_label, large=True),
+            FigureTile(_("Ritmo por mes"), self.pace_label, self.pace_note, large=True),
         ):
             self.figures.add_tile(tile)
         self.content_layout.addWidget(self.figures)
@@ -115,7 +122,7 @@ class GoalDetailPage(DetailPage):
         self.content_layout.addLayout(self._status)
         self.pill: QLabel | None = None
 
-        chart_card = Card("Lo ahorrado en el tiempo")
+        chart_card = Card(_("Lo ahorrado en el tiempo"))
         self.chart = LineChart(
             theme_manager.theme,
             *money_formats(lambda: self.goal.currency if self.goal else None, lambda: self._hidden),
@@ -125,7 +132,7 @@ class GoalDetailPage(DetailPage):
         theme_manager.theme_changed.connect(self.chart.set_theme)
         self.content_layout.addWidget(chart_card)
 
-        self.accounts_card = Card("Cuentas")
+        self.accounts_card = Card(_("Cuentas"))
         self._account_rows = QVBoxLayout()
         self._account_rows.setSpacing(0)
         self.accounts_card.body.addLayout(self._account_rows)
@@ -166,12 +173,14 @@ class GoalDetailPage(DetailPage):
             return []
         return [
             RowAction(
-                "Desarchivar" if goal.is_archived else "Archivar",
+                _("Desarchivar") if goal.is_archived else _("Archivar"),
                 self.toggle_archived,
                 "archive",
                 effect=Effect.TOGGLE,
             ),
-            RowAction("Eliminar", self.delete, "trash", destructive=True, effect=Effect.CONFIRMED),
+            RowAction(
+                _("Eliminar"), self.delete, "trash", destructive=True, effect=Effect.CONFIRMED
+            ),
         ]
 
     def edit(self) -> None:
@@ -196,21 +205,23 @@ class GoalDetailPage(DetailPage):
 
         self.target_label.setText(shown(goal.target))
         self.target_note.setText(
-            f"para {format_month_in_sentence(Month.of(goal.target_date))}"
+            _("para {month}").format(month=format_month_in_sentence(Month.of(goal.target_date)))
             if goal.target_date
-            else "Sin fecha"
+            else _("Sin fecha")
         )
         self.saved_label.setText(shown(progress.saved))
         self.change_note.setText(month_change_text(progress.month_change, hidden))
         self.remaining_label.setText(shown(progress.remaining))
         self.needed_label.setText(shown(progress.needed_per_month))
         if progress.pace_per_month is None:
-            self.pace_label.setText("Falta historia")
+            self.pace_label.setText(_("Falta historia"))
             self.pace_note.setText("")
         else:
             self.pace_label.setText(f"≈ {shown(progress.pace_per_month)}")
             self.pace_note.setText(
-                f"llega en {format_month_in_sentence(progress.eta)}" if progress.eta else ""
+                _("llega en {month}").format(month=format_month_in_sentence(progress.eta))
+                if progress.eta
+                else ""
             )
         self.figures.relayout()
 
@@ -222,7 +233,7 @@ class GoalDetailPage(DetailPage):
         self._status.addWidget(self.pill)
         self._status.addWidget(self.sentence_label, stretch=1)
         if progress.state is GoalState.NO_RATE:
-            self.pill.setToolTip("Cárgala en Ajustes")
+            self.pill.setToolTip(_("Cárgala en Ajustes"))
 
     def _show_accounts(self, contributions: list[GoalContribution]) -> None:
         clear_layout(self._account_rows)

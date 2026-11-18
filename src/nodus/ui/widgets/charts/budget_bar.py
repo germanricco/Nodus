@@ -6,6 +6,7 @@ from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QLabel, QWidget
 
+from nodus.i18n import _
 from nodus.models.budget import Budget, BudgetState, used_percent_label
 from nodus.models.language_format import format_percent
 from nodus.ui.theme.design import ControlSize, Line, Opacity
@@ -33,23 +34,25 @@ def spent_of_limit(budget: Budget, compact: bool = False) -> str:
     """ "$ 260.000,00 de $ 400.000,00", or "$ 260 k de $ 400 k" where room is short."""
     if compact:
         currency = budget.limit.currency
-        return (
-            f"{format_compact(budget.spent.cents, currency)} de "
-            f"{format_compact(budget.limit.cents, currency)}"
-        )
-    return f"{budget.spent.format()} de {budget.limit.format()}"
+        spent = format_compact(budget.spent.cents, currency)
+        limit = format_compact(budget.limit.cents, currency)
+    else:
+        spent, limit = budget.spent.format(), budget.limit.format()
+    return _("{spent} de {limit}").format(spent=spent, limit=limit)
 
 
 def usage_text(budget: Budget) -> str:
     """ "65 % usado · $ 260.000,00 de $ 400.000,00"."""
-    return f"{used_percent_label(budget.used)} usado · {spent_of_limit(budget)}"
+    return _("{percent} usado · {spent_of_limit}").format(
+        percent=used_percent_label(budget.used), spent_of_limit=spent_of_limit(budget)
+    )
 
 
 def remaining_text(budget: Budget) -> str:
     """ "Quedan $ 140.000,00", or "Excedido en $ 20.900,00" past the limit."""
     if budget.state is BudgetState.OVER:
-        return f"Excedido en {(-budget.remaining).format()}"
-    return f"Quedan {budget.remaining.format()}"
+        return _("Excedido en {amount}").format(amount=(-budget.remaining).format())
+    return _("Quedan {amount}").format(amount=budget.remaining.format())
 
 
 def budget_pill(budget: Budget) -> QLabel:
@@ -94,7 +97,11 @@ class BudgetBar(ProgressStrip):
         super().__init__(theme, self.HEIGHT + 2 * self.MARK_OVERHANG, start, parent)
         self.budget = budget
         if self.shows_pace:
-            self.setToolTip(f"Ritmo del mes: {format_percent(round(budget.elapsed * 100))}")
+            self.setToolTip(
+                _("Ritmo del mes: {percent}").format(
+                    percent=format_percent(round(budget.elapsed * 100))
+                )
+            )
         self._begin()
 
     @property

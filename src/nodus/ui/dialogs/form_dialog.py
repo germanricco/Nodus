@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import N_, _
 from nodus.services.errors import ValidationError
 from nodus.ui.dialogs.confirm import confirm
 from nodus.ui.theme.design import Layout, Space
@@ -32,22 +33,22 @@ from nodus.ui.widgets.inputs.tag_input import TagInput
 from nodus.ui.widgets.style import secondary_button, set_style_property
 
 # The main button of a dialog that edits something that already exists.
-SAVE_CHANGES = "Guardar cambios"
+SAVE_CHANGES = N_("Guardar cambios")
 # The red message under a field, and the property that gives the field a red border.
 FIELD_ERROR = "FieldError"
 ERROR_PROPERTY = "error"
 
 # What a required field left empty asks for: «Elige» what is picked, «Escribe» what is
 # typed. Every form uses these, so the same field asks the same way everywhere.
-CHOOSE_ACCOUNT = "Elige una cuenta."
-CHOOSE_CATEGORY = "Elige una categoría."
-TYPE_NAME = "Escribe un nombre."
-TYPE_AMOUNT = "Escribe un monto."
+CHOOSE_ACCOUNT = N_("Elige una cuenta.")
+CHOOSE_CATEGORY = N_("Elige una categoría.")
+TYPE_NAME = N_("Escribe un nombre.")
+TYPE_AMOUNT = N_("Escribe un monto.")
 # What a list shows while nothing likely enough stands chosen (``set_placeholder``).
-ACCOUNT_PLACEHOLDER = "Elegir cuenta"
-CATEGORY_PLACEHOLDER = "Elegir categoría"
-DISCARD_TITLE = "¿Descartar los cambios?"
-DISCARD_TEXT = "Lo que cambiaste en este formulario no se guarda."
+ACCOUNT_PLACEHOLDER = N_("Elegir cuenta")
+CATEGORY_PLACEHOLDER = N_("Elegir categoría")
+DISCARD_TITLE = N_("¿Descartar los cambios?")
+DISCARD_TEXT = N_("Lo que cambiaste en este formulario no se guarda.")
 
 
 @dataclass
@@ -63,7 +64,8 @@ class _FieldError:
 class FormDialog(QDialog):
     """A titled form with "Cancelar" and a main button, and an inline error message.
 
-    The main button says what it does (``action``): "Agregar cuenta", "Guardar cambios".
+    The main button says what it does (``action``, already translated): "Agregar
+    cuenta", or "Guardar cambios" when none is given.
 
     Subclasses add their fields to ``form`` and implement ``save``. A problem is shown
     under the field that causes it, in red, as a login form does, and the dialog stays
@@ -88,7 +90,7 @@ class FormDialog(QDialog):
     MARGIN = Space.XXL
 
     def __init__(
-        self, title: str, parent: QWidget | None = None, action: str = SAVE_CHANGES
+        self, title: str, parent: QWidget | None = None, action: str | None = None
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
@@ -119,8 +121,8 @@ class FormDialog(QDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch()
-        cancel = secondary_button("Cancelar", self.reject)
-        self.save_button = QPushButton(action)
+        cancel = secondary_button(_("Cancelar"), self.reject)
+        self.save_button = QPushButton(action or _(SAVE_CHANGES))
         self.save_button.setObjectName("PrimaryButton")
         self.save_button.setDefault(True)
         self.save_button.clicked.connect(self._on_save)
@@ -144,8 +146,8 @@ class FormDialog(QDialog):
         return {}
 
     def required(self, *fields: tuple[QWidget, str]) -> dict[QWidget, str]:
-        """Of ``fields`` (a field and what it asks for), those left empty in a visible
-        row: a field the current mode hides is not required."""
+        """Of ``fields`` (a field and what it asks for, translated), those left empty in a
+        visible row: a field the current mode hides is not required."""
         return {
             widget: message
             for widget, message in fields
@@ -198,7 +200,11 @@ class FormDialog(QDialog):
     def reject(self) -> None:
         """Closes without saving, after asking if something changed."""
         if self.has_changes() and not confirm(
-            self, DISCARD_TITLE, DISCARD_TEXT, "Descartar", cancel_text="Seguir editando"
+            self,
+            _(DISCARD_TITLE),
+            _(DISCARD_TEXT),
+            _("Descartar"),
+            cancel_text=_("Seguir editando"),
         ):
             return
         super().reject()

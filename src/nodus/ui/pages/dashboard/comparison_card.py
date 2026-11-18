@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QVBoxLayout
 
+from nodus.i18n import _
 from nodus.services.reports.dashboard_service import Comparison
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.card import Card, card_header
@@ -23,7 +24,7 @@ class ComparisonCard(Card):
 
     def __init__(self) -> None:
         super().__init__()
-        card_header(self, "Frente al período anterior")
+        card_header(self, _("Frente al período anterior"))
         self._rows = QVBoxLayout()
         self._rows.setSpacing(Space.XXS)
         self.body.addLayout(self._rows)
@@ -35,14 +36,16 @@ class ComparisonCard(Card):
         self.rows = []
         changes = comparison.categories[:COMPARISON_COUNT]
         if not changes:
-            self._rows.addWidget(EmptyState("Sin gastos en el período.", compact=True))
+            self._rows.addWidget(EmptyState(_("Sin gastos en el período."), compact=True))
         for change in changes:
             row = CategoryLine(change.category.color, change.category.name, change.current.format())
-            badge = ChangeBadge(higher_is_better=False, none_text="Nueva")
+            badge = ChangeBadge(higher_is_better=False, none_text=_("Nueva"))
             # In the row before set_change shows it, or it would flash as its own window.
             row.add(badge)
             badge.set_change(change.change)
-            badge.setToolTip(f"Período anterior: {change.previous.format()}")
+            badge.setToolTip(
+                _("Período anterior: {amount}").format(amount=change.previous.format())
+            )
             badge.setMinimumWidth(Layout.CHANGE_BADGE_MIN_WIDTH)
             badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
             row.clicked.connect(lambda c=change.category.id: self.category_clicked.emit(c))

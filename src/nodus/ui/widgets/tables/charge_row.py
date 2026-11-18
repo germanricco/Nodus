@@ -8,6 +8,7 @@ from datetime import date
 from PySide6.QtCore import Qt, Signal, SignalInstance
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from nodus.i18n import N_, _
 from nodus.models.recurring_charge import DueStatus, RecurringCharge
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import due_label
@@ -22,8 +23,8 @@ DUE_TONES = {
     DueStatus.SOON: Tone.WARNING,
     DueStatus.LATER: Tone.NEUTRAL,
 }
-SEEN_TEXT = "Ya lo vi"
-REMIND_AGAIN_TEXT = "Volver a avisarme"
+SEEN_TEXT = N_("Ya lo vi")
+REMIND_AGAIN_TEXT = N_("Volver a avisarme")
 
 
 def due_status_label(charge: RecurringCharge, today: date, quiet: bool) -> QLabel:
@@ -33,14 +34,22 @@ def due_status_label(charge: RecurringCharge, today: date, quiet: bool) -> QLabe
     pill = status_pill(due_label(charge.days_until(today)), tone)
     if quiet:
         pill.setToolTip(
-            f"Ya lo viste. Te lo recordamos {reminder_day(charge.quiet_until(), today)}."
+            reminder_text(
+                charge.quiet_until(),
+                today,
+                _("Ya lo viste. Te lo recordamos mañana."),
+                _("Ya lo viste. Te lo recordamos el {date}."),
+            )
         )
     return pill
 
 
-def reminder_day(day: date, today: date) -> str:
-    """When a warning put off comes back: «mañana» or «el 16/11/2026»."""
-    return "mañana" if (day - today).days == 1 else f"el {format_date(day)}"
+def reminder_text(day: date, today: date, tomorrow: str, dated: str, **names: str) -> str:
+    """The sentence that says when a warning put off comes back: ``tomorrow`` when it is
+    tomorrow, otherwise ``dated`` with its ``{date}``; ``names`` fill the rest of either."""
+    if (day - today).days == 1:
+        return tomorrow.format(**names)
+    return dated.format(date=format_date(day), **names)
 
 
 def seen_actions(
@@ -49,9 +58,9 @@ def seen_actions(
     """«Ya lo vi» while the charge warns with a day to spare, «Volver a avisarme» while
     it is seen (``quiet``); nothing otherwise (overdue, due tomorrow or not due soon)."""
     if quiet:
-        text, icon = REMIND_AGAIN_TEXT, "bell"
+        text, icon = _(REMIND_AGAIN_TEXT), "bell"
     elif charge.can_be_seen(today):
-        text, icon = SEEN_TEXT, "check"
+        text, icon = _(SEEN_TEXT), "check"
     else:
         return []
     return [RowAction(text, lambda: toggled.emit(charge), icon, effect=Effect.TOGGLE)]
@@ -105,14 +114,17 @@ class UpcomingPaymentRow(QWidget):
         charge = self.charge
         return [
             RowAction(
-                "Pagar",
+                _("Pagar"),
                 lambda: self.pay_requested.emit(charge),
                 "pay",
                 default=True,
                 effect=Effect.OPEN,
             ),
             RowAction(
-                "Omitir", lambda: self.skip_requested.emit(charge), "skip", effect=Effect.UNDOABLE
+                _("Omitir"),
+                lambda: self.skip_requested.emit(charge),
+                "skip",
+                effect=Effect.UNDOABLE,
             ),
             *seen_actions(charge, self._today, self._quiet, self.seen_toggled),
         ]

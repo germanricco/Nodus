@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QLineEdit, QWidget
 
+from nodus.i18n import N_, _, ngettext
 from nodus.models.payee import Payee
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
@@ -14,7 +15,7 @@ from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.inputs.selectors import CategoryComboBox
 from nodus.ui.widgets.style import hint_label
 
-NO_DEFAULT_CATEGORY = "Sin categoría predeterminada"
+NO_DEFAULT_CATEGORY = N_("Sin categoría predeterminada")
 
 
 class PayeeDialog(FormDialog):
@@ -32,31 +33,31 @@ class PayeeDialog(FormDialog):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(
-            "Editar beneficiario" if payee else "Nuevo beneficiario",
+            _("Editar beneficiario") if payee else _("Nuevo beneficiario"),
             parent,
-            SAVE_CHANGES if payee else "Agregar beneficiario",
+            _(SAVE_CHANGES) if payee else _("Agregar beneficiario"),
         )
         self._services = services
         self._event_bus = event_bus
         self._payee = payee
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Ej.: Coto, Edenor, Mercado Libre")
+        self.name_input.setPlaceholderText(_("Ej.: Coto, Edenor, Mercado Libre"))
         self.category_input = CategoryComboBox()
         categories = services.categories
         self.category_input.set_categories(
             [
-                ("Gastos", categories.category_tree(TransactionType.EXPENSE)),
-                ("Ingresos", categories.category_tree(TransactionType.INCOME)),
+                (_("Gastos"), categories.category_tree(TransactionType.EXPENSE)),
+                (_("Ingresos"), categories.category_tree(TransactionType.INCOME)),
             ],
-            NO_DEFAULT_CATEGORY,
+            _(NO_DEFAULT_CATEGORY),
         )
-        hint = hint_label("Se completa sola al elegir este beneficiario en un movimiento.")
+        hint = hint_label(_("Se completa sola al elegir este beneficiario en un movimiento."))
         hint.setWordWrap(True)
 
-        self.form.addRow("Nombre", self.name_input)
+        self.form.addRow(_("Nombre"), self.name_input)
         self.bind_field(self.name_input, "name")
-        self.form.addRow("Categoría", self.category_input)
+        self.form.addRow(_("Categoría"), self.category_input)
         self.form.addRow("", hint)
 
         if payee:
@@ -64,7 +65,7 @@ class PayeeDialog(FormDialog):
             self.category_input.select(payee.default_category_id)
 
     def missing(self) -> dict[QWidget, str]:
-        return self.required((self.name_input, TYPE_NAME))
+        return self.required((self.name_input, _(TYPE_NAME)))
 
     def save(self) -> None:
         name = self.name_input.text()
@@ -96,7 +97,10 @@ class MergePayeeDialog(MergeDialog):
             MergeItem(payee.name, payee.id, services.payees.transaction_count(payee.id))
             for payee in payees
         ]
-        super().__init__(sources, "Beneficiario", "beneficiarios", others, parent)
+        several_title = ngettext(
+            "Unir {count} beneficiario", "Unir {count} beneficiarios", len(payees)
+        ).format(count=len(payees))
+        super().__init__(sources, _("Beneficiario"), several_title, others, parent)
         self._services = services
         self._event_bus = event_bus
 

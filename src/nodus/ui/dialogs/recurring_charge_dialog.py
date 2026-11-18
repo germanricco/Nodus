@@ -41,7 +41,7 @@ def account_input_for(
     """An account picker whose currency the amount field follows; empty until chosen
     when there is no account to offer."""
     combo = AccountComboBox()
-    combo.set_placeholder(ACCOUNT_PLACEHOLDER)
+    combo.set_placeholder(_(ACCOUNT_PLACEHOLDER))
     combo.set_accounts(selectable_accounts(services, used_ids))
 
     def follow() -> None:
@@ -65,22 +65,22 @@ class RecurringChargeDialog(FormDialog):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(
-            "Editar cargo" if charge else "Nuevo cargo recurrente",
+            _("Editar cargo") if charge else _("Nuevo cargo recurrente"),
             parent,
-            SAVE_CHANGES if charge else "Agregar cargo",
+            _(SAVE_CHANGES) if charge else _("Agregar cargo"),
         )
         self._services = services
         self._event_bus = event_bus
         self._charge = charge
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Por ejemplo, Netflix o Alquiler")
+        self.name_input.setPlaceholderText(_("Por ejemplo, Netflix o Alquiler"))
         self.amount_input = AmountInput(HOME_CURRENCY)
         self.account_input = account_input_for(
             services, self.amount_input, [charge.account_id] if charge else []
         )
         self.category_input = CategoryComboBox()
-        self.category_input.set_placeholder(CATEGORY_PLACEHOLDER)
+        self.category_input.set_placeholder(_(CATEGORY_PLACEHOLDER))
         self.category_input.set_categories(
             [(None, services.categories.category_tree(TransactionType.EXPENSE))]
         )
@@ -90,21 +90,23 @@ class RecurringChargeDialog(FormDialog):
         self.frequency_input.setCurrentIndex(self.frequency_input.findData(Frequency.MONTHLY))
         self.due_input = DateInput()
         self.note_input = QLineEdit()
-        self.note_input.setPlaceholderText("Opcional")
-        self.dollars_input = QCheckBox("Se cobra en dólares")
+        self.note_input.setPlaceholderText(_("Opcional"))
+        self.dollars_input = QCheckBox(_("Se cobra en dólares"))
         self.dollars_input.setToolTip(
-            "Para una suscripción en dólares que se paga con pesos: al pagarla, anotas los"
-            " pesos que salieron"
+            _(
+                "Para una suscripción en dólares que se paga con pesos: al pagarla, anotas"
+                " los pesos que salieron"
+            )
         )
 
-        self.form.addRow("Nombre", self.name_input)
-        self.form.addRow("Monto", self.amount_input)
+        self.form.addRow(_("Nombre"), self.name_input)
+        self.form.addRow(_("Monto"), self.amount_input)
         self.form.addRow("", self.dollars_input)
-        self.form.addRow("Cuenta", self.account_input)
-        self.form.addRow("Categoría", self.category_input)
-        self.form.addRow("Frecuencia", self.frequency_input)
-        self.form.addRow("Próximo cobro", self.due_input)
-        self.form.addRow("Nota", self.note_input)
+        self.form.addRow(_("Cuenta"), self.account_input)
+        self.form.addRow(_("Categoría"), self.category_input)
+        self.form.addRow(_("Frecuencia"), self.frequency_input)
+        self.form.addRow(_("Próximo cobro"), self.due_input)
+        self.form.addRow(_("Nota"), self.note_input)
         self.bind_field(self.name_input, "name")
         self.bind_field(self.amount_input, "amount")
         self.bind_field(self.account_input, "account_id")
@@ -144,10 +146,10 @@ class RecurringChargeDialog(FormDialog):
 
     def missing(self) -> dict[QWidget, str]:
         return self.required(
-            (self.name_input, TYPE_NAME),
-            (self.amount_input, TYPE_AMOUNT),
-            (self.account_input, CHOOSE_ACCOUNT),
-            (self.category_input, CHOOSE_CATEGORY),
+            (self.name_input, _(TYPE_NAME)),
+            (self.amount_input, _(TYPE_AMOUNT)),
+            (self.account_input, _(CHOOSE_ACCOUNT)),
+            (self.category_input, _(CHOOSE_CATEGORY)),
         )
 
     def save(self) -> None:
@@ -186,7 +188,7 @@ class PayChargeDialog(FormDialog):
         today: date | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__(f"Pagar {charge.name}", parent, "Registrar pago")
+        super().__init__(_("Pagar {name}").format(name=charge.name), parent, _("Registrar pago"))
         self._services = services
         self._event_bus = event_bus
         self._charge = charge
@@ -201,16 +203,17 @@ class PayChargeDialog(FormDialog):
         self.date_input = DateInput()
         self.date_input.set_day(self._today)
         self.next_hint = hint_label(
-            f"Se registra como gasto y el próximo cobro pasa al "
-            f"{format_date(charge.following_due())}."
+            _("Se registra como gasto y el próximo cobro pasa al {date}.").format(
+                date=format_date(charge.following_due())
+            )
         )
         self.next_hint.setWordWrap(True)
 
-        self.form.addRow("Cargo", self.charge_label)
-        self.form.addRow("Monto", self.amount_input)
+        self.form.addRow(_("Cargo"), self.charge_label)
+        self.form.addRow(_("Monto"), self.amount_input)
         self.form.addRow("", self.rate_hint)
-        self.form.addRow("Cuenta", self.account_input)
-        self.form.addRow("Fecha", self.date_input)
+        self.form.addRow(_("Cuenta"), self.account_input)
+        self.form.addRow(_("Fecha"), self.date_input)
         self.form.addRow("", self.next_hint)
         self.bind_field(self.amount_input, "amount")
         self.bind_field(self.account_input, "account_id")
@@ -227,7 +230,7 @@ class PayChargeDialog(FormDialog):
         self.form.setRowVisible(self.charge_label, other_currency)
         self.form.setRowVisible(self.rate_hint, other_currency)
         self.form.labelForField(self.amount_input).setText(
-            "Pesos que salieron" if other_currency else "Monto"
+            _("Pesos que salieron") if other_currency else _("Monto")
         )
         if not other_currency:
             self.amount_input.set_money(charge.amount)
@@ -235,19 +238,21 @@ class PayChargeDialog(FormDialog):
         estimate = self._services.recurring.estimated_payment(charge, self._today)
         if estimate is None:
             self.amount_input.line_edit.clear()
-            self.rate_hint.setText("Sin cotización guardada: escribe los pesos que salieron.")
+            self.rate_hint.setText(_("Sin cotización guardada: escribe los pesos que salieron."))
             return
         self.amount_input.set_money(estimate)
         rate = Money(round(estimate.cents * 100 / charge.amount.cents), estimate.currency)
-        source = (
-            "como el último pago"
+        text = (
+            _("A {rate} por dólar, como el último pago.")
             if charge.last_paid_rate is not None
-            else "la cotización guardada; corrígelo con lo que te cobraron"
+            else _("A {rate} por dólar, la cotización guardada; corrígelo con lo que te cobraron.")
         )
-        self.rate_hint.setText(f"A {rate.format()} por dólar, {source}.")
+        self.rate_hint.setText(text.format(rate=rate.format()))
 
     def missing(self) -> dict[QWidget, str]:
-        return self.required((self.amount_input, TYPE_AMOUNT), (self.account_input, CHOOSE_ACCOUNT))
+        return self.required(
+            (self.amount_input, _(TYPE_AMOUNT)), (self.account_input, _(CHOOSE_ACCOUNT))
+        )
 
     def save(self) -> None:
         self._services.recurring.pay(

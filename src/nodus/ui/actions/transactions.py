@@ -7,8 +7,9 @@ from datetime import date
 
 from PySide6.QtWidgets import QWidget
 
+from nodus.i18n import _, ngettext
 from nodus.services.container import Services
-from nodus.ui.dialogs.confirm import delete_title, delete_with_confirm
+from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.text.formatting import format_date
@@ -40,7 +41,9 @@ def delete_transactions(
         return
     delete_with_confirm(
         parent,
-        delete_title(len(items), "transacción", "transacciones"),
+        ngettext("Eliminar transacción", "Eliminar {count} transacciones", len(items)).format(
+            count=len(items)
+        ),
         transaction_delete_warning(services, items),
         lambda: services.transactions.delete_many([item.transaction.id for item in items]),
         event_bus.transactions_changed,
@@ -52,30 +55,42 @@ def transaction_delete_warning(services: Services, items: list[TransactionListIt
         item = items[0]
         installment = item.transaction.installment
         if item.is_transfer:
-            text = "Se va a eliminar la transferencia, con el movimiento de las dos cuentas."
+            text = _("Se va a eliminar la transferencia, con el movimiento de las dos cuentas.")
         elif installment is not None:
             name = item.transaction.note or item.category_name
-            text = f"Se van a eliminar las {installment.count} cuotas de «{name}»."
+            text = _("Se van a eliminar las {count} cuotas de «{name}».").format(
+                count=installment.count, name=name
+            )
         else:
-            text = f"Se va a eliminar «{item.description}» del {format_date(item.occurred_on)}."
+            text = _("Se va a eliminar «{description}» del {date}.").format(
+                description=item.description, date=format_date(item.occurred_on)
+            )
     else:
-        text = f"Se van a eliminar {transactions_text(len(items))}."
+        text = _("Se van a eliminar {transactions}.").format(
+            transactions=transactions_text(len(items))
+        )
         if any(item.is_transfer for item in items):
-            text += " Las transferencias se eliminan con el movimiento de las dos cuentas."
+            text += " " + _("Las transferencias se eliminan con el movimiento de las dos cuentas.")
         if any(item.transaction.installment for item in items):
-            text += " Las cuotas se eliminan con toda su compra."
+            text += " " + _("Las cuotas se eliminan con toda su compra.")
     refunds = sum(
         len(services.refunds.summary(item.transaction.id).refunds)
         for item in items
         if not item.is_transfer
     )
     if refunds == 1 and len(items) == 1:
-        text += " Su reembolso queda como un ingreso común."
+        text += " " + _("Su reembolso queda como un ingreso común.")
     elif refunds == 1:
-        text += " Un reembolso queda como un ingreso común."
+        text += " " + _("Un reembolso queda como un ingreso común.")
     elif refunds:
-        owner = "Sus" if len(items) == 1 else "Los"
-        text += f" {owner} {refunds} reembolsos quedan como ingresos comunes."
+        if len(items) == 1:
+            text += " " + _("Sus {count} reembolsos quedan como ingresos comunes.").format(
+                count=refunds
+            )
+        else:
+            text += " " + _("Los {count} reembolsos quedan como ingresos comunes.").format(
+                count=refunds
+            )
     return text
 
 
@@ -99,7 +114,7 @@ def pay_off_actions(
     if plan.settled_on is not None:
         return [
             RowAction(
-                "Deshacer adelanto",
+                _("Deshacer adelanto"),
                 lambda: run(lambda: installments.unsettle(plan.id)),
                 "repeat",
                 effect=Effect.TOGGLE,
@@ -108,7 +123,7 @@ def pay_off_actions(
     day = max(date.today(), plan.first_due_on)
     return [
         RowAction(
-            "Adelantar las cuotas que faltan",
+            _("Adelantar las cuotas que faltan"),
             lambda: run(lambda: installments.settle(plan.id, day), undoable=True),
             "skip",
             enabled=not plan.remaining(day).is_zero,

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QPushButton, QWidget
 
+from nodus.i18n import N_, _
 from nodus.services.container import Services
 from nodus.services.errors import BackupError
 from nodus.ui.dialogs.confirm import add_button
@@ -15,7 +16,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.busy import busy
 from nodus.ui.widgets.toast import show_toast
 
-TITLE = "Copia fuera de la PC"
+TITLE = N_("Copia fuera de la PC")
 
 
 def save_copy_outside(
@@ -33,20 +34,22 @@ def save_copy_outside(
     if folder is None:
         return False
     try:
-        with busy(button, "Guardando…"):
+        with busy(button, _("Guardando…")):
             services.backups.export_to(folder, date.today())
     except BackupError as error:
         user_error(
             parent,
-            TITLE,
-            "No se pudo guardar la copia.",
-            f"Revisa que la carpeta {folder} exista y que el pendrive o el disco sigan"
-            " conectados y con lugar libre. Después vuelve a intentarlo.",
+            _(TITLE),
+            _("No se pudo guardar la copia."),
+            _(
+                "Revisa que la carpeta {folder} exista y que el pendrive o el disco sigan"
+                " conectados y con lugar libre. Después vuelve a intentarlo."
+            ).format(folder=folder),
             str(error),
         )
         return False
     event_bus.backups_changed.emit()
-    show_toast(parent, f"Copia guardada en {folder}.")
+    show_toast(parent, _("Copia guardada en {folder}.").format(folder=folder))
     return True
 
 
@@ -56,15 +59,15 @@ def choose_folder(parent: QWidget, services: Services) -> Path | None:
     if last is not None:
         box = QMessageBox(
             QMessageBox.Icon.Question,
-            TITLE,
-            f"¿Guardar la copia en {last}, como la última vez?",
+            _(TITLE),
+            _("¿Guardar la copia en {folder}, como la última vez?").format(folder=last),
             parent=parent,
         )
-        here = add_button(box, "Guardar ahí", "PrimaryButton", QMessageBox.ButtonRole.AcceptRole)
+        here = add_button(box, _("Guardar ahí"), "PrimaryButton", QMessageBox.ButtonRole.AcceptRole)
         other = add_button(
-            box, "Elegir otra carpeta…", "SecondaryButton", QMessageBox.ButtonRole.ActionRole
+            box, _("Elegir otra carpeta…"), "SecondaryButton", QMessageBox.ButtonRole.ActionRole
         )
-        add_button(box, "Cancelar", "SecondaryButton", QMessageBox.ButtonRole.RejectRole)
+        add_button(box, _("Cancelar"), "SecondaryButton", QMessageBox.ButtonRole.RejectRole)
         box.setDefaultButton(here)
         box.exec()
         if box.clickedButton() is here:
@@ -73,6 +76,6 @@ def choose_folder(parent: QWidget, services: Services) -> Path | None:
             return None
     start = last or services.settings.external_backup_folder() or Path.home()
     path = QFileDialog.getExistingDirectory(
-        parent, "Guardar copia en un pendrive, un disco externo o Drive", str(start)
+        parent, _("Guardar copia en un pendrive, un disco externo o Drive"), str(start)
     )
     return Path(path) if path else None

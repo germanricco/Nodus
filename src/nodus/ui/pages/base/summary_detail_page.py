@@ -6,6 +6,7 @@ from typing import Generic
 
 from PySide6.QtWidgets import QLabel
 
+from nodus.i18n import N_, _
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
@@ -51,18 +52,20 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self._hidden = services.settings.amounts_hidden()
         self.summary: S | None = None
 
-        self.edit_button = self.add_header_button("Editar")
+        self.edit_button = self.add_header_button(_("Editar"))
         self.edit_button.clicked.connect(lambda: self.edit_item(self.summary))
-        self.merge_button = self.add_header_button("Unir con…")
-        self.merge_button.setToolTip("Le pasa sus movimientos a otro y lo elimina")
+        self.merge_button = self.add_header_button(_("Unir con…"))
+        self.merge_button.setToolTip(_("Le pasa sus movimientos a otro y lo elimina"))
         self.merge_button.clicked.connect(lambda: self.merge_item(self.summary))
 
         self.figures = FigureRow()
         self.figure_labels: dict[str, QLabel] = {}
-        for caption in ("Movimientos", "Total", "Último movimiento", *self.CAPTIONS):
+        # Keyed by the untranslated caption, which the code looks up.
+        captions = (N_("Movimientos"), N_("Total"), N_("Último movimiento"), *self.CAPTIONS)
+        for caption in captions:
             label = QLabel()
             self.figure_labels[caption] = label
-            self.figures.add_tile(FigureTile(caption, label, large=True))
+            self.figures.add_tile(FigureTile(_(caption), label, large=True))
         self.content_layout.addWidget(self.figures)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
@@ -125,8 +128,8 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self.title_label.setText(self.name(summary))
         start = self.transaction_start(summary)
         self.list_view.empty_state.set_message(
-            "Todavía no tiene movimientos.",
-            "Agregar transacción",
+            _("Todavía no tiene movimientos."),
+            _("Agregar transacción"),
             lambda: self.new_transaction_requested.emit(start),
         )
         self.merge_button.setEnabled(self.has_others())

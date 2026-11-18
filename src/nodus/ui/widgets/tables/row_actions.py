@@ -24,13 +24,14 @@ from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
 from PySide6.QtGui import QCursor, QIcon
 from PySide6.QtWidgets import QMenu, QPushButton, QWidget
 
+from nodus.i18n import N_, _
 from nodus.ui.theme.design import ControlSize, IconSize, Popup
 from nodus.ui.theme.icons import icon as tinted_icon
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
 from nodus.ui.widgets.style import make_hoverable
 
-MORE_ACTIONS = "Más acciones"
+MORE_ACTIONS = N_("Más acciones")
 
 
 class Effect(Enum):
@@ -209,8 +210,8 @@ class MoreButton(QPushButton):
         self._actions_for = actions_for
         self.menu: QMenu | None = None
         self.setObjectName("MoreButton")
-        self.setToolTip(MORE_ACTIONS)
-        self.setAccessibleName(MORE_ACTIONS)
+        self.setToolTip(_(MORE_ACTIONS))
+        self.setAccessibleName(_(MORE_ACTIONS))
         self.setFixedSize(self.SIZE, self.SIZE)
         self.setIconSize(QSize(IconSize.L, IconSize.L))
         self.setCursor(Qt.CursorShape.PointingHandCursor)

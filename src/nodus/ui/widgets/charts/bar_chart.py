@@ -9,6 +9,7 @@ from PySide6.QtCore import QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QMouseEvent, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
 
+from nodus.i18n import _
 from nodus.models.period import Month, format_month
 from nodus.services.reports.dashboard_service import MonthFlow
 from nodus.ui.theme.design import Chart, Opacity, Radius
@@ -138,9 +139,9 @@ def flow_bar_groups(flow: list[MonthFlow], selected: Month | None = None) -> lis
             month.expenses.cents,
             format_month(month.month),
             (
-                f"Ingresos {month.income.format()}",
-                f"Gastos {month.expenses.format()}",
-                f"Ahorro {month.savings.format()}",
+                _("Ingresos {amount}").format(amount=month.income.format()),
+                _("Gastos {amount}").format(amount=month.expenses.format()),
+                _("Ahorro {amount}").format(amount=month.savings.format()),
             ),
             selected=month.month == selected,
             key=month.month,

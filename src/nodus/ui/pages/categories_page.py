@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
+from nodus.i18n import N_, _, ngettext
 from nodus.models.category import Category
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
@@ -20,9 +21,9 @@ from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.style import clear_layout
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 
-SECTION_TITLES = {TransactionType.EXPENSE: "Gastos", TransactionType.INCOME: "Ingresos"}
-SYSTEM_HINT = "Recibe las transacciones de las categorías que se eliminan."
-REFUNDS_HINT = "Sus ingresos se pueden vincular al gasto que devuelven, con «Reembolso de»."
+SECTION_TITLES = {TransactionType.EXPENSE: N_("Gastos"), TransactionType.INCOME: N_("Ingresos")}
+SYSTEM_HINT = N_("Recibe las transacciones de las categorías que se eliminan.")
+REFUNDS_HINT = N_("Sus ingresos se pueden vincular al gasto que devuelven, con «Reembolso de».")
 
 
 class CategoryRow(QWidget):
@@ -51,9 +52,9 @@ class CategoryRow(QWidget):
         name.setObjectName("RowTitle")
         layout.addWidget(name)
         if category.is_fixed:
-            tag = QLabel("sistema")
+            tag = QLabel(_("sistema"))
             tag.setObjectName("Tag")
-            tag.setToolTip(SYSTEM_HINT if category.is_system else REFUNDS_HINT)
+            tag.setToolTip(_(SYSTEM_HINT) if category.is_system else _(REFUNDS_HINT))
             layout.addWidget(tag, alignment=Qt.AlignmentFlag.AlignVCenter)
         layout.addStretch()
 
@@ -67,7 +68,7 @@ class CategoryRow(QWidget):
         category = self.category
         result = [
             RowAction(
-                "Ver movimientos",
+                _("Ver movimientos"),
                 lambda: self.transactions_requested.emit(category),
                 "list",
                 enabled=self.has_movements,
@@ -80,7 +81,7 @@ class CategoryRow(QWidget):
             return result
         result.append(
             RowAction(
-                "Editar",
+                _("Editar"),
                 lambda: self.edit_requested.emit(category),
                 "pencil",
                 default=True,
@@ -90,7 +91,7 @@ class CategoryRow(QWidget):
         if not category.is_subcategory:
             result.append(
                 RowAction(
-                    "Agregar subcategoría",
+                    _("Agregar subcategoría"),
                     lambda: self.add_subcategory_requested.emit(category),
                     "plus",
                     effect=Effect.OPEN,
@@ -98,7 +99,7 @@ class CategoryRow(QWidget):
             )
         result.append(
             RowAction(
-                "Eliminar",
+                _("Eliminar"),
                 lambda: self.delete_requested.emit(category),
                 "trash",
                 destructive=True,
@@ -120,7 +121,7 @@ class CategoriesPage(Page):
         super().__init__(PageId.CATEGORIES.label)
         self._services = services
         self._event_bus = event_bus
-        self.create_button = self.add_header_button("Agregar categoría", primary=True)
+        self.create_button = self.add_header_button(_("Agregar categoría"), primary=True)
         self.create_button.clicked.connect(lambda: self.open_category_dialog())
 
         self._sections = self.scrolling_body()
@@ -128,7 +129,7 @@ class CategoriesPage(Page):
     def refresh(self) -> None:
         clear_layout(self._sections)
         for kind, title in SECTION_TITLES.items():
-            self._sections.addWidget(self._section(kind, title))
+            self._sections.addWidget(self._section(kind, _(title)))
         self._sections.addStretch()
 
     def open_category_dialog(
@@ -144,7 +145,7 @@ class CategoriesPage(Page):
     def delete_category(self, category: Category) -> None:
         delete_with_confirm(
             self.window(),
-            "Eliminar categoría",
+            _("Eliminar categoría"),
             self._delete_warning(category),
             lambda: self._services.categories.delete(category.id),
             self._event_bus.categories_changed,
@@ -176,12 +177,17 @@ class CategoriesPage(Page):
             node.category.id == category.id and node.children
             for node in self._services.categories.category_tree(category.kind)
         )
-        subject = f"«{category.name}»" + (" y sus subcategorías" if has_children else "")
+        if has_children:
+            deletion = _("Se va a eliminar «{name}» y sus subcategorías.")
+        else:
+            deletion = _("Se va a eliminar «{name}».")
         count = self._services.categories.transaction_count(category.id)
         if count == 0:
-            consequence = "No tiene transacciones."
-        elif count == 1:
-            consequence = "Su única transacción pasa a «Otros»."
+            consequence = _("No tiene transacciones.")
         else:
-            consequence = f"Sus {count} transacciones pasan a «Otros»."
-        return f"Se va a eliminar {subject}. {consequence}"
+            consequence = ngettext(
+                "Su única transacción pasa a «Otros».",
+                "Sus {count} transacciones pasan a «Otros».",
+                count,
+            ).format(count=count)
+        return f"{deletion.format(name=category.name)} {consequence}"

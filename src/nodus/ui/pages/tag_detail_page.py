@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from nodus.i18n import N_, _
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.classification.tag_service import TagSummary
 from nodus.services.container import Services
@@ -19,12 +20,12 @@ class TagDetailPage(SummaryDetailPage[TagSummary]):
     """A tag, such as a trip, with when its first movement was; deleting it keeps the
     movements, without the tag."""
 
-    CAPTIONS = ("Primer movimiento",)
+    CAPTIONS = (N_("Primer movimiento"),)
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__(DetailId.TAG, services, event_bus, theme_manager, "Eliminar etiqueta")
+        super().__init__(DetailId.TAG, services, event_bus, theme_manager, _("Eliminar etiqueta"))
 
     def load_summary(self, item_id: int) -> TagSummary:
         return self._services.tags.summary(item_id)

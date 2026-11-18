@@ -8,6 +8,7 @@ from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QFrame, QPushButton, QVBoxLayout
 
+from nodus.i18n import _
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.base.page import Page
 from nodus.ui.shortcuts import BACK_TO_LIST
@@ -41,8 +42,8 @@ class DetailPage(Page):
         self.back_button.setIconSize(QSize(IconSize.XL, IconSize.XL))
         self.back_button.setCursor(Qt.CursorShape.PointingHandCursor)
         label = detail_id.list_page.label
-        self.back_button.setToolTip(f"Volver a {label} (Esc)")
-        self.back_button.setAccessibleName(f"Volver a {label}")
+        self.back_button.setToolTip(_("Volver a {page} (Esc)").format(page=label))
+        self.back_button.setAccessibleName(_("Volver a {page}").format(page=label))
         self.back_button.clicked.connect(self.back_requested)
         self._header.insertWidget(0, self.back_button)
         self._header.insertSpacing(1, Space.XS)
@@ -74,7 +75,7 @@ def danger_zone(text: str, action: str, run: Callable[[], object]) -> tuple[QFra
     layout = QVBoxLayout(card)
     layout.setContentsMargins(Space.XL, Space.L, Space.XL, Space.L)
     layout.setSpacing(Space.S)
-    title = card_title("Zona de peligro")
+    title = card_title(_("Zona de peligro"))
     explanation = hint_label(text)
     explanation.setWordWrap(True)
     button = QPushButton(action)

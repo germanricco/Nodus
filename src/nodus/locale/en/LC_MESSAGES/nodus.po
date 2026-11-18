@@ -605,63 +605,83 @@ msgstr "Choose at least one account."
 msgid "Cada cuenta va una sola vez."
 msgstr "Each account goes only once."
 
-#: nodus/services/reports/analysis_service.py
+#: nodus/services/reports/analysis_service.py nodus/ui/dialogs/payee_dialogs.py
+#: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/categories_page.py
+#: nodus/ui/pages/dashboard/cash_flow_card.py nodus/ui/pages/transactions_page.py
 msgid "Gastos"
 msgstr "Expenses"
 
-#: nodus/services/reports/analysis_service.py
+#: nodus/services/reports/analysis_service.py nodus/ui/dialogs/payee_dialogs.py
+#: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/categories_page.py
+#: nodus/ui/pages/dashboard/cash_flow_card.py nodus/ui/pages/transactions_page.py
 msgid "Ingresos"
 msgstr "Income"
 
-#: nodus/services/reports/analysis_service.py nodus/ui/text/labels.py
+#: nodus/services/reports/analysis_service.py nodus/ui/pages/analysis/cash_flow_view.py
+#: nodus/ui/pages/dashboard/cash_flow_card.py nodus/ui/text/labels.py
 msgid "Ahorro"
 msgstr "Savings"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/goal_dialog.py
+#: nodus/ui/dialogs/recurring_charge_dialog.py nodus/ui/dialogs/transaction_dialog.py
+#: nodus/ui/dialogs/value_adjustment_dialog.py nodus/ui/widgets/tables/transaction_table.py
 msgid "Fecha"
 msgstr "Date"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/account_dialog.py
+#: nodus/ui/dialogs/category_dialog.py nodus/ui/pages/transactions_page.py
 msgid "Tipo"
 msgstr "Type"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/recurring_charge_dialog.py
+#: nodus/ui/dialogs/transaction_dialog.py nodus/ui/pages/transactions_page.py
+#: nodus/ui/widgets/tables/transaction_table.py
 msgid "Cuenta"
 msgstr "Account"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/budget_dialog.py
+#: nodus/ui/dialogs/bulk_edit_dialog.py nodus/ui/dialogs/payee_dialogs.py
+#: nodus/ui/dialogs/recurring_charge_dialog.py nodus/ui/dialogs/transaction_dialog.py
+#: nodus/ui/pages/transactions_page.py nodus/ui/widgets/tables/transaction_table.py
 msgid "Categoría"
 msgstr "Category"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/bulk_edit_dialog.py
+#: nodus/ui/dialogs/payee_dialogs.py nodus/ui/dialogs/transaction_dialog.py
+#: nodus/ui/pages/transactions_page.py nodus/ui/widgets/tables/transaction_table.py
 msgid "Beneficiario"
 msgstr "Payee"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/widgets/tables/transaction_table.py
 msgid "Descripción"
 msgstr "Description"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/recurring_charge_dialog.py
+#: nodus/ui/dialogs/transaction_dialog.py nodus/ui/widgets/tables/transaction_table.py
 msgid "Monto"
 msgstr "Amount"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/account_dialog.py
+#: nodus/ui/dialogs/goal_dialog.py nodus/ui/pages/settings/rates_card.py
 msgid "Moneda"
 msgstr "Currency"
 
-#: nodus/services/reports/export_service.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/transaction_dialog.py
 msgid "Reembolso de"
 msgstr "Refund of"
 
-#: nodus/services/reports/export_service.py nodus/ui/transaction_rows.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/transaction_dialog.py
+#: nodus/ui/transaction_rows.py
 msgid "Transferencia"
 msgstr "Transfer"
 
-#: nodus/services/reports/export_service.py nodus/ui/text/labels.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/transaction_dialog.py
+#: nodus/ui/text/labels.py
 msgid "Gasto"
 msgstr "Expense"
 
-#: nodus/services/reports/export_service.py nodus/ui/text/labels.py
+#: nodus/services/reports/export_service.py nodus/ui/dialogs/transaction_dialog.py
+#: nodus/ui/text/labels.py
 msgid "Ingreso"
 msgstr "Income"
 
@@ -819,7 +839,7 @@ msgstr "Enter the amount that arrives in the destination account."
 msgid "Inicio"
 msgstr "Home"
 
-#: nodus/ui/navigation.py
+#: nodus/ui/dialogs/goal_dialog.py nodus/ui/navigation.py nodus/ui/pages/goal_detail_page.py
 msgid "Cuentas"
 msgstr "Accounts"
 
@@ -831,7 +851,7 @@ msgstr "Transactions"
 msgid "Recurrentes"
 msgstr "Recurring"
 
-#: nodus/ui/navigation.py nodus/ui/text/help_texts.py
+#: nodus/ui/navigation.py nodus/ui/pages/dashboard/budgets_card.py nodus/ui/text/help_texts.py
 msgid "Presupuestos"
 msgstr "Budgets"
 
@@ -847,11 +867,12 @@ msgstr "Analysis"
 msgid "Categorías"
 msgstr "Categories"
 
-#: nodus/ui/navigation.py
+#: nodus/ui/navigation.py nodus/ui/pages/payees_page.py
 msgid "Beneficiarios"
 msgstr "Payees"
 
-#: nodus/ui/navigation.py
+#: nodus/ui/dialogs/transaction_dialog.py nodus/ui/navigation.py nodus/ui/pages/tags_page.py
+#: nodus/ui/widgets/tables/transaction_table.py
 msgid "Etiquetas"
 msgstr "Tags"
 
@@ -859,7 +880,7 @@ msgstr "Tags"
 msgid "Ajustes"
 msgstr "Settings"
 
-#: nodus/ui/period_selector.py
+#: nodus/ui/pages/analysis/trends_view.py nodus/ui/period_selector.py
 msgid "Período anterior"
 msgstr "Previous period"
 
@@ -994,19 +1015,25 @@ msgstr "Refund of “{description}” from {date}"
 msgid "Se descuenta el {date}"
 msgstr "Charged on {date}"
 
-#: nodus/ui/transaction_rows.py
+#: nodus/ui/pages/recurring_page.py nodus/ui/transaction_rows.py
 msgid "Editar compra"
 msgstr "Edit purchase"
 
-#: nodus/ui/transaction_rows.py
+#: nodus/ui/pages/account_detail_page.py nodus/ui/pages/accounts_page.py
+#: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
+#: nodus/ui/pages/categories_page.py nodus/ui/pages/goal_detail_page.py nodus/ui/pages/goals_page.py
+#: nodus/ui/pages/recurring_page.py nodus/ui/transaction_rows.py nodus/ui/widgets/inputs/selectors.py
 msgid "Editar"
 msgstr "Edit"
 
-#: nodus/ui/transaction_rows.py
+#: nodus/ui/pages/recurring_page.py nodus/ui/transaction_rows.py
 msgid "Eliminar compra"
 msgstr "Delete purchase"
 
-#: nodus/ui/transaction_rows.py
+#: nodus/ui/pages/accounts_page.py nodus/ui/pages/base/summary_page.py
+#: nodus/ui/pages/base/transaction_list_view.py nodus/ui/pages/categories_page.py
+#: nodus/ui/pages/goal_detail_page.py nodus/ui/pages/goals_page.py nodus/ui/pages/recurring_page.py
+#: nodus/ui/pages/settings/rates_card.py nodus/ui/transaction_rows.py
 msgid "Eliminar"
 msgstr "Delete"
 
@@ -1023,12 +1050,1366 @@ msgstr "Undo"
 msgid "Se deshizo."
 msgstr "Undone."
 
-#: nodus/ui/pages/account_detail_page.py
+#: nodus/ui/actions/accounts.py
+#, python-brace-format
+msgid "Se va a eliminar la cuenta «{name}»."
+msgstr "The account “{name}” will be deleted."
+
+#: nodus/ui/actions/accounts.py nodus/ui/pages/categories_page.py
+msgid "No tiene transacciones."
+msgstr "It has no transactions."
+
+#: nodus/ui/actions/accounts.py
+#, python-brace-format
+msgid "Su única transacción también se elimina."
+msgid_plural "Sus {count} transacciones también se eliminan."
+msgstr[0] "Its only transaction is deleted too."
+msgstr[1] "Its {count} transactions are deleted too."
+
+#: nodus/ui/actions/accounts.py
+#, python-brace-format
+msgid "Incluye una transferencia, así que cambia el saldo de la otra cuenta."
+msgid_plural "Incluye {count} transferencias, así que cambia el saldo de las otras cuentas."
+msgstr[0] "It includes a transfer, so the other account's balance changes."
+msgstr[1] "It includes {count} transfers, so the other accounts' balances change."
+
+#: nodus/ui/actions/accounts.py
+#, python-brace-format
+msgid "También se elimina su cargo recurrente."
+msgid_plural "También se eliminan sus {count} cargos recurrentes."
+msgstr[0] "Its recurring charge is deleted too."
+msgstr[1] "Its {count} recurring charges are deleted too."
+
+#: nodus/ui/actions/accounts.py
+msgid "Para conservar el historial, archívala en su lugar."
+msgstr "To keep the history, archive it instead."
+
+#: nodus/ui/actions/accounts.py nodus/ui/pages/account_detail_page.py
+msgid "Eliminar cuenta"
+msgstr "Delete account"
+
+#: nodus/ui/actions/goals.py
+#, python-brace-format
+msgid "Se elimina la meta «{name}». Las cuentas y sus movimientos no se tocan."
+msgstr "The goal “{name}” will be deleted. Your accounts and their transactions stay as they are."
+
+#: nodus/ui/actions/goals.py
+msgid "Eliminar meta"
+msgstr "Delete goal"
+
+#: nodus/ui/actions/payees.py nodus/ui/actions/tags.py nodus/ui/pages/categories_page.py
+#, python-brace-format
+msgid "Se va a eliminar «{name}»."
+msgstr "“{name}” will be deleted."
+
+#: nodus/ui/actions/payees.py
+#, python-brace-format
+msgid "Se van a eliminar {count} beneficiarios."
+msgstr "{count} payees will be deleted."
+
+#: nodus/ui/actions/payees.py
+#, python-brace-format
+msgid "{count} movimiento queda sin beneficiario."
+msgid_plural "{count} movimientos quedan sin beneficiario."
+msgstr[0] "{count} transaction is left without a payee."
+msgstr[1] "{count} transactions are left without a payee."
+
+#: nodus/ui/actions/payees.py nodus/ui/pages/payee_detail_page.py
+#, python-brace-format
+msgid "Eliminar beneficiario"
+msgid_plural "Eliminar {count} beneficiarios"
+msgstr[0] "Delete payee"
+msgstr[1] "Delete {count} payees"
+
+#: nodus/ui/actions/recurring.py
+#, python-brace-format
+msgid "Te volvemos a avisar de {name}."
+msgstr "We'll remind you about {name} again."
+
+#: nodus/ui/actions/recurring.py
+#, python-brace-format
+msgid "Te recordamos {name} mañana."
+msgstr "We'll remind you about {name} tomorrow."
+
+#: nodus/ui/actions/recurring.py
+#, python-brace-format
+msgid "Te recordamos {name} el {date}."
+msgstr "We'll remind you about {name} on {date}."
+
+#: nodus/ui/actions/tags.py
+#, python-brace-format
+msgid "Se van a eliminar {count} etiquetas."
+msgstr "{count} tags will be deleted."
+
+#: nodus/ui/actions/tags.py
+#, python-brace-format
+msgid "{count} movimiento la pierden; los movimientos no se borran."
+msgid_plural "{count} movimientos la pierden; los movimientos no se borran."
+msgstr[0] "{count} transaction loses it; the transactions aren't deleted."
+msgstr[1] "{count} transactions lose it; the transactions aren't deleted."
+
+#: nodus/ui/actions/tags.py
+#, python-brace-format
+msgid "{count} movimiento pierden alguna; los movimientos no se borran."
+msgid_plural "{count} movimientos pierden alguna; los movimientos no se borran."
+msgstr[0] "{count} transaction loses one of them; the transactions aren't deleted."
+msgstr[1] "{count} transactions lose one of them; the transactions aren't deleted."
+
+#: nodus/ui/actions/tags.py nodus/ui/pages/tag_detail_page.py
+#, python-brace-format
+msgid "Eliminar etiqueta"
+msgid_plural "Eliminar {count} etiquetas"
+msgstr[0] "Delete tag"
+msgstr[1] "Delete {count} tags"
+
+#: nodus/ui/actions/transactions.py
+#, python-brace-format
+msgid "Eliminar transacción"
+msgid_plural "Eliminar {count} transacciones"
+msgstr[0] "Delete transaction"
+msgstr[1] "Delete {count} transactions"
+
+#: nodus/ui/actions/transactions.py
+msgid "Se va a eliminar la transferencia, con el movimiento de las dos cuentas."
+msgstr "The transfer will be deleted, along with its entries in both accounts."
+
+#: nodus/ui/actions/transactions.py
+#, python-brace-format
+msgid "Se van a eliminar las {count} cuotas de «{name}»."
+msgstr "All {count} installments of “{name}” will be deleted."
+
+#: nodus/ui/actions/transactions.py
+#, python-brace-format
+msgid "Se va a eliminar «{description}» del {date}."
+msgstr "“{description}” from {date} will be deleted."
+
+#: nodus/ui/actions/transactions.py
+#, python-brace-format
+msgid "Se van a eliminar {transactions}."
+msgstr "{transactions} will be deleted."
+
+#: nodus/ui/actions/transactions.py
+msgid "Las transferencias se eliminan con el movimiento de las dos cuentas."
+msgstr "Transfers are deleted along with their entries in both accounts."
+
+#: nodus/ui/actions/transactions.py
+msgid "Las cuotas se eliminan con toda su compra."
+msgstr "Installments are deleted along with the whole purchase."
+
+#: nodus/ui/actions/transactions.py
+msgid "Su reembolso queda como un ingreso común."
+msgstr "Its refund stays as regular income."
+
+#: nodus/ui/actions/transactions.py
+msgid "Un reembolso queda como un ingreso común."
+msgstr "One refund stays as regular income."
+
+#: nodus/ui/actions/transactions.py
+#, python-brace-format
+msgid "Sus {count} reembolsos quedan como ingresos comunes."
+msgstr "Its {count} refunds stay as regular income."
+
+#: nodus/ui/actions/transactions.py
+#, python-brace-format
+msgid "Los {count} reembolsos quedan como ingresos comunes."
+msgstr "The {count} refunds stay as regular income."
+
+#: nodus/ui/actions/transactions.py
+msgid "Deshacer adelanto"
+msgstr "Undo paying ahead"
+
+#: nodus/ui/actions/transactions.py
+msgid "Adelantar las cuotas que faltan"
+msgstr "Pay the remaining installments ahead"
+
+#: nodus/ui/dialogs/account_dialog.py
+msgid "Editar cuenta"
+msgstr "Edit account"
+
+#: nodus/ui/dialogs/account_dialog.py
+msgid "Nueva cuenta"
+msgstr "New account"
+
+#: nodus/ui/dialogs/account_dialog.py nodus/ui/pages/accounts_page.py
+msgid "Agregar cuenta"
+msgstr "Add account"
+
+#: nodus/ui/dialogs/account_dialog.py
+msgid "Ej.: Banco, Efectivo, Dólares"
+msgstr "E.g.: Bank, Cash, Dollars"
+
+#: nodus/ui/dialogs/account_dialog.py nodus/ui/dialogs/account_group_dialogs.py
+#: nodus/ui/dialogs/category_dialog.py nodus/ui/dialogs/goal_dialog.py
+#: nodus/ui/dialogs/payee_dialogs.py nodus/ui/dialogs/recurring_charge_dialog.py
+#: nodus/ui/dialogs/tag_dialogs.py nodus/ui/pages/base/summary_page.py
+msgid "Nombre"
+msgstr "Name"
+
+#: nodus/ui/dialogs/account_dialog.py
+msgid "Saldo inicial"
+msgstr "Starting balance"
+
+#: nodus/ui/dialogs/account_group_dialogs.py nodus/ui/pages/accounts_page.py
+msgid "Sin grupo"
+msgstr "No group"
+
+#: nodus/ui/dialogs/account_group_dialogs.py
+msgid "Ej.: Bancos, Billeteras, Inversiones"
+msgstr "E.g.: Banks, Wallets, Investments"
+
+#: nodus/ui/dialogs/account_group_dialogs.py
+msgid "Nuevo grupo…"
+msgstr "New group…"
+
+#: nodus/ui/dialogs/account_group_dialogs.py
+msgid "Grupo"
+msgstr "Group"
+
+#: nodus/ui/dialogs/account_group_dialogs.py
+msgid "Nombre del grupo"
+msgstr "Group name"
+
+#: nodus/ui/dialogs/account_group_dialogs.py
+msgid "Renombrar grupo"
+msgstr "Rename group"
+
+#: nodus/ui/dialogs/account_group_dialogs.py
+msgid "Nuevo grupo"
+msgstr "New group"
+
+#: nodus/ui/dialogs/account_group_dialogs.py nodus/ui/pages/accounts_page.py
+msgid "Agregar grupo"
+msgstr "Add group"
+
+#: nodus/ui/dialogs/account_group_dialogs.py
+#, python-brace-format
+msgid "Mover «{name}»"
+msgstr "Move “{name}”"
+
+#: nodus/ui/dialogs/account_group_dialogs.py
+msgid "Mover"
+msgstr "Move"
+
+#: nodus/ui/dialogs/budget_dialog.py nodus/ui/pages/budgets_page.py
+msgid "Cambiar límite"
+msgstr "Change limit"
+
+#: nodus/ui/dialogs/budget_dialog.py
+msgid "Nuevo presupuesto"
+msgstr "New budget"
+
+#: nodus/ui/dialogs/budget_dialog.py nodus/ui/pages/budgets_page.py
+msgid "Agregar presupuesto"
+msgstr "Add budget"
+
+#: nodus/ui/dialogs/budget_dialog.py
+#, python-brace-format
+msgid "Rige desde {month} en adelante; los meses anteriores conservan su límite."
+msgstr "Applies from {month} on; earlier months keep their limit."
+
+#: nodus/ui/dialogs/budget_dialog.py
+msgid "Límite mensual"
+msgstr "Monthly limit"
+
+#: nodus/ui/dialogs/budget_dialog.py
+#, python-brace-format
+msgid "Lo gastado el mes pasado: {amount}"
+msgstr "Spent last month: {amount}"
+
+#: nodus/ui/dialogs/budget_dialog.py
+#, python-brace-format
+msgid "Promedio del último {count} mes: {amount}"
+msgid_plural "Promedio de los últimos {count} meses: {amount}"
+msgstr[0] "Average of the last {count} month: {amount}"
+msgstr[1] "Average of the last {count} months: {amount}"
+
+#: nodus/ui/dialogs/bulk_edit_dialog.py nodus/ui/dialogs/value_adjustment_dialog.py
+msgid "Sin cambios"
+msgstr "No change"
+
+#: nodus/ui/dialogs/bulk_edit_dialog.py
+msgid "La categoría cambia solo si todas son gastos o todas son ingresos."
+msgstr "The category changes only if they're all expenses or all income."
+
+#: nodus/ui/dialogs/bulk_edit_dialog.py
+msgid "Las transferencias solo cambian su nota."
+msgstr "Transfers only change their note."
+
+#: nodus/ui/dialogs/bulk_edit_dialog.py
+#, python-brace-format
+msgid "Editar {transactions}"
+msgstr "Edit {transactions}"
+
+#: nodus/ui/dialogs/bulk_edit_dialog.py
+#, python-brace-format
+msgid "Aplicar a {transactions}"
+msgstr "Apply to {transactions}"
+
+#: nodus/ui/dialogs/bulk_edit_dialog.py
+msgid "Ninguna · Enter para agregar"
+msgstr "None · Enter to add"
+
+#: nodus/ui/dialogs/bulk_edit_dialog.py nodus/ui/dialogs/recurring_charge_dialog.py
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Nota"
+msgstr "Note"
+
+#: nodus/ui/dialogs/bulk_edit_dialog.py
+msgid "Agregar etiquetas"
+msgstr "Add tags"
+
+#: nodus/ui/dialogs/bulk_edit_dialog.py
+msgid "Quitar etiquetas"
+msgstr "Remove tags"
+
+#: nodus/ui/dialogs/bulk_edit_dialog.py
+msgid "Solo cambia lo que completes."
+msgstr "Only what you fill in changes."
+
+#: nodus/ui/dialogs/category_dialog.py
+msgid "Ninguna (categoría principal)"
+msgstr "None (main category)"
+
+#: nodus/ui/dialogs/category_dialog.py nodus/ui/pages/categories_page.py
+msgid "Agregar subcategoría"
+msgstr "Add subcategory"
+
+#: nodus/ui/dialogs/category_dialog.py nodus/ui/pages/categories_page.py
+msgid "Agregar categoría"
+msgstr "Add category"
+
+#: nodus/ui/dialogs/category_dialog.py
+msgid "Editar categoría"
+msgstr "Edit category"
+
+#: nodus/ui/dialogs/category_dialog.py
+msgid "Nueva categoría"
+msgstr "New category"
+
+#: nodus/ui/dialogs/category_dialog.py
+msgid "Ej.: Mascotas, Gimnasio, Alquiler"
+msgstr "E.g.: Pets, Gym, Rent"
+
+#: nodus/ui/dialogs/category_dialog.py
+msgid "Dentro de"
+msgstr "Inside"
+
+#: nodus/ui/dialogs/category_dialog.py nodus/ui/dialogs/tag_dialogs.py
+msgid "Color"
+msgstr "Color"
+
+#: nodus/ui/dialogs/confirm.py nodus/ui/dialogs/external_backup.py nodus/ui/dialogs/form_dialog.py
+#: nodus/ui/dialogs/update_dialog.py nodus/ui/widgets/inputs/color_wheel.py
+msgid "Cancelar"
+msgstr "Cancel"
+
+#: nodus/ui/dialogs/confirm.py nodus/ui/dialogs/news_dialog.py
+msgid "Entendido"
+msgstr "Got it"
+
+#: nodus/ui/dialogs/date_range_dialog.py
+msgid "Elegir fechas"
+msgstr "Choose dates"
+
+#: nodus/ui/dialogs/date_range_dialog.py
+msgid "Aplicar"
+msgstr "Apply"
+
+#: nodus/ui/dialogs/date_range_dialog.py nodus/ui/dialogs/transaction_dialog.py
+msgid "Desde"
+msgstr "From"
+
+#: nodus/ui/dialogs/date_range_dialog.py
+msgid "Hasta"
+msgstr "To"
+
+#: nodus/ui/dialogs/date_range_dialog.py
+msgid "«Hasta» no puede ser anterior a «Desde»."
+msgstr "“To” can't be earlier than “From”."
+
+#: nodus/ui/dialogs/export.py nodus/ui/pages/settings/data_card.py
+msgid "Exportar transacciones"
+msgstr "Export transactions"
+
+#: nodus/ui/dialogs/export.py
+msgid "Archivo CSV (*.csv)"
+msgstr "CSV file (*.csv)"
+
+#: nodus/ui/dialogs/export.py
+msgid "Exportando…"
+msgstr "Exporting…"
+
+#: nodus/ui/dialogs/export.py
+msgid "No se pudo guardar el archivo."
+msgstr "The file couldn't be saved."
+
+#: nodus/ui/dialogs/export.py
+msgid ""
+"Revisa que la carpeta exista, que puedas escribir en ella y que el archivo no esté abierto en "
+"otro programa, como Excel. Después vuelve a intentarlo."
+msgstr ""
+"Check that the folder exists, that you can write to it, and that the file isn't open in another "
+"program, like Excel. Then try again."
+
+#: nodus/ui/dialogs/export.py
+#, python-brace-format
+msgid "Exportación lista: {transactions}."
+msgstr "Export ready: {transactions}."
+
+#: nodus/ui/dialogs/external_backup.py nodus/ui/pages/settings/data_card.py
+msgid "Copia fuera de la PC"
+msgstr "Backup outside this PC"
+
+#: nodus/ui/dialogs/external_backup.py nodus/ui/pages/settings/data_card.py
+msgid "Guardando…"
+msgstr "Saving…"
+
+#: nodus/ui/dialogs/external_backup.py
+msgid "No se pudo guardar la copia."
+msgstr "The backup couldn't be saved."
+
+#: nodus/ui/dialogs/external_backup.py
+#, python-brace-format
+msgid ""
+"Revisa que la carpeta {folder} exista y que el pendrive o el disco sigan conectados y con lugar "
+"libre. Después vuelve a intentarlo."
+msgstr ""
+"Check that the folder {folder} exists and that the USB drive or disk is still connected and has "
+"free space. Then try again."
+
+#: nodus/ui/dialogs/external_backup.py
+#, python-brace-format
+msgid "Copia guardada en {folder}."
+msgstr "Backup saved to {folder}."
+
+#: nodus/ui/dialogs/external_backup.py
+#, python-brace-format
+msgid "¿Guardar la copia en {folder}, como la última vez?"
+msgstr "Save the backup to {folder}, like last time?"
+
+#: nodus/ui/dialogs/external_backup.py
+msgid "Guardar ahí"
+msgstr "Save there"
+
+#: nodus/ui/dialogs/external_backup.py
+msgid "Elegir otra carpeta…"
+msgstr "Choose another folder…"
+
+#: nodus/ui/dialogs/external_backup.py
+msgid "Guardar copia en un pendrive, un disco externo o Drive"
+msgstr "Save a backup to a USB drive, an external disk or Drive"
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "Guardar cambios"
+msgstr "Save changes"
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "Elige una cuenta."
+msgstr "Choose an account."
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "Elige una categoría."
+msgstr "Choose a category."
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "Escribe un nombre."
+msgstr "Type a name."
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "Escribe un monto."
+msgstr "Type an amount."
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "Elegir cuenta"
+msgstr "Choose account"
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "Elegir categoría"
+msgstr "Choose category"
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "¿Descartar los cambios?"
+msgstr "Discard your changes?"
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "Lo que cambiaste en este formulario no se guarda."
+msgstr "What you changed in this form won't be saved."
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "Descartar"
+msgstr "Discard"
+
+#: nodus/ui/dialogs/form_dialog.py
+msgid "Seguir editando"
+msgstr "Keep editing"
+
+#: nodus/ui/dialogs/goal_dialog.py
+msgid "La parte del saldo que cuenta para la meta"
+msgstr "The part of the balance that counts toward the goal"
+
+#: nodus/ui/dialogs/goal_dialog.py
+#, python-brace-format
+msgid "aporta {amount} hoy"
+msgstr "adds {amount} today"
+
+#: nodus/ui/dialogs/goal_dialog.py
+#, python-brace-format
+msgid "usada al {percent} en otras metas"
+msgstr "{percent} used by other goals"
+
+#: nodus/ui/dialogs/goal_dialog.py
+#, python-brace-format
+msgid "quedan {percent} libres"
+msgstr "{percent} still free"
+
+#: nodus/ui/dialogs/goal_dialog.py
+msgid "Todavía no hay cuentas que junten dinero para una meta."
+msgstr "There are no accounts saving money for a goal yet."
+
+#: nodus/ui/dialogs/goal_dialog.py
+msgid "Editar meta"
+msgstr "Edit goal"
+
+#: nodus/ui/dialogs/goal_dialog.py
+msgid "Nueva meta"
+msgstr "New goal"
+
+#: nodus/ui/dialogs/goal_dialog.py nodus/ui/pages/goals_page.py
+msgid "Agregar meta"
+msgstr "Add goal"
+
+#: nodus/ui/dialogs/goal_dialog.py
+msgid "Ej.: Vacaciones, Fondo de emergencia"
+msgstr "E.g.: Vacation, Emergency fund"
+
+#: nodus/ui/dialogs/goal_dialog.py
+msgid "Con fecha"
+msgstr "By a date"
+
+#: nodus/ui/dialogs/goal_dialog.py nodus/ui/pages/goal_detail_page.py
+msgid "Objetivo"
+msgstr "Target"
+
+#: nodus/ui/dialogs/goal_dialog.py
+msgid "Ya está cubierta: tus cuentas ya suman el objetivo."
+msgstr "Already covered: your accounts already add up to the target."
+
+#: nodus/ui/dialogs/goal_dialog.py
+#, python-brace-format
+msgid "Faltan {remaining} para {target}."
+msgstr "{remaining} to go to reach {target}."
+
+#: nodus/ui/dialogs/goal_dialog.py
+#, python-brace-format
+msgid "Para llegar a {target} en {month} hacen falta unos {needed} por mes."
+msgstr "To reach {target} by {month}, you need about {needed} a month."
+
+#: nodus/ui/dialogs/installment_fields.py nodus/ui/dialogs/transaction_dialog.py
+#: nodus/ui/pages/analysis/net_worth_view.py nodus/ui/pages/analysis/trends_view.py
+#: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
+#: nodus/ui/pages/dashboard/expenses_card.py
+msgid "Total"
+msgstr "Total"
+
+#: nodus/ui/dialogs/installment_fields.py
+msgid "Por cuota"
+msgstr "Per installment"
+
+#: nodus/ui/dialogs/installment_fields.py
+msgid "Otra cantidad…"
+msgstr "Other number…"
+
+#: nodus/ui/dialogs/installment_fields.py nodus/ui/dialogs/transaction_dialog.py
+#: nodus/ui/pages/recurring_page.py
+msgid "Cuotas"
+msgstr "Installments"
+
+#: nodus/ui/dialogs/installment_fields.py
+msgid "En cuántas cuotas se paga"
+msgstr "How many installments you pay it in"
+
+#: nodus/ui/dialogs/installment_fields.py
+msgid "Cuántas"
+msgstr "How many"
+
+#: nodus/ui/dialogs/installment_fields.py
+msgid "Otra cantidad de cuotas"
+msgstr "Another number of installments"
+
+#: nodus/ui/dialogs/installment_fields.py
+msgid "El monto es el total de la compra o lo que vale cada cuota"
+msgstr "The amount is the purchase total or what each installment costs"
+
+#: nodus/ui/dialogs/installment_fields.py
+#, python-brace-format
+msgid "El monto no alcanza para {count} cuota."
+msgid_plural "El monto no alcanza para {count} cuotas."
+msgstr[0] "The amount isn't enough for {count} installment."
+msgstr[1] "The amount isn't enough for {count} installments."
+
+#: nodus/ui/dialogs/installment_fields.py
+#, python-brace-format
+msgid "Escribe en cuántas cuotas, de {low} a {high}."
+msgstr "Type how many installments, from {low} to {high}."
+
+#: nodus/ui/dialogs/installment_fields.py
+msgid "1 pago"
+msgstr "1 payment"
+
+#: nodus/ui/dialogs/installment_fields.py nodus/ui/pages/account_detail_page.py
 #, python-brace-format
 msgid "{count} cuota"
 msgid_plural "{count} cuotas"
 msgstr[0] "{count} installment"
 msgstr[1] "{count} installments"
+
+#: nodus/ui/dialogs/installment_fields.py
+#, python-brace-format
+msgid "la última, el {date}"
+msgstr "the last one on {date}"
+
+#: nodus/ui/dialogs/installment_fields.py
+#, python-brace-format
+msgid "Total {amount} · {last}"
+msgstr "Total {amount} · {last}"
+
+#: nodus/ui/dialogs/installment_fields.py
+#, python-brace-format
+msgid "{count} cuota de {amount} (la primera, {first})"
+msgid_plural "{count} cuotas de {amount} (la primera, {first})"
+msgstr[0] "{count} installment of {amount} (the first one {first})"
+msgstr[1] "{count} installments of {amount} (the first one {first})"
+
+#: nodus/ui/dialogs/installment_fields.py
+#, python-brace-format
+msgid "{count} cuota de {amount}"
+msgid_plural "{count} cuotas de {amount}"
+msgstr[0] "{count} installment of {amount}"
+msgstr[1] "{count} installments of {amount}"
+
+#: nodus/ui/dialogs/merge_dialog.py
+#, python-brace-format
+msgid "{names} y {last}"
+msgstr "{names} and {last}"
+
+#: nodus/ui/dialogs/merge_dialog.py
+#, python-brace-format
+msgid "Unir «{name}» con…"
+msgstr "Merge “{name}” with…"
+
+#: nodus/ui/dialogs/merge_dialog.py
+msgid "Unir"
+msgstr "Merge"
+
+#: nodus/ui/dialogs/merge_dialog.py
+msgid "Queda"
+msgstr "Keep"
+
+#: nodus/ui/dialogs/merge_dialog.py
+#, python-brace-format
+msgid "{names} no tiene movimientos y se elimina."
+msgid_plural "{names} no tienen movimientos y se eliminan."
+msgstr[0] "{names} has no transactions and is deleted."
+msgstr[1] "{names} have no transactions and are deleted."
+
+#: nodus/ui/dialogs/merge_dialog.py
+#, python-brace-format
+msgid "Su movimiento pasa a «{target}» y {names} se elimina."
+msgid_plural "Sus {count} movimientos pasan a «{target}» y {names} se elimina."
+msgstr[0] "Its transaction moves to “{target}” and {names} is deleted."
+msgstr[1] "Its {count} transactions move to “{target}” and {names} is deleted."
+
+#: nodus/ui/dialogs/merge_dialog.py
+#, python-brace-format
+msgid "{count} movimiento pasa a «{target}» y se eliminan {names}."
+msgid_plural "{count} movimientos pasan a «{target}» y se eliminan {names}."
+msgstr[0] "{count} transaction moves to “{target}” and {names} are deleted."
+msgstr[1] "{count} transactions move to “{target}” and {names} are deleted."
+
+#: nodus/ui/dialogs/news_dialog.py nodus/ui/dialogs/update_dialog.py nodus/ui/dialogs/user_error.py
+#: nodus/ui/widgets/toast.py
+msgid "Cerrar"
+msgstr "Close"
+
+#: nodus/ui/dialogs/news_dialog.py nodus/ui/pages/settings/rates_card.py nodus/ui/shell/notices.py
+msgid "Actualizar"
+msgstr "Update"
+
+#: nodus/ui/dialogs/news_dialog.py
+msgid "Novedades de Nodus"
+msgstr "What's new in Nodus"
+
+#: nodus/ui/dialogs/news_dialog.py
+msgid "Esta versión no trae notas."
+msgstr "This version has no notes."
+
+#: nodus/ui/dialogs/news_dialog.py
+#, python-brace-format
+msgid "Qué trae Nodus {version}"
+msgstr "What's in Nodus {version}"
+
+#: nodus/ui/dialogs/payee_dialogs.py
+msgid "Sin categoría predeterminada"
+msgstr "No default category"
+
+#: nodus/ui/dialogs/payee_dialogs.py
+msgid "Editar beneficiario"
+msgstr "Edit payee"
+
+#: nodus/ui/dialogs/payee_dialogs.py
+msgid "Nuevo beneficiario"
+msgstr "New payee"
+
+#: nodus/ui/dialogs/payee_dialogs.py
+msgid "Agregar beneficiario"
+msgstr "Add payee"
+
+#: nodus/ui/dialogs/payee_dialogs.py
+msgid "Ej.: Coto, Edenor, Mercado Libre"
+msgstr "E.g.: Walmart, Con Edison, Amazon"
+
+#: nodus/ui/dialogs/payee_dialogs.py
+msgid "Se completa sola al elegir este beneficiario en un movimiento."
+msgstr "Filled in automatically when you choose this payee in a transaction."
+
+#: nodus/ui/dialogs/payee_dialogs.py
+#, python-brace-format
+msgid "Unir {count} beneficiario"
+msgid_plural "Unir {count} beneficiarios"
+msgstr[0] "Merge {count} payee"
+msgstr[1] "Merge {count} payees"
+
+#: nodus/ui/dialogs/recovery_dialog.py
+msgid "El archivo de tus datos está dañado."
+msgstr "Your data file is damaged."
+
+#: nodus/ui/dialogs/recovery_dialog.py
+msgid "Restaurar la copia"
+msgstr "Restore the backup"
+
+#: nodus/ui/dialogs/recovery_dialog.py
+#, python-brace-format
+msgid ""
+"Nodus puede traer tus datos de vuelta desde la última copia sana, del {date} a las {time}. Lo que"
+" anotaste después no va a estar. El archivo dañado queda guardado aparte, junto a tus datos."
+msgstr ""
+"Nodus can bring your data back from the last healthy backup, from {date} at {time}. Anything you "
+"entered after that won't be there. The damaged file is kept aside, next to your data."
+
+#: nodus/ui/dialogs/recovery_dialog.py
+#, python-brace-format
+msgid ""
+"No hay una copia sana en «{folder}». Si guardaste una fuera de la PC, copia ese archivo a esa "
+"carpeta y vuelve a abrir Nodus."
+msgstr ""
+"There's no healthy backup in “{folder}”. If you saved one outside this PC, copy that file into "
+"that folder and open Nodus again."
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Editar cargo"
+msgstr "Edit charge"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Nuevo cargo recurrente"
+msgstr "New recurring charge"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py nodus/ui/pages/recurring_page.py
+msgid "Agregar cargo"
+msgstr "Add charge"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Por ejemplo, Netflix o Alquiler"
+msgstr "For example, Netflix or Rent"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py nodus/ui/dialogs/transaction_dialog.py
+#: nodus/ui/widgets/inputs/payee_input.py
+msgid "Opcional"
+msgstr "Optional"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Se cobra en dólares"
+msgstr "Charged in dollars"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Para una suscripción en dólares que se paga con pesos: al pagarla, anotas los pesos que salieron"
+msgstr "For a subscription in dollars paid with pesos: when you pay it, you enter the pesos that went out"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Frecuencia"
+msgstr "Frequency"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Próximo cobro"
+msgstr "Next charge"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+#, python-brace-format
+msgid "Pagar {name}"
+msgstr "Pay {name}"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Registrar pago"
+msgstr "Record payment"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+#, python-brace-format
+msgid "Se registra como gasto y el próximo cobro pasa al {date}."
+msgstr "It's recorded as an expense and the next charge moves to {date}."
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Cargo"
+msgstr "Charge"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Pesos que salieron"
+msgstr "Pesos that went out"
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+msgid "Sin cotización guardada: escribe los pesos que salieron."
+msgstr "No saved exchange rate: type the pesos that went out."
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+#, python-brace-format
+msgid "A {rate} por dólar, como el último pago."
+msgstr "At {rate} per dollar, like the last payment."
+
+#: nodus/ui/dialogs/recurring_charge_dialog.py
+#, python-brace-format
+msgid "A {rate} por dólar, la cotización guardada; corrígelo con lo que te cobraron."
+msgstr "At {rate} per dollar, the saved exchange rate; correct it with what you were charged."
+
+#: nodus/ui/dialogs/refund_extra_dialog.py
+msgid "Te devolvieron de más"
+msgstr "You got back more than expected"
+
+#: nodus/ui/dialogs/refund_extra_dialog.py
+msgid "Anotar los dos"
+msgstr "Record both"
+
+#: nodus/ui/dialogs/refund_extra_dialog.py
+#, python-brace-format
+msgid ""
+"Te devolvieron {amount} y de ese gasto quedaban {left} por reembolsar. Se anota {left} como "
+"reembolso y {excess} como un ingreso aparte."
+msgstr ""
+"You got back {amount}, and {left} of that expense was left to refund. {left} is recorded as a "
+"refund and {excess} as separate income."
+
+#: nodus/ui/dialogs/refund_extra_dialog.py
+msgid "Categoría de lo que sobra"
+msgstr "Category for the extra"
+
+#: nodus/ui/dialogs/refund_picker.py
+msgid "Elegir el gasto que se reembolsa"
+msgstr "Choose the expense being refunded"
+
+#: nodus/ui/dialogs/refund_picker.py
+msgid "Vincular"
+msgstr "Link"
+
+#: nodus/ui/dialogs/refund_picker.py nodus/ui/pages/transactions_page.py
+msgid "Buscar…"
+msgstr "Search…"
+
+#: nodus/ui/dialogs/refund_picker.py
+msgid "Busca en la nota, el beneficiario y las etiquetas"
+msgstr "Searches the note, the payee and the tags"
+
+#: nodus/ui/dialogs/refund_picker.py
+msgid "Sin gastos para reembolsar en este período."
+msgstr "No expenses to refund in this period."
+
+#: nodus/ui/dialogs/refund_picker.py
+msgid "Elige el gasto que se reembolsa."
+msgstr "Choose the expense being refunded."
+
+#: nodus/ui/dialogs/refund_picker.py
+msgid "Vincular a un gasto…"
+msgstr "Link to an expense…"
+
+#: nodus/ui/dialogs/refund_picker.py
+msgid "Si este ingreso devuelve un gasto, lo resta de lo gastado"
+msgstr "If this income pays back an expense, it's taken off what you spent"
+
+#: nodus/ui/dialogs/refund_picker.py nodus/ui/widgets/inputs/tag_input.py
+msgid "Quitar"
+msgstr "Remove"
+
+#: nodus/ui/dialogs/refund_picker.py
+msgid "Deja de ser un reembolso"
+msgstr "It's no longer a refund"
+
+#: nodus/ui/dialogs/refund_picker.py
+#, python-brace-format
+msgid "{description} · {date} · {amount} (queda {remaining})"
+msgstr "{description} · {date} · {amount} ({remaining} left)"
+
+#: nodus/ui/dialogs/restore_copy.py
+msgid "Restaurar copia"
+msgstr "Restore backup"
+
+#: nodus/ui/dialogs/restore_copy.py
+msgid "Restaurar desde una copia"
+msgstr "Restore from a backup"
+
+#: nodus/ui/dialogs/restore_copy.py
+msgid "Copias de Nodus (*.db)"
+msgstr "Nodus backups (*.db)"
+
+#: nodus/ui/dialogs/restore_copy.py
+#, python-brace-format
+msgid ""
+"Tus datos actuales se van a reemplazar por los de «{name}». Antes se guarda una copia de cómo "
+"están ahora, en la carpeta de copias."
+msgstr ""
+"Your current data will be replaced with the data in “{name}”. First, a backup of how it is now is"
+" saved in the backups folder."
+
+#: nodus/ui/dialogs/restore_copy.py
+msgid "Restaurando…"
+msgstr "Restoring…"
+
+#: nodus/ui/dialogs/restore_copy.py
+msgid "Elige otra copia. Tus datos siguen como estaban."
+msgstr "Choose another backup. Your data is unchanged."
+
+#: nodus/ui/dialogs/restore_copy.py
+msgid "No se pudo restaurar la copia."
+msgstr "The backup couldn't be restored."
+
+#: nodus/ui/dialogs/restore_copy.py nodus/ui/pages/settings/data_card.py
+msgid "Revisa que quede lugar en el disco y vuelve a intentarlo. Tus datos siguen como estaban."
+msgstr "Check that there's free space on the disk and try again. Your data is unchanged."
+
+#: nodus/ui/dialogs/restore_copy.py
+msgid "Copia restaurada."
+msgstr "Backup restored."
+
+#: nodus/ui/dialogs/tag_dialogs.py
+msgid "Editar etiqueta"
+msgstr "Edit tag"
+
+#: nodus/ui/dialogs/tag_dialogs.py
+msgid "Nueva etiqueta"
+msgstr "New tag"
+
+#: nodus/ui/dialogs/tag_dialogs.py
+msgid "Agregar etiqueta"
+msgstr "Add tag"
+
+#: nodus/ui/dialogs/tag_dialogs.py
+msgid "Ej.: Vacaciones 2026, Trabajo, Mudanza"
+msgstr "E.g.: Vacation 2026, Work, Moving"
+
+#: nodus/ui/dialogs/tag_dialogs.py
+#, python-brace-format
+msgid "Unir {count} etiqueta"
+msgid_plural "Unir {count} etiquetas"
+msgstr[0] "Merge {count} tag"
+msgstr[1] "Merge {count} tags"
+
+#: nodus/ui/dialogs/tag_dialogs.py nodus/ui/pages/transactions_page.py
+msgid "Etiqueta"
+msgstr "Tag"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Primera cuota"
+msgstr "First installment"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Editar transacción"
+msgstr "Edit transaction"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Nueva transacción"
+msgstr "New transaction"
+
+#: nodus/ui/dialogs/transaction_dialog.py nodus/ui/pages/account_detail_page.py
+#: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/transactions_page.py
+#: nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
+msgid "Agregar transacción"
+msgstr "Add transaction"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Hacia"
+msgstr "To"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Entra"
+msgstr "Received"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+#, python-brace-format
+msgid "Reembolsado {refunded} de {amount}"
+msgstr "Refunded {refunded} of {amount}"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Cuota"
+msgstr "Installment"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Sale"
+msgstr "Sent"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+#, python-brace-format
+msgid "Cotización implícita: {rate}"
+msgstr "Implied exchange rate: {rate}"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Elige la cuenta de destino."
+msgstr "Choose the destination account."
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Escribe el monto que entra."
+msgstr "Type the amount received."
+
+#: nodus/ui/dialogs/update_dialog.py
+msgid "Actualizar Nodus"
+msgstr "Update Nodus"
+
+#: nodus/ui/dialogs/update_dialog.py
+#, python-brace-format
+msgid "Descargando Nodus {version}…"
+msgstr "Downloading Nodus {version}…"
+
+#: nodus/ui/dialogs/update_dialog.py
+msgid "Abrir GitHub"
+msgstr "Open GitHub"
+
+#: nodus/ui/dialogs/update_dialog.py
+msgid "Cancelando…"
+msgstr "Canceling…"
+
+#: nodus/ui/dialogs/update_dialog.py
+#, python-brace-format
+msgid "{received} de {total} MB"
+msgstr "{received} of {total} MB"
+
+#: nodus/ui/dialogs/update_dialog.py
+msgid "No se pudo actualizar"
+msgstr "Couldn't update"
+
+#: nodus/ui/dialogs/update_dialog.py
+#, python-brace-format
+msgid ""
+"{error}\n"
+"También puedes descargarla desde GitHub."
+msgstr ""
+"{error}\n"
+"You can also download it from GitHub."
+
+#: nodus/ui/dialogs/user_error.py
+msgid "Ver detalle"
+msgstr "Show details"
+
+#: nodus/ui/dialogs/user_error.py
+msgid "Ocultar detalle"
+msgstr "Hide details"
+
+#: nodus/ui/dialogs/user_error.py
+msgid "Algo falló en Nodus."
+msgstr "Something went wrong in Nodus."
+
+#: nodus/ui/dialogs/user_error.py
+msgid ""
+"Lo que estabas haciendo puede no haberse guardado: revísalo. Envía el reporte para que lo "
+"arreglemos: se abre en el navegador y lo lees antes de enviarlo."
+msgstr ""
+"What you were doing may not have been saved: check it. Send the report so we can fix it: it opens"
+" in your browser and you read it before sending."
+
+#: nodus/ui/dialogs/user_error.py
+msgid "Copiar"
+msgstr "Copy"
+
+#: nodus/ui/dialogs/user_error.py
+msgid "Copiado"
+msgstr "Copied"
+
+#: nodus/ui/dialogs/user_error.py
+msgid "Abrir registros"
+msgstr "Open logs"
+
+#: nodus/ui/dialogs/user_error.py
+msgid "La carpeta donde Nodus anota lo que pasó"
+msgstr "The folder where Nodus records what happened"
+
+#: nodus/ui/dialogs/user_error.py
+msgid "Enviar reporte"
+msgstr "Send report"
+
+#: nodus/ui/dialogs/user_error.py
+msgid "Abre el formulario de comentarios con el reporte; lo lees antes de enviarlo"
+msgstr "Opens the feedback form with the report; you read it before sending"
+
+#: nodus/ui/dialogs/value_adjustment_dialog.py
+#, python-brace-format
+msgid "Actualizar valor de «{name}»"
+msgstr "Update value of “{name}”"
+
+#: nodus/ui/dialogs/value_adjustment_dialog.py nodus/ui/pages/account_detail_page.py
+#: nodus/ui/pages/accounts_page.py
+msgid "Actualizar valor"
+msgstr "Update value"
+
+#: nodus/ui/dialogs/value_adjustment_dialog.py
+msgid ""
+"Escribe lo que vale hoy, como lo muestra su app o resumen. La diferencia cuenta como rendimiento:"
+" cambia el saldo y el patrimonio neto, no los ingresos ni los gastos."
+msgstr ""
+"Type what it's worth today, as its app or statement shows it. The difference counts as return: it"
+" changes the balance and net worth, not income or expenses."
+
+#: nodus/ui/dialogs/value_adjustment_dialog.py
+msgid "Saldo en Nodus"
+msgstr "Balance in Nodus"
+
+#: nodus/ui/dialogs/value_adjustment_dialog.py
+msgid "Valor actual"
+msgstr "Current value"
+
+#: nodus/ui/dialogs/value_adjustment_dialog.py
+#, python-brace-format
+msgid "Deshacer el último ({amount}, {date})"
+msgstr "Undo the last one ({amount}, {date})"
+
+#: nodus/ui/dialogs/value_adjustment_dialog.py
+#, python-brace-format
+msgid "Pérdida: {amount}"
+msgstr "Loss: {amount}"
+
+#: nodus/ui/dialogs/value_adjustment_dialog.py
+#, python-brace-format
+msgid "Ganancia: {amount}"
+msgstr "Gain: {amount}"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "6 meses"
+msgstr "6 months"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "1 año"
+msgstr "1 year"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Todo"
+msgstr "All"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Anota lo que vale hoy; la diferencia es rendimiento, no un ingreso"
+msgstr "Enter what it's worth today; the difference is return, not income"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Saldo"
+msgstr "Balance"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "En pesos"
+msgstr "In pesos"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Entró este mes"
+msgstr "In this month"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Salió este mes"
+msgstr "Out this month"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Rendimiento"
+msgstr "Return"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Cuotas por pagar"
+msgstr "Installments to pay"
+
+#: nodus/ui/pages/account_detail_page.py nodus/ui/pages/dashboard/upcoming_payments_card.py
+msgid "Próximos pagos"
+msgstr "Upcoming payments"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Saldo en el tiempo"
+msgstr "Balance over time"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Esta cuenta todavía no tiene movimientos."
+msgstr "This account has no transactions yet."
+
+#: nodus/ui/pages/account_detail_page.py nodus/ui/pages/accounts_page.py
+#: nodus/ui/pages/goal_detail_page.py nodus/ui/pages/goals_page.py
+msgid "Desarchivar"
+msgstr "Unarchive"
+
+#: nodus/ui/pages/account_detail_page.py nodus/ui/pages/accounts_page.py
+#: nodus/ui/pages/goal_detail_page.py nodus/ui/pages/goals_page.py
+msgid "Archivar"
+msgstr "Archive"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Archivada"
+msgstr "Archived"
+
+#: nodus/ui/pages/account_detail_page.py
+#, python-brace-format
+msgid "{amount} de otras cuentas"
+msgstr "{amount} from other accounts"
+
+#: nodus/ui/pages/account_detail_page.py
+#, python-brace-format
+msgid "{amount} a otras cuentas"
+msgstr "{amount} to other accounts"
+
+#: nodus/ui/pages/account_detail_page.py
+#, python-brace-format
+msgid "{share} sobre lo invertido"
+msgstr "{share} on what you invested"
+
+#: nodus/ui/pages/account_detail_page.py
+#, python-brace-format
+msgid "{installments} · hasta {month}"
+msgstr "{installments} · until {month}"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Sin cotización para pasarlo a pesos"
+msgstr "No exchange rate to convert it to pesos"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Con la cotización de hoy, como lo cuenta el patrimonio"
+msgstr "At today's exchange rate, the way net worth counts it"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Aporta a:"
+msgstr "Adds to:"
+
+#: nodus/ui/pages/account_detail_page.py nodus/ui/pages/goals_page.py
+msgid "Abrir la meta"
+msgstr "Open the goal"
+
+#: nodus/ui/pages/accounts_page.py
+#, python-brace-format
+msgid "Rendimiento {amount}"
+msgstr "Return {amount}"
+
+#: nodus/ui/pages/accounts_page.py nodus/ui/pages/goal_detail_page.py
+msgid "Abrir la cuenta"
+msgstr "Open the account"
+
+#: nodus/ui/pages/accounts_page.py nodus/ui/pages/base/summary_page.py nodus/ui/pages/goals_page.py
+msgid "Abrir"
+msgstr "Open"
+
+#: nodus/ui/pages/accounts_page.py nodus/ui/pages/base/summary_page.py nodus/ui/pages/budgets_page.py
+#: nodus/ui/pages/categories_page.py
+msgid "Ver movimientos"
+msgstr "View transactions"
+
+#: nodus/ui/pages/accounts_page.py
+msgid "Usar en una meta…"
+msgstr "Use in a goal…"
+
+#: nodus/ui/pages/accounts_page.py
+msgid "Mover a grupo…"
+msgstr "Move to group…"
+
+#: nodus/ui/pages/accounts_page.py
+#, python-brace-format
+msgid "Se va a eliminar el grupo «{name}». No tiene cuentas."
+msgstr "The group “{name}” will be deleted. It has no accounts."
+
+#: nodus/ui/pages/accounts_page.py
+#, python-brace-format
+msgid ""
+"Se va a eliminar el grupo «{name}». Su cuenta queda sin grupo; no se elimina ninguna cuenta ni "
+"movimiento."
+msgid_plural ""
+"Se va a eliminar el grupo «{name}». Sus {count} cuentas quedan sin grupo; no se elimina ninguna "
+"cuenta ni movimiento."
+msgstr[0] ""
+"The group “{name}” will be deleted. Its account is left without a group; no account or "
+"transaction is deleted."
+msgstr[1] ""
+"The group “{name}” will be deleted. Its {count} accounts are left without a group; no account or "
+"transaction is deleted."
+
+#: nodus/ui/pages/accounts_page.py
+msgid "Cuentas activas"
+msgstr "Active accounts"
+
+#: nodus/ui/pages/accounts_page.py nodus/ui/pages/goals_page.py
+msgid "Archivadas"
+msgstr "Archived"
+
+#: nodus/ui/pages/accounts_page.py
+msgid "No hay cuentas activas."
+msgstr "There are no active accounts."
+
+#: nodus/ui/pages/accounts_page.py
+msgid "Sin cuentas. Arrastra una aquí o usa «Mover a grupo…»."
+msgstr "No accounts. Drag one here or use “Move to group…”."
+
+#: nodus/ui/pages/accounts_page.py
+msgid "Renombrar"
+msgstr "Rename"
+
+#: nodus/ui/pages/accounts_page.py
+msgid "Subir"
+msgstr "Move up"
+
+#: nodus/ui/pages/accounts_page.py
+msgid "Bajar"
+msgstr "Move down"
+
+#: nodus/ui/pages/accounts_page.py
+msgid "Eliminar grupo"
+msgstr "Delete group"
+
+#: nodus/ui/pages/accounts_page.py nodus/ui/shell/sidebar.py
+msgid "Todavía no hay cuentas"
+msgstr "No accounts yet"
+
+#: nodus/ui/pages/accounts_page.py
+msgid "Una por cada lugar donde tengas dinero: banco, efectivo, dólares."
+msgstr "One for each place where you keep money: bank, cash, dollars."
+
+#: nodus/ui/pages/budgets_page.py
+msgid ""
+"Ponle un límite mensual a las categorías que quieres cuidar, como el supermercado o las salidas. "
+"Nodus te muestra cuánto llevas gastado, si vas más rápido que el mes y te avisa cuando te pasas."
+msgstr ""
+"Set a monthly limit on the categories you want to keep an eye on, like groceries or going out. "
+"Nodus shows you how much you've spent, whether you're spending faster than the month is going, "
+"and lets you know when you go over."
+
+#: nodus/ui/pages/budgets_page.py
+msgid "Quitar presupuesto"
+msgstr "Remove budget"
+
+#: nodus/ui/pages/budgets_page.py
+#, python-brace-format
+msgid "«{name}» deja de tener presupuesto desde {month}. Los meses anteriores conservan su límite."
+msgstr "“{name}” no longer has a budget from {month}. Earlier months keep their limit."
+
+#: nodus/ui/pages/budgets_page.py
+msgid "Presupuestado"
+msgstr "Budgeted"
+
+#: nodus/ui/pages/budgets_page.py
+msgid "Gastado"
+msgstr "Spent"
+
+#: nodus/ui/pages/budgets_page.py
+msgid "Excedido en"
+msgstr "Over by"
+
+#: nodus/ui/pages/budgets_page.py
+msgid "Quedan"
+msgstr "Left"
+
+#: nodus/ui/pages/budgets_page.py
+#, python-brace-format
+msgid "Presupuestos ({count})"
+msgstr "Budgets ({count})"
 
 #: nodus/ui/pages/budgets_page.py
 #, python-brace-format
@@ -1037,9 +2418,889 @@ msgid_plural "{count} excedidos"
 msgstr[0] "{count} over its limit"
 msgstr[1] "{count} over their limit"
 
-#: nodus/ui/shell/coach_marks.py nodus/ui/shell/main_window.py
+#: nodus/ui/pages/budgets_page.py
+msgid "Sin presupuesto"
+msgstr "No budget"
+
+#: nodus/ui/pages/budgets_page.py
+msgid "Lo gastado en el mes en categorías sin límite."
+msgstr "What you spent this month in categories without a limit."
+
+#: nodus/ui/pages/budgets_page.py
+msgid "Poner límite"
+msgstr "Set limit"
+
+#: nodus/ui/pages/budgets_page.py
+msgid "Todavía no hay presupuestos"
+msgstr "No budgets yet"
+
+#: nodus/ui/pages/categories_page.py
+msgid "Recibe las transacciones de las categorías que se eliminan."
+msgstr "Receives the transactions of the categories that get deleted."
+
+#: nodus/ui/pages/categories_page.py
+msgid "Sus ingresos se pueden vincular al gasto que devuelven, con «Reembolso de»."
+msgstr "Its income can be linked to the expense it pays back, with “Refund of”."
+
+#: nodus/ui/pages/categories_page.py
+msgid "sistema"
+msgstr "system"
+
+#: nodus/ui/pages/categories_page.py
+msgid "Eliminar categoría"
+msgstr "Delete category"
+
+#: nodus/ui/pages/categories_page.py
+#, python-brace-format
+msgid "Se va a eliminar «{name}» y sus subcategorías."
+msgstr "“{name}” and its subcategories will be deleted."
+
+#: nodus/ui/pages/categories_page.py
+#, python-brace-format
+msgid "Su única transacción pasa a «Otros»."
+msgid_plural "Sus {count} transacciones pasan a «Otros»."
+msgstr[0] "Its only transaction moves to “Other”."
+msgstr[1] "Its {count} transactions move to “Other”."
+
+#: nodus/ui/pages/goal_detail_page.py
+#, python-brace-format
+msgid "{percent} de {balance}"
+msgstr "{percent} of {balance}"
+
+#: nodus/ui/pages/dashboard/cash_flow_card.py nodus/ui/pages/goal_detail_page.py
+msgid "Ahorrado"
+msgstr "Saved"
+
+#: nodus/ui/pages/goal_detail_page.py
+msgid "Falta"
+msgstr "To go"
+
+#: nodus/ui/pages/goal_detail_page.py nodus/ui/pages/recurring_page.py
+msgid "Por mes"
+msgstr "Per month"
+
+#: nodus/ui/pages/goal_detail_page.py
+msgid "Ritmo por mes"
+msgstr "Monthly pace"
+
+#: nodus/ui/pages/goal_detail_page.py
+msgid "Lo ahorrado en el tiempo"
+msgstr "Saved over time"
+
+#: nodus/ui/pages/goal_detail_page.py
+#, python-brace-format
+msgid "para {month}"
+msgstr "by {month}"
+
+#: nodus/ui/pages/goal_detail_page.py nodus/ui/widgets/charts/goal_bar.py
+msgid "Sin fecha"
+msgstr "No date"
+
+#: nodus/ui/pages/goal_detail_page.py
+msgid "Falta historia"
+msgstr "Not enough history"
+
+#: nodus/ui/pages/goal_detail_page.py
+#, python-brace-format
+msgid "llega en {month}"
+msgstr "reaches it in {month}"
+
+#: nodus/ui/pages/goal_detail_page.py
+msgid "Cárgala en Ajustes"
+msgstr "Add it in Settings"
+
+#: nodus/ui/pages/goals_page.py
+msgid "Todavía no hay metas"
+msgstr "No goals yet"
+
+#: nodus/ui/pages/goals_page.py
+msgid ""
+"Una meta junta el saldo de tus cuentas de ahorro hacia un monto, con fecha si quieres. Nodus te "
+"dice cuánto apartar por mes y si a tu ritmo llegas a tiempo."
+msgstr ""
+"A goal adds up the balance of your savings accounts toward an amount, with a date if you want "
+"one. Nodus tells you how much to set aside each month and whether you'll get there in time at "
+"your pace."
+
+#: nodus/ui/pages/goals_page.py
+#, python-brace-format
+msgid "{count} cuenta"
+msgid_plural "{count} cuentas"
+msgstr[0] "{count} account"
+msgstr[1] "{count} accounts"
+
+#: nodus/ui/pages/base/net_worth_card.py nodus/ui/pages/goals_page.py
+msgid "Cargar cotización"
+msgstr "Add exchange rate"
+
+#: nodus/ui/pages/goals_page.py
+msgid "En curso"
+msgstr "In progress"
+
+#: nodus/ui/pages/goals_page.py
+msgid "Alcanzadas"
+msgstr "Reached"
+
+#: nodus/ui/pages/payee_detail_page.py nodus/ui/pages/payees_page.py
+msgid "Categoría habitual"
+msgstr "Usual category"
+
+#: nodus/ui/pages/payees_page.py
+msgid "Todavía no hay beneficiarios: se crean al escribir uno nuevo al cargar un movimiento."
+msgstr "No payees yet: they're created when you type a new one while adding a transaction."
+
+#: nodus/ui/pages/payees_page.py
+msgid "Ningún beneficiario coincide con la búsqueda."
+msgstr "No payees match your search."
+
+#: nodus/ui/pages/payees_page.py
+msgid "beneficiario"
+msgstr "payee"
+
+#: nodus/ui/pages/payees_page.py
+msgid "seleccionados"
+msgstr "selected"
+
+#: nodus/ui/pages/recurring_page.py
+msgid "Vencidos"
+msgstr "Overdue"
+
+#: nodus/ui/pages/recurring_page.py
+#, python-brace-format
+msgid "Próximos {days} días"
+msgstr "Next {days} days"
+
+#: nodus/ui/pages/recurring_page.py
+msgid "Más adelante"
+msgstr "Later"
+
+#: nodus/ui/pages/recurring_page.py
+msgid "En pausa"
+msgstr "Paused"
+
+#: nodus/ui/pages/recurring_page.py
+msgid ""
+"Anota acá lo que pagas todos los meses o todos los años: el alquiler, los servicios, Netflix, el "
+"gimnasio. Nodus te avisa cuándo vence cada uno y cuánto suman por mes."
+msgstr ""
+"Write down what you pay every month or every year here: rent, utilities, Netflix, the gym. Nodus "
+"lets you know when each one is due and how much they add up to per month."
+
+#: nodus/ui/pages/recurring_page.py nodus/ui/widgets/tables/charge_row.py
+msgid "Pagar"
+msgstr "Pay"
+
+#: nodus/ui/pages/recurring_page.py nodus/ui/widgets/tables/charge_row.py
+msgid "Omitir"
+msgstr "Skip"
+
+#: nodus/ui/pages/recurring_page.py
+msgid "Pausar"
+msgstr "Pause"
+
+#: nodus/ui/pages/recurring_page.py
+msgid "Reanudar"
+msgstr "Resume"
+
+#: nodus/ui/pages/recurring_page.py
+#, python-brace-format
+msgid "{paid} de {count} · {account} · {category}"
+msgstr "{paid} of {count} · {account} · {category}"
+
+#: nodus/ui/pages/recurring_page.py
+msgid "Pagos que se repiten: servicios, suscripciones, alquiler."
+msgstr "Payments that repeat: utilities, subscriptions, rent."
+
+#: nodus/ui/pages/recurring_page.py
+#, python-brace-format
+msgid "Se va a eliminar «{name}». Los pagos ya registrados se conservan como transacciones."
+msgstr "“{name}” will be deleted. Payments already recorded are kept as transactions."
+
+#: nodus/ui/pages/recurring_page.py
+msgid "Eliminar cargo"
+msgstr "Delete charge"
+
+#: nodus/ui/pages/recurring_page.py
+msgid "Por año"
+msgstr "Per year"
+
+#: nodus/ui/pages/recurring_page.py
+msgid "Activos"
+msgstr "Active"
+
+#: nodus/ui/pages/recurring_page.py
+msgid "Cuotas por mes"
+msgstr "Installments per month"
+
+#: nodus/ui/pages/recurring_page.py
+msgid "Todavía no hay cargos recurrentes"
+msgstr "No recurring charges yet"
+
+#: nodus/ui/pages/tag_detail_page.py
+msgid "Primer movimiento"
+msgstr "First transaction"
+
+#: nodus/ui/pages/tags_page.py
+msgid "Todavía no hay etiquetas: se crean al escribir una nueva al cargar un movimiento."
+msgstr "No tags yet: they're created when you type a new one while adding a transaction."
+
+#: nodus/ui/pages/tags_page.py
+msgid "Ninguna etiqueta coincide con la búsqueda."
+msgstr "No tags match your search."
+
+#: nodus/ui/pages/tags_page.py
+msgid "etiqueta"
+msgstr "tag"
+
+#: nodus/ui/pages/transactions_page.py
+msgid "Transferencias"
+msgstr "Transfers"
+
+#: nodus/ui/pages/transactions_page.py nodus/ui/text/help_texts.py
+msgid "Reembolsos"
+msgstr "Refunds"
+
+#: nodus/ui/pages/transactions_page.py
+msgid "Exportar"
+msgstr "Export"
+
+#: nodus/ui/pages/transactions_page.py
+msgid "Guarda en un archivo CSV los movimientos que se ven"
+msgstr "Saves the transactions you see to a CSV file"
+
+#: nodus/ui/pages/transactions_page.py
+msgid "Busca en la nota y en los nombres del beneficiario y las etiquetas"
+msgstr "Searches the note and the names of the payee and tags"
+
+#: nodus/ui/pages/transactions_page.py
+msgid "Limpiar filtros"
+msgstr "Clear filters"
+
+#: nodus/ui/pages/transactions_page.py
+msgid "Sin transacciones con estos filtros."
+msgstr "No transactions with these filters."
+
+#: nodus/ui/pages/transactions_page.py
+msgid "Sin transacciones en este período."
+msgstr "No transactions in this period."
+
+#: nodus/ui/pages/analysis/analysis_page.py
+msgid "Tendencias"
+msgstr "Trends"
+
+#: nodus/ui/pages/analysis/analysis_page.py nodus/ui/pages/dashboard/cash_flow_card.py
+msgid "Flujo de caja"
+msgstr "Cash flow"
+
+#: nodus/ui/pages/analysis/analysis_page.py nodus/ui/pages/base/net_worth_card.py
+msgid "Patrimonio neto"
+msgstr "Net worth"
+
+#: nodus/ui/pages/analysis/cash_flow_view.py
+msgid "Período anterior: sin datos"
+msgstr "Previous period: no data"
+
+#: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/analysis/net_worth_view.py
+msgid "Mes"
+msgstr "Month"
+
+#: nodus/ui/pages/analysis/cash_flow_view.py
+msgid "Tasa de ahorro"
+msgstr "Savings rate"
+
+#: nodus/ui/pages/analysis/cash_flow_view.py
+msgid "Lo que entra contra lo que sale cada mes, y cuánto te queda."
+msgstr "What comes in against what goes out each month, and how much you have left."
+
+#: nodus/ui/pages/analysis/cash_flow_view.py
+msgid "Diferencia en puntos porcentuales"
+msgstr "Difference in percentage points"
+
+#: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/analysis/trends_view.py
+msgid "Mes a mes"
+msgstr "Month by month"
+
+#: nodus/ui/pages/analysis/cash_flow_view.py
+msgid "Detalle por mes"
+msgstr "Monthly detail"
+
+#: nodus/ui/pages/analysis/cash_flow_view.py
+msgid "Ver los movimientos del mes"
+msgstr "View the month's transactions"
+
+#: nodus/ui/pages/analysis/common.py
+msgid "Frente al período anterior, del mismo largo"
+msgstr "Compared with the previous period, of the same length"
+
+#: nodus/ui/pages/analysis/net_worth_view.py
+#, python-brace-format
+msgid "Total en {currency}"
+msgstr "Total in {currency}"
+
+#: nodus/ui/pages/analysis/net_worth_view.py
+msgid "Variación"
+msgstr "Change"
+
+#: nodus/ui/pages/analysis/net_worth_view.py nodus/ui/pages/base/net_worth_card.py
+#, python-brace-format
+msgid "al {date}"
+msgstr "as of {date}"
+
+#: nodus/ui/pages/analysis/net_worth_view.py
+msgid "Cuánto tienes al cierre de cada mes, sumando todas tus cuentas y monedas."
+msgstr "How much you have at the end of each month, adding up all your accounts and currencies."
+
+#: nodus/ui/pages/analysis/net_worth_view.py
+msgid "Fin de cada mes"
+msgstr "End of each month"
+
+#: nodus/ui/pages/analysis/trends_view.py
+msgid "Sin beneficiario"
+msgstr "No payee"
+
+#: nodus/ui/pages/analysis/trends_view.py
+msgid "Un movimiento con varias etiquetas suma en cada una."
+msgstr "A transaction with several tags counts toward each one."
+
+#: nodus/ui/pages/analysis/trends_view.py
+msgid "Lo que gastas, ganas y ahorras mes a mes, frente al período anterior."
+msgstr "What you spend, earn and save month by month, compared with the previous period."
+
+#: nodus/ui/pages/analysis/trends_view.py
+msgid "Promedio mensual"
+msgstr "Monthly average"
+
+#: nodus/ui/pages/analysis/trends_view.py
+msgid "Por categoría"
+msgstr "By category"
+
+#: nodus/ui/pages/analysis/trends_view.py
+msgid "Por beneficiario"
+msgstr "By payee"
+
+#: nodus/ui/pages/analysis/trends_view.py
+msgid "Por etiqueta"
+msgstr "By tag"
+
+#: nodus/ui/pages/analysis/trends_view.py
+msgid "Sin datos"
+msgstr "No data"
+
+#: nodus/ui/pages/analysis/trends_view.py nodus/ui/widgets/charts/bar_chart.py
+#, python-brace-format
+msgid "Ahorro {amount}"
+msgstr "Savings {amount}"
+
+#: nodus/ui/pages/analysis/trends_view.py
+#, python-brace-format
+msgid "Total {amount}"
+msgstr "Total {amount}"
+
+#: nodus/ui/pages/base/detail_page.py
+#, python-brace-format
+msgid "Volver a {page} (Esc)"
+msgstr "Back to {page} (Esc)"
+
+#: nodus/ui/pages/base/detail_page.py
+#, python-brace-format
+msgid "Volver a {page}"
+msgstr "Back to {page}"
+
+#: nodus/ui/pages/base/detail_page.py
+msgid "Zona de peligro"
+msgstr "Danger zone"
+
+#: nodus/ui/pages/base/net_worth_card.py
+msgid "vs. inicio del período"
+msgstr "vs. start of the period"
+
+#: nodus/ui/pages/base/net_worth_card.py
+#, python-brace-format
+msgid "{percent} por la cotización"
+msgstr "{percent} from the exchange rate"
+
+#: nodus/ui/pages/base/net_worth_card.py
+msgid "Ver el patrimonio neto en pesos o en dólares"
+msgstr "View net worth in pesos or in dollars"
+
+#: nodus/ui/pages/base/net_worth_card.py
+msgid "Hace falta para sumar tus cuentas en otras monedas"
+msgstr "Needed to add up your accounts in other currencies"
+
+#: nodus/ui/pages/base/net_worth_card.py
+msgid "El resto de la variación es por tus movimientos."
+msgstr "The rest of the change comes from your transactions."
+
+#: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
+msgid "Unir con…"
+msgstr "Merge with…"
+
+#: nodus/ui/pages/base/summary_detail_page.py
+msgid "Le pasa sus movimientos a otro y lo elimina"
+msgstr "Moves its transactions to another one and deletes it"
+
+#: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
+msgid "Movimientos"
+msgstr "Transactions"
+
+#: nodus/ui/pages/base/summary_detail_page.py
+msgid "Último movimiento"
+msgstr "Last transaction"
+
+#: nodus/ui/pages/base/summary_detail_page.py
+msgid "Todavía no tiene movimientos."
+msgstr "No transactions yet."
+
+#: nodus/ui/pages/base/summary_page.py nodus/ui/pages/base/transaction_list_view.py
+#: nodus/ui/widgets/tables/selection_bar.py
+msgid "seleccionadas"
+msgstr "selected"
+
+#: nodus/ui/pages/base/summary_page.py
+#, python-brace-format
+msgid "Buscar {noun}…"
+msgstr "Search {noun}s…"
+
+#: nodus/ui/pages/base/summary_page.py
+#, python-brace-format
+msgid "Agregar {noun}"
+msgstr "Add {noun}"
+
+#: nodus/ui/pages/base/summary_page.py
+msgid "Unir…"
+msgstr "Merge…"
+
+#: nodus/ui/pages/base/summary_page.py
+msgid "Deja uno solo y le pasa los movimientos de los demás"
+msgstr "Keeps just one and moves the others' transactions to it"
+
+#: nodus/ui/pages/base/summary_page.py
+msgid "Borrar búsqueda"
+msgstr "Clear search"
+
+#: nodus/ui/pages/base/transaction_list_view.py nodus/ui/widgets/charts/bar_chart.py
+#, python-brace-format
+msgid "Ingresos {amount}"
+msgstr "Income {amount}"
+
+#: nodus/ui/pages/base/transaction_list_view.py nodus/ui/widgets/charts/bar_chart.py
+#, python-brace-format
+msgid "Gastos {amount}"
+msgstr "Expenses {amount}"
+
+#: nodus/ui/pages/base/transaction_list_view.py
+#, python-brace-format
+msgid "Neto {amount}"
+msgstr "Net {amount}"
+
+#: nodus/ui/pages/base/transaction_list_view.py
+msgid "Editar…"
+msgstr "Edit…"
+
+#: nodus/ui/pages/base/transaction_list_view.py
+msgid "Cambia la categoría, el beneficiario, la nota o las etiquetas"
+msgstr "Changes the category, payee, note or tags"
+
+#: nodus/ui/pages/dashboard/budgets_card.py nodus/ui/pages/dashboard/upcoming_payments_card.py
+msgid "Ver todos"
+msgstr "View all"
+
+#: nodus/ui/pages/dashboard/cash_flow_card.py
+msgid "Ahorro frente al período anterior"
+msgstr "Savings compared with the previous period"
+
+#: nodus/ui/pages/dashboard/cash_flow_card.py
+msgid "MES A MES"
+msgstr "MONTH BY MONTH"
+
+#: nodus/ui/pages/dashboard/comparison_card.py
+msgid "Frente al período anterior"
+msgstr "Compared with the previous period"
+
+#: nodus/ui/pages/dashboard/comparison_card.py
+msgid "Sin gastos en el período."
+msgstr "No expenses in this period."
+
+#: nodus/ui/pages/dashboard/comparison_card.py
+msgid "Nueva"
+msgstr "New"
+
+#: nodus/ui/pages/dashboard/comparison_card.py
+#, python-brace-format
+msgid "Período anterior: {amount}"
+msgstr "Previous period: {amount}"
+
+#: nodus/ui/pages/dashboard/dashboard_page.py
+msgid "Te damos la bienvenida a Nodus"
+msgstr "Welcome to Nodus"
+
+#: nodus/ui/pages/dashboard/dashboard_page.py
+msgid "Crea una cuenta por cada lugar donde tengas dinero y registra tus movimientos."
+msgstr "Create an account for each place where you keep money and record your transactions."
+
+#: nodus/ui/pages/dashboard/dashboard_page.py
+msgid "Agregar mi primera cuenta"
+msgstr "Add my first account"
+
+#: nodus/ui/pages/dashboard/dashboard_page.py
+msgid "Traer mis datos de otra computadora"
+msgstr "Bring my data from another computer"
+
+#: nodus/ui/pages/dashboard/expenses_card.py
+msgid "Resto"
+msgstr "Rest"
+
+#: nodus/ui/pages/dashboard/expenses_card.py
+msgid "Gastos por categoría"
+msgstr "Expenses by category"
+
+#: nodus/ui/pages/dashboard/expenses_card.py
+msgid "Gastos frente al período anterior"
+msgstr "Expenses compared with the previous period"
+
+#: nodus/ui/pages/dashboard/expenses_card.py
+msgid "Sin gastos"
+msgstr "No expenses"
+
+#: nodus/ui/pages/dashboard/expenses_card.py
+msgid "en el período"
+msgstr "in this period"
+
+#: nodus/ui/pages/dashboard/latest_transactions_card.py
+msgid "Últimas transacciones"
+msgstr "Latest transactions"
+
+#: nodus/ui/pages/dashboard/latest_transactions_card.py
+msgid "Ver todas"
+msgstr "View all"
+
+#: nodus/ui/pages/dashboard/upcoming_payments_card.py
+msgid "Lo que suman tus cargos recurrentes en un mes"
+msgstr "What your recurring charges add up to in a month"
+
+#: nodus/ui/pages/dashboard/upcoming_payments_card.py
+#, python-brace-format
+msgid "~{amount}/mes"
+msgstr "~{amount}/month"
+
+#: nodus/ui/pages/dashboard/upcoming_payments_card.py
+#, python-brace-format
+msgid "Nada que pagar en el próximo {count} día"
+msgid_plural "Nada que pagar en los próximos {count} días"
+msgstr[0] "Nothing to pay in the next {count} day"
+msgstr[1] "Nothing to pay in the next {count} days"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Acerca de Nodus"
+msgstr "About Nodus"
+
+#: nodus/ui/pages/settings/about_card.py
+#, python-brace-format
+msgid "Versión {version}"
+msgstr "Version {version}"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "El código fuente, abierto a todos."
+msgstr "The source code, open to everyone."
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Ver en GitHub"
+msgstr "View on GitHub"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Buscar actualizaciones al iniciar"
+msgstr "Check for updates on startup"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Consulta en GitHub cuál es la última versión publicada. No envía ningún dato tuyo."
+msgstr "Checks GitHub for the latest published version. It doesn't send any of your data."
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Novedades"
+msgstr "What's new"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Lo que trajo cada versión."
+msgstr "What each version brought."
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Ver novedades"
+msgstr "See what's new"
+
+#: nodus/ui/pages/settings/about_card.py nodus/ui/shell/coach_marks.py nodus/ui/shell/main_window.py
 msgid "Recorrido guiado"
 msgstr "Guided tour"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Dónde está cada cosa, en un minuto."
+msgstr "Where everything is, in a minute."
+
+#: nodus/ui/pages/settings/about_card.py nodus/ui/shell/help_panel.py nodus/ui/shell/top_bar.py
+#: nodus/ui/shell/tour.py
+msgid "Ayuda"
+msgstr "Help"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Cómo se hace cada cosa y los atajos. También con F1."
+msgstr "How to do each thing, and the shortcuts. Also with F1."
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Abrir la ayuda"
+msgstr "Open help"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Registro de errores"
+msgstr "Error log"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Lo que anota Nodus para encontrar un error. Queda en tu computadora."
+msgstr "What Nodus writes down to track down an error. It stays on your computer."
+
+#: nodus/ui/pages/settings/about_card.py nodus/ui/pages/settings/data_card.py
+msgid "Abrir carpeta"
+msgstr "Open folder"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Comentarios"
+msgstr "Feedback"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Una idea o un error, sin crear una cuenta."
+msgstr "An idea or a bug, without creating an account."
+
+#: nodus/ui/pages/settings/about_card.py nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
+msgid "Enviar comentarios"
+msgstr "Send feedback"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Apoyar el proyecto"
+msgstr "Support the project"
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Nodus es gratis y lo va a seguir siendo."
+msgstr "Nodus is free and will stay that way."
+
+#: nodus/ui/pages/settings/about_card.py
+msgid "Invitar un cafecito"
+msgstr "Buy me a cafecito"
+
+#: nodus/ui/pages/settings/data_card.py nodus/ui/text/help_texts.py
+msgid "Tus datos"
+msgstr "Your data"
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Archivo de datos"
+msgstr "Data file"
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Copia de seguridad"
+msgstr "Backup"
+
+#: nodus/ui/pages/settings/data_card.py
+#, python-brace-format
+msgid ""
+"Nodus guarda una copia por día al abrirse y conserva las {daily} más recientes, una por semana de"
+" las últimas {weekly} semanas y una por mes de los últimos {monthly} meses."
+msgstr ""
+"Nodus saves a backup every day when it opens and keeps the {daily} most recent ones, one per week"
+" for the last {weekly} weeks and one per month for the last {monthly} months."
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Hacer copia"
+msgstr "Back up now"
+
+#: nodus/ui/pages/settings/data_card.py
+msgid ""
+"Las copias diarias quedan en este disco. Una copia en un pendrive, un disco externo o una carpeta"
+" de Drive u OneDrive salva tus datos si la PC se pierde o se rompe."
+msgstr ""
+"Daily backups stay on this drive. A backup on a USB drive, an external drive or a Drive or "
+"OneDrive folder saves your data if your PC gets lost or breaks."
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Guardar copia en…"
+msgstr "Save backup to…"
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Recordarme a fin de mes"
+msgstr "Remind me at the end of the month"
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Un aviso en la campana si en el mes no guardaste una copia fuera de la PC."
+msgstr "A notification in the bell if you didn't save a backup outside your PC that month."
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Todas, en un archivo CSV para abrir en una planilla."
+msgstr "All of them, in a CSV file to open in a spreadsheet."
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Exportar CSV"
+msgstr "Export CSV"
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Restaurar una copia"
+msgstr "Restore a backup"
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Reemplaza tus datos actuales por los de una copia. Antes se guarda una copia de cómo están ahora."
+msgstr ""
+"Replaces your current data with the data in a backup. First, a backup of how things are now is "
+"saved."
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Restaurar copia…"
+msgstr "Restore backup…"
+
+#: nodus/ui/pages/settings/data_card.py
+#, python-brace-format
+msgid "Última: {date}"
+msgstr "Last: {date}"
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Sin copias"
+msgstr "No backups"
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Nunca. Guárdala en un pendrive, un disco externo o una carpeta de Drive."
+msgstr "Never. Save one to a USB drive, an external drive or a Drive folder."
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "No se pudo hacer la copia."
+msgstr "Couldn't make the backup."
+
+#: nodus/ui/pages/settings/data_card.py
+msgid "Copia guardada."
+msgstr "Backup saved."
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Claro"
+msgstr "Light"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Oscuro"
+msgstr "Dark"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Según el sistema"
+msgstr "System default"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "General"
+msgstr "General"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Tema"
+msgstr "Theme"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "«Según el sistema» sigue el modo claro u oscuro de Windows."
+msgstr "“System default” follows Windows' light or dark mode."
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Abrir Nodus al iniciar Windows"
+msgstr "Open Nodus when Windows starts"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Te espera abierto al encender la computadora."
+msgstr "It's ready and open when you turn on your computer."
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Disponible en la versión instalada."
+msgstr "Available in the installed version."
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Disponible en la versión instalada"
+msgstr "Available in the installed version"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Reducir animaciones"
+msgstr "Reduce animations"
+
+#: nodus/ui/pages/settings/general_card.py
+msgid "Los gráficos y las cifras cambian de una vez, sin moverse."
+msgstr "Charts and figures change all at once, without moving."
+
+#: nodus/ui/pages/settings/rates_card.py
+#, python-brace-format
+msgid "{home} por {currency}"
+msgstr "{home} per {currency}"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Cotizaciones"
+msgstr "Exchange rates"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Historial"
+msgstr "History"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "La cotización que se ve y se carga debajo."
+msgstr "The exchange rate shown and entered below."
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Fuente"
+msgstr "Source"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid ""
+"Con MEP, Blue u Oficial, Nodus trae el valor de venta del día desde DolarApi al abrirse; el euro "
+"y el peso chileno, con su cotización oficial. Con Manual, las cargas tú."
+msgstr ""
+"With MEP, Blue or Official, Nodus gets the day's selling rate from DolarApi when it opens; the "
+"euro and the Chilean peso, with their official rate. With Manual, you enter them yourself."
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Oficial, desde DolarApi"
+msgstr "Official, from DolarApi"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Guardar cotización"
+msgstr "Save exchange rate"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Si ya hay una cotización para esa fecha, se reemplaza."
+msgstr "If there's already an exchange rate for that date, it gets replaced."
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Consultando…"
+msgstr "Checking…"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Actualizando…"
+msgstr "Updating…"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Actualizada hoy"
+msgstr "Updated today"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Sin conexión"
+msgstr "Offline"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Cotización guardada."
+msgstr "Exchange rate saved."
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Sin cotizaciones."
+msgstr "No exchange rates."
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Actualizar ahora"
+msgstr "Update now"
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Cargar a mano"
+msgstr "Enter manually"
+
+#: nodus/ui/pages/settings/rates_card.py
+#, python-brace-format
+msgid "Se va a eliminar la cotización del {date}."
+msgstr "The exchange rate for {date} will be deleted."
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Eliminar cotización"
+msgstr "Delete exchange rate"
 
 #: nodus/ui/shell/coach_marks.py
 msgid "Saltar"
@@ -1065,10 +3326,6 @@ msgstr "Finish"
 #: nodus/ui/shell/help_panel.py
 msgid "Atajos de teclado"
 msgstr "Keyboard shortcuts"
-
-#: nodus/ui/shell/help_panel.py nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
-msgid "Ayuda"
-msgstr "Help"
 
 #: nodus/ui/shell/help_panel.py
 msgid "Cerrar la ayuda (Esc)"
@@ -1124,10 +3381,6 @@ msgstr "To record transactions you need at least one active account. Create one 
 #: nodus/ui/shell/main_window.py
 msgid "Transacción guardada."
 msgstr "Transaction saved."
-
-#: nodus/ui/shell/notices.py
-msgid "Actualizar"
-msgstr "Update"
 
 #: nodus/ui/shell/notices.py
 msgid "Descartar esta versión"
@@ -1202,18 +3455,6 @@ msgstr "Collapse the panel"
 #: nodus/ui/shell/sidebar.py
 msgid "CUENTAS"
 msgstr "ACCOUNTS"
-
-#: nodus/ui/shell/sidebar.py
-msgid "Todavía no hay cuentas"
-msgstr "No accounts yet"
-
-#: nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
-msgid "Agregar transacción"
-msgstr "Add transaction"
-
-#: nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
-msgid "Enviar comentarios"
-msgstr "Send feedback"
 
 #: nodus/ui/shell/top_bar.py
 #, python-brace-format
@@ -1339,10 +3580,6 @@ msgstr "Planning"
 #: nodus/ui/text/help_texts.py
 msgid "Ordenar"
 msgstr "Organizing"
-
-#: nodus/ui/text/help_texts.py
-msgid "Tus datos"
-msgstr "Your data"
 
 #: nodus/ui/text/help_texts.py
 msgid "Cómo está organizado Nodus"
@@ -1621,10 +3858,6 @@ msgstr ""
 "Recurring shows you how many you've paid, the next one and how much the installments take each "
 "month. Opening any installment opens the whole purchase, to change or delete it, and its menu has"
 " “Pay the remaining installments ahead”."
-
-#: nodus/ui/text/help_texts.py
-msgid "Reembolsos"
-msgstr "Refunds"
 
 #: nodus/ui/text/help_texts.py
 msgid ""
@@ -2096,10 +4329,204 @@ msgid_plural "{count} días restantes"
 msgstr[0] "{count} day left"
 msgstr[1] "{count} days left"
 
+#: nodus/ui/widgets/empty_state.py
+msgid "Sin movimientos en el período."
+msgstr "No transactions in this period."
+
+#: nodus/ui/widgets/money_label.py
+msgid "Sin cambios este mes"
+msgstr "No change this month"
+
+#: nodus/ui/widgets/money_label.py
+#, python-brace-format
+msgid "{sign}{amount} este mes"
+msgstr "{sign}{amount} this month"
+
+#: nodus/ui/widgets/money_label.py
+msgid "Falta una cotización para sumar las cuentas de este grupo."
+msgstr "An exchange rate is missing to add up the accounts in this group."
+
+#: nodus/ui/widgets/money_label.py
+msgid "Convertido con la cotización del día."
+msgstr "Converted with the day's exchange rate."
+
+#: nodus/ui/widgets/pay_button.py
+msgid "Registrar el pago"
+msgstr "Record the payment"
+
+#: nodus/ui/widgets/charts/budget_bar.py
+#, python-brace-format
+msgid "{spent} de {limit}"
+msgstr "{spent} of {limit}"
+
+#: nodus/ui/widgets/charts/budget_bar.py
+#, python-brace-format
+msgid "{percent} usado · {spent_of_limit}"
+msgstr "{percent} used · {spent_of_limit}"
+
+#: nodus/ui/widgets/charts/budget_bar.py
+#, python-brace-format
+msgid "Excedido en {amount}"
+msgstr "Over by {amount}"
+
+#: nodus/ui/widgets/charts/budget_bar.py
+#, python-brace-format
+msgid "Quedan {amount}"
+msgstr "{amount} left"
+
+#: nodus/ui/widgets/charts/budget_bar.py
+#, python-brace-format
+msgid "Ritmo del mes: {percent}"
+msgstr "Month's pace: {percent}"
+
+#: nodus/ui/widgets/charts/goal_bar.py
+msgid "Alcanzada"
+msgstr "Reached"
+
+#: nodus/ui/widgets/charts/goal_bar.py
+msgid "Al día"
+msgstr "On track"
+
+#: nodus/ui/widgets/charts/goal_bar.py
+msgid "Atrasada"
+msgstr "Behind"
+
+#: nodus/ui/widgets/charts/goal_bar.py
+msgid "Vencida"
+msgstr "Overdue"
+
+#: nodus/ui/widgets/charts/goal_bar.py
+msgid "Sin historia"
+msgstr "No history"
+
+#: nodus/ui/widgets/charts/goal_bar.py
+msgid "Falta la cotización para sumar las cuentas en otras monedas."
+msgstr "An exchange rate is missing to add up the accounts in other currencies."
+
 #: nodus/ui/widgets/charts/goal_bar.py
 #, python-brace-format
-msgid "{count} mes"
-msgid_plural "{count} meses"
-msgstr[0] "{count} month"
-msgstr[1] "{count} months"
+msgid "— de {target}"
+msgstr "— of {target}"
+
+#: nodus/ui/widgets/charts/goal_bar.py
+#, python-brace-format
+msgid "{saved} de {target} · {percent}"
+msgstr "{saved} of {target} · {percent}"
+
+#: nodus/ui/widgets/charts/goal_bar.py
+#, python-brace-format
+msgid "Para llegar a tiempo hacen falta {amount} por mes."
+msgstr "To get there in time, you need {amount} per month."
+
+#: nodus/ui/widgets/charts/goal_bar.py
+#, python-brace-format
+msgid "Alcanzada el {date}."
+msgstr "Reached on {date}."
+
+#: nodus/ui/widgets/charts/goal_bar.py
+msgid "Alcanzada."
+msgstr "Reached."
+
+#: nodus/ui/widgets/charts/goal_bar.py
+#, python-brace-format
+msgid "La fecha pasó y faltan {amount}. Cambia la fecha o el objetivo."
+msgstr "The date has passed and {amount} is still missing. Change the date or the target."
+
+#: nodus/ui/widgets/charts/goal_bar.py
+msgid "Todavía no hay 3 meses para medir tu ritmo."
+msgstr "There aren't 3 months yet to measure your pace."
+
+#: nodus/ui/widgets/charts/goal_bar.py
+msgid "Tu ahorro no viene creciendo en los últimos meses."
+msgstr "Your savings haven't been growing in the last few months."
+
+#: nodus/ui/widgets/charts/goal_bar.py
+#, python-brace-format
+msgid "Vas bien: a este ritmo llegas en {month}."
+msgstr "You're doing well: at this pace you'll get there in {month}."
+
+#: nodus/ui/widgets/charts/goal_bar.py
+#, python-brace-format
+msgid "A este ritmo llegas en {month}, {count} mes tarde."
+msgid_plural "A este ritmo llegas en {month}, {count} meses tarde."
+msgstr[0] "At this pace you'll get there in {month}, {count} month late."
+msgstr[1] "At this pace you'll get there in {month}, {count} months late."
+
+#: nodus/ui/widgets/charts/goal_bar.py
+#, python-brace-format
+msgid "A este ritmo llegas en {month}."
+msgstr "At this pace you'll get there in {month}."
+
+#: nodus/ui/widgets/charts/stacked_bar_chart.py
+#, python-brace-format
+msgid "Promedio {amount}"
+msgstr "Average {amount}"
+
+#: nodus/ui/widgets/inputs/color.py
+msgid "Otro color"
+msgstr "Other color"
+
+#: nodus/ui/widgets/inputs/color.py
+#, python-brace-format
+msgid "Usado hace poco: {color}"
+msgstr "Recently used: {color}"
+
+#: nodus/ui/widgets/inputs/color_wheel.py
+msgid "Brillo"
+msgstr "Brightness"
+
+#: nodus/ui/widgets/inputs/color_wheel.py
+msgid "Usar color"
+msgstr "Use color"
+
+#: nodus/ui/widgets/inputs/payee_input.py nodus/ui/widgets/inputs/tag_input.py
+#, python-brace-format
+msgid "Se creará «{name}»"
+msgstr "“{name}” will be created"
+
+#: nodus/ui/widgets/inputs/tag_input.py
+#, python-brace-format
+msgid "Se crearán {names} y {last}"
+msgstr "{names} and {last} will be created"
+
+#: nodus/ui/widgets/inputs/tag_input.py
+msgid "Opcional · Enter para agregar"
+msgstr "Optional · Enter to add"
+
+#: nodus/ui/widgets/tables/category_line.py
+msgid "Ver sus transacciones"
+msgstr "View its transactions"
+
+#: nodus/ui/widgets/tables/charge_row.py
+msgid "Ya lo vi"
+msgstr "Got it"
+
+#: nodus/ui/widgets/tables/charge_row.py
+msgid "Volver a avisarme"
+msgstr "Remind me again"
+
+#: nodus/ui/widgets/tables/charge_row.py
+msgid "Ya lo viste. Te lo recordamos mañana."
+msgstr "You've seen it. We'll remind you tomorrow."
+
+#: nodus/ui/widgets/tables/charge_row.py
+#, python-brace-format
+msgid "Ya lo viste. Te lo recordamos el {date}."
+msgstr "You've seen it. We'll remind you on {date}."
+
+#: nodus/ui/widgets/tables/reorderable_list.py
+msgid "Arrastrar para ordenar"
+msgstr "Drag to reorder"
+
+#: nodus/ui/widgets/tables/row_actions.py
+msgid "Más acciones"
+msgstr "More actions"
+
+#: nodus/ui/widgets/tables/selection_bar.py
+msgid "Quitar la selección (Esc)"
+msgstr "Clear selection (Esc)"
+
+#: nodus/ui/widgets/tables/table.py
+msgid "También con la tecla Supr"
+msgstr "Also with the Del key"
 

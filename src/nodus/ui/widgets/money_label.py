@@ -6,6 +6,7 @@ from PySide6.QtCore import QSize, QVariantAnimation
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
+from nodus.i18n import _
 from nodus.models.language_format import with_symbol
 from nodus.models.money import Money
 from nodus.services.accounts.account_group_service import GroupTotal
@@ -30,20 +31,20 @@ def month_change_text(change: Money | None, hidden: bool) -> str:
     if change is None:
         return ""
     if change.is_zero:
-        return "Sin cambios este mes"
+        return _("Sin cambios este mes")
     sign = "-" if change.is_negative else "+"
     size = -change if change.is_negative else change
-    return f"{sign}{amount_text(size, hidden)} este mes"
+    return _("{sign}{amount} este mes").format(sign=sign, amount=amount_text(size, hidden))
 
 
 def total_text(total: GroupTotal, hidden: bool) -> tuple[str, str]:
     """A group's subtotal and its tooltip: "≈" when it converts currencies, "—" when a
     rate is missing to add it up."""
     if total.amount is None:
-        return "—", "Falta una cotización para sumar las cuentas de este grupo."
+        return "—", _("Falta una cotización para sumar las cuentas de este grupo.")
     text = masked(total.amount) if hidden else total.amount.format()
     if total.approximate:
-        return f"≈ {text}", "Convertido con la cotización del día."
+        return f"≈ {text}", _("Convertido con la cotización del día.")
     return text, ""
 
 

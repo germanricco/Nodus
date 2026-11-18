@@ -6,12 +6,13 @@ from datetime import date
 
 from PySide6.QtWidgets import QWidget
 
+from nodus.i18n import _
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.undo import offer_undo
-from nodus.ui.widgets.tables.charge_row import reminder_day
+from nodus.ui.widgets.tables.charge_row import reminder_text
 from nodus.ui.widgets.toast import show_toast, toast_host
 
 
@@ -23,10 +24,16 @@ def toggle_seen(
     today = date.today()
     if services.recurring.is_quiet(charge, today):
         services.recurring.remind_again(charge.id, today)
-        text = f"Te volvemos a avisar de {charge.name}."
+        text = _("Te volvemos a avisar de {name}.").format(name=charge.name)
     else:
         day = services.recurring.mark_seen(charge.id, today)
-        text = f"Te recordamos {charge.name} {reminder_day(day, today)}."
+        text = reminder_text(
+            day,
+            today,
+            _("Te recordamos {name} mañana."),
+            _("Te recordamos {name} el {date}."),
+            name=charge.name,
+        )
     host = toast_host(widget)  # the row that asked is rebuilt by the refresh
     event_bus.recurring_changed.emit()
     if host is not None:

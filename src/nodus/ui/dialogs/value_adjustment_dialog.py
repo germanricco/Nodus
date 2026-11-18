@@ -6,6 +6,7 @@ from datetime import date
 
 from PySide6.QtWidgets import QLabel, QPushButton, QWidget
 
+from nodus.i18n import _
 from nodus.models.account import Account
 from nodus.models.money import Money
 from nodus.services.container import Services
@@ -33,7 +34,11 @@ class ValueAdjustmentDialog(FormDialog):
         today: date | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__(f"Actualizar valor de «{account.name}»", parent, "Actualizar valor")
+        super().__init__(
+            _("Actualizar valor de «{name}»").format(name=account.name),
+            parent,
+            _("Actualizar valor"),
+        )
         self._services = services
         self._event_bus = event_bus
         self._account = account
@@ -44,15 +49,17 @@ class ValueAdjustmentDialog(FormDialog):
         self.value_input = AmountInput(account.currency)
         self.difference_label = QLabel()
         hint = hint_label(
-            "Escribe lo que vale hoy, como lo muestra su app o resumen. La diferencia cuenta"
-            " como rendimiento: cambia el saldo y el patrimonio neto, no los ingresos ni los"
-            " gastos."
+            _(
+                "Escribe lo que vale hoy, como lo muestra su app o resumen. La diferencia cuenta"
+                " como rendimiento: cambia el saldo y el patrimonio neto, no los ingresos ni los"
+                " gastos."
+            )
         )
         hint.setWordWrap(True)
 
-        self.form.addRow("Fecha", self.date_input)
-        self.form.addRow("Saldo en Nodus", self.balance_label)
-        self.form.addRow("Valor actual", self.value_input)
+        self.form.addRow(_("Fecha"), self.date_input)
+        self.form.addRow(_("Saldo en Nodus"), self.balance_label)
+        self.form.addRow(_("Valor actual"), self.value_input)
         self.form.addRow("", self.difference_label)
         self.form.addRow("", hint)
         self.bind_field(self.value_input, "value")
@@ -63,7 +70,7 @@ class ValueAdjustmentDialog(FormDialog):
         self._show_balance()
 
     def missing(self) -> dict[QWidget, str]:
-        return self.required((self.value_input, TYPE_AMOUNT))
+        return self.required((self.value_input, _(TYPE_AMOUNT)))
 
     def save(self) -> None:
         self._services.accounts.adjust_value(
@@ -85,8 +92,9 @@ class ValueAdjustmentDialog(FormDialog):
         self.undo_button.clicked.connect(self.undo_last)
         if self._last is not None:
             self.undo_button.setText(
-                f"Deshacer el último ({signed(self._last.amount)},"
-                f" {format_date(self._last.occurred_on)})"
+                _("Deshacer el último ({amount}, {date})").format(
+                    amount=signed(self._last.amount), date=format_date(self._last.occurred_on)
+                )
             )
             self.form.addRow("", self.undo_button)
 
@@ -107,11 +115,11 @@ class ValueAdjustmentDialog(FormDialog):
             self.difference_label.setText("")
             return
         if difference.is_zero:
-            self.difference_label.setText("Sin cambios")
+            self.difference_label.setText(_("Sin cambios"))
             set_style_property(self.difference_label, "tone", "neutral")
             return
-        word = "Ganancia" if not difference.is_negative else "Pérdida"
-        self.difference_label.setText(f"{word}: {signed(difference)}")
+        text = _("Pérdida: {amount}") if difference.is_negative else _("Ganancia: {amount}")
+        self.difference_label.setText(text.format(amount=signed(difference)))
         set_style_property(
             self.difference_label, "tone", "negative" if difference.is_negative else "positive"
         )

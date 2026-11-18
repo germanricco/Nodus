@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import _
 from nodus.services.app.changelog import ChangelogEntry
 from nodus.services.external.update_service import Release
 from nodus.ui.text.formatting import format_date
@@ -82,11 +83,11 @@ class NewsDialog(QDialog):
         buttons.addStretch()
         self.update_button: QPushButton | None = None
         if update:
-            close = secondary_button("Cerrar", self.reject)
+            close = secondary_button(_("Cerrar"), self.reject)
             buttons.addWidget(close)
-            self.update_button = main_button = QPushButton("Actualizar")
+            self.update_button = main_button = QPushButton(_("Actualizar"))
         else:
-            main_button = QPushButton("Entendido")
+            main_button = QPushButton(_("Entendido"))
         main_button.clicked.connect(self.accept)
         main_button.setObjectName("PrimaryButton")
         main_button.setDefault(True)
@@ -98,10 +99,11 @@ class NewsDialog(QDialog):
         cls, entries: list[ChangelogEntry], parent: QWidget | None = None
     ) -> NewsDialog:
         """The news of installed versions, newest first."""
-        return cls("Novedades de Nodus", entries_markdown(entries), parent=parent)
+        return cls(_("Novedades de Nodus"), entries_markdown(entries), parent=parent)
 
     @classmethod
     def for_release(cls, release: Release, parent: QWidget | None = None) -> NewsDialog:
         """What a published version brings, before installing it."""
-        notes = release.notes or "Esta versión no trae notas."
-        return cls(f"Qué trae Nodus {release.version}", notes, update=True, parent=parent)
+        notes = release.notes or _("Esta versión no trae notas.")
+        title = _("Qué trae Nodus {version}").format(version=release.version)
+        return cls(title, notes, update=True, parent=parent)

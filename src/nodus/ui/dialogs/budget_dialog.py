@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QWidget
 
+from nodus.i18n import _, ngettext
 from nodus.models.category import Category
 from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
-from nodus.models.period import Month, format_month
+from nodus.models.period import Month, format_month_in_sentence
 from nodus.services.classification.category_service import CategoryNode
 from nodus.services.container import Services
 from nodus.services.planning.budget_service import BudgetSuggestion
@@ -44,9 +45,9 @@ class BudgetDialog(FormDialog):
         limits = services.budgets.limits_on(month)
         has_limit = category is not None and category.id in limits
         super().__init__(
-            "Cambiar límite" if has_limit else "Nuevo presupuesto",
+            _("Cambiar límite") if has_limit else _("Nuevo presupuesto"),
             parent,
-            SAVE_CHANGES if has_limit else "Agregar presupuesto",
+            _(SAVE_CHANGES) if has_limit else _("Agregar presupuesto"),
         )
         self._services = services
         self._event_bus = event_bus
@@ -54,7 +55,7 @@ class BudgetDialog(FormDialog):
 
         self.category_input = CategoryComboBox()
         if category is None:
-            self.category_input.set_placeholder(CATEGORY_PLACEHOLDER)
+            self.category_input.set_placeholder(_(CATEGORY_PLACEHOLDER))
         candidates = [category] if category else self._free_categories(limits)
         self.category_input.set_categories([(None, [CategoryNode(c, []) for c in candidates])])
         self.category_input.setEnabled(category is None)
@@ -62,15 +63,16 @@ class BudgetDialog(FormDialog):
         self.suggestion_hint = hint_label()
         self.suggestion_hint.setWordWrap(True)
         scope_hint = hint_label(
-            f"Rige desde {format_month(month).lower()} en adelante; "
-            "los meses anteriores conservan su límite."
+            _("Rige desde {month} en adelante; los meses anteriores conservan su límite.").format(
+                month=format_month_in_sentence(month)
+            )
         )
         scope_hint.setWordWrap(True)
 
-        self.form.addRow("Categoría", self.category_input)
+        self.form.addRow(_("Categoría"), self.category_input)
         self.bind_field(self.category_input, "category_id")
         self.bind_field(self.amount_input, "limit")
-        self.form.addRow("Límite mensual", self.amount_input)
+        self.form.addRow(_("Límite mensual"), self.amount_input)
         self.form.addRow("", self.suggestion_hint)
         self.form.addRow("", scope_hint)
 
@@ -99,7 +101,7 @@ class BudgetDialog(FormDialog):
 
     def missing(self) -> dict[QWidget, str]:
         return self.required(
-            (self.category_input, CHOOSE_CATEGORY), (self.amount_input, TYPE_AMOUNT)
+            (self.category_input, _(CHOOSE_CATEGORY)), (self.amount_input, _(TYPE_AMOUNT))
         )
 
     def save(self) -> None:
@@ -114,5 +116,9 @@ def suggestion_text(suggestion: BudgetSuggestion) -> str:
     "Lo gastado el mes pasado: $ 90.000,00"."""
     amount = suggestion.amount.format()
     if suggestion.months == 1:
-        return f"Lo gastado el mes pasado: {amount}"
-    return f"Promedio de los últimos {suggestion.months} meses: {amount}"
+        return _("Lo gastado el mes pasado: {amount}").format(amount=amount)
+    return ngettext(
+        "Promedio del último {count} mes: {amount}",
+        "Promedio de los últimos {count} meses: {amount}",
+        suggestion.months,
+    ).format(count=suggestion.months, amount=amount)

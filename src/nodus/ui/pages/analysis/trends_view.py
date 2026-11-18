@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout
 
+from nodus.i18n import N_, _
 from nodus.models.currency import HOME_CURRENCY
 from nodus.models.period import Period, format_month
 from nodus.services.container import Services
@@ -31,8 +32,8 @@ METRICS = list(Metric)
 STACKED_CATEGORIES = 7
 # Payees listed; the rest are left to the transactions page.
 PAYEES_SHOWN = 8
-NO_PAYEE_LABEL = "Sin beneficiario"
-TAGS_HINT = "Un movimiento con varias etiquetas suma en cada una."
+NO_PAYEE_LABEL = N_("Sin beneficiario")
+TAGS_HINT = N_("Un movimiento con varias etiquetas suma en cada una.")
 TOOLTIP_CATEGORIES = 3
 
 
@@ -41,7 +42,7 @@ class TrendsView(AnalysisView):
     bars stacked by category with the monthly average, and the split by category, by
     payee and by tag. Clicking a bar, a piece or a row opens those transactions."""
 
-    DESCRIPTION = "Lo que gastas, ganas y ahorras mes a mes, frente al período anterior."
+    DESCRIPTION = N_("Lo que gastas, ganas y ahorras mes a mes, frente al período anterior.")
 
     def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
         super().__init__()
@@ -61,15 +62,15 @@ class TrendsView(AnalysisView):
         self.total_label = AnimatedMoneyLabel()
         # Without a previous period the badge steps aside: its tile already says so.
         self.change_badge = ChangeBadge()
-        self.change_badge.setToolTip(VERSUS_PREVIOUS_TEXT)
+        self.change_badge.setToolTip(_(VERSUS_PREVIOUS_TEXT))
         self.previous_label = QLabel()
         self.average_label = QLabel()
-        self.total_tile = FigureTile("Total", self.total_label, self.change_badge, large=True)
-        self.previous_tile = FigureTile("Período anterior", self.previous_label, large=True)
+        self.total_tile = FigureTile(_("Total"), self.total_label, self.change_badge, large=True)
+        self.previous_tile = FigureTile(_("Período anterior"), self.previous_label, large=True)
         tiles = QHBoxLayout()
         tiles.setSpacing(Space.L)
-        for tile in (self.total_tile, self.previous_tile,
-                     FigureTile("Promedio mensual", self.average_label, large=True)):  # fmt: skip
+        average_tile = FigureTile(_("Promedio mensual"), self.average_label, large=True)
+        for tile in (self.total_tile, self.previous_tile, average_tile):
             tiles.addWidget(tile, stretch=1)
         layout.addLayout(tiles)
 
@@ -77,18 +78,18 @@ class TrendsView(AnalysisView):
             self._theme, lambda cents: format_compact(cents, HOME_CURRENCY)
         )
         self.chart.clicked.connect(self._bar_clicked)
-        card, self.empty_label, self.unconverted_label = chart_card("Mes a mes", self.chart)
+        card, self.empty_label, self.unconverted_label = chart_card(_("Mes a mes"), self.chart)
         layout.addWidget(card)
 
-        self.categories_card, self._category_rows = rows_card("Por categoría")
-        self.payees_card, self._payee_rows = rows_card("Por beneficiario")
+        self.categories_card, self._category_rows = rows_card(_("Por categoría"))
+        self.payees_card, self._payee_rows = rows_card(_("Por beneficiario"))
         breakdown = QHBoxLayout()
         breakdown.setSpacing(Space.L)
         breakdown.addWidget(self.categories_card, stretch=1)
         breakdown.addWidget(self.payees_card, stretch=1)
         layout.addLayout(breakdown)
-        self.tags_card, self._tag_rows = rows_card("Por etiqueta")
-        self.tags_card.setToolTip(TAGS_HINT)
+        self.tags_card, self._tag_rows = rows_card(_("Por etiqueta"))
+        self.tags_card.setToolTip(_(TAGS_HINT))
         layout.addWidget(self.tags_card)
         layout.addStretch()
 
@@ -111,7 +112,7 @@ class TrendsView(AnalysisView):
         self.change_badge.set_higher_is_better(not expenses)
         self.change_badge.set_change(trends.change)
         self.previous_label.setText(
-            "Sin datos" if trends.change is None else trends.previous_total.format()
+            _("Sin datos") if trends.change is None else trends.previous_total.format()
         )
         self.average_label.setText(trends.average.format())
 
@@ -145,8 +146,8 @@ class TrendsView(AnalysisView):
         if self.metric is Metric.SAVINGS:
             color = self._theme.income if not month.total.is_negative else self._theme.expense
             segments = (StackSegment(None, color, month.total.cents),)
-            return StackedBar(month.month.short_name, segments, title,
-                              (f"Ahorro {month.total.format()}",), month.month)  # fmt: skip
+            line = _("Ahorro {amount}").format(amount=month.total.format())
+            return StackedBar(month.month.short_name, segments, title, (line,), month.month)
         by_id = {total.category.id: total for total in month.by_category}
         segments = [
             StackSegment(category_id, by_id[category_id].category.color,
@@ -157,7 +158,7 @@ class TrendsView(AnalysisView):
         rest = sum(t.total.cents for t in month.by_category if t.category.id not in stacked)
         if rest:
             segments.append(StackSegment(None, self._theme.text_muted, rest))
-        lines = [f"Total {month.total.format()}"] + [
+        lines = [_("Total {amount}").format(amount=month.total.format())] + [
             f"{total.category.name} {total.total.format()}"
             for total in month.by_category[:TOOLTIP_CATEGORIES]
         ]
@@ -172,7 +173,7 @@ class TrendsView(AnalysisView):
     def _fill_categories(self, trends: Trends) -> None:
         clear_layout(self._category_rows)
         if not trends.categories:
-            self._category_rows.addWidget(EmptyState(NO_MOVEMENTS_TEXT, compact=True))
+            self._category_rows.addWidget(EmptyState(_(NO_MOVEMENTS_TEXT), compact=True))
         for total in trends.categories:
             row = CategoryLine(total.category.color, total.category.name)
             row.add(muted_label(percent(total.total, trends.total)))
@@ -189,9 +190,9 @@ class TrendsView(AnalysisView):
         named = [p for p in trends.payees if p.payee is not None][:PAYEES_SHOWN]
         without = [p for p in trends.payees if p.payee is None]
         if not trends.payees:
-            self._payee_rows.addWidget(EmptyState(NO_MOVEMENTS_TEXT, compact=True))
+            self._payee_rows.addWidget(EmptyState(_(NO_MOVEMENTS_TEXT), compact=True))
         for total in named + without:
-            name = total.payee.name if total.payee else NO_PAYEE_LABEL
+            name = total.payee.name if total.payee else _(NO_PAYEE_LABEL)
             color = self._theme.accent if total.payee else self._theme.border
             row = CategoryLine(color, name, movements_text(total.count),
                                clickable=total.payee is not None)  # fmt: skip

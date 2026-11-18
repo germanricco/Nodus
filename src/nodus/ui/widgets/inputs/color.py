@@ -14,6 +14,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QButtonGroup, QGridLayout, QPushButton, QWidget
 
+from nodus.i18n import _
 from nodus.models.palette import PALETTE
 from nodus.ui.theme.design import ControlSize, Line, Space
 from nodus.ui.widgets.color_dot import paint_dot
@@ -116,14 +117,16 @@ class ColorPicker(QWidget):
         self.wheel_swatch = WheelSwatch()
         self.wheel_swatch.setFixedSize(self.SWATCH_SIZE, self.SWATCH_SIZE)
         self.wheel_swatch.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.wheel_swatch.setToolTip("Otro color")
+        self.wheel_swatch.setToolTip(_("Otro color"))
         self.wheel_swatch.clicked.connect(self.open_wheel)
         self.wheel_popup: ColorWheelPopup | None = None
         for color in PALETTE:
             self._add_swatch(color)
         for color in recent or []:
             if color.lower() not in self._swatches:
-                self._add_swatch(color.lower(), f"Usado hace poco: {color.lower()}")
+                self._add_swatch(
+                    color.lower(), _("Usado hace poco: {color}").format(color=color.lower())
+                )
         self.set_color(PALETTE[0])
 
     def color(self) -> str:

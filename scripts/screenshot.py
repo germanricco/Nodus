@@ -27,7 +27,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QScrollArea, QWidget  # noq
 from nodus import APP_NAME  # noqa: E402
 from nodus.config.paths import AppPaths  # noqa: E402
 from nodus.database.database import Database  # noqa: E402
-from nodus.i18n import Language, install  # noqa: E402
+from nodus.i18n import Language, _, install  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
 from nodus.models.money import Money  # noqa: E402
 from nodus.models.period import Month  # noqa: E402
@@ -517,7 +517,7 @@ def capture_messages(shots: Shots) -> None:
     # The data file damaged: the newest whole copy, offered before any window.
     copy = RecoveryCopy(Path("nodus-2026-11-16.db"), datetime(2026, 11, 16, 9, 30))
     recovery = UserErrorDialog(
-        APP_NAME, DAMAGED, recovery_text(copy), "file is not a database", action=RESTORE
+        APP_NAME, _(DAMAGED), recovery_text(copy), "file is not a database", action=_(RESTORE)
     )
     recovery.show()
     shots.settle()
@@ -602,7 +602,7 @@ def capture_undo(app: QApplication, window: MainWindow, out: Path, mode: ThemeMo
     """A real «Omitir» on Recurrentes and the notice that offers to undo it; undone
     after, so the next captures show the demo data as it was."""
     page = window.page(PageId.RECURRING)
-    skip = next(action for action in page.rows[0].actions() if action.text == "Omitir")
+    skip = next(action for action in page.rows[0].actions() if action.text == _("Omitir"))
     skip.callback()
     app.processEvents()
     save(window, out / f"toast-undo-{mode.value}.png")
@@ -617,7 +617,7 @@ def capture_seen(app: QApplication, window: MainWindow, out: Path, mode: ThemeMo
     window.show_page(PageId.DASHBOARD)
     row = window.page(PageId.DASHBOARD).upcoming_card.rows[1]  # due in 2 days
     charge = row.charge
-    seen = next(action for action in row.actions() if action.text == "Ya lo vi")
+    seen = next(action for action in row.actions() if action.text == _("Ya lo vi"))
     seen.callback()
     app.processEvents()
     save(window, out / f"upcoming-seen-{mode.value}.png")
@@ -679,7 +679,7 @@ def save(widget: QWidget, path: Path) -> None:
     # A page laid out again (another width, another height, another tab) settles over a
     # few turns of the event loop; a single one can catch it halfway, with its lists
     # crushed. The running app never stops between turns, so only a capture can.
-    for _ in range(SETTLE_PASSES):
+    for _turn in range(SETTLE_PASSES):
         QApplication.processEvents()
     widget.grab().save(str(path))
     print(path)

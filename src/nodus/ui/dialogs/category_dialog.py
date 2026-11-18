@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QLineEdit, QWidget
 
-from nodus.i18n import _
+from nodus.i18n import N_, _
 from nodus.models.category import Category
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
@@ -14,7 +14,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.text.labels import TRANSACTION_TYPE_LABELS
 from nodus.ui.widgets.inputs.combo_box import ComboBox
 
-NO_PARENT_LABEL = "Ninguna (categoría principal)"
+NO_PARENT_LABEL = N_("Ninguna (categoría principal)")
 
 
 class CategoryDialog(FormDialog):
@@ -34,26 +34,28 @@ class CategoryDialog(FormDialog):
         parent: QWidget | None = None,
     ) -> None:
         if category:
-            action = SAVE_CHANGES
+            action = _(SAVE_CHANGES)
         else:
-            action = "Agregar subcategoría" if parent_id else "Agregar categoría"
-        super().__init__("Editar categoría" if category else "Nueva categoría", parent, action)
+            action = _("Agregar subcategoría") if parent_id else _("Agregar categoría")
+        super().__init__(
+            _("Editar categoría") if category else _("Nueva categoría"), parent, action
+        )
         self._services = services
         self._event_bus = event_bus
         self._category = category
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Ej.: Mascotas, Gimnasio, Alquiler")
+        self.name_input.setPlaceholderText(_("Ej.: Mascotas, Gimnasio, Alquiler"))
         self.kind_input = ComboBox()
         for transaction_type, label in TRANSACTION_TYPE_LABELS.items():
             self.kind_input.addItem(_(label), transaction_type)
         self.parent_input = ComboBox()
         self.color_input = color_picker(services)
 
-        self.form.addRow("Nombre", self.name_input)
-        self.form.addRow("Tipo", self.kind_input)
-        self.form.addRow("Dentro de", self.parent_input)
-        self.form.addRow("Color", self.color_input)
+        self.form.addRow(_("Nombre"), self.name_input)
+        self.form.addRow(_("Tipo"), self.kind_input)
+        self.form.addRow(_("Dentro de"), self.parent_input)
+        self.form.addRow(_("Color"), self.color_input)
         self.bind_field(self.name_input, "name")
         self.bind_field(self.parent_input, "parent_id")
 
@@ -68,7 +70,7 @@ class CategoryDialog(FormDialog):
     def _fill_parents(self) -> None:
         """Lists the categories that can hold a subcategory of the selected kind."""
         self.parent_input.clear()
-        self.parent_input.addItem(NO_PARENT_LABEL, None)
+        self.parent_input.addItem(_(NO_PARENT_LABEL), None)
         for node in self._services.categories.category_tree(self.kind_input.currentData()):
             if not node.category.is_fixed:
                 self.parent_input.addItem(node.category.name, node.category.id)
@@ -83,7 +85,7 @@ class CategoryDialog(FormDialog):
         self.parent_input.setEnabled(False)
 
     def missing(self) -> dict[QWidget, str]:
-        return self.required((self.name_input, TYPE_NAME))
+        return self.required((self.name_input, _(TYPE_NAME)))
 
     def save(self) -> None:
         name = self.name_input.text()

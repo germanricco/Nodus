@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel
 
+from nodus.i18n import N_, _
 from nodus.services.reports.dashboard_service import Comparison, MonthFlow
 from nodus.ui.text.formatting import rate_text
 from nodus.ui.text.labels import unconverted_note
@@ -26,9 +27,9 @@ class CashFlowCard(Card):
     def __init__(self, theme_manager: ThemeManager) -> None:
         super().__init__()
         theme = theme_manager.theme
-        header = card_header(self, "Flujo de caja")
+        header = card_header(self, _("Flujo de caja"))
         self.change_badge = ChangeBadge()
-        self.change_badge.setToolTip("Ahorro frente al período anterior")
+        self.change_badge.setToolTip(_("Ahorro frente al período anterior"))
         header.addWidget(self.change_badge)
         self.savings_label = AnimatedMoneyLabel(highlight_positive=True)
         self.savings_label.setObjectName("StatValueLarge")
@@ -47,17 +48,17 @@ class CashFlowCard(Card):
         tiles = QHBoxLayout()
         tiles.setSpacing(Space.S)
         for caption, value in (
-            ("Ingresos", self.income_label),
-            ("Gastos", self.expenses_label),
-            ("Ahorrado", self.saved_label),
+            (N_("Ingresos"), self.income_label),
+            (N_("Gastos"), self.expenses_label),
+            (N_("Ahorrado"), self.saved_label),
         ):
-            tiles.addWidget(FigureTile(caption, value), stretch=1)
+            tiles.addWidget(FigureTile(_(caption), value), stretch=1)
         self.body.addLayout(tiles)
 
         self.unconverted_label = muted_label("")
         self.unconverted_label.setWordWrap(True)
         self.body.addWidget(self.unconverted_label)
-        trend_title = QLabel("MES A MES")
+        trend_title = QLabel(_("MES A MES"))
         trend_title.setObjectName("StatCaption")
         self.body.addSpacing(Space.S)
         self.body.addWidget(trend_title)
@@ -69,7 +70,7 @@ class CashFlowCard(Card):
     def show_data(self, comparison: Comparison, flow: list[MonthFlow]) -> None:
         summary = comparison.current
         self.savings_label.set_money(summary.savings)
-        self.caption_label.setText(f"Ahorro · {summary.period.label()}")
+        self.caption_label.setText(" · ".join([_("Ahorro"), summary.period.label()]))
         self.change_badge.set_change(comparison.savings_change)
         self.proportion.set_segments(
             [

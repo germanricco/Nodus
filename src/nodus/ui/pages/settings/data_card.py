@@ -7,6 +7,7 @@ from datetime import date
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QPushButton
 
+from nodus.i18n import _
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.backups.retention import DAILY, MONTHLY, WEEKLY
 from nodus.services.container import Services
@@ -36,47 +37,54 @@ class DataCard(Card):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__("Tus datos")
+        super().__init__(_("Tus datos"))
         self._services = services
         self._event_bus = event_bus
         self._theme_manager = theme_manager
 
         data_file = services.settings.data_file
-        data_row = SettingRow("Archivo de datos", str(data_file))
+        data_row = SettingRow(_("Archivo de datos"), str(data_file))
         self.data_path_label = data_row.detail
         self.data_path_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        data_row.add(secondary_button("Abrir carpeta", lambda: open_folder(data_file.parent)))
+        data_row.add(secondary_button(_("Abrir carpeta"), lambda: open_folder(data_file.parent)))
 
-        self.backup_row = SettingRow("Copia de seguridad")
+        self.backup_row = SettingRow(_("Copia de seguridad"))
         self.backup_row.setToolTip(
-            f"Nodus guarda una copia por día al abrirse y conserva las {DAILY} más recientes,"
-            f" una por semana de las últimas {WEEKLY} semanas y una por mes de los últimos"
-            f" {MONTHLY} meses."
+            _(
+                "Nodus guarda una copia por día al abrirse y conserva las {daily} más"
+                " recientes, una por semana de las últimas {weekly} semanas y una por mes"
+                " de los últimos {monthly} meses."
+            ).format(daily=DAILY, weekly=WEEKLY, monthly=MONTHLY)
         )
         self.backup_now_button = self.backup_row.add(
-            secondary_button("Hacer copia", self.backup_now)
+            secondary_button(_("Hacer copia"), self.backup_now)
         )
-        self.backup_row.add(secondary_button("Abrir carpeta", self._open_backups_folder))
+        self.backup_row.add(secondary_button(_("Abrir carpeta"), self._open_backups_folder))
 
-        self.outside_row = SettingRow("Copia fuera de la PC")
+        self.outside_row = SettingRow(_("Copia fuera de la PC"))
         self.outside_row.setToolTip(
-            "Las copias diarias quedan en este disco. Una copia en un pendrive, un disco externo"
-            " o una carpeta de Drive u OneDrive salva tus datos si la PC se pierde o se rompe."
+            _(
+                "Las copias diarias quedan en este disco. Una copia en un pendrive, un disco"
+                " externo o una carpeta de Drive u OneDrive salva tus datos si la PC se"
+                " pierde o se rompe."
+            )
         )
         self.save_outside_button = self.outside_row.add(
-            secondary_button("Guardar copia en…", self.save_copy_outside)
+            secondary_button(_("Guardar copia en…"), self.save_copy_outside)
         )
         reminder_row = SettingRow(
-            "Recordarme a fin de mes",
-            "Un aviso en la campana si en el mes no guardaste una copia fuera de la PC.",
+            _("Recordarme a fin de mes"),
+            _("Un aviso en la campana si en el mes no guardaste una copia fuera de la PC."),
         )
         self.backup_reminder_input = reminder_row.add(ToggleSwitch())
         self.backup_reminder_input.clicked.connect(self._set_backup_reminder)
 
         export_row = SettingRow(
-            "Exportar transacciones", "Todas, en un archivo CSV para abrir en una planilla."
+            _("Exportar transacciones"), _("Todas, en un archivo CSV para abrir en una planilla.")
         )
-        self.export_all_button = export_row.add(secondary_button("Exportar CSV", self.export_all))
+        self.export_all_button = export_row.add(
+            secondary_button(_("Exportar CSV"), self.export_all)
+        )
 
         for row in (data_row, self.backup_row, self.outside_row, reminder_row, export_row):
             self.body.addWidget(row)
@@ -85,11 +93,13 @@ class DataCard(Card):
         self.body.addSpacing(Space.XS)
         self.body.addWidget(separator())
         restore_row = SettingRow(
-            "Restaurar una copia",
-            "Reemplaza tus datos actuales por los de una copia. Antes se guarda una copia de"
-            " cómo están ahora.",
+            _("Restaurar una copia"),
+            _(
+                "Reemplaza tus datos actuales por los de una copia. Antes se guarda una copia"
+                " de cómo están ahora."
+            ),
         )
-        self.restore_button = restore_row.add(QPushButton("Restaurar copia…"))
+        self.restore_button = restore_row.add(QPushButton(_("Restaurar copia…")))
         self.restore_button.setObjectName("DangerButton")
         self.restore_button.clicked.connect(self.restore_backup)
         self.body.addWidget(restore_row)
@@ -101,12 +111,14 @@ class DataCard(Card):
             self.backup_row.set_detail(backups.last_error, error=True)
             return
         last = backups.last_backup()
-        self.backup_row.set_detail(f"Última: {format_date(last)}" if last else "Sin copias")
+        self.backup_row.set_detail(
+            _("Última: {date}").format(date=format_date(last)) if last else _("Sin copias")
+        )
         outside = backups.last_external_backup()
         self.outside_row.set_detail(
-            f"Última: {format_date(outside)}"
+            _("Última: {date}").format(date=format_date(outside))
             if outside
-            else "Nunca. Guárdala en un pendrive, un disco externo o una carpeta de Drive."
+            else _("Nunca. Guárdala en un pendrive, un disco externo o una carpeta de Drive.")
         )
         self.backup_reminder_input.setChecked(self._services.settings.backup_reminder())
 
@@ -121,19 +133,21 @@ class DataCard(Card):
 
     def backup_now(self) -> None:
         try:
-            with busy(self.backup_now_button, "Guardando…"):
+            with busy(self.backup_now_button, _("Guardando…")):
                 self._services.backups.create(date.today())
         except BackupError as error:
             user_error(
                 self.window(),
-                "Copia de seguridad",
-                "No se pudo hacer la copia.",
-                "Revisa que quede lugar en el disco y vuelve a intentarlo. Tus datos siguen"
-                " como estaban.",
+                _("Copia de seguridad"),
+                _("No se pudo hacer la copia."),
+                _(
+                    "Revisa que quede lugar en el disco y vuelve a intentarlo. Tus datos"
+                    " siguen como estaban."
+                ),
                 str(error),
             )
         else:
-            show_toast(self, "Copia guardada.")
+            show_toast(self, _("Copia guardada."))
         self._event_bus.backups_changed.emit()
         self.refresh()
 

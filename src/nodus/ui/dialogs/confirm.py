@@ -9,13 +9,15 @@ from collections.abc import Callable
 from PySide6.QtCore import SignalInstance
 from PySide6.QtWidgets import QMessageBox, QPushButton, QWidget
 
+from nodus.i18n import _
+
 
 def confirm(
     parent: QWidget,
     title: str,
     text: str,
     action: str | None = None,
-    cancel_text: str = "Cancelar",
+    cancel_text: str | None = None,
 ) -> bool:
     """Asks the user to confirm; True only if they press ``action``, which is the title
     unless given ("Eliminar 3 transacciones").
@@ -28,16 +30,11 @@ def confirm(
         box, action or title, "DangerButton", QMessageBox.ButtonRole.DestructiveRole
     )
     cancel_button = add_button(
-        box, cancel_text, "SecondaryButton", QMessageBox.ButtonRole.RejectRole
+        box, cancel_text or _("Cancelar"), "SecondaryButton", QMessageBox.ButtonRole.RejectRole
     )
     box.setDefaultButton(cancel_button)
     box.exec()
     return box.clickedButton() is accept_button
-
-
-def delete_title(count: int, one: str, many: str) -> str:
-    """The title of deleting ``count`` items: «Eliminar etiqueta», «Eliminar 3 etiquetas»."""
-    return f"Eliminar {one}" if count == 1 else f"Eliminar {count} {many}"
 
 
 def delete_with_confirm(
@@ -60,16 +57,18 @@ def delete_with_confirm(
     return True
 
 
-def tell(parent: QWidget, title: str, text: str, button: str = "Entendido") -> None:
+def tell(parent: QWidget, title: str, text: str, button: str | None = None) -> None:
     """Tells the user something that needs no answer, with one button in Spanish."""
     box = QMessageBox(QMessageBox.Icon.Information, title, text, parent=parent)
     box.setDefaultButton(
-        add_button(box, button, "PrimaryButton", QMessageBox.ButtonRole.AcceptRole)
+        add_button(
+            box, button or _("Entendido"), "PrimaryButton", QMessageBox.ButtonRole.AcceptRole
+        )
     )
     box.exec()
 
 
-def ask(parent: QWidget, title: str, text: str, action: str, cancel: str = "Cancelar") -> bool:
+def ask(parent: QWidget, title: str, text: str, action: str, cancel: str | None = None) -> bool:
     """Asks before something that loses nothing; True only if they press ``action``.
 
     Unlike ``confirm``, the action is the primary button and the default one, since
@@ -77,7 +76,7 @@ def ask(parent: QWidget, title: str, text: str, action: str, cancel: str = "Canc
     """
     box = QMessageBox(QMessageBox.Icon.Question, title, text, parent=parent)
     accept_button = add_button(box, action, "PrimaryButton", QMessageBox.ButtonRole.AcceptRole)
-    add_button(box, cancel, "SecondaryButton", QMessageBox.ButtonRole.RejectRole)
+    add_button(box, cancel or _("Cancelar"), "SecondaryButton", QMessageBox.ButtonRole.RejectRole)
     box.setDefaultButton(accept_button)
     box.exec()
     return box.clickedButton() is accept_button

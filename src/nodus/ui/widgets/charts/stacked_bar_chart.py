@@ -9,6 +9,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
+from nodus.i18n import _
 from nodus.ui.theme.design import Chart, Line, Opacity, Radius
 from nodus.ui.theme.theme import Theme
 from nodus.ui.widgets.charts.chart_base import (
@@ -167,8 +168,10 @@ class StackedBarChart(BarColumnsChart):
         ):
             faded = self.hover_index is not None and index != self.hover_index
             pieces = self._pieces(index, values, baseline, per_cent)
-            outer_up = max((i for i, (s, _) in enumerate(pieces) if s.value > 0), default=None)
-            outer_down = max((i for i, (s, _) in enumerate(pieces) if s.value < 0), default=None)
+            outer_up = max((i for i, (s, _rect) in enumerate(pieces) if s.value > 0), default=None)
+            outer_down = max(
+                (i for i, (s, _rect) in enumerate(pieces) if s.value < 0), default=None
+            )
             painter.setPen(Qt.PenStyle.NoPen)
             for position, (segment, rect) in enumerate(pieces):
                 painter.setBrush(with_alpha(segment.color, Opacity.FADED if faded else Opacity.BAR))
@@ -188,7 +191,7 @@ class StackedBarChart(BarColumnsChart):
         painter.setPen(pen)
         painter.drawLine(QPointF(0, y), QPointF(self.width(), y))
         # The label sits on a patch of the card's color, so it reads over a bar.
-        text = f"Promedio {self._format_value(self.average)}"
+        text = _("Promedio {amount}").format(amount=self._format_value(self.average))
         width = painter.fontMetrics().horizontalAdvance(text) + 12
         box = QRectF(self.width() - width, y - 18, width, 16)
         painter.setPen(Qt.PenStyle.NoPen)

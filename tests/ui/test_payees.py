@@ -219,3 +219,10 @@ class TestDialogs:
             qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
 
         assert [p.name for p in services.payees.list_payees()] == ["Kiosco"]
+
+
+def test_in_english_the_page_and_its_table_speak_english(english, populated, page):
+    """Built after the language is set, the page shows its texts and figures in English."""
+    assert page.search_input.placeholderText() == "Search payees…"
+    assert page.model.headerData(COUNT, Qt.Orientation.Horizontal, 0) == "Transactions"
+    assert column(page, TOTAL)[:2] == ["-$350.00", "$1,000.00"]

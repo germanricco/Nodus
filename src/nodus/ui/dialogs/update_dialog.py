@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import _
 from nodus.models.language_format import format_decimal
 from nodus.services.errors import UpdateError
 from nodus.services.external.update_service import Release, UpdateService
@@ -49,13 +50,15 @@ class UpdateDialog(QDialog):
         self._cancel_requested = False
         self._downloading = False
         self.installing = False
-        self.setWindowTitle("Actualizar Nodus")
+        self.setWindowTitle(_("Actualizar Nodus"))
         self.setMinimumWidth(Layout.MESSAGE_MIN_WIDTH)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(Space.XXL, Space.XL, Space.XXL, Space.XL)
         layout.setSpacing(Space.M)
-        self.status_label = QLabel(f"Descargando Nodus {release.version}…")
+        self.status_label = QLabel(
+            _("Descargando Nodus {version}…").format(version=release.version)
+        )
         self.status_label.setObjectName("DialogTitle")
         layout.addWidget(self.status_label)
         self.progress_bar = QProgressBar()
@@ -69,10 +72,10 @@ class UpdateDialog(QDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch()
-        self.page_button = secondary_button("Abrir GitHub", self._open_page)
+        self.page_button = secondary_button(_("Abrir GitHub"), self._open_page)
         self.page_button.hide()
         buttons.addWidget(self.page_button)
-        self.cancel_button = secondary_button("Cancelar", self.reject)
+        self.cancel_button = secondary_button(_("Cancelar"), self.reject)
         buttons.addWidget(self.cancel_button)
         layout.addLayout(buttons)
 
@@ -100,7 +103,7 @@ class UpdateDialog(QDialog):
             return
         self._cancel_requested = True
         self.cancel_button.setEnabled(False)
-        self.status_label.setText("Cancelando…")
+        self.status_label.setText(_("Cancelando…"))
 
     def _fetch(self) -> Path | UpdateError | None:
         """Runs on a worker thread; errors come back as values for the interface thread."""
@@ -113,7 +116,11 @@ class UpdateDialog(QDialog):
 
     def _show_progress(self, received: int) -> None:
         self.progress_bar.setValue(received)
-        self.detail_label.setText(f"{megabytes(received)} de {megabytes(self._total)} MB")
+        self.detail_label.setText(
+            _("{received} de {total} MB").format(
+                received=megabytes(received), total=megabytes(self._total)
+            )
+        )
 
     def _finish(self, result: Path | UpdateError | None) -> None:
         self._downloading = False
@@ -134,13 +141,15 @@ class UpdateDialog(QDialog):
         self.accept()
 
     def _show_error(self, error: UpdateError) -> None:
-        self.status_label.setText("No se pudo actualizar")
+        self.status_label.setText(_("No se pudo actualizar"))
         set_style_name(self.detail_label, "ErrorLabel")
-        self.detail_label.setText(f"{error}\nTambién puedes descargarla desde GitHub.")
+        self.detail_label.setText(
+            _("{error}\nTambién puedes descargarla desde GitHub.").format(error=error)
+        )
         self.error_detail.set_detail(error.detail)
         self.progress_bar.hide()
         self.page_button.show()
-        self.cancel_button.setText("Cerrar")
+        self.cancel_button.setText(_("Cerrar"))
         self.cancel_button.setEnabled(True)
 
     def _open_page(self) -> None:

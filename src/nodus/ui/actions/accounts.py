@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QWidget
 
+from nodus.i18n import _, ngettext
 from nodus.models.account import Account
 from nodus.services.container import Services
 from nodus.ui.dialogs.account_dialog import AccountDialog
@@ -14,26 +15,36 @@ from nodus.ui.event_bus import EventBus
 def account_delete_warning(services: Services, account: Account) -> str:
     """What deleting ``account`` takes with it: its movements, transfers and charges."""
     movements, transfers = services.accounts.transaction_count(account.id)
-    sentences = [f"Se va a eliminar la cuenta «{account.name}»."]
+    sentences = [_("Se va a eliminar la cuenta «{name}».").format(name=account.name)]
     if movements == 0:
-        sentences.append("No tiene transacciones.")
-    elif movements == 1:
-        sentences.append("Su única transacción también se elimina.")
+        sentences.append(_("No tiene transacciones."))
     else:
-        sentences.append(f"Sus {movements} transacciones también se eliminan.")
-    if transfers == 1:
-        sentences.append("Incluye una transferencia, así que cambia el saldo de la otra cuenta.")
-    elif transfers > 1:
         sentences.append(
-            f"Incluye {transfers} transferencias, así que cambia el saldo de las otras cuentas."
+            ngettext(
+                "Su única transacción también se elimina.",
+                "Sus {count} transacciones también se eliminan.",
+                movements,
+            ).format(count=movements)
+        )
+    if transfers:
+        sentences.append(
+            ngettext(
+                "Incluye una transferencia, así que cambia el saldo de la otra cuenta.",
+                "Incluye {count} transferencias, así que cambia el saldo de las otras cuentas.",
+                transfers,
+            ).format(count=transfers)
         )
     charges = services.recurring.count_for_account(account.id)
-    if charges == 1:
-        sentences.append("También se elimina su cargo recurrente.")
-    elif charges > 1:
-        sentences.append(f"También se eliminan sus {charges} cargos recurrentes.")
+    if charges:
+        sentences.append(
+            ngettext(
+                "También se elimina su cargo recurrente.",
+                "También se eliminan sus {count} cargos recurrentes.",
+                charges,
+            ).format(count=charges)
+        )
     if movements:
-        sentences.append("Para conservar el historial, archívala en su lugar.")
+        sentences.append(_("Para conservar el historial, archívala en su lugar."))
     return " ".join(sentences)
 
 
@@ -43,7 +54,7 @@ def delete_account(
     """Deletes ``account`` once the user confirms, saying what goes with it."""
     return delete_with_confirm(
         parent,
-        "Eliminar cuenta",
+        _("Eliminar cuenta"),
         account_delete_warning(services, account),
         lambda: services.accounts.delete(account.id),
         event_bus.accounts_changed,

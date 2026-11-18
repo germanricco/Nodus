@@ -8,12 +8,13 @@ from collections.abc import Callable
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 
+from nodus.i18n import N_
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.style import set_style_name, set_style_property
 
 # A card about a period with no movements: the Dashboard's and Análisis's.
-NO_MOVEMENTS_TEXT = "Sin movimientos en el período."
+NO_MOVEMENTS_TEXT = N_("Sin movimientos en el período.")
 
 
 class EmptyState(QWidget):

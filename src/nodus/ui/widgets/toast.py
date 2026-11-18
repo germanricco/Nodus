@@ -13,6 +13,7 @@ from PySide6.QtCore import QEvent, QObject, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QEnterEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
+from nodus.i18n import _
 from nodus.ui.theme.design import Dwell, IconSize, Layout, Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -57,7 +58,7 @@ class Toast(QFrame):
         self.close_button.setIcon(icon("close", theme_manager.theme.text_muted))
         self.close_button.setIconSize(QSize(IconSize.M, IconSize.M))
         self.close_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.close_button.setToolTip("Cerrar")
+        self.close_button.setToolTip(_("Cerrar"))
         self.close_button.clicked.connect(self.dismiss)
         layout.addWidget(self.close_button, alignment=Qt.AlignmentFlag.AlignTop)
         elevate(self, theme_manager.theme)

@@ -6,8 +6,8 @@ from dataclasses import dataclass
 
 from PySide6.QtWidgets import QWidget
 
+from nodus.i18n import _, ngettext, quoted
 from nodus.ui.dialogs.form_dialog import FormDialog
-from nodus.ui.text.labels import movements_text
 from nodus.ui.widgets.inputs.combo_box import ComboBox
 from nodus.ui.widgets.style import hint_label
 
@@ -23,8 +23,10 @@ class MergeItem:
 
 def quoted_names(names: list[str]) -> str:
     """ "«A»", "«A» y «B»", "«A», «B» y «C»"."""
-    quoted = [f"«{name}»" for name in names]
-    return quoted[0] if len(quoted) == 1 else f"{', '.join(quoted[:-1])} y {quoted[-1]}"
+    marked = [quoted(name) for name in names]
+    if len(marked) == 1:
+        return marked[0]
+    return _("{names} y {last}").format(names=", ".join(marked[:-1]), last=marked[-1])
 
 
 class MergeDialog(FormDialog):
@@ -39,14 +41,14 @@ class MergeDialog(FormDialog):
         self,
         sources: list[MergeItem],
         field_label: str,
-        plural_noun: str,
+        several_title: str,
         others: list[tuple[str, int]],
         parent: QWidget | None = None,
     ) -> None:
-        """``plural_noun`` names several items ("beneficiarios") in the title."""
+        """``several_title`` is the title when merging several ("Unir 3 beneficiarios")."""
         single = len(sources) == 1
-        title = f"Unir «{sources[0].name}» con…" if single else f"Unir {len(sources)} {plural_noun}"
-        super().__init__(title, parent, "Unir")
+        title = _("Unir «{name}» con…").format(name=sources[0].name) if single else several_title
+        super().__init__(title, parent, _("Unir"))
         self._sources = sources
 
         self.target_input = ComboBox()
@@ -55,7 +57,7 @@ class MergeDialog(FormDialog):
             self.target_input.addItem(name, item_id)
         self.result_label = hint_label()
         self.result_label.setWordWrap(True)
-        self.form.addRow(field_label if single else "Queda", self.target_input)
+        self.form.addRow(field_label if single else _("Queda"), self.target_input)
         self.form.addRow("", self.result_label)
 
         self.target_input.currentIndexChanged.connect(self._update_result)
@@ -72,15 +74,22 @@ class MergeDialog(FormDialog):
         leaving = [s for s in self._sources if s.id != target_id]
         names = quoted_names([s.name for s in leaving])
         count = sum(s.count for s in leaving)
-        goes = "se elimina" if len(leaving) == 1 else "se eliminan"
         if count == 0:
-            have = "no tiene" if len(leaving) == 1 else "no tienen"
-            text = f"{names} {have} movimientos y {goes}."
-        elif len(leaving) == 1 and count == 1:
-            text = f"Su movimiento pasa a «{target}» y {names} {goes}."
+            text = ngettext(
+                "{names} no tiene movimientos y se elimina.",
+                "{names} no tienen movimientos y se eliminan.",
+                len(leaving),
+            )
         elif len(leaving) == 1:
-            text = f"Sus {count} movimientos pasan a «{target}» y {names} {goes}."
+            text = ngettext(
+                "Su movimiento pasa a «{target}» y {names} se elimina.",
+                "Sus {count} movimientos pasan a «{target}» y {names} se elimina.",
+                count,
+            )
         else:
-            moves = "pasa" if count == 1 else "pasan"
-            text = f"{movements_text(count)} {moves} a «{target}» y {goes} {names}."
-        self.result_label.setText(text)
+            text = ngettext(
+                "{count} movimiento pasa a «{target}» y se eliminan {names}.",
+                "{count} movimientos pasan a «{target}» y se eliminan {names}.",
+                count,
+            )
+        self.result_label.setText(text.format(names=names, target=target, count=count))

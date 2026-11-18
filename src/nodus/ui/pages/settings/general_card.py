@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from nodus.i18n import N_, _
 from nodus.services.container import Services
 from nodus.ui.theme.design import set_reduced_motion
 from nodus.ui.theme.theme import ThemeMode
@@ -13,41 +14,41 @@ from nodus.ui.widgets.setting_row import SettingRow
 
 # Segment order of the theme selector.
 THEME_MODES = [ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM]
-THEME_LABELS = ["Claro", "Oscuro", "Según el sistema"]
+THEME_LABELS = [N_("Claro"), N_("Oscuro"), N_("Según el sistema")]
 
 
 class GeneralCard(Card):
     """The preferences of how Nodus looks and opens."""
 
     def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
-        super().__init__("General")
+        super().__init__(_("General"))
         self._services = services
         self._theme_manager = theme_manager
 
         theme_row = SettingRow(
-            "Tema", "«Según el sistema» sigue el modo claro u oscuro de Windows."
+            _("Tema"), _("«Según el sistema» sigue el modo claro u oscuro de Windows.")
         )
-        self.theme_input = theme_row.add(SegmentedControl(THEME_LABELS))
+        self.theme_input = theme_row.add(SegmentedControl([_(label) for label in THEME_LABELS]))
         self.theme_input.changed.connect(self._set_theme)
         self.body.addWidget(theme_row)
 
         startup = services.startup
         startup_row = SettingRow(
-            "Abrir Nodus al iniciar Windows",
-            "Te espera abierto al encender la computadora."
+            _("Abrir Nodus al iniciar Windows"),
+            _("Te espera abierto al encender la computadora.")
             if startup.is_available()
-            else "Disponible en la versión instalada.",
+            else _("Disponible en la versión instalada."),
         )
         self.startup_input = startup_row.add(ToggleSwitch())
         self.startup_input.setEnabled(startup.is_available())
         if not startup.is_available():
-            self.startup_input.setToolTip("Disponible en la versión instalada")
+            self.startup_input.setToolTip(_("Disponible en la versión instalada"))
         self.startup_input.clicked.connect(startup.set_enabled)
         self.body.addWidget(startup_row)
 
         motion_row = SettingRow(
-            "Reducir animaciones",
-            "Los gráficos y las cifras cambian de una vez, sin moverse.",
+            _("Reducir animaciones"),
+            _("Los gráficos y las cifras cambian de una vez, sin moverse."),
         )
         self.reduce_motion_input = motion_row.add(ToggleSwitch())
         self.reduce_motion_input.clicked.connect(self._set_reduce_motion)

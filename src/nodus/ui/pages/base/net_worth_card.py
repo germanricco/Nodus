@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from nodus.i18n import _
+from nodus.i18n import N_, _
 from nodus.models.currency import TOTAL_CURRENCIES, Currency
 from nodus.models.language_format import format_percent, with_symbol
 from nodus.models.money import Money
@@ -35,7 +35,7 @@ CURRENCIES = list(TOTAL_CURRENCIES)
 CURRENCY_LABELS = [currency.symbol for currency in CURRENCIES]
 # Which chart series each currency takes, so a currency keeps its color everywhere.
 SERIES_ORDER = tuple(Currency)
-CHANGE_CAPTION = "vs. inicio del período"
+CHANGE_CAPTION = N_("vs. inicio del período")
 
 
 def rate_effect_text(effect: Money | None, start: Money | None) -> str:
@@ -44,7 +44,9 @@ def rate_effect_text(effect: Money | None, start: Money | None) -> str:
     if effect is None or start is None or effect.is_zero:
         return ""
     change = relative_change(start + effect, start)
-    return "" if change is None else f"{format_signed_percent(change)} por la cotización"
+    if change is None:
+        return ""
+    return _("{percent} por la cotización").format(percent=format_signed_percent(change))
 
 
 def share_text(share: float | None) -> str:
@@ -114,9 +116,9 @@ class NetWorthCard(Card):
     def _build_header(self) -> None:
         header = QHBoxLayout()
         header.setSpacing(Space.M)
-        title = card_title("Patrimonio neto")
+        title = card_title(_("Patrimonio neto"))
         self.currency_input = SegmentedControl(CURRENCY_LABELS)
-        self.currency_input.setToolTip("Ver el patrimonio neto en pesos o en dólares")
+        self.currency_input.setToolTip(_("Ver el patrimonio neto en pesos o en dólares"))
         self.currency_input.set_index(
             CURRENCIES.index(self._services.settings.net_worth_currency())
         )
@@ -125,7 +127,7 @@ class NetWorthCard(Card):
         header.addWidget(self.currency_input)
         header.addStretch()
         self.change_badge = ChangeBadge()
-        self.change_caption = hint_label(CHANGE_CAPTION)
+        self.change_caption = hint_label(_(CHANGE_CAPTION))
         change = QVBoxLayout()
         change.setSpacing(Space.XXS)
         change.addWidget(self.change_badge, alignment=Qt.AlignmentFlag.AlignRight)
@@ -171,9 +173,9 @@ class NetWorthCard(Card):
             column.addWidget(caption)
             column.addWidget(amount)
             layout.addWidget(column_widget)
-        self.load_rate_button = QPushButton("Cargar cotización")
+        self.load_rate_button = QPushButton(_("Cargar cotización"))
         self.load_rate_button.setObjectName("SecondaryButton")
-        self.load_rate_button.setToolTip("Hace falta para sumar tus cuentas en otras monedas")
+        self.load_rate_button.setToolTip(_("Hace falta para sumar tus cuentas en otras monedas"))
         self.load_rate_button.clicked.connect(self.rate_requested)
         layout.addWidget(self.load_rate_button)
         self.body.addWidget(self.missing_rate)
@@ -217,7 +219,7 @@ class NetWorthCard(Card):
         self.missing_rate.setVisible(not has_total)
         if total is not None:
             self.total_label.set_money(total)
-            self.day_label.setText(f"al {format_date(day)}")
+            self.day_label.setText(_("al {date}").format(date=format_date(day)))
         else:
             for held, label in self.subtotal_labels.items():
                 amount = net_worth.by_currency.get(held)
@@ -307,7 +309,8 @@ class NetWorthCard(Card):
         percent, which says nothing of how much there is, so it stays with hidden amounts."""
         effect = self._services.net_worth.rate_effect(end, start_day, currency)
         text = rate_effect_text(effect, first)
-        self.change_caption.setText(f"{CHANGE_CAPTION} · {text}" if text else CHANGE_CAPTION)
+        caption = _(CHANGE_CAPTION)
+        self.change_caption.setText(f"{caption} · {text}" if text else caption)
         tip = self._rates_moved_tip(end, start_day, currency) if text else ""
         self.change_caption.setToolTip(tip)
 
@@ -324,7 +327,7 @@ class NetWorthCard(Card):
                 start_text = rate_text(foreign, before.quote, before.rate)
                 end_text = Money.from_decimal(after.rate, after.quote).format()
                 lines.append(f"{start_text} → {end_text}")
-        lines.append("El resto de la variación es por tus movimientos.")
+        lines.append(_("El resto de la variación es por tus movimientos."))
         return "\n".join(lines)
 
     # Chart formatting

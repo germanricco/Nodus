@@ -7,6 +7,7 @@ from datetime import date
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QVBoxLayout
 
+from nodus.i18n import _
 from nodus.models.period import Month, format_month
 from nodus.services.container import Services
 from nodus.ui.text.labels import days_left_text
@@ -32,10 +33,10 @@ class BudgetsCard(Card):
         super().__init__()
         self._services = services
         self._theme_manager = theme_manager
-        header = card_header(self, "Presupuestos")
+        header = card_header(self, _("Presupuestos"))
         self.when_label = muted_label("")
         header.addWidget(self.when_label)
-        self.see_all_button = see_all_link(header, "Ver todos", self.see_all_requested)
+        self.see_all_button = see_all_link(header, _("Ver todos"), self.see_all_requested)
         self._rows = QVBoxLayout()
         self._rows.setSpacing(0)
         self.body.addLayout(self._rows)

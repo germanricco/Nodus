@@ -7,6 +7,7 @@ from datetime import date
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QVBoxLayout
 
+from nodus.i18n import _, ngettext
 from nodus.services.container import Services
 from nodus.services.transactions.recurring_charge_service import UPCOMING_DAYS
 from nodus.ui.text.labels import estimate_text
@@ -29,11 +30,11 @@ class UpcomingPaymentsCard(Card):
     def __init__(self, services: Services) -> None:
         super().__init__()
         self._services = services
-        header = card_header(self, "Próximos pagos")
+        header = card_header(self, _("Próximos pagos"))
         self.monthly_label = muted_label("")
-        self.monthly_label.setToolTip("Lo que suman tus cargos recurrentes en un mes")
+        self.monthly_label.setToolTip(_("Lo que suman tus cargos recurrentes en un mes"))
         header.addWidget(self.monthly_label)
-        self.see_all_button = see_all_link(header, "Ver todos", self.see_all_requested)
+        self.see_all_button = see_all_link(header, _("Ver todos"), self.see_all_requested)
         self._rows = QVBoxLayout()
         self._rows.setSpacing(0)
         self.body.addLayout(self._rows)
@@ -46,14 +47,17 @@ class UpcomingPaymentsCard(Card):
         recurring = self._services.recurring
         summary = recurring.summary(today)
         self.setVisible(summary.active > 0)
-        self.monthly_label.setText(f"~{summary.monthly.format()}/mes")
+        self.monthly_label.setText(_("~{amount}/mes").format(amount=summary.monthly.format()))
         clear_layout(self._rows)
         charges = recurring.upcoming(today)
         self.rows = []
         if not charges:
-            self._rows.addWidget(
-                muted_label(f"Nada que pagar en los próximos {UPCOMING_DAYS} días")
-            )
+            nothing_due = ngettext(
+                "Nada que pagar en el próximo {count} día",
+                "Nada que pagar en los próximos {count} días",
+                UPCOMING_DAYS,
+            ).format(count=UPCOMING_DAYS)
+            self._rows.addWidget(muted_label(nothing_due))
         for charge in charges[:UPCOMING_COUNT]:
             estimate = self._services.recurring.estimated_payment(charge, today)
             row = UpcomingPaymentRow(

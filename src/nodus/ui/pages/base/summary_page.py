@@ -16,6 +16,7 @@ from PySide6.QtCore import (
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QLineEdit
 
+from nodus.i18n import N_, _
 from nodus.models.money import Money
 from nodus.models.names import normalize_name
 from nodus.services.sorting import name_sort_key
@@ -60,7 +61,7 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
     and ``decoration``.
     """
 
-    TITLES = ["Nombre", "Movimientos", "Total"]
+    TITLES = [N_("Nombre"), N_("Movimientos"), N_("Total")]
 
     def __init__(self, theme: Theme) -> None:
         super().__init__()
@@ -101,7 +102,7 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = 0) -> object:  # noqa: N802
         if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            return self.TITLES[section]
+            return _(self.TITLES[section])
         if role == Qt.ItemDataRole.TextAlignmentRole and section in (COUNT, TOTAL):
             return RIGHT_ALIGNED
         return None
@@ -160,7 +161,7 @@ class SummaryPage(Page, Generic[S]):
         texts: tuple[str, str],
         model: SummaryTableModel[S],
         theme_manager: ThemeManager,
-        chosen_word: str = "seleccionadas",
+        chosen_word: str = N_("seleccionadas"),
     ) -> None:
         """``noun`` names one item ("beneficiario"); ``texts`` are what the empty table
         says when there are no items at all and when none matches the search;
@@ -171,18 +172,20 @@ class SummaryPage(Page, Generic[S]):
         self._summaries: list[S] = []
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText(f"Buscar {noun}…")
+        self.search_input.setPlaceholderText(_("Buscar {noun}…").format(noun=_(noun)))
         self.search_input.setClearButtonEnabled(True)
         self.search_input.setMinimumWidth(Layout.SEARCH_WIDTH)
         self.add_header_widget(self.search_input)
-        self.create_button = self.add_header_button(f"Agregar {noun}", primary=True)
-        self.selection_bar = SelectionBar(chosen_word)
-        self.merge_button = self.selection_bar.add_action("Unir…", self.merge_selected)
-        self.merge_button.setToolTip("Deja uno solo y le pasa los movimientos de los demás")
-        self.delete_button = self.selection_bar.add_action(
-            "Eliminar", self.delete_selected, destructive=True
+        self.create_button = self.add_header_button(
+            _("Agregar {noun}").format(noun=_(noun)), primary=True
         )
-        self.delete_button.setToolTip(DELETE_KEY_HINT)
+        self.selection_bar = SelectionBar(_(chosen_word))
+        self.merge_button = self.selection_bar.add_action(_("Unir…"), self.merge_selected)
+        self.merge_button.setToolTip(_("Deja uno solo y le pasa los movimientos de los demás"))
+        self.delete_button = self.selection_bar.add_action(
+            _("Eliminar"), self.delete_selected, destructive=True
+        )
+        self.delete_button.setToolTip(_(DELETE_KEY_HINT))
         self.selection_bar.cleared.connect(lambda: self.table.clearSelection())
         self.set_selection_bar(self.selection_bar)
 
@@ -245,24 +248,26 @@ class SummaryPage(Page, Generic[S]):
         """The menu of a row: its page, its movements, edit, merge and delete."""
         summary = self.summary_at(row)
         return [
-            RowAction("Abrir", lambda: self.open_detail(summary), default=True, effect=Effect.OPEN),
             RowAction(
-                "Ver movimientos",
+                _("Abrir"), lambda: self.open_detail(summary), default=True, effect=Effect.OPEN
+            ),
+            RowAction(
+                _("Ver movimientos"),
                 lambda: self.show_transactions(summary),
                 "list",
                 enabled=summary.count > 0,
                 effect=Effect.OPEN,
             ),
-            RowAction("Editar", lambda: self.edit_item(summary), "pencil", effect=Effect.OPEN),
+            RowAction(_("Editar"), lambda: self.edit_item(summary), "pencil", effect=Effect.OPEN),
             RowAction(
-                "Unir con…",
+                _("Unir con…"),
                 lambda: self.merge_items([summary]),
                 "merge",
                 enabled=len(self._summaries) > 1,
                 effect=Effect.OPEN,
             ),
             RowAction(
-                "Eliminar",
+                _("Eliminar"),
                 lambda: self.delete_items([summary]),
                 "trash",
                 destructive=True,
@@ -296,11 +301,13 @@ class SummaryPage(Page, Generic[S]):
         self.table.setVisible(has_rows)
         if self._summaries:
             self.empty_state.set_message(
-                self._no_matches_text, "Borrar búsqueda", self.search_input.clear
+                _(self._no_matches_text), _("Borrar búsqueda"), self.search_input.clear
             )
         else:
             self.empty_state.set_message(
-                self._no_items_text, f"Agregar {self._noun}", self.create_item
+                _(self._no_items_text),
+                _("Agregar {noun}").format(noun=_(self._noun)),
+                self.create_item,
             )
         self.empty_state.setVisible(not has_rows)
         self._update_actions()

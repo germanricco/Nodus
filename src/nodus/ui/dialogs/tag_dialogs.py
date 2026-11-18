@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import SignalInstance
 from PySide6.QtWidgets import QLineEdit, QWidget
 
+from nodus.i18n import _, ngettext
 from nodus.models.tag import Tag
 from nodus.services.container import Services
 from nodus.ui.dialogs.color_choice import color_picker, remember_color
@@ -36,19 +37,19 @@ class TagDialog(FormDialog):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(
-            "Editar etiqueta" if tag else "Nueva etiqueta",
+            _("Editar etiqueta") if tag else _("Nueva etiqueta"),
             parent,
-            SAVE_CHANGES if tag else "Agregar etiqueta",
+            _(SAVE_CHANGES) if tag else _("Agregar etiqueta"),
         )
         self._services = services
         self._event_bus = event_bus
         self._tag = tag
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Ej.: Vacaciones 2026, Trabajo, Mudanza")
+        self.name_input.setPlaceholderText(_("Ej.: Vacaciones 2026, Trabajo, Mudanza"))
         self.color_input = color_picker(services)
-        self.form.addRow("Nombre", self.name_input)
-        self.form.addRow("Color", self.color_input)
+        self.form.addRow(_("Nombre"), self.name_input)
+        self.form.addRow(_("Color"), self.color_input)
         self.bind_field(self.name_input, "name")
 
         if tag:
@@ -58,7 +59,7 @@ class TagDialog(FormDialog):
             self.color_input.set_color(services.tags.next_color())
 
     def missing(self) -> dict[QWidget, str]:
-        return self.required((self.name_input, TYPE_NAME))
+        return self.required((self.name_input, _(TYPE_NAME)))
 
     def save(self) -> None:
         name, color = self.name_input.text(), self.color_input.color()
@@ -89,7 +90,10 @@ class MergeTagDialog(MergeDialog):
         sources = [
             MergeItem(tag.name, tag.id, services.tags.transaction_count(tag.id)) for tag in tags
         ]
-        super().__init__(sources, "Etiqueta", "etiquetas", others, parent)
+        several_title = ngettext(
+            "Unir {count} etiqueta", "Unir {count} etiquetas", len(tags)
+        ).format(count=len(tags))
+        super().__init__(sources, _("Etiqueta"), several_title, others, parent)
         self._services = services
         self._event_bus = event_bus
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QBoxLayout, QVBoxLayout, QWidget
 
+from nodus.i18n import N_, _
 from nodus.models.money import Money
 from nodus.services.reports.dashboard_service import CategoryTotal, PeriodSummary
 from nodus.ui.text.formatting import percent
@@ -18,7 +19,7 @@ from nodus.ui.widgets.tables.category_line import CategoryLine
 
 # Categories listed beside the donut; the rest are added up as one line.
 LEGEND_COUNT = 6
-REST_LABEL = "Resto"
+REST_LABEL = N_("Resto")
 
 
 class ExpensesCard(Card):
@@ -33,9 +34,9 @@ class ExpensesCard(Card):
     def __init__(self, theme_manager: ThemeManager) -> None:
         super().__init__()
         self._theme_manager = theme_manager
-        header = card_header(self, "Gastos por categoría")
+        header = card_header(self, _("Gastos por categoría"))
         self.change_badge = ChangeBadge(higher_is_better=False)
-        self.change_badge.setToolTip("Gastos frente al período anterior")
+        self.change_badge.setToolTip(_("Gastos frente al período anterior"))
         header.addWidget(self.change_badge)
         self.donut = DonutChart(theme_manager.theme)
         self.donut.segment_hovered.connect(self._highlight_row)
@@ -69,9 +70,9 @@ class ExpensesCard(Card):
                 )
                 for category_id, name, color, total in items
             ],
-            "Total" if items else "Sin gastos",
+            _("Total") if items else _("Sin gastos"),
             summary.expenses if items else None,
-            "en el período",
+            _("en el período"),
         )
         clear_layout(self._legend)
         self.rows = []
@@ -124,7 +125,7 @@ class ExpensesCard(Card):
         rest = totals[LEGEND_COUNT:]
         if rest:
             rest_total = sum((t.total for t in rest[1:]), rest[0].total)
-            items.append((None, REST_LABEL, self._theme_manager.theme.text_muted, rest_total))
+            items.append((None, _(REST_LABEL), self._theme_manager.theme.text_muted, rest_total))
         return items
 
     def _hover_row(self, index: int, on: bool) -> None:

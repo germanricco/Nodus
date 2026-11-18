@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import _
 from nodus.models.period import Month, Period
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
@@ -334,20 +335,20 @@ class DashboardPage(Page):
 
     def _welcome_card(self) -> Card:
         card = Card()
-        title = QLabel("Te damos la bienvenida a Nodus")
+        title = QLabel(_("Te damos la bienvenida a Nodus"))
         title.setObjectName("DialogTitle")
         text = muted_label(
-            "Crea una cuenta por cada lugar donde tengas dinero y registra tus movimientos."
+            _("Crea una cuenta por cada lugar donde tengas dinero y registra tus movimientos.")
         )
         text.setWordWrap(True)
-        self.create_account_button = QPushButton("Agregar mi primera cuenta")
+        self.create_account_button = QPushButton(_("Agregar mi primera cuenta"))
         self.create_account_button.setObjectName("PrimaryButton")
         self.create_account_button.clicked.connect(
             lambda: self.navigate_requested.emit(PageId.ACCOUNTS)
         )
         # Nodus on a new computer: the copy saved on the old one brings everything along.
         self.bring_data_button = secondary_button(
-            "Traer mis datos de otra computadora", self._bring_data
+            _("Traer mis datos de otra computadora"), self._bring_data
         )
         buttons = QHBoxLayout()
         buttons.addWidget(self.create_account_button)

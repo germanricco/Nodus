@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import _
 from nodus.ui.theme.design import ControlSize, Layout, Line, Space
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.style import secondary_button, show_below
@@ -148,7 +149,7 @@ class ColorWheelPopup(QFrame):
 
         self.value_slider = QSlider(Qt.Orientation.Horizontal)
         self.value_slider.setRange(0, VALUE_STEPS)
-        self.value_slider.setToolTip("Brillo")
+        self.value_slider.setToolTip(_("Brillo"))
         self.value_slider.valueChanged.connect(self._on_value_changed)
         layout.addWidget(self.value_slider)
 
@@ -164,8 +165,8 @@ class ColorWheelPopup(QFrame):
         code.addStretch()
         layout.addLayout(code)
 
-        cancel = secondary_button("Cancelar", self.close)
-        self.accept_button = QPushButton("Usar color")
+        cancel = secondary_button(_("Cancelar"), self.close)
+        self.accept_button = QPushButton(_("Usar color"))
         self.accept_button.setObjectName("PrimaryButton")
         self.accept_button.clicked.connect(self._accept)
         buttons = QHBoxLayout()

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QLineEdit, QWidget
 
+from nodus.i18n import N_, _
 from nodus.models.bulk_changes import BulkChanges
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
@@ -16,9 +17,9 @@ from nodus.ui.widgets.inputs.selectors import CategoryComboBox
 from nodus.ui.widgets.inputs.tag_input import TagInput
 from nodus.ui.widgets.style import hint_label
 
-UNCHANGED = "Sin cambios"
-MIXED_KINDS_HINT = "La categoría cambia solo si todas son gastos o todas son ingresos."
-TRANSFERS_HINT = "Las transferencias solo cambian su nota."
+UNCHANGED = N_("Sin cambios")
+MIXED_KINDS_HINT = N_("La categoría cambia solo si todas son gastos o todas son ingresos.")
+TRANSFERS_HINT = N_("Las transferencias solo cambian su nota.")
 
 
 def shared_kind(transactions: list[Transaction]) -> TransactionType | None:
@@ -44,7 +45,11 @@ class BulkEditDialog(FormDialog):
         parent: QWidget | None = None,
     ) -> None:
         count = transactions_text(len(transactions))
-        super().__init__(f"Editar {count}", parent, f"Aplicar a {count}")
+        super().__init__(
+            _("Editar {transactions}").format(transactions=count),
+            parent,
+            _("Aplicar a {transactions}").format(transactions=count),
+        )
         self._services = services
         self._event_bus = event_bus
         self._ids = [t.id for t in transactions]
@@ -54,39 +59,39 @@ class BulkEditDialog(FormDialog):
         kind = shared_kind(transactions)
         if kind is not None:
             self.category_input.set_categories(
-                [(None, services.categories.category_tree(kind))], all_label=UNCHANGED
+                [(None, services.categories.category_tree(kind))], all_label=_(UNCHANGED)
             )
         else:
-            self.category_input.set_categories([], all_label=UNCHANGED)
+            self.category_input.set_categories([], all_label=_(UNCHANGED))
             self.category_input.setEnabled(False)
-            self.category_input.setToolTip(MIXED_KINDS_HINT if movements else TRANSFERS_HINT)
+            self.category_input.setToolTip(_(MIXED_KINDS_HINT) if movements else _(TRANSFERS_HINT))
         self.payee_input = PayeeInput(services.payees)
-        self.payee_input.line_edit.setPlaceholderText(UNCHANGED)
+        self.payee_input.line_edit.setPlaceholderText(_(UNCHANGED))
         self.note_input = QLineEdit()
-        self.note_input.setPlaceholderText(UNCHANGED)
+        self.note_input.setPlaceholderText(_(UNCHANGED))
         self.add_tags_input = TagInput(services.tags)
         self.remove_tags_input = TagInput(services.tags)
         for tags_input in (self.add_tags_input, self.remove_tags_input):
-            tags_input.line_edit.setPlaceholderText("Ninguna · Enter para agregar")
+            tags_input.line_edit.setPlaceholderText(_("Ninguna · Enter para agregar"))
         for widget in (self.payee_input, self.add_tags_input, self.remove_tags_input):
             widget.setEnabled(bool(movements))
 
-        self.form.addRow("Categoría", self.category_input)
-        self.form.addRow("Beneficiario", self.payee_input)
-        self.form.addRow("Nota", self.note_input)
-        self.form.addRow("Agregar etiquetas", self.add_tags_input)
-        self.form.addRow("Quitar etiquetas", self.remove_tags_input)
+        self.form.addRow(_("Categoría"), self.category_input)
+        self.form.addRow(_("Beneficiario"), self.payee_input)
+        self.form.addRow(_("Nota"), self.note_input)
+        self.form.addRow(_("Agregar etiquetas"), self.add_tags_input)
+        self.form.addRow(_("Quitar etiquetas"), self.remove_tags_input)
         hint = hint_label(self._hint(transactions, kind))
         hint.setWordWrap(True)
         self.form.addRow("", hint)
 
     @staticmethod
     def _hint(transactions: list[Transaction], kind: TransactionType | None) -> str:
-        sentences = ["Solo cambia lo que completes."]
+        sentences = [_("Solo cambia lo que completes.")]
         if any(t.is_transfer for t in transactions):
-            sentences.append(TRANSFERS_HINT)
+            sentences.append(_(TRANSFERS_HINT))
         elif kind is None:
-            sentences.append(MIXED_KINDS_HINT)
+            sentences.append(_(MIXED_KINDS_HINT))
         return " ".join(sentences)
 
     def changes(self) -> BulkChanges:

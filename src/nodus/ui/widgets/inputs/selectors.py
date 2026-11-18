@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from nodus.i18n import N_, _
 from nodus.models.account import Account
 from nodus.models.payee import Payee
 from nodus.models.tag import Tag
@@ -29,7 +30,7 @@ HEADING_ROLE = Qt.ItemDataRole.UserRole + 1
 DEPTH_ROLE = Qt.ItemDataRole.UserRole + 2
 # The closing «Editar» row: an action, not a choice.
 MANAGE_ROLE = Qt.ItemDataRole.UserRole + 3
-MANAGE_LABEL = "Editar"
+MANAGE_LABEL = N_("Editar")
 
 _Index = QModelIndex | QPersistentModelIndex
 
@@ -185,7 +186,7 @@ class _SelectorComboBox(ComboBox):
         """Closes a refill started with ``_start``: adds «Editar» if enabled, lets signals
         through again and restores the selection."""
         if self._has_manage_item:
-            self.addItem(MANAGE_LABEL, None)
+            self.addItem(_(MANAGE_LABEL), None)
             item = self.model().item(self.count() - 1)
             # Enabled to take the click, but not selectable, so it never becomes the filter.
             item.setFlags(Qt.ItemFlag.ItemIsEnabled)

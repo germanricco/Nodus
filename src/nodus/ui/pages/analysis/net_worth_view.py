@@ -8,7 +8,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QVBoxLayout
 
-from nodus.i18n import _
+from nodus.i18n import N_, _
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.money import Money
 from nodus.models.period import Month, Period, format_month
@@ -85,9 +85,10 @@ class NetWorthTableModel(QAbstractTableModel):
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = 0) -> object:  # noqa: N802
         if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             if section == self.total_column:
-                return f"Total en {CURRENCY_LABELS[CURRENCIES.index(self._currency)]}"
+                symbol = CURRENCY_LABELS[CURRENCIES.index(self._currency)]
+                return _("Total en {currency}").format(currency=symbol)
             held = [held_in_label(currency) for currency in self._held]
-            return ["Mes", *held, "Total", "Variación"][section]
+            return [_("Mes"), *held, _("Total"), _("Variación")][section]
         if role == Qt.ItemDataRole.TextAlignmentRole and section != MONTH:
             return RIGHT_ALIGNED
         return None
@@ -130,14 +131,16 @@ class NetWorthTableModel(QAbstractTableModel):
     def _month_text(day: date) -> str:
         """The month, and the day when the point is not its last one (today)."""
         month = Month.of(day)
-        return format_month(month) + ("" if day == month.end else f" · al {format_date(day)}")
+        if day == month.end:
+            return format_month(month)
+        return " · ".join([format_month(month), _("al {date}").format(date=format_date(day))])
 
 
 class NetWorthView(AnalysisView):
     """The net worth along the period, in pesos or dollars, with its change and split by
     currency, and a table of what there was at each month end."""
 
-    DESCRIPTION = "Cuánto tienes al cierre de cada mes, sumando todas tus cuentas y monedas."
+    DESCRIPTION = N_("Cuánto tienes al cierre de cada mes, sumando todas tus cuentas y monedas.")
 
     rate_requested = Signal()
 
@@ -156,7 +159,7 @@ class NetWorthView(AnalysisView):
         layout.addWidget(self.card)
 
         table_card = Card()
-        card_header(table_card, "Fin de cada mes")
+        card_header(table_card, _("Fin de cada mes"))
         self.model = NetWorthTableModel(theme_manager.theme)
         self.table = record_table(self.model, MONTH)
         table_card.body.addWidget(self.table)

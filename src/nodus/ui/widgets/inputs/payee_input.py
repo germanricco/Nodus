@@ -7,6 +7,7 @@ from collections.abc import Callable
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QLineEdit, QVBoxLayout, QWidget
 
+from nodus.i18n import _
 from nodus.models.names import normalize_name
 from nodus.models.transaction import TransactionType
 from nodus.services.classification.payee_service import PayeeService
@@ -47,7 +48,7 @@ class PayeeInput(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Space.XXS)
         self.line_edit = QLineEdit()
-        self.line_edit.setPlaceholderText("Opcional")
+        self.line_edit.setPlaceholderText(_("Opcional"))
         self.names = NameCompleter(
             self.line_edit, self._suggestions, suggest_on_focus=context is not None
         )
@@ -83,7 +84,7 @@ class PayeeInput(QWidget):
     def _update_hint(self, text: str) -> None:
         name = text.strip()
         is_new = bool(normalize_name(name)) and self._payees.find(name) is None
-        self.hint.setText(f"Se creará «{name}»" if is_new else "")
+        self.hint.setText(_("Se creará «{name}»").format(name=name) if is_new else "")
         self.hint.setVisible(is_new)
 
     def _choose(self, text: str) -> None:

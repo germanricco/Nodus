@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
 )
 
+from nodus.i18n import N_, _
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
@@ -30,13 +31,14 @@ from nodus.ui.widgets.inputs.selectors import (
 )
 from nodus.ui.widgets.style import secondary_button, set_style_property
 
-# Type filter: label -> (transaction type, is_transfer, refund_linked) criteria.
+# Type filter: label -> (transaction type, is_transfer, refund_linked) criteria, in the
+# combo's order; the labels are translated where the combo shows them.
 TYPE_FILTERS = {
-    "Tipo": (None, None, None),
-    "Gastos": (TransactionType.EXPENSE, False, None),
-    "Ingresos": (TransactionType.INCOME, False, None),
-    "Transferencias": (None, True, None),
-    "Reembolsos": (None, False, True),
+    N_("Tipo"): (None, None, None),
+    N_("Gastos"): (TransactionType.EXPENSE, False, None),
+    N_("Ingresos"): (TransactionType.INCOME, False, None),
+    N_("Transferencias"): (None, True, None),
+    N_("Reembolsos"): (None, False, True),
 }
 
 
@@ -62,8 +64,8 @@ class TransactionsPage(Page):
         # The period goes in the header, as on the dashboard, to leave the row to the filters.
         self.period_selector = PeriodSelector()
         self.add_header_widget(self.period_selector)
-        self.export_button = self.add_header_button("Exportar")
-        self.export_button.setToolTip("Guarda en un archivo CSV los movimientos que se ven")
+        self.export_button = self.add_header_button(_("Exportar"))
+        self.export_button.setToolTip(_("Guarda en un archivo CSV los movimientos que se ven"))
         self.export_button.clicked.connect(self.export_shown)
         self.account_filter = AccountComboBox()
         self.category_filter = CategoryComboBox()
@@ -78,15 +80,15 @@ class TransactionsPage(Page):
             combo.enable_manage_item()
             combo.manage_requested.connect(partial(self.navigate_requested.emit, page_id))
         self.type_filter = ComboBox()
-        self.type_filter.addItems(list(TYPE_FILTERS))
+        self.type_filter.addItems([_(label) for label in TYPE_FILTERS])
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Buscar…")
+        self.search_input.setPlaceholderText(_("Buscar…"))
         self.search_input.setToolTip(
-            "Busca en la nota y en los nombres del beneficiario y las etiquetas"
+            _("Busca en la nota y en los nombres del beneficiario y las etiquetas")
         )
         self.search_input.setMinimumWidth(Layout.SEARCH_MIN_WIDTH)
         self.search_input.setClearButtonEnabled(True)
-        self.clear_filters_button = secondary_button("Limpiar filtros", self.clear_filters)
+        self.clear_filters_button = secondary_button(_("Limpiar filtros"), self.clear_filters)
         filters = QHBoxLayout()
         filters.setSpacing(Space.S)
         for combo in self._filter_combos():
@@ -121,30 +123,30 @@ class TransactionsPage(Page):
 
     def _load_filter_choices(self) -> None:
         self.account_filter.set_accounts(
-            self._services.accounts.list_accounts(include_archived=True), "Cuenta"
+            self._services.accounts.list_accounts(include_archived=True), _("Cuenta")
         )
         categories = self._services.categories
         self.category_filter.set_categories(
             [
-                ("Gastos", categories.category_tree(TransactionType.EXPENSE)),
-                ("Ingresos", categories.category_tree(TransactionType.INCOME)),
+                (_("Gastos"), categories.category_tree(TransactionType.EXPENSE)),
+                (_("Ingresos"), categories.category_tree(TransactionType.INCOME)),
             ],
-            "Categoría",
+            _("Categoría"),
         )
-        self.payee_filter.set_payees(self._services.payees.list_payees(), "Beneficiario")
-        self.tag_filter.set_tags(self._services.tags.list_tags(), "Etiqueta")
+        self.payee_filter.set_payees(self._services.payees.list_payees(), _("Beneficiario"))
+        self.tag_filter.set_tags(self._services.tags.list_tags(), _("Etiqueta"))
 
     def reload(self) -> None:
         """Lists the movements matching the current filters."""
         self.list_view.show_matching(self.current_filter())
         if self._has_filters():
             self.empty_state.set_message(
-                "Sin transacciones con estos filtros.", "Limpiar filtros", self.clear_filters
+                _("Sin transacciones con estos filtros."), _("Limpiar filtros"), self.clear_filters
             )
         else:
             self.empty_state.set_message(
-                "Sin transacciones en este período.",
-                "Agregar transacción",
+                _("Sin transacciones en este período."),
+                _("Agregar transacción"),
                 self.new_transaction_requested.emit,
             )
         self.clear_filters_button.setEnabled(self._has_filters())
@@ -213,7 +215,8 @@ class TransactionsPage(Page):
 
     def current_filter(self) -> TransactionFilter:
         period = self.period_selector.period()
-        transaction_type, is_transfer, refund_linked = TYPE_FILTERS[self.type_filter.currentText()]
+        criteria = list(TYPE_FILTERS.values())[self.type_filter.currentIndex()]
+        transaction_type, is_transfer, refund_linked = criteria
         return TransactionFilter(
             start=period.start,
             end=period.end,

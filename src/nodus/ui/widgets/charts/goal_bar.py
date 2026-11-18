@@ -7,7 +7,7 @@ from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QPainter, QPaintEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
-from nodus.i18n import _, ngettext
+from nodus.i18n import N_, _, ngettext
 from nodus.models.goal import Goal, GoalProgress, GoalState
 from nodus.models.language_format import format_percent
 from nodus.models.money import Money
@@ -22,24 +22,26 @@ from nodus.ui.widgets.money_label import amount_text
 
 # The pill of each state, and its tone (the colors of ``ChangeBadge``).
 STATE_LABELS = {
-    GoalState.REACHED: ("Alcanzada", Tone.GOOD),
-    GoalState.ON_TRACK: ("Al día", Tone.GOOD),
-    GoalState.BEHIND: ("Atrasada", Tone.WARNING),
-    GoalState.OVERDUE: ("Vencida", Tone.BAD),
-    GoalState.NO_HISTORY: ("Sin historia", Tone.NEUTRAL),
-    GoalState.NO_DATE: ("Sin fecha", Tone.NEUTRAL),
+    GoalState.REACHED: (N_("Alcanzada"), Tone.GOOD),
+    GoalState.ON_TRACK: (N_("Al día"), Tone.GOOD),
+    GoalState.BEHIND: (N_("Atrasada"), Tone.WARNING),
+    GoalState.OVERDUE: (N_("Vencida"), Tone.BAD),
+    GoalState.NO_HISTORY: (N_("Sin historia"), Tone.NEUTRAL),
+    GoalState.NO_DATE: (N_("Sin fecha"), Tone.NEUTRAL),
     GoalState.NO_RATE: (NO_RATE_TEXT, Tone.NEUTRAL),
 }
-MISSING_RATE_SENTENCE = "Falta la cotización para sumar las cuentas en otras monedas."
+MISSING_RATE_SENTENCE = N_("Falta la cotización para sumar las cuentas en otras monedas.")
 
 
 def saved_of_target(progress: GoalProgress, hidden: bool) -> str:
     """ "US$ 820,00 de US$ 2.000,00 · 41 %"; without a rate, "— de US$ 2.000,00"."""
     target = amount_text(progress.target, hidden)
     if progress.saved is None:
-        return f"— de {target}"
+        return _("— de {target}").format(target=target)
     percent = format_percent(progress.percent)
-    return f"{amount_text(progress.saved, hidden)} de {target} · {percent}"
+    return _("{saved} de {target} · {percent}").format(
+        saved=amount_text(progress.saved, hidden), target=target, percent=percent
+    )
 
 
 def goal_sentence(goal: Goal, progress: GoalProgress, hidden: bool = False) -> str:
@@ -51,30 +53,41 @@ def goal_sentence(goal: Goal, progress: GoalProgress, hidden: bool = False) -> s
         return amount_text(money, hidden)
 
     needed = (
-        f" Para llegar a tiempo hacen falta {amount(progress.needed_per_month)} por mes."
+        " "
+        + _("Para llegar a tiempo hacen falta {amount} por mes.").format(
+            amount=amount(progress.needed_per_month)
+        )
         if progress.needed_per_month is not None
         else ""
     )
     if state is GoalState.REACHED:
-        return f"Alcanzada el {format_date(goal.reached_on)}." if goal.reached_on else "Alcanzada."
+        if goal.reached_on:
+            return _("Alcanzada el {date}.").format(date=format_date(goal.reached_on))
+        return _("Alcanzada.")
     if state is GoalState.NO_RATE:
-        return MISSING_RATE_SENTENCE
+        return _(MISSING_RATE_SENTENCE)
     if state is GoalState.OVERDUE:
         missing = amount(progress.remaining)
-        return f"La fecha pasó y faltan {missing}. Cambia la fecha o el objetivo."
+        return _("La fecha pasó y faltan {amount}. Cambia la fecha o el objetivo.").format(
+            amount=missing
+        )
     if state is GoalState.NO_HISTORY:
-        return "Todavía no hay 3 meses para medir tu ritmo." + needed
+        return _("Todavía no hay 3 meses para medir tu ritmo.") + needed
     if progress.eta is None:  # saving nothing, or less every month
-        return "Tu ahorro no viene creciendo en los últimos meses." + needed
-    arrives = f"A este ritmo llegas en {format_month_in_sentence(progress.eta)}"
+        return _("Tu ahorro no viene creciendo en los últimos meses.") + needed
+    month = format_month_in_sentence(progress.eta)
     if state is GoalState.ON_TRACK:
-        return f"Vas bien: {arrives[0].lower()}{arrives[1:]}."
+        return _("Vas bien: a este ritmo llegas en {month}.").format(month=month)
     if state is GoalState.BEHIND:
         assert goal.target_date is not None  # behind means behind its date
         late = Month.of(goal.target_date).months_to(progress.eta)
-        months = ngettext("{count} mes", "{count} meses", late).format(count=late)
-        return f"{arrives}, {months} tarde." + needed
-    return f"{arrives}."
+        late_text = ngettext(
+            "A este ritmo llegas en {month}, {count} mes tarde.",
+            "A este ritmo llegas en {month}, {count} meses tarde.",
+            late,
+        ).format(month=month, count=late)
+        return late_text + needed
+    return _("A este ritmo llegas en {month}.").format(month=month)
 
 
 def goal_pill(progress: GoalProgress) -> QLabel:

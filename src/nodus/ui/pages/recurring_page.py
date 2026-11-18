@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from nodus.i18n import _
+from nodus.i18n import N_, _
 from nodus.models.category import Category
 from nodus.models.recurring_charge import SOON_DAYS, DueStatus, RecurringCharge
 from nodus.services.container import Services
@@ -37,14 +37,15 @@ from nodus.ui.widgets.tables.charge_row import due_status_label, seen_actions
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
 from nodus.ui.widgets.tables.schedule_row import ScheduleRow
 
+# Untranslated: each is translated, with its days, where a card shows it.
 GROUP_TITLES = {
-    DueStatus.OVERDUE: "Vencidos",
-    DueStatus.SOON: f"Próximos {SOON_DAYS} días",
-    DueStatus.LATER: "Más adelante",
+    DueStatus.OVERDUE: N_("Vencidos"),
+    DueStatus.SOON: N_("Próximos {days} días"),
+    DueStatus.LATER: N_("Más adelante"),
 }
-PAUSED_TITLE = "En pausa"
-INSTALLMENTS_TITLE = "Cuotas"
-EMPTY_TEXT = (
+PAUSED_TITLE = N_("En pausa")
+INSTALLMENTS_TITLE = N_("Cuotas")
+EMPTY_TEXT = N_(
     "Anota acá lo que pagas todos los meses o todos los años: el alquiler, los servicios, "
     "Netflix, el gimnasio. Nodus te avisa cuándo vence cada uno y cuánto suman por mes."
 )
@@ -86,7 +87,7 @@ class RecurringChargeRow(ScheduleRow):
         if charge.is_active:
             status = due_status_label(charge, today, quiet)
         else:
-            status = muted_label(PAUSED_TITLE)
+            status = muted_label(_(PAUSED_TITLE))
         pay_button = PayButton()
         super().__init__(
             category.color,
@@ -110,14 +111,14 @@ class RecurringChargeRow(ScheduleRow):
         if charge.is_active:
             result += [
                 RowAction(
-                    "Pagar",
+                    _("Pagar"),
                     lambda: self.pay_requested.emit(charge),
                     "pay",
                     default=True,
                     effect=Effect.OPEN,
                 ),
                 RowAction(
-                    "Omitir",
+                    _("Omitir"),
                     lambda: self.skip_requested.emit(charge),
                     "skip",
                     effect=Effect.UNDOABLE,
@@ -127,20 +128,20 @@ class RecurringChargeRow(ScheduleRow):
         return result + [
             # A paused charge cannot be paid; editing is what it opens.
             RowAction(
-                "Editar",
+                _("Editar"),
                 lambda: self.edit_requested.emit(charge),
                 "pencil",
                 default=not charge.is_active,
                 effect=Effect.OPEN,
             ),
             RowAction(
-                "Pausar" if charge.is_active else "Reanudar",
+                _("Pausar") if charge.is_active else _("Reanudar"),
                 lambda: self.pause_toggled.emit(charge),
                 "pause" if charge.is_active else "play",
                 effect=Effect.TOGGLE,
             ),
             RowAction(
-                "Eliminar",
+                _("Eliminar"),
                 lambda: self.delete_requested.emit(charge),
                 "trash",
                 destructive=True,
@@ -171,7 +172,12 @@ class InstallmentPlanRow(ScheduleRow):
         super().__init__(
             color,
             summary.first.note or item.category_name,
-            f"{summary.paid} de {plan.count} · {item.account_text} · {item.category_name}",
+            _("{paid} de {count} · {account} · {category}").format(
+                paid=summary.paid,
+                count=plan.count,
+                account=item.account_text,
+                category=item.category_name,
+            ),
             upcoming.amount.format(),
             status_pill(due_label((upcoming.occurred_on - today).days), Tone.NEUTRAL),
             lambda: actions,
@@ -190,12 +196,12 @@ class RecurringPage(Page):
         self._services = services
         self._event_bus = event_bus
         self._theme_manager = theme_manager
-        self.create_button = self.add_header_button("Agregar cargo", primary=True)
+        self.create_button = self.add_header_button(_("Agregar cargo"), primary=True)
         self.create_button.clicked.connect(lambda: self.open_charge_dialog())
 
         # What the short name covers, said once under the title.
         self.content_layout.addWidget(
-            muted_label("Pagos que se repiten: servicios, suscripciones, alquiler.")
+            muted_label(_("Pagos que se repiten: servicios, suscripciones, alquiler."))
         )
         self._sections = self.scrolling_body()
         self.rows: list[RecurringChargeRow] = []
@@ -230,7 +236,8 @@ class RecurringPage(Page):
         for title, members in groups.items():
             if not members:
                 continue
-            card = Card(f"{title} ({len(members)})")
+            name = _(title).format(days=SOON_DAYS)
+            card = Card(f"{name} ({len(members)})")
             for charge in members:
                 row = RecurringChargeRow(
                     charge, categories[charge.category_id], accounts[charge.account_id], today,
@@ -252,7 +259,8 @@ class RecurringPage(Page):
     ) -> Card:
         """The purchases with installments to come, soonest first, as Transacciones shows
         their installments."""
-        card = Card(f"{INSTALLMENTS_TITLE} ({len(purchases)})")
+        name = _(INSTALLMENTS_TITLE)
+        card = Card(f"{name} ({len(purchases)})")
         items = TransactionListBuilder(self._services).build([p.upcoming for p in purchases])
         for summary, item in zip(purchases, items, strict=True):
             row = InstallmentPlanRow(
@@ -272,7 +280,7 @@ class RecurringPage(Page):
         services, event_bus = self._services, self._event_bus
         return [
             RowAction(
-                "Editar compra",
+                _("Editar compra"),
                 lambda: edit_transaction(
                     services, event_bus, self._theme_manager, item, self.window()
                 ),
@@ -282,7 +290,7 @@ class RecurringPage(Page):
             ),
             *pay_off_actions(self, services, event_bus, item),
             RowAction(
-                "Eliminar compra",
+                _("Eliminar compra"),
                 lambda: delete_transactions(services, event_bus, [item], self.window()),
                 "trash",
                 destructive=True,
@@ -306,13 +314,12 @@ class RecurringPage(Page):
         self._event_bus.recurring_changed.emit()
 
     def delete_charge(self, charge: RecurringCharge) -> None:
-        text = (
-            f"Se va a eliminar «{charge.name}». Los pagos ya registrados se conservan "
-            "como transacciones."
-        )
+        text = _(
+            "Se va a eliminar «{name}». Los pagos ya registrados se conservan como transacciones."
+        ).format(name=charge.name)
         delete_with_confirm(
             self.window(),
-            "Eliminar cargo",
+            _("Eliminar cargo"),
             text,
             lambda: self._services.recurring.delete(charge.id),
             self._event_bus.recurring_changed,
@@ -341,15 +348,15 @@ class RecurringPage(Page):
             " + ".join(amount.format() for amount in installments) or "—"
         )
         for caption, value in (
-            ("Por mes", self.monthly_label),
-            ("Por año", self.yearly_label),
-            ("Activos", self.active_label),
-            ("Cuotas por mes", self.installments_label),
+            (_("Por mes"), self.monthly_label),
+            (_("Por año"), self.yearly_label),
+            (_("Activos"), self.active_label),
+            (_("Cuotas por mes"), self.installments_label),
         ):
             tiles.addWidget(FigureTile(caption, value), stretch=1)
         card.body.addLayout(tiles)
         return card
 
     def _empty_state(self) -> Card:
-        card, _state = empty_page_card("Todavía no hay cargos recurrentes", EMPTY_TEXT)
+        card, _state = empty_page_card(_("Todavía no hay cargos recurrentes"), _(EMPTY_TEXT))
         return card

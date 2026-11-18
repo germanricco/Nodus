@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
 from PySide6.QtGui import QColor
 
+from nodus.i18n import N_, _
 from nodus.ui.text.formatting import format_date
 from nodus.ui.theme.theme import Theme
 from nodus.ui.transaction_rows import REFUND_MARK, TransactionListItem, upcoming_text
@@ -12,7 +13,8 @@ from nodus.ui.widgets.inputs.color import color_icon, colors_icon
 
 DATE, DESCRIPTION, PAYEE, CATEGORY, TAGS, ACCOUNT, AMOUNT = range(7)
 COLUMN_TITLES = [
-    "Fecha", "Descripción", "Beneficiario", "Categoría", "Etiquetas", "Cuenta", "Monto"
+    N_("Fecha"), N_("Descripción"), N_("Beneficiario"), N_("Categoría"), N_("Etiquetas"),
+    N_("Cuenta"), N_("Monto"),
 ]  # fmt: skip
 
 
@@ -50,7 +52,7 @@ class TransactionTableModel(QAbstractTableModel):
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = 0) -> object:  # noqa: N802
         if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            return COLUMN_TITLES[section]
+            return _(COLUMN_TITLES[section])
         if role == Qt.ItemDataRole.TextAlignmentRole and section == AMOUNT:
             return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         return None

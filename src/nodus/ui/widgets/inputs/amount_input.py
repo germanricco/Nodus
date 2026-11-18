@@ -6,11 +6,9 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
 
 from nodus.models.amount_parsing import AmountTextError, parse_amount
 from nodus.models.currency import Currency
+from nodus.models.language_format import format_decimal
 from nodus.models.money import Money
 from nodus.ui.widgets.inputs.input_error import InputError
-
-# The hint of an empty field: "0,00", or "0" for a currency without cents.
-_ZERO_HINTS = {True: "0,00", False: "0"}
 
 
 class AmountInput(QWidget):
@@ -25,14 +23,17 @@ class AmountInput(QWidget):
         self.line_edit = QLineEdit()
         layout.addWidget(self._symbol)
         layout.addWidget(self.line_edit, stretch=1)
+        self._zero_hint = ""
         self.set_currency(currency)
 
     def set_currency(self, currency: Currency) -> None:
         self._currency = currency
         self._symbol.setText(currency.symbol)
-        # Only the default hint follows the currency; a field may set one of its own.
-        if self.line_edit.placeholderText() in {"", *_ZERO_HINTS.values()}:
-            self.line_edit.setPlaceholderText(_ZERO_HINTS[currency.decimals > 0])
+        # Only the default hint ("0,00", or "0" for a currency without cents) follows the
+        # currency; a field may set one of its own.
+        if self.line_edit.placeholderText() in {"", self._zero_hint}:
+            self._zero_hint = format_decimal(0, currency.decimals)
+            self.line_edit.setPlaceholderText(self._zero_hint)
 
     def money(self) -> Money:
         """The typed amount; an empty field counts as zero. Raises ``InputError`` about

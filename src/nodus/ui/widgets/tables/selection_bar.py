@@ -7,6 +7,7 @@ from collections.abc import Callable
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
+from nodus.i18n import _
 from nodus.ui.theme.design import Space
 from nodus.ui.widgets.style import muted_label
 
@@ -17,12 +18,12 @@ class SelectionBar(QFrame):
 
     cleared = Signal()
 
-    def __init__(self, chosen_word: str = "seleccionadas") -> None:
+    def __init__(self, chosen_word: str = "") -> None:
         """``chosen_word`` agrees with what the rows are: "seleccionadas" (transacciones,
-        etiquetas) or "seleccionados" (beneficiarios)."""
+        etiquetas), the default, or "seleccionados" (beneficiarios)."""
         super().__init__()
         self.setObjectName("SelectionBar")
-        self._chosen_word = chosen_word
+        self._chosen_word = chosen_word or _("seleccionadas")
         layout = QHBoxLayout(self)
         layout.setContentsMargins(Space.M, Space.XS, Space.S, Space.XS)
         layout.setSpacing(Space.S)
@@ -37,7 +38,7 @@ class SelectionBar(QFrame):
         layout.addLayout(self._actions)
         self.clear_button = QPushButton("✕")
         self.clear_button.setObjectName("SmallButton")
-        self.clear_button.setToolTip("Quitar la selección (Esc)")
+        self.clear_button.setToolTip(_("Quitar la selección (Esc)"))
         self.clear_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.clear_button.clicked.connect(self.cleared)
         layout.addWidget(self.clear_button)

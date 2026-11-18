@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QLabel, QWidget
 
+from nodus.i18n import _
 from nodus.models.money import Money
 from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
@@ -26,16 +27,17 @@ class RefundExtraDialog(FormDialog):
         transaction_id: int | None = None,
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__("Te devolvieron de más", parent, "Anotar los dos")
+        super().__init__(_("Te devolvieron de más"), parent, _("Anotar los dos"))
         self._services = services
         self._draft = draft
         self._transaction_id = transaction_id
 
         left = draft.amount - excess
         message = QLabel(
-            f"Te devolvieron {draft.amount.format()} y de ese gasto quedaban"
-            f" {left.format()} por reembolsar. Se anota {left.format()} como reembolso"
-            f" y {excess.format()} como un ingreso aparte."
+            _(
+                "Te devolvieron {amount} y de ese gasto quedaban {left} por reembolsar."
+                " Se anota {left} como reembolso y {excess} como un ingreso aparte."
+            ).format(amount=draft.amount.format(), left=left.format(), excess=excess.format())
         )
         message.setWordWrap(True)
         self.form.addRow(message)
@@ -45,11 +47,11 @@ class RefundExtraDialog(FormDialog):
         self.category_input.set_categories([(None, services.categories.category_tree(income))])
         others = next(c for c in services.categories.list_categories(income) if c.is_system)
         self.category_input.select(others.id)
-        self.form.addRow("Categoría de lo que sobra", self.category_input)
+        self.form.addRow(_("Categoría de lo que sobra"), self.category_input)
         self.bind_field(self.category_input, "category_id")
 
     def missing(self) -> dict[QWidget, str]:
-        return self.required((self.category_input, CHOOSE_CATEGORY))
+        return self.required((self.category_input, _(CHOOSE_CATEGORY)))
 
     def save(self) -> None:
         category_id = self.category_input.current_id()
