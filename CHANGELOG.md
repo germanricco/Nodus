@@ -40,6 +40,8 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Arreglo: ocultar o mostrar los montos, o cambiar el tema, volvía a animar desde cero las barras de Metas y de Presupuestos. Ahora se quedan quietas, y cuando una cifra cambia, la barra avanza desde donde estaba.
 - Arreglo: al achicar la ventana, las tarjetas del Inicio se cortaban por la derecha antes de reacomodarse. Ahora el Inicio cambia de forma apenas una tarjeta no entra.
 - Arreglo: traer tus datos desde una copia ofrecía el recorrido guiado, como si fuera la primera vez.
+- Arreglo: con la ventana angosta, abrir la Ayuda podía dejar cortadas las tarjetas del Inicio. Ahora la barra lateral se pliega mientras la Ayuda está abierta y vuelve al cerrarla; si la mueves tú, se respeta lo que elegiste.
+- Arreglo: en «Últimas transacciones» del Inicio, una transferencia entre monedas mostraba los dos montos y dejaba su nombre en «Compra de …». Ahora muestra lo que salió, y lo que llegó aparece al pasar el mouse.
 
 ## 1.8.0 — 2026-11-15
 

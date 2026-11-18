@@ -57,11 +57,18 @@ class TransactionListItem:
     category_color: str | None
     payee_name: str
     account_text: str
-    amount_text: str
+    amount_text: str  # a transfer between currencies: what left → what arrived
     tone: str  # "positive", "negative" or "neutral", as MoneyLabel uses it
     refund_text: str = ""  # what the refund pays back, or what was refunded of the expense
     tags: tuple[Tag, ...] = ()
     upcoming: bool = False
+    sent_text: str = ""  # a transfer between currencies: what left its account
+
+    @property
+    def short_amount_text(self) -> str:
+        """The amount where there is room for one: what left, for a transfer between
+        currencies."""
+        return self.sent_text or self.amount_text
 
     @property
     def occurred_on(self) -> date:
@@ -144,7 +151,8 @@ class TransactionListBuilder:
     def _transfer_item(self, transfer_id: str) -> TransactionListItem:
         transfer = self._transfers[transfer_id]
         outgoing, incoming = transfer.outgoing, transfer.incoming
-        amount_text = outgoing.amount.format()
+        sent_text = outgoing.amount.format()
+        amount_text = sent_text
         if incoming.amount.currency is not outgoing.amount.currency:
             amount_text += f" → {incoming.amount.format()}"
         return TransactionListItem(
@@ -160,4 +168,5 @@ class TransactionListBuilder:
             amount_text=amount_text,
             tone="neutral",
             upcoming=outgoing.occurred_on > self._today,
+            sent_text=sent_text,
         )

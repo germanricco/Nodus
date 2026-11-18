@@ -61,7 +61,11 @@ class LatestTransactionRow(QWidget):
         layout.addLayout(texts, stretch=1)
         figures = QVBoxLayout()
         figures.setSpacing(0)
-        amount = QLabel(item.amount_text)
+        # One amount, so the name keeps its room; a transfer between currencies tells
+        # what arrived under the mouse, and the accounts it went between below its name.
+        amount = QLabel(item.short_amount_text)
+        if item.short_amount_text != item.amount_text:
+            amount.setToolTip(item.amount_text)
         amount.setAlignment(Qt.AlignmentFlag.AlignRight)
         set_style_property(amount, "tone", item.tone)
         day = muted_label(format_date(item.occurred_on))

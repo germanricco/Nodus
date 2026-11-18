@@ -11,6 +11,7 @@ from factories import (
     expense_draft,
     income_draft,
     services_for,
+    usd,
 )
 from PySide6.QtWidgets import QLabel, QScrollArea
 
@@ -19,6 +20,7 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
+from nodus.services.transactions.transfer_service import TransferDraft
 from nodus.ui.actions import recurring as recurring_actions
 from nodus.ui.dialogs import restore_copy
 from nodus.ui.navigation import PageId, TransactionFocus
@@ -78,6 +80,23 @@ def test_a_new_computer_brings_the_data_from_the_old_one(
     qtbot.wait(10)
     assert asked == []
     assert services.settings.tour_offered()
+
+
+def test_a_transfer_between_currencies_shows_what_left(
+    qtbot, window, services, event_bus, pesos, dollars
+):
+    """One amount leaves the name its room; what arrived shows under the mouse."""
+    services.transfers.create(
+        TransferDraft(pesos.id, dollars.id, ars("243100"), date.today(), amount_in=usd("200"))
+    )
+    event_bus.transactions_changed.emit()
+    page = dashboard(window)
+    page.refresh()
+
+    qtbot.waitUntil(lambda: "$ 243.100,00" in visible_texts(page))  # rows come next pass
+    (row,) = [r for r in page.findChildren(LatestTransactionRow) if r.isVisibleTo(page)]
+    (amount,) = [label for label in row.findChildren(QLabel) if label.text() == "$ 243.100,00"]
+    assert amount.toolTip() == "$ 243.100,00 → US$ 200,00"
 
 
 def test_shows_month_flow_and_latest_movements(qtbot, window, services, event_bus, pesos):
@@ -318,6 +337,39 @@ def test_no_card_is_cut_at_any_width(qtbot, window, services, event_bus, pesos, 
         return needed <= page._scroll.viewport().width()
 
     qtbot.waitUntil(fits)
+
+
+def test_ayuda_folds_the_sidebar_when_the_page_would_be_cut(qtbot, window, pesos):
+    """With the window at its narrowest, Ayuda beside it leaves the Inicio less than its
+    narrowest shape needs: the sidebar folds while Ayuda is open, and comes back."""
+    page = dashboard(window)
+    page.net_worth_card.setMinimumWidth(560)  # as wide as it gets with long figures
+    window.resize(1100, 900)
+    page.refresh()
+    assert not window.sidebar.is_collapsed
+
+    window.toggle_help()
+
+    qtbot.waitUntil(lambda: window.sidebar.is_collapsed)
+    needed = page._scroll.widget().minimumSizeHint().width()
+    qtbot.waitUntil(lambda: needed <= page._scroll.viewport().width())
+    window.toggle_help()
+    assert not window.sidebar.is_collapsed
+
+
+def test_a_sidebar_folded_by_hand_stays_folded_after_ayuda(qtbot, window, pesos):
+    page = dashboard(window)
+    page.net_worth_card.setMinimumWidth(560)
+    window.resize(1100, 900)
+    page.refresh()
+    window.toggle_help()
+    qtbot.waitUntil(lambda: window.sidebar.is_collapsed)
+
+    window.sidebar.collapse_button.click()  # unfolded by hand: the user's choice now
+    window.sidebar.collapse_button.click()  # and folded again
+    window.toggle_help()
+
+    assert window.sidebar.is_collapsed
 
 
 def test_budgets_card_sits_beside_the_cash_flow_when_there_are_budgets(

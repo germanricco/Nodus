@@ -7,13 +7,14 @@ from datetime import date
 from functools import partial
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QKeySequence, QShortcut, QShowEvent
+from PySide6.QtGui import QKeySequence, QResizeEvent, QShortcut, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QHBoxLayout,
     QMainWindow,
     QPushButton,
+    QScrollArea,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -101,6 +102,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(content, stretch=1)
         self._central_layout = layout
         self._help_panel: HelpPanel | None = None  # built the first time it opens
+        self._folded_for_help = False  # the sidebar folded to make room for Ayuda
+        self._sidebar_by_hand = False  # folded or unfolded by the user while Ayuda is open
+        self.sidebar.collapse_button.clicked.connect(self._sidebar_moved_by_hand)
         self.setCentralWidget(central)
 
         self.sidebar.page_requested.connect(self.show_page)
@@ -146,6 +150,10 @@ class MainWindow(QMainWindow):
     ) -> None:
         """Tells what just happened at the bottom right of the page (``ToastStack``)."""
         self.toasts.show_toast(text, action_text, on_action)
+
+    def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802
+        super().resizeEvent(event)
+        self._make_room_for_help_soon()
 
     def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
         """Opens with the focus on the page, not on the first button of the sidebar,
@@ -206,8 +214,46 @@ class MainWindow(QMainWindow):
             panel.tour_requested.connect(self._tour_from_help)
             # The panel had the focus; Qt would hand it to the sidebar's first button.
             panel.closed.connect(self._content.setFocus)
+            panel.closed.connect(self._unfold_after_help)
             self._help_panel = panel
         return self._help_panel
+
+    def _make_room_for_help_soon(self) -> None:
+        """Once the page has taken the width left beside Ayuda: see ``_make_room_for_help``."""
+        QTimer.singleShot(0, self, self._make_room_for_help)
+
+    def _make_room_for_help(self) -> None:
+        """Folds the sidebar while Ayuda is open if the page shown would be cut: a page
+        that never scrolls sideways and needs more width than it has. Closing Ayuda
+        unfolds it again."""
+        panel = self._help_panel
+        if panel is None or not panel.isVisible() or self.sidebar.is_collapsed:
+            return
+        if self._sidebar_by_hand:  # the user's choice wins until Ayuda closes
+            return
+        self._central_layout.activate()  # the page takes its width now, not later
+        if self._page_is_cut():
+            self.sidebar.set_collapsed(True)
+            self._folded_for_help = True
+
+    def _page_is_cut(self) -> bool:
+        page = self._stack.currentWidget()
+        return any(
+            area.widget() is not None
+            and area.horizontalScrollBarPolicy() == Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+            and area.widget().minimumSizeHint().width() > area.viewport().width()
+            for area in page.findChildren(QScrollArea)
+        )
+
+    def _unfold_after_help(self) -> None:
+        if self._folded_for_help:
+            self.sidebar.set_collapsed(False)
+        self._folded_for_help = self._sidebar_by_hand = False
+
+    def _sidebar_moved_by_hand(self) -> None:
+        self._folded_for_help = False
+        if self._help_panel is not None and self._help_panel.isVisible():
+            self._sidebar_by_hand = True
 
     def toggle_help(self) -> None:
         """F1, the «?» of the top bar and Ajustes open Ayuda, or close it when open."""
@@ -228,6 +274,7 @@ class MainWindow(QMainWindow):
             panel.show_topic(topic)
         panel.show()
         panel.setFocus()
+        self._make_room_for_help_soon()
 
     @property
     def current_page_id(self) -> PageId:
@@ -394,6 +441,7 @@ class MainWindow(QMainWindow):
             page.refresh()
         self._stack.setCurrentWidget(page)
         self.sidebar.select(page_id)
+        self._make_room_for_help_soon()
 
     def detail(self, detail_id: DetailId) -> DetailPage:
         """The detail page ``detail_id``, built and wired the first time it is asked for."""
@@ -412,6 +460,7 @@ class MainWindow(QMainWindow):
         page.show_item(item_id)
         self._stack.setCurrentWidget(page)
         self.sidebar.select(detail_id.list_page)
+        self._make_room_for_help_soon()
         page.setFocus()
 
     def show_transactions(self, focus: TransactionFocus) -> None:
