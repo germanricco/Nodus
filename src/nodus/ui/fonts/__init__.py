@@ -1,2 +1,2 @@
-"""Inter, the typeface Nodus brings where the system has no Segoe UI (Linux), in the
-three weights the design uses. Licensed under the SIL Open Font License (``OFL.txt``)."""
+"""Source Sans 3, the typeface of Nodus on every system, in the three weights the design
+uses. Licensed under the SIL Open Font License (``OFL.txt``)."""

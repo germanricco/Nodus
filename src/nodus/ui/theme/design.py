@@ -12,15 +12,14 @@ Light and dark themes share this scale; only colors differ between them (``theme
 
 from __future__ import annotations
 
-import sys
 from enum import Enum, IntEnum
 
 from PySide6.QtCore import QEasingCurve
 from PySide6.QtGui import QFont
 
-# Windows brings Segoe UI; elsewhere Nodus brings Inter (``ui/fonts``), so it looks the same
-# on every Linux distribution instead of taking whatever font each one has.
-FONT_FAMILY = "Segoe UI" if sys.platform == "win32" else "Inter"
+# Nodus brings its own typeface (``ui/fonts``) and uses it on every system, so each screen
+# is measured once and text takes the same room on Windows and on any Linux distribution.
+FONT_FAMILY = "Source Sans 3"
 
 REGULAR, SEMIBOLD, BOLD = 400, 600, 700
 
@@ -36,16 +35,20 @@ class TextRole(Enum):
     FIGURE_SMALL = (13, SEMIBOLD)  # the figures of the Dashboard cards
     STRONG = (11, SEMIBOLD)  # amounts in rows, empty states, the way back
     BODY = (10, REGULAR)  # everything else
-    NOTE = (9, REGULAR)  # hints under a field, badges, small buttons, chart axes
-    LABEL = (9, SEMIBOLD)  # card titles, sidebar sections, table headers
+    # Source Sans 3 is small for its size: below 10 points hints and captions read poorly.
+    NOTE = (10, REGULAR)  # hints under a field, badges, small buttons, chart axes
+    LABEL = (10, SEMIBOLD)  # card titles, sidebar sections, table headers
 
-    @property
-    def size(self) -> int:
-        return self.value[0]
+    def __new__(cls, size: int, weight: int) -> TextRole:
+        # Each role is its own member even when it shares a size and weight with another
+        # (NOTE and BODY): with the pair as the value, Enum would make it an alias.
+        role = object.__new__(cls)
+        role._value_ = len(cls.__members__)
+        return role
 
-    @property
-    def weight(self) -> int:
-        return self.value[1]
+    def __init__(self, size: int, weight: int) -> None:
+        self.size = size
+        self.weight = weight
 
 
 class Space(IntEnum):

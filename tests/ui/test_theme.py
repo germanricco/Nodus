@@ -1,9 +1,9 @@
 import pytest
 from factories import ars
-from PySide6.QtGui import QFontDatabase
+from PySide6.QtGui import QFont, QFontDatabase, QFontInfo
 
 from nodus.ui.navigation import PageId
-from nodus.ui.theme import theme_manager as theme_manager_module
+from nodus.ui.theme.design import BOLD, FONT_FAMILY, REGULAR, SEMIBOLD
 from nodus.ui.theme.icons import APP_ICON_SIZES, _svg, app_icon, tinted_pixmap
 from nodus.ui.theme.theme import DARK, LIGHT, ThemeMode
 from nodus.ui.widgets.money_label import MoneyLabel
@@ -72,14 +72,10 @@ def test_app_icon_has_every_windows_size(qapp):
     assert sizes == set(APP_ICON_SIZES)
 
 
-def test_where_the_design_font_is_missing_nodus_brings_inter(qapp, monkeypatch):
-    monkeypatch.setattr(theme_manager_module, "FONT_FAMILY", "Inter")
-
-    theme_manager_module.load_bundled_fonts()
-
-    assert "Inter" in QFontDatabase.families()
-    assert {QFontDatabase.weight("Inter", style) for style in QFontDatabase.styles("Inter")} >= {
-        400,
-        600,
-        700,
+def test_nodus_brings_its_font_in_the_three_weights_of_the_design(theme_manager):
+    """On any system, whatever fonts it has: the screens are measured in this one."""
+    assert QFontInfo(QFont(FONT_FAMILY)).family() == FONT_FAMILY
+    weights = {
+        QFontDatabase.weight(FONT_FAMILY, style) for style in QFontDatabase.styles(FONT_FAMILY)
     }
+    assert weights >= {REGULAR, SEMIBOLD, BOLD}

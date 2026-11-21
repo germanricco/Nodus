@@ -54,6 +54,15 @@ def test_it_names_what_is_missing(window, monkeypatch):
     ]
 
 
+def test_a_font_left_out_of_the_build_is_named(window, monkeypatch):
+    """Without its font Nodus still opens, in a system font that takes other room."""
+    monkeypatch.setattr(smoke_test, "FONT_FAMILY", "A Font Nodus Lacks")
+
+    assert window_problems(window) == [
+        "the A Font Nodus Lacks font is missing: text takes another font's room"
+    ]
+
+
 def test_a_page_that_fails_is_named_and_the_rest_still_tried(window, monkeypatch):
     shown = []
     show_page = window.show_page

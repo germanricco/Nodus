@@ -2,6 +2,10 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.11.0
+
+- Nodus tiene letra propia, Source Sans 3, y se ve igual en cualquier computadora. Es más angosta que la de antes, así que en las listas entra más texto antes de cortarse con «…», como la descripción de cada transacción. Las ayudas bajo cada opción y los títulos de las tarjetas crecieron un poco y se leen mejor.
+
 ## 1.10.0 — 2026-11-18
 
 - Nodus habla inglés. El idioma se elige en Ajustes, en «Idioma», y se aplica al reiniciar. Junto con los textos cambian los montos y las fechas: en inglés se escriben «$1,234.56» y «11/18/2026». La primera vez, Nodus abre en el idioma de tu Windows; si ya lo usabas, sigue en español.

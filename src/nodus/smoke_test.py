@@ -18,7 +18,7 @@ import threading
 from pathlib import Path
 from types import TracebackType
 
-from PySide6.QtGui import QImageReader
+from PySide6.QtGui import QFont, QFontInfo, QImageReader
 from PySide6.QtWidgets import QApplication
 
 from nodus import __version__
@@ -28,6 +28,7 @@ from nodus.services.app.changelog import changelog_files, load_changelog
 from nodus.ui.navigation import PageId
 from nodus.ui.qt_language import has_qt_texts
 from nodus.ui.shell.main_window import MainWindow
+from nodus.ui.theme.design import FONT_FAMILY
 
 FLAG = "--smoke-test"
 
@@ -62,6 +63,8 @@ def window_problems(window: MainWindow) -> list[str]:
         problems.append("the window did not open")
     if b"svg" not in QImageReader.supportedImageFormats():
         problems.append("Qt's SVG plugin is missing: the icons do not show")
+    if QFontInfo(QFont(FONT_FAMILY)).family() != FONT_FAMILY:
+        problems.append(f"the {FONT_FAMILY} font is missing: text takes another font's room")
     problems.extend(language_problems())
     if not any(entry.version == __version__ for entry in load_changelog(SOURCE_LANGUAGE)):
         problems.append(f"the changelog has no section for {__version__}")

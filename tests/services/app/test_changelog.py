@@ -103,7 +103,9 @@ def test_notes_without_the_english_mark_are_whole_in_any_language():
 
 
 def test_the_english_changelog_is_read_in_english():
-    assert "Nodus speaks English" in load_changelog(Language.ENGLISH)[0].body
+    entries = {entry.version: entry for entry in load_changelog(Language.ENGLISH)}
+
+    assert "Nodus speaks English" in entries["1.10.0"].body
 
 
 def test_release_notes_refuse_a_missing_or_undated_section():

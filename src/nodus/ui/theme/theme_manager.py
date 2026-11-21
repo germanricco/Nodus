@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 from importlib import resources
 from pathlib import Path
 from string import Template
@@ -10,16 +11,16 @@ from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QColor, QFontDatabase, QPalette
 from PySide6.QtWidgets import QApplication
 
-from nodus.ui.theme.design import FONT_FAMILY, design_tokens
+from nodus.ui.theme.design import design_tokens
 from nodus.ui.theme.focus import use_keyboard_focus_style
 from nodus.ui.theme.theme import DARK, LIGHT, Theme, ThemeMode
 
 
+@functools.cache
 def load_bundled_fonts() -> None:
-    """Registers the fonts Nodus brings (``ui/fonts``) when the system lacks the typeface
-    of the design; on Windows, Segoe UI is already there and nothing is loaded."""
-    if FONT_FAMILY in QFontDatabase.families():
-        return
+    """Registers the typeface Nodus brings (``ui/fonts``), ``FONT_FAMILY``. It is loaded
+    even if the system has a font of that name, so the screens use the very files they
+    were measured with. Once per process: every theme manager calls it."""
     for font in resources.files("nodus.ui.fonts").iterdir():
         if font.name.endswith(".ttf"):
             QFontDatabase.addApplicationFontFromData(font.read_bytes())
