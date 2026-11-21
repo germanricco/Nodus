@@ -2,9 +2,9 @@
 
 What each version brings, newest first. To update, click “Update” when Nodus tells you there's a new version: your data is kept. The versions before 1.10, when Nodus spoke only Spanish, are described in [CHANGELOG.md](CHANGELOG.md).
 
-## 1.11.0
+## 1.11.0 — 2026-11-21
 
-- Nodus comes to Linux. Download it as an AppImage, a single file that opens with a double click on almost any distribution, with nothing to install. Once opened, Nodus joins the applications menu with its icon, and if the file is deleted it leaves the menu. From Settings it can open when you sign in, light or dark mode follows your system's and, as on Windows, it updates itself: click “Update” and Nodus downloads the new version, puts it in place of the old one and opens again.
+- Nodus comes to Linux as an AppImage: a single file that opens with a double click on almost any distribution, with nothing to install. It shows up in the applications menu, can open when you sign in and updates itself, as on Windows.
 - Nodus has a typeface of its own, Source Sans 3, and looks the same on any computer. It's narrower than before, so lists show more text before cutting it with “…”, like each transaction's description. The hints under each option and the titles of the cards grew a little and are easier to read.
 - On Home, Help opens on the list of topics, so you see at once everything it explains. On the other screens it still opens on the topic of that screen.
 

@@ -3,7 +3,7 @@
 import os
 import sys
 
-__version__ = "1.10.0"
+__version__ = "1.11.0"
 
 # The program's name: the window, the data folder, the registry and the installer use it.
 APP_NAME = "Nodus"
