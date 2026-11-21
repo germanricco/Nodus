@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox, QPushButton, QWidget
 from nodus.i18n import N_, _
 from nodus.services.container import Services
 from nodus.services.errors import BackupError
-from nodus.ui.dialogs.confirm import add_button
+from nodus.ui.dialogs.confirm import add_button, exec_box
 from nodus.ui.dialogs.user_error import user_error
 from nodus.ui.event_bus import EventBus
 from nodus.ui.widgets.busy import busy
@@ -69,7 +69,7 @@ def choose_folder(parent: QWidget, services: Services) -> Path | None:
         )
         add_button(box, _("Cancelar"), "SecondaryButton", QMessageBox.ButtonRole.RejectRole)
         box.setDefaultButton(here)
-        box.exec()
+        exec_box(box)
         if box.clickedButton() is here:
             return last
         if box.clickedButton() is not other:

@@ -9,7 +9,13 @@ from nodus.models.account import AccountType
 from nodus.models.currency import Currency
 from nodus.ui.dialogs.account_dialog import AccountDialog
 from nodus.ui.dialogs.category_dialog import CategoryDialog
-from nodus.ui.dialogs.confirm import ask, confirm, delete_with_confirm, tell
+from nodus.ui.dialogs.confirm import (
+    ask,
+    confirm,
+    delete_with_confirm,
+    tell,
+    title_width,
+)
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES
 
 
@@ -136,3 +142,21 @@ def test_a_notice_answers_in_spanish(qtbot):
     tell(None, "Primero, una cuenta", "Crea una en Cuentas.")
 
     assert buttons == ["Entendido"]
+
+
+def test_a_question_is_wide_enough_for_its_whole_title(qtbot, monkeypatch):
+    """GNOME's title bar writes the title in bold, centered between its buttons: the box
+    keeps that room, so «Recorrido guiado» is not cut to «Recorrido gu…»."""
+    widths: list[int] = []
+
+    def fake_exec(box: QMessageBox) -> int:
+        box.show()
+        widths.append(box.width())
+        box.close()
+        return 0
+
+    monkeypatch.setattr(QMessageBox, "exec", fake_exec)
+    title = "Recorrido guiado"
+    ask(None, title, "¿Te muestro cómo se usa Nodus? Es un minuto.", "Ver el recorrido")
+
+    assert widths[0] >= title_width(title) > 343  # 343 px: the box as Qt makes it

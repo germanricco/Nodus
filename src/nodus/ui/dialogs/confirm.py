@@ -7,9 +7,18 @@ Every box is built here with its own buttons, named in Spanish: the static
 from collections.abc import Callable
 
 from PySide6.QtCore import SignalInstance
-from PySide6.QtWidgets import QMessageBox, QPushButton, QWidget
+from PySide6.QtGui import QFontMetrics
+from PySide6.QtWidgets import (
+    QGridLayout,
+    QMessageBox,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QWidget,
+)
 
 from nodus.i18n import _
+from nodus.ui.theme.design import Layout, title_bar_font
 
 
 def confirm(
@@ -33,7 +42,7 @@ def confirm(
         box, cancel_text or _("Cancelar"), "SecondaryButton", QMessageBox.ButtonRole.RejectRole
     )
     box.setDefaultButton(cancel_button)
-    box.exec()
+    exec_box(box)
     return box.clickedButton() is accept_button
 
 
@@ -65,7 +74,7 @@ def tell(parent: QWidget, title: str, text: str, button: str | None = None) -> N
             box, button or _("Entendido"), "PrimaryButton", QMessageBox.ButtonRole.AcceptRole
         )
     )
-    box.exec()
+    exec_box(box)
 
 
 def ask(parent: QWidget, title: str, text: str, action: str, cancel: str | None = None) -> bool:
@@ -78,8 +87,28 @@ def ask(parent: QWidget, title: str, text: str, action: str, cancel: str | None 
     accept_button = add_button(box, action, "PrimaryButton", QMessageBox.ButtonRole.AcceptRole)
     add_button(box, cancel or _("Cancelar"), "SecondaryButton", QMessageBox.ButtonRole.RejectRole)
     box.setDefaultButton(accept_button)
-    box.exec()
+    exec_box(box)
     return box.clickedButton() is accept_button
+
+
+def exec_box(box: QMessageBox) -> None:
+    """Shows ``box`` and waits for the answer, wide enough for its whole title.
+
+    QMessageBox keeps 50 px beside the title, enough for Windows; GNOME's title bar, in
+    bold and centered between its buttons, cut «Recorrido guiado» to «Recorrido gu…».
+    """
+    width = title_width(box.windowTitle())
+    layout = box.layout()
+    assert isinstance(layout, QGridLayout)
+    room = QSpacerItem(width, 0, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
+    layout.addItem(room, layout.rowCount(), 0, 1, layout.columnCount())
+    box.exec()
+
+
+def title_width(title: str) -> int:
+    """How wide a dialog must be for ``title`` to fit between the title bar's buttons."""
+    title_room = QFontMetrics(title_bar_font()).horizontalAdvance(title)
+    return title_room + 2 * Layout.TITLE_BAR_BUTTONS
 
 
 def add_button(

@@ -213,6 +213,7 @@ class Layout:
     HEADER_HEIGHT = 44  # a page's title row
     DIALOG_MIN_WIDTH = 460  # a form
     MESSAGE_MIN_WIDTH = 420  # a dialog of text and buttons, such as an update's
+    TITLE_BAR_BUTTONS = 112  # what GNOME's buttons take on each side of a centered title
     COACH_BUBBLE_WIDTH = 340  # the guided tour's bubble beside what it points at
     ERROR_DETAIL_HEIGHT = 120  # the unfolded technical text of an error; it scrolls
     NEWS_SIZE = (560, 520)
@@ -289,6 +290,15 @@ def role_font(role: TextRole) -> QFont:
     font = QFont(FONT_FAMILY)
     font.setPointSize(role.size)
     font.setWeight(QFont.Weight(role.weight))
+    return font
+
+
+def title_bar_font() -> QFont:
+    """About the font of the system's title bar, which is not Nodus's: GNOME writes the
+    title in bold at 12 points, so a dialog measures its title with this to fit it."""
+    font = QFont()
+    font.setPointSize(12)
+    font.setBold(True)
     return font
 
 
