@@ -28,10 +28,15 @@ from nodus.services.app.changelog import (
     parse_changelog,
 )
 
+# How to update, on either system: the installer goes over the old one on Windows, the
+# AppImage takes the old one's place on Linux.
 FOOTERS = {
-    Language.SPANISH: "Para actualizar, instala esta versión encima de la anterior: tus datos"
-    " se conservan.",
-    Language.ENGLISH: "To update, install this version over the previous one: your data is kept.",
+    Language.SPANISH: "Para actualizar, toca «Actualizar» cuando Nodus avise. Si la descargas"
+    " a mano, en Windows instálala encima de la anterior y en Linux reemplaza el AppImage:"
+    " tus datos se conservan.",
+    Language.ENGLISH: "To update, click “Update” when Nodus tells you. If you download it"
+    " yourself, on Windows install it over the previous one and on Linux replace the"
+    " AppImage: your data is kept.",
 }
 # The first version with an English section; older ones have notes only in Spanish.
 FIRST_ENGLISH = "1.10.0"

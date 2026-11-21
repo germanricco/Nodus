@@ -7,16 +7,15 @@
 **Tus finanzas, en tu computadora.**
 
 Finanzas personales con el diseño de una app moderna y la privacidad de un archivo que es solo tuyo.<br>
-Sin nube, sin cuentas, sin suscripciones.
+Sin nube, sin cuentas, sin suscripciones, en Windows y Linux.
 
 [English](README.md) · **Español**
 
 [![Última versión](https://img.shields.io/github/v/release/germanricco/Nodus?label=versi%C3%B3n)](https://github.com/germanricco/Nodus/releases/latest)
 [![Licencia MIT](https://img.shields.io/github/license/germanricco/Nodus?label=licencia)](LICENSE)
-[![Windows 10 y 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4)](https://github.com/germanricco/Nodus/releases/latest)
-[![Linux x86_64](https://img.shields.io/badge/Linux-x86__64-FCC624)](https://github.com/germanricco/Nodus/releases/latest)
 
-### [Descargar para Windows y Linux](https://github.com/germanricco/Nodus/releases/latest)
+<a href="https://github.com/germanricco/Nodus/releases/latest"><img src="https://img.shields.io/badge/Descargar-Windows%2010%20%7C%2011-0078D4?style=for-the-badge" alt="Descargar para Windows 10 y 11"></a>
+<a href="https://github.com/germanricco/Nodus/releases/latest"><img src="https://img.shields.io/badge/Descargar-Linux%20x86__64-E95420?style=for-the-badge" alt="Descargar para Linux x86_64"></a>
 
 </div>
 
