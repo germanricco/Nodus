@@ -10,6 +10,7 @@ htmlcov/
 
 # Entornos virtuales y variables locales
 .venv/
+.venv-linux/
 venv/
 .env
 
@@ -36,6 +37,7 @@ dist/
 
 # Capturas generadas por scripts/screenshot.py
 screenshots/
+screenshots-linux/
 
 # Copia de los datos reales para probar con scripts/dev.py
 dev-data/
@@ -56,6 +58,7 @@ referencias/
 # Archivos de trabajo (planes, notas, tareas e instrucciones para Claude): quedan en local
 docs/plans/
 docs/especificacion_de_proyecto.md
+docs/sincronizacion.md
 NOTES.md
 TASKS.md
 CLAUDE.md

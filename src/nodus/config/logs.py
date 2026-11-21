@@ -18,7 +18,7 @@ import sys
 import traceback
 from dataclasses import dataclass
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import TextIO
 
 from nodus import __version__, is_installed
@@ -73,10 +73,11 @@ class Frame:
 
 def code_path(filename: str) -> str:
     """The path of a source file from the ``nodus`` package on, the same in any install
-    and without the user's folders; for anything else, its file name."""
-    parts = Path(filename).parts
+    and without the user's folders; for anything else, its file name. Read as a Windows
+    path, which also splits on "/", so it works with the paths of either system."""
+    parts = PureWindowsPath(filename).parts
     if "nodus" not in parts:
-        return Path(filename).name
+        return PureWindowsPath(filename).name
     start = len(parts) - 1 - parts[::-1].index("nodus")
     return "/".join(parts[start:])
 

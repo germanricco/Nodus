@@ -41,7 +41,7 @@ def has_qt_texts(language: Language) -> bool:
 
 
 def system_language() -> Language:
-    """Spanish if Windows speaks Spanish; English for any other language, since it is
+    """Spanish if the system speaks Spanish; English for any other language, since it is
     the one more people read."""
     if QLocale.system().language() is QLocale.Language.Spanish:
         return Language.SPANISH

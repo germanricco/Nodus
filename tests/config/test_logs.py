@@ -69,6 +69,14 @@ def test_code_path_starts_at_the_package():
     assert code_path(r"C:\Python311\Lib\json\decoder.py") == "decoder.py"
 
 
+def test_code_path_reads_linux_paths_too():
+    assert code_path("/home/ana/Nodus/src/nodus/ui/app.py") == "nodus/ui/app.py"
+    assert code_path("/tmp/.mount_NodusX/_internal/nodus/models/money.py") == (
+        "nodus/models/money.py"
+    )
+    assert code_path("/usr/lib/python3.12/json/decoder.py") == "decoder.py"
+
+
 def test_describe_names_the_kind_and_scrubs_the_message():
     assert describe(KeyError("Banco")) == "KeyError: '…'"
     assert describe(RuntimeError()) == "RuntimeError"

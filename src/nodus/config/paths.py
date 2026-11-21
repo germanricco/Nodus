@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import sys
 from collections.abc import Mapping
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from PySide6.QtCore import QStandardPaths
 
@@ -89,7 +89,7 @@ def _store_package_family(base_prefix: str) -> str | None:
     "<name>_<version>_<architecture>_<resource id>_<publisher id>"; the redirected folder
     is named after "<name>_<publisher id>".
     """
-    folder = Path(base_prefix)
+    folder = PureWindowsPath(base_prefix)  # a Store install is always a Windows path
     parts = folder.name.split("_")
     if "WindowsApps" not in folder.parts or len(parts) != 5:
         return None

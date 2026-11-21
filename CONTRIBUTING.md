@@ -4,7 +4,7 @@ Gracias por el interés. Las ideas y los reportes de errores son bienvenidos en 
 
 ## Preparar el entorno
 
-Hace falta **Python 3.11**. En Windows, conviene instalarlo desde [python.org](https://www.python.org/downloads/) y no desde la Microsoft Store: esa versión guarda los archivos de `AppData` en una carpeta privada, donde el Explorador no los encuentra. Desde una terminal, en la carpeta del proyecto:
+Hace falta **Python 3.11** en Windows y **Python 3.12** en Linux: la versión de Qt que usa Nodus (PySide6 6.12.0), compilada para Linux, cierra Python con un error al correr sobre 3.11, y con 3.12 no. En Windows, conviene instalarlo desde [python.org](https://www.python.org/downloads/) y no desde la Microsoft Store: esa versión guarda los archivos de `AppData` en una carpeta privada, donde el Explorador no los encuentra. Desde una terminal, en la carpeta del proyecto:
 
 ```bash
 python -m venv .venv
