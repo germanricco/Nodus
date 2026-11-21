@@ -7,7 +7,7 @@ from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QLabel
 
 from nodus.ui.navigation import DetailId, PageId
-from nodus.ui.shell.help_panel import SHORTCUTS_VIEW, topic_html
+from nodus.ui.shell.help_panel import INDEX, SHORTCUTS_VIEW, topic_html
 from nodus.ui.shortcuts import SHORTCUT_GROUPS, SHORTCUTS
 from nodus.ui.text.help_texts import HELP_SECTIONS, HELP_TOPICS, TOPICS_BY_KEY
 
@@ -50,6 +50,15 @@ def test_it_opens_on_the_topic_of_the_page_shown(window, pesos):
     window.toggle_help()
     window.toggle_help()
     assert window.help_panel.topic is TOPICS_BY_KEY["accounts"]
+
+
+def test_on_inicio_it_opens_on_the_list_of_topics(window):
+    window.show_page(PageId.DASHBOARD)
+    window.show_help()
+
+    assert window.help_panel.views.currentIndex() == INDEX
+    assert lit(window) == set()
+    assert len(window.help_panel.visible_topics()) == len(HELP_TOPICS)
 
 
 def test_a_topic_lights_up_its_pages_until_left(window):

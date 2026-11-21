@@ -519,5 +519,9 @@ TOPICS_BY_KEY = {topic.key: topic for topic in HELP_TOPICS}
 
 
 def topic_for_page(page_id: PageId) -> HelpTopic | None:
-    """The first topic about a page: what F1 opens there."""
+    """The first topic about a page: what F1 opens there. Inicio, where Nodus starts,
+    opens on the list of topics instead: its own topic only tells how Nodus is
+    organized, and the list shows everything the help covers."""
+    if page_id is PageId.DASHBOARD:
+        return None
     return next((topic for topic in HELP_TOPICS if page_id in topic.pages), None)
