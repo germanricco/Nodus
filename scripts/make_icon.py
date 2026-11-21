@@ -1,4 +1,5 @@
-"""Generates packaging/nodus.ico, the icon of the executable and the installer, from the logo.
+"""Generates the program's icons from the logo: packaging/nodus.ico, of the Windows
+executable and installer, and packaging/nodus.png, of the AppImage on Linux.
 
 Each size is drawn by Qt straight from the SVG, so small sizes stay sharp instead of being
 scaled down from a large bitmap. Needs the ``build`` extra (Pillow writes the ICO file).
@@ -22,6 +23,7 @@ from PySide6.QtGui import QGuiApplication  # noqa: E402
 from nodus.ui.theme.icons import APP_ICON_SIZES, logo_svg, render_svg  # noqa: E402
 
 ICON_PATH = ROOT / "packaging" / "nodus.ico"
+PNG_PATH = ROOT / "packaging" / "nodus.png"  # the largest size, which Linux desktops scale
 
 
 def logo_image(size: int) -> Image.Image:
@@ -42,7 +44,8 @@ def main() -> int:
         sizes=[(size, size) for size in APP_ICON_SIZES],
         append_images=images[:-1],
     )
-    print(f"Ícono generado en {ICON_PATH}")
+    largest.save(PNG_PATH, format="PNG")
+    print(f"Íconos generados en {ICON_PATH} y {PNG_PATH}")
     return 0
 
 

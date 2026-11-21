@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import sys
 import tempfile
 import threading
@@ -44,6 +45,13 @@ def changelog_problems() -> list[str]:
     ]
 
 
+def stylesheet_problems(stylesheet: str) -> list[str]:
+    """The images the stylesheet names by path that are not there, such as the arrow of
+    a drop-down field: Qt only warns on the console, which the built program has not."""
+    paths = dict.fromkeys(re.findall(r"url\(([^;}\n]+)\)", stylesheet))
+    return [f"the stylesheet image {path} is missing" for path in paths if not Path(path).is_file()]
+
+
 def language_problems() -> list[str]:
     """The files a language needs that the built program lacks: Nodus's catalog for
     each language but Spanish, and Qt's own texts where Qt does not speak it already."""
@@ -65,6 +73,7 @@ def window_problems(window: MainWindow) -> list[str]:
         problems.append("Qt's SVG plugin is missing: the icons do not show")
     if QFontInfo(QFont(FONT_FAMILY)).family() != FONT_FAMILY:
         problems.append(f"the {FONT_FAMILY} font is missing: text takes another font's room")
+    problems.extend(stylesheet_problems(QApplication.instance().styleSheet()))
     problems.extend(language_problems())
     if not any(entry.version == __version__ for entry in load_changelog(SOURCE_LANGUAGE)):
         problems.append(f"the changelog has no section for {__version__}")

@@ -27,3 +27,6 @@ def program_path() -> str:
 # and the installer's shortcuts must carry the same one: a pinned window whose ID no
 # shortcut declares shows a blank icon. Fixed forever, or existing pins stop matching.
 APP_USER_MODEL_ID = "GermanRicco.Nodus"
+# The same on Linux: the name of the program's ``.desktop`` file (packaging/nodus.desktop,
+# in the AppImage), which Wayland desktops match the window to for its icon and name.
+DESKTOP_FILE_ID = "nodus"

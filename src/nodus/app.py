@@ -9,7 +9,7 @@ from datetime import date, datetime
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
-from nodus import APP_NAME, APP_USER_MODEL_ID
+from nodus import APP_NAME, APP_USER_MODEL_ID, DESKTOP_FILE_ID
 from nodus.config.logs import RunLog, system_line
 from nodus.config.paths import AppPaths, visible_path
 from nodus.database.database import (
@@ -25,6 +25,7 @@ from nodus.links import DOWNLOAD_URL
 from nodus.services.app.settings_service import SettingsService
 from nodus.services.backups.recovery import DataRecovery
 from nodus.services.container import Services
+from nodus.services.external.desktop_entry import DesktopEntry
 from nodus.services.external.process import launch_detached, restart_command
 from nodus.smoke_test import FLAG as SMOKE_TEST_FLAG
 from nodus.smoke_test import SmokeTest
@@ -112,6 +113,7 @@ class NodusApp:
         else:
             self._smoke_test.install()
         logger.info("Starting: %s", system_line())
+        self._install_desktop_entry()
         try:
             code = self._open_and_run(reporter, instance)
         finally:
@@ -126,6 +128,13 @@ class NodusApp:
             self._launch(restart_command(self._argv))
             return 0
         return code
+
+    def _install_desktop_entry(self) -> None:
+        """The AppImage's icon in the dock and its entry in the menu; the smoke test,
+        which touches nothing of the system, skips it."""
+        entry = DesktopEntry.for_this_program()
+        if entry is not None and self._smoke_test is None:
+            entry.install()
 
     def _show_the_open_one(self, instance: SingleInstance) -> int:
         """This run ends here: the Nodus that is open comes to the front, or, if it does
@@ -242,6 +251,8 @@ class NodusApp:
         """Groups the windows under Nodus's own taskbar icon instead of Python's."""
         if sys.platform == "win32":
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID)
+        else:
+            QApplication.setDesktopFileName(DESKTOP_FILE_ID)
 
 
 def main() -> int:

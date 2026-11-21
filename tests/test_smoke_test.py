@@ -11,7 +11,7 @@ from factories import light_theme
 from nodus import smoke_test
 from nodus.config.paths import AppPaths
 from nodus.services.app.changelog import changelog_files
-from nodus.smoke_test import SmokeTest, window_problems
+from nodus.smoke_test import SmokeTest, stylesheet_problems, window_problems
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId
 from nodus.ui.shell.main_window import MainWindow
@@ -61,6 +61,16 @@ def test_a_font_left_out_of_the_build_is_named(window, monkeypatch):
     assert window_problems(window) == [
         "the A Font Nodus Lacks font is missing: text takes another font's room"
     ]
+
+
+def test_a_stylesheet_image_that_is_not_there_is_named_once(tmp_path):
+    """As in a build where the icons folder came out as «MultiplexedPath('…')»."""
+    arrow = tmp_path / "chevron-down.svg"
+    arrow.write_text("<svg/>", encoding="utf-8")
+    broken = "MultiplexedPath('/opt/nodus/icons')/chevron-left.svg"
+    stylesheet = f"a {{ image: url({arrow.as_posix()}); }} b {{ image: url({broken}); }}" * 2
+
+    assert stylesheet_problems(stylesheet) == [f"the stylesheet image {broken} is missing"]
 
 
 def test_a_page_that_fails_is_named_and_the_rest_still_tried(window, monkeypatch):

@@ -4,6 +4,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 
 ## 1.11.0
 
+- Nodus llega a Linux. Se descarga como AppImage, un solo archivo que se abre con doble clic en casi cualquier distribución, sin instalar nada. Al abrirlo, Nodus se suma al menú de aplicaciones con su ícono, y si el archivo se borra, desaparece del menú. Desde Ajustes puede abrirse al iniciar sesión, y el modo claro u oscuro sigue al del sistema.
 - Nodus tiene letra propia, Source Sans 3, y se ve igual en cualquier computadora. Es más angosta que la de antes, así que en las listas entra más texto antes de cortarse con «…», como la descripción de cada transacción. Las ayudas bajo cada opción y los títulos de las tarjetas crecieron un poco y se leen mejor.
 
 ## 1.10.0 — 2026-11-18

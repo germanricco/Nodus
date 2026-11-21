@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Nodus
+GenericName=Personal finance
+GenericName[es]=Finanzas personales
+Comment=Your finances, on your computer
+Comment[es]=Tus finanzas, en tu computadora
+Exec=Nodus
+Icon=nodus
+Terminal=false
+Categories=Office;Finance;
+Keywords=money;budget;expenses;accounts;
+Keywords[es]=dinero;presupuesto;gastos;cuentas;
+StartupWMClass=Nodus

@@ -42,8 +42,8 @@ def test_in_english_qt_speaks_english_and_weeks_start_on_sunday(qt_language):
 
 
 def test_the_installer_keeps_the_spanish_texts():
-    """The installer leaves out Qt's translations (45 MB) but that one."""
+    """The installer and the AppImage leave out Qt's translations (45 MB) but that one."""
     spec = (Path(__file__).parents[2] / "packaging" / "nodus.spec").read_text(encoding="utf-8")
 
     for name in QT_TEXTS.values():
-        assert f"PySide6/translations/{name}.qm" in spec
+        assert f'"translations/{name}.qm"' in spec

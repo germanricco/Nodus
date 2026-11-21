@@ -65,6 +65,12 @@ class WindowsRunKey:
             pass
 
 
+def program_command(executable: str) -> str:
+    """The command that opens ``executable``, quoted so a path with spaces stays whole:
+    for the Run key and for the ``Exec`` line of a ``.desktop`` file alike."""
+    return f'"{executable}"'
+
+
 def autostart_folder(environ: Mapping[str, str] = os.environ) -> Path:
     """``$XDG_CONFIG_HOME/autostart``, by default ``~/.config/autostart``."""
     config = environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
@@ -108,7 +114,7 @@ class StartupService:
 
     def __init__(self, registry: StartupRegistry | None, executable: str) -> None:
         self._registry = registry
-        self._command = f'"{executable}"'
+        self._command = program_command(executable)
 
     @classmethod
     def for_this_program(cls) -> StartupService:
