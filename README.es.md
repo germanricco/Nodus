@@ -14,8 +14,9 @@ Sin nube, sin cuentas, sin suscripciones.
 [![Última versión](https://img.shields.io/github/v/release/germanricco/Nodus?label=versi%C3%B3n)](https://github.com/germanricco/Nodus/releases/latest)
 [![Licencia MIT](https://img.shields.io/github/license/germanricco/Nodus?label=licencia)](LICENSE)
 [![Windows 10 y 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4)](https://github.com/germanricco/Nodus/releases/latest)
+[![Linux x86_64](https://img.shields.io/badge/Linux-x86__64-FCC624)](https://github.com/germanricco/Nodus/releases/latest)
 
-### [Descargar para Windows](https://github.com/germanricco/Nodus/releases/latest)
+### [Descargar para Windows y Linux](https://github.com/germanricco/Nodus/releases/latest)
 
 </div>
 
@@ -138,19 +139,29 @@ Una campana junta lo que merece tu atención: un pago que vence, un presupuesto 
 
 ## Tus datos son tuyos
 
-Todo vive en un archivo de tu computadora, `%APPDATA%\Nodus\nodus.db`, con las copias al lado, en `%APPDATA%\Nodus\backups`: las 3 más recientes, una por cada una de las 4 semanas anteriores y una por cada uno de los 6 meses anteriores, más una que Nodus guarda antes de borrar algo grande, como una cuenta. Actualizar o desinstalar Nodus no lo toca, y Nodus se abre una sola vez sobre él: abrirlo de nuevo trae al frente la ventana que ya tenías, así dos ventanas nunca escriben a la vez en el mismo archivo. Si ese archivo llegara a dañarse, por un corte de luz o un disco que falla, al abrirse Nodus te ofrece traer tus datos de vuelta desde la última copia sana y guarda aparte el archivo dañado. Y si el archivo viene de una versión más nueva de Nodus, no lo abre, para no dañarlo, y te ofrece descargar esa versión. La aplicación solo se conecta a internet para dos cosas, y puedes desactivar las dos: ver en GitHub si hay una versión nueva, sin enviar ningún dato tuyo (el instalador solo se descarga cuando tocas «Actualizar»), y traer las cotizaciones de [DolarApi](https://dolarapi.com) si elegiste una fuente automática.
+Todo vive en un archivo de tu computadora, `nodus.db`, con las copias al lado, en la carpeta `backups`. En Windows están en `%APPDATA%\Nodus`, y en Linux, en `~/.local/share/Nodus`. Nodus guarda las 3 copias más recientes, una por cada una de las 4 semanas anteriores y una por cada uno de los 6 meses anteriores, más una que hace antes de borrar algo grande, como una cuenta. Actualizar Nodus, desinstalarlo o borrar el AppImage no toca tus datos, y Nodus se abre una sola vez sobre el archivo: abrirlo de nuevo trae al frente la ventana que ya tenías, así dos ventanas nunca escriben a la vez en el mismo archivo. Si ese archivo llegara a dañarse, por un corte de luz o un disco que falla, al abrirse Nodus te ofrece traer tus datos de vuelta desde la última copia sana y guarda aparte el archivo dañado. Y si el archivo viene de una versión más nueva de Nodus, no lo abre, para no dañarlo, y te ofrece descargar esa versión. La aplicación solo se conecta a internet para dos cosas, y puedes desactivar las dos: ver en GitHub si hay una versión nueva, sin enviar ningún dato tuyo (la versión nueva solo se descarga cuando tocas «Actualizar»), y traer las cotizaciones de [DolarApi](https://dolarapi.com) si elegiste una fuente automática.
 
-Para encontrar errores, Nodus lleva un registro breve en `%APPDATA%\Nodus\logs`, con lo que hizo y lo que falló, pero nunca montos, nombres ni notas. Nunca sale de tu computadora por su cuenta. Si algo falla, Nodus te lo dice y ofrece «Enviar reporte», que abre el formulario de comentarios con el error ya escrito; lo lees en el navegador y decides si enviarlo.
+Para encontrar errores, Nodus lleva un registro breve en la carpeta `logs`, junto a tus datos, con lo que hizo y lo que falló, pero nunca montos, nombres ni notas. Nunca sale de tu computadora por su cuenta. Si algo falla, Nodus te lo dice y ofrece «Enviar reporte», que abre el formulario de comentarios con el error ya escrito; lo lees en el navegador y decides si enviarlo.
 
 ## Descargar e instalar
 
-Nodus funciona en **Windows 10 y 11 de 64 bits**.
+Nodus funciona en **Windows 10 y 11 de 64 bits** y en **Linux de 64 bits**.
+
+### Windows
 
 1. Descarga `Nodus-Setup-<versión>.exe` desde la [última versión publicada](https://github.com/germanricco/Nodus/releases/latest).
 2. Ábrelo y sigue el asistente. Se instala solo para tu usuario, sin permisos de administrador, y queda en el menú Inicio.
 3. Si Windows muestra «Windows protegió tu PC», haz clic en «Más información» y luego en «Ejecutar de todas formas». Aparece porque el instalador no tiene una firma comercial, que tiene un costo anual. Cada instalador se compila automáticamente en GitHub a partir del código de este repositorio.
 
-Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: la descarga, comprueba que llegó entera, la instala sin preguntas y se vuelve a abrir, con tus datos intactos. (Si vienes de la 1.1.0 o anterior, instala la 1.2.0 encima una vez; desde ahí, alcanza con un clic.) Antes de instalar, Nodus te cuenta qué trae cada versión, y después de actualizar te muestra una vez qué cambió; la historia completa está en [CHANGELOG.md](CHANGELOG.md). Si quieres que te espere abierto cada mañana, activa «Abrir Nodus al iniciar Windows» en Ajustes; al desinstalarlo, esa opción se quita sola.
+### Linux
+
+Nodus viene como AppImage, un solo archivo que se abre sin instalar nada en casi cualquier distribución de 2022 en adelante, como Ubuntu 22.04, Debian 12 o Fedora 36 y posteriores. Se probó en Ubuntu 24.04 con GNOME.
+
+1. Descarga `Nodus-<versión>-x86_64.AppImage` desde la [última versión publicada](https://github.com/germanricco/Nodus/releases/latest) y guárdalo donde quieras, por ejemplo en una carpeta `Aplicaciones` dentro de tu carpeta personal.
+2. Permite que se ejecute como programa: en sus Propiedades, activa «Ejecutable como programa», o corre `chmod +x Nodus-*.AppImage` en una terminal.
+3. Ábrelo con doble clic. Desde ahí, Nodus aparece en el menú de aplicaciones, con su ícono en el dock. Si no abre, puede que a tu sistema le falte FUSE, que usan los AppImage: instala el paquete `fuse3` de tu distribución.
+
+Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: la descarga, comprueba que llegó entera, la instala sin preguntas y se vuelve a abrir, con tus datos intactos. En Linux, el AppImage nuevo ocupa el lugar del anterior, con el mismo nombre. (Si vienes de la 1.1.0 o anterior, instala la 1.2.0 encima una vez; desde ahí, alcanza con un clic.) Antes de instalar, Nodus te cuenta qué trae cada versión, y después de actualizar te muestra una vez qué cambió; la historia completa está en [CHANGELOG.md](CHANGELOG.md). Si quieres que te espere abierto cada mañana, activa «Abrir Nodus al iniciar Windows» en Ajustes, o «Abrir Nodus al iniciar sesión» en Linux; en Windows, al desinstalarlo, esa opción se quita sola.
 
 ## Hoja de ruta
 
@@ -162,7 +173,7 @@ Nodus crece por versiones pequeñas y estables. La **v1.0**, la primera estable,
 
 ## Tecnología
 
-Nodus está escrito en **Python**. La interfaz usa **PySide6**, la versión oficial de Qt para Python, que da aplicaciones nativas y rápidas sin cargar un navegador. Los datos se guardan en **SQLite**, una base de datos de un solo archivo que no necesita servidor. El instalador se arma con PyInstaller e Inno Setup.
+Nodus está escrito en **Python**. La interfaz usa **PySide6**, la versión oficial de Qt para Python, que da aplicaciones nativas y rápidas sin cargar un navegador. Los datos se guardan en **SQLite**, una base de datos de un solo archivo que no necesita servidor. El instalador de Windows se arma con PyInstaller e Inno Setup, y el AppImage de Linux, con PyInstaller y appimagetool.
 
 ## Contribuir
 
