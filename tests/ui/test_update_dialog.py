@@ -10,6 +10,8 @@ from nodus.ui import browser
 from nodus.ui.dialogs.update_dialog import UpdateDialog, megabytes
 from nodus.ui.shell import main_window
 
+pytestmark = pytest.mark.usefixtures("as_on_windows")  # the release file is the installer
+
 SETUP = b"setup program" * 50_000
 RELEASE = Release(
     "9.0.0",
@@ -138,6 +140,20 @@ def test_window_closes_nodus_once_the_installer_runs(
     window.start_update(RELEASE)
 
     assert quit_calls == [True]
+
+
+def test_window_restarts_nodus_over_the_new_appimage(window, services, tmp_path, monkeypatch):
+    """The AppImage is replaced in place and nothing reopens it: Nodus restarts itself."""
+    restarts = []
+    monkeypatch.setattr(main_window, "restart", lambda: restarts.append(True))
+    monkeypatch.setattr(main_window.QApplication, "quit", lambda: restarts.append("quit"))
+    monkeypatch.setattr(main_window, "UpdateDialog", FakeUpdateDialog)
+    appimage = UpdateService("1.2.0", appimage=tmp_path / "Nodus.AppImage")
+    monkeypatch.setattr(window, "_services", dataclasses.replace(services, updates=appimage))
+
+    window.start_update(RELEASE)
+
+    assert restarts == [True]
 
 
 def test_window_opens_the_page_when_it_cannot_install(window, monkeypatch):

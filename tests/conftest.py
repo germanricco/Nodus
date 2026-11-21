@@ -139,3 +139,10 @@ def investment(services) -> Account:
     return services.accounts.create(
         "MP Inversiones", AccountType.INVESTMENT, Currency.ARS, ars("1000000")
     )
+
+
+@pytest.fixture
+def as_on_windows(monkeypatch):
+    """Runs the test as on Windows, whose release file is the setup program (the
+    update tests; on Linux it is the AppImage)."""
+    monkeypatch.setattr(sys, "platform", "win32")

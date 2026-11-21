@@ -5,14 +5,16 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
 import shutil
+import sys
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from nodus import APP_NAME, USER_AGENT, is_installed
+from nodus import APP_NAME, USER_AGENT, is_installed, program_path
 from nodus.config.logs import describe
 from nodus.i18n import _, current_language
 from nodus.links import LATEST_RELEASE_API
@@ -32,7 +34,8 @@ INSTALLER_ARGUMENTS = ("/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/RELAUNCH=
 
 @dataclass(frozen=True)
 class Installer:
-    """The setup program attached to a release, with the checksum GitHub computed for it."""
+    """What installs a release on this system, attached to it with the checksum GitHub
+    computed: the setup program on Windows, the AppImage itself on Linux."""
 
     url: str
     size: int
@@ -51,7 +54,10 @@ class Release:
 
 
 def installer_name(version: str) -> str:
-    return f"Nodus-Setup-{version}.exe"
+    """The name scripts/build.py gives the file of ``version`` on this system."""
+    if sys.platform == "win32":
+        return f"Nodus-Setup-{version}.exe"
+    return f"Nodus-{version}-x86_64.AppImage"
 
 
 def _installer(version: str, assets: list[dict[str, Any]]) -> Installer | None:
@@ -64,7 +70,8 @@ def _installer(version: str, assets: list[dict[str, Any]]) -> Installer | None:
 
 
 class UpdateService:
-    """Asks GitHub for the latest release, and downloads and starts its installer.
+    """Asks GitHub for the latest release, downloads it and installs it: on Windows by
+    starting its installer, on Linux by putting the new AppImage in place of ``appimage``.
 
     The check sends only the version number, nothing about the user or their data. The
     installer is downloaded only when the user asks for it.
@@ -77,8 +84,10 @@ class UpdateService:
         stream: Stream | None = None,
         downloads_dir: Path | None = None,
         launch: Callable[[list[str]], None] | None = None,
+        appimage: Path | None = None,
     ) -> None:
         self.current_version = current_version
+        self._appimage = appimage
         self._fetch = fetch or downloader(USER_AGENT, GITHUB_JSON)
         self._stream = stream or streamer(USER_AGENT)
         self.downloads_dir = downloads_dir or Path(tempfile.gettempdir()) / APP_NAME / "updates"
@@ -86,9 +95,20 @@ class UpdateService:
 
     @classmethod
     def for_this_program(cls, current_version: str) -> UpdateService:
-        """Installs updates only when running as the installed program on Windows; run
-        from the source code there is nothing to replace, so the release page opens."""
-        return cls(current_version, launch=launch_detached if is_installed() else None)
+        """Installs updates only when running as the installed program on Windows or the
+        AppImage on Linux; run from the source code there is nothing to replace, so the
+        release page opens."""
+        if not is_installed():
+            return cls(current_version)
+        if sys.platform == "win32":
+            return cls(current_version, launch=launch_detached)
+        return cls(current_version, appimage=Path(program_path()))
+
+    @property
+    def reopens_by_itself(self) -> bool:
+        """Whether the installer opens Nodus again once it closes, as the Windows one
+        does; the AppImage, replaced in place, is reopened by Nodus (a restart)."""
+        return self._appimage is None
 
     def check(self) -> Release | None:
         """The latest release if it is newer than the running version, otherwise None.
@@ -113,7 +133,8 @@ class UpdateService:
 
     def can_install(self, release: Release) -> bool:
         """Whether ``release`` can be installed from Nodus, instead of from its page."""
-        return self._launch is not None and release.installer is not None
+        can_replace = self._launch is not None or self._appimage is not None
+        return can_replace and release.installer is not None
 
     def download(
         self,
@@ -165,10 +186,14 @@ class UpdateService:
         return destination
 
     def install(self, installer: Path) -> None:
-        """Starts ``installer``; Nodus must close right after so its files can be replaced.
+        """Starts ``installer``, or puts the new AppImage in place: Nodus must close right
+        after so its files can be replaced, or so the new one opens.
 
         Raises ``UpdateError`` if the installer cannot be started.
         """
+        if self._appimage is not None:
+            self._replace_appimage(installer, self._appimage)
+            return
         if self._launch is None:
             raise UpdateError(_("Las actualizaciones se instalan desde la versión instalada."))
         try:
@@ -177,6 +202,28 @@ class UpdateService:
             logger.warning("The installer could not start", exc_info=error)
             raise UpdateError(
                 _("No se pudo abrir el instalador. Vuelve a intentarlo."),
+                str(error),
+            ) from error
+
+    @staticmethod
+    def _replace_appimage(new: Path, appimage: Path) -> None:
+        """Copies ``new`` beside ``appimage`` and swaps them in one step, so an update cut
+        short never leaves half an AppImage. The name stays: the menu entry and the
+        sign-in entry point at it. The running Nodus keeps the old one open until it
+        closes."""
+        staged = appimage.with_name(f".{appimage.name}.new")
+        try:
+            shutil.copyfile(new, staged)
+            staged.chmod(0o755)
+            os.replace(staged, appimage)
+        except OSError as error:
+            logger.warning("The AppImage could not be replaced", exc_info=error)
+            staged.unlink(missing_ok=True)
+            raise UpdateError(
+                _(
+                    "No se pudo reemplazar Nodus en su carpeta. Revisa que puedas escribir"
+                    " en ella, o descarga la versión nueva desde GitHub."
+                ),
                 str(error),
             ) from error
 

@@ -610,6 +610,14 @@ msgstr "Only the installed version can install updates."
 msgid "No se pudo abrir el instalador. Vuelve a intentarlo."
 msgstr "The installer could not be opened. Try again."
 
+#: nodus/services/external/update_service.py
+msgid ""
+"No se pudo reemplazar Nodus en su carpeta. Revisa que puedas escribir en ella, o descarga la "
+"versión nueva desde GitHub."
+msgstr ""
+"Nodus could not be replaced in its folder. Check that you can write to it, or download the "
+"new version from GitHub."
+
 #: nodus/services/planning/budget_service.py
 msgid "El límite del presupuesto va en pesos."
 msgstr "The budget limit goes in pesos."

@@ -4,7 +4,7 @@ What each version brings, newest first. To update, click “Update” when Nodus
 
 ## 1.11.0
 
-- Nodus comes to Linux. Download it as an AppImage, a single file that opens with a double click on almost any distribution, with nothing to install. Once opened, Nodus joins the applications menu with its icon, and if the file is deleted it leaves the menu. From Settings it can open when you sign in, and light or dark mode follows your system's.
+- Nodus comes to Linux. Download it as an AppImage, a single file that opens with a double click on almost any distribution, with nothing to install. Once opened, Nodus joins the applications menu with its icon, and if the file is deleted it leaves the menu. From Settings it can open when you sign in, light or dark mode follows your system's and, as on Windows, it updates itself: click “Update” and Nodus downloads the new version, puts it in place of the old one and opens again.
 - Nodus has a typeface of its own, Source Sans 3, and looks the same on any computer. It's narrower than before, so lists show more text before cutting it with “…”, like each transaction's description. The hints under each option and the titles of the cards grew a little and are easier to read.
 
 ## 1.10.0 — 2026-11-18

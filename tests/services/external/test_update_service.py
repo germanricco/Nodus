@@ -1,5 +1,7 @@
 import hashlib
 import json
+import os
+import sys
 
 import pytest
 
@@ -13,6 +15,10 @@ from nodus.services.external.update_service import (
 )
 
 RELEASE_PAGE = "https://github.com/germanricco/Nodus/releases/tag/v0.3.0"
+
+
+# As on Windows, unless a test says otherwise with ``on_linux``.
+pytestmark = pytest.mark.usefixtures("as_on_windows")
 
 
 def answer(tag: str) -> bytes:
@@ -214,3 +220,93 @@ def test_clean_removes_downloaded_installers(tmp_path):
     service.clean()  # nothing left: still fine
 
     assert not service.downloads_dir.exists()
+
+
+# Installing on Linux, where the release file is the AppImage itself
+
+APPIMAGE_BYTES = b"new appimage" * 1000
+
+
+def appimage_asset() -> dict:
+    return installer_asset(
+        name="Nodus-0.3.0-x86_64.AppImage",
+        size=len(APPIMAGE_BYTES),
+        digest=f"sha256:{hashlib.sha256(APPIMAGE_BYTES).hexdigest()}",
+        browser_download_url=INSTALLER_URL.replace(
+            "Nodus-Setup-0.3.0.exe", "Nodus-0.3.0-x86_64.AppImage"
+        ),
+    )
+
+
+@pytest.fixture
+def on_linux(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "linux")
+
+
+@pytest.fixture
+def appimage(tmp_path):
+    """The AppImage that is running, in a folder of the user's with a space in it."""
+    path = tmp_path / "Mis programas" / "Nodus-0.2.0-x86_64.AppImage"
+    path.parent.mkdir()
+    path.write_bytes(b"old appimage")
+    path.chmod(0o755)
+    return path
+
+
+def linux_updater(tmp_path, appimage) -> UpdateService:
+    return UpdateService(
+        "0.2.0",
+        stream=lambda _url: iter(chunks(APPIMAGE_BYTES)),
+        downloads_dir=tmp_path / "updates",
+        appimage=appimage,
+    )
+
+
+def test_on_linux_the_release_file_is_the_appimage(on_linux):
+    release = release_with([installer_asset(), appimage_asset()])
+
+    assert release.installer.url.endswith("Nodus-0.3.0-x86_64.AppImage")
+    assert release.installer.size == len(APPIMAGE_BYTES)
+
+
+def test_the_new_appimage_takes_the_place_and_name_of_the_old(on_linux, tmp_path, appimage):
+    service = linux_updater(tmp_path, appimage)
+    downloaded = service.download(release_with([appimage_asset()]))
+
+    service.install(downloaded)
+
+    assert appimage.read_bytes() == APPIMAGE_BYTES
+    assert os.access(appimage, os.X_OK)
+    assert sorted(p.name for p in appimage.parent.iterdir()) == [appimage.name]
+    assert not service.reopens_by_itself  # Nodus restarts over the new one
+
+
+def test_a_folder_it_cannot_write_keeps_the_old_appimage(on_linux, monkeypatch, tmp_path, appimage):
+    service = linux_updater(tmp_path, appimage)
+    downloaded = service.download(release_with([appimage_asset()]))
+
+    # The swap is refused, as in a folder without write permission; failing it here,
+    # rather than with chmod, runs on every system and as root.
+    def refuse(_source, _destination):
+        raise PermissionError("Permission denied")
+
+    monkeypatch.setattr(os, "replace", refuse)
+    with pytest.raises(UpdateError, match="No se pudo reemplazar Nodus"):
+        service.install(downloaded)
+
+    assert appimage.read_bytes() == b"old appimage"
+    assert sorted(p.name for p in appimage.parent.iterdir()) == [appimage.name]
+
+
+def test_only_the_appimage_installs_updates_on_linux(on_linux, monkeypatch, tmp_path, appimage):
+    release = release_with([appimage_asset()])
+    assert linux_updater(tmp_path, appimage).can_install(release)
+    assert not UpdateService.for_this_program("0.2.0").can_install(release)  # source code
+
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setenv("APPIMAGE", str(appimage))
+    assert UpdateService.for_this_program("0.2.0").can_install(release)
+
+
+def test_the_windows_installer_reopens_nodus_by_itself(tmp_path):
+    assert updater(tmp_path, launch=lambda _command: None).reopens_by_itself

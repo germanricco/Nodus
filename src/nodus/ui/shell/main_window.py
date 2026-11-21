@@ -39,6 +39,7 @@ from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.page import Page
 from nodus.ui.rate_updater import shared_rate_updater, updated_text
 from nodus.ui.refresh import refresh_on_changes
+from nodus.ui.restart import restart
 from nodus.ui.shell.coach_marks import CoachMarks
 from nodus.ui.shell.help_panel import HelpPanel
 from nodus.ui.shell.notices import NOTICES
@@ -379,15 +380,20 @@ class MainWindow(QMainWindow):
 
     def start_update(self, release: Release) -> None:
         """Downloads and installs ``release``, then closes Nodus for the installer, which
-        opens it again. Run from the source code, or without an installer attached, the
-        release page opens instead."""
-        if not self._services.updates.can_install(release):
+        opens it again, or restarts it over the new AppImage. Run from the source code, or
+        without an installer attached, the release page opens instead."""
+        updates = self._services.updates
+        if not updates.can_install(release):
             open_url(release.url)
             return
-        dialog = UpdateDialog(self._services.updates, release, parent=self)
+        dialog = UpdateDialog(updates, release, parent=self)
         dialog.exec()
-        if dialog.installing:
+        if not dialog.installing:
+            return
+        if updates.reopens_by_itself:
             QApplication.quit()
+        else:
+            restart()
 
     def _dismiss_notice(self, notice: Notice) -> None:
         """Puts the notice away as its kind does; a kind that cannot be is left alone."""

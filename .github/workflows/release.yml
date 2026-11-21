@@ -1,9 +1,10 @@
-# Builds the Windows installer and publishes it as a GitHub release.
+# Builds the Windows installer and the Linux AppImage, and publishes them as a GitHub
+# release.
 #
 # - Pushing a tag like v0.2.0 publishes the release. The tag must be annotated: its
 #   message becomes the release notes.
-# - Running it by hand (Actions > Release > Run workflow) only builds the installer and
-#   attaches it to the run, to try the build without publishing anything.
+# - Running it by hand (Actions > Release > Run workflow) only builds both files and
+#   attaches them to the run, to try the build without publishing anything.
 name: Release
 
 on:
@@ -15,7 +16,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  windows:
     runs-on: windows-latest
     defaults:
       run:
@@ -33,15 +34,6 @@ jobs:
 
       - name: Install
         run: python -m pip install -e ".[dev,build]" -c constraints.txt
-
-      - name: Check that the tag matches the version in the code
-        if: github.event_name == 'push'
-        run: |
-          VERSION=$(python -c "import nodus; print(nodus.__version__)")
-          if [ "${GITHUB_REF_NAME}" != "v${VERSION}" ]; then
-            echo "::error::The tag ${GITHUB_REF_NAME} does not match nodus.__version__ (${VERSION})."
-            exit 1
-          fi
 
       - name: Tests
         run: python -m pytest
@@ -83,21 +75,84 @@ jobs:
           }
 
       - name: Attach the installer to the run
-        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v7
         with:
           path: ${{ steps.installer.outputs.path }}
           # Uploads the .exe as is instead of inside a zip.
           archive: false
 
+  linux:
+    # The oldest Ubuntu GitHub offers: an AppImage opens only where glibc is as new as
+    # the one it was built with or newer (2.35 here), so this reaches the most systems.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Qt libraries
+        # What Qt needs to draw without a screen (offscreen) on a bare runner.
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3
+
+      - uses: actions/setup-python@v7
+        with:
+          # PySide6 6.12.0 for Linux aborts on Python 3.11 (see ci.yml).
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            constraints.txt
+
+      - name: Install
+        run: python -m pip install -e ".[dev,build]" -c constraints.txt
+
+      - name: Tests
+        run: python -m pytest
+
+      - name: Build
+        # Opens the built program and then the AppImage with --smoke-test, without a
+        # screen. The runner may lack FUSE, so the AppImage unpacks itself to run.
+        env:
+          QT_QPA_PLATFORM: offscreen
+          APPIMAGE_EXTRACT_AND_RUN: "1"
+        run: python scripts/build.py
+
+      - name: Attach the AppImage to the run
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/Nodus-*-x86_64.AppImage
+          archive: false
+
+  publish:
+    if: github.event_name == 'push'
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check that the tag matches the version in the code
+        run: |
+          VERSION=$(PYTHONPATH=src python3 -c "import nodus; print(nodus.__version__)")
+          if [ "${GITHUB_REF_NAME}" != "v${VERSION}" ]; then
+            echo "::error::The tag ${GITHUB_REF_NAME} does not match nodus.__version__ (${VERSION})."
+            exit 1
+          fi
+
+      - name: Download the installer and the AppImage
+        # v8 saves the files uploaded with archive: false as they are, without unzipping.
+        uses: actions/download-artifact@v8
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Show what will be published
+        run: ls -l release
+
       - name: Publish the release
-        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           # The checkout may hold a lightweight copy of the tag; fetch the annotated one.
           git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
           git tag --list --format='%(contents)' "${GITHUB_REF_NAME}" > release-notes.md
-          gh release create "${GITHUB_REF_NAME}" "${{ steps.installer.outputs.path }}" \
+          gh release create "${GITHUB_REF_NAME}" release/Nodus-Setup-*.exe release/Nodus-*-x86_64.AppImage \
             --title "Nodus ${GITHUB_REF_NAME#v}" \
             --notes-file release-notes.md
