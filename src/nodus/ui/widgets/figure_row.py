@@ -29,7 +29,7 @@ class FigureRow(QWidget):
     Whoever shows or hides a tile, or changes its text, calls ``relayout``.
     """
 
-    SPACING = Space.M
+    SPACING = Space.L  # the same gap as between cards, so boxes have one spacing
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
