@@ -13,7 +13,7 @@ from nodus.services.errors import NotFoundError
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
-from nodus.ui.pages.base.detail_page import DetailPage, danger_zone
+from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.summary_page import S
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
 from nodus.ui.text.formatting import format_date
@@ -23,6 +23,7 @@ from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.money_label import masked
+from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
 
 NO_MOVEMENTS = "—"
 
@@ -32,7 +33,7 @@ class SummaryDetailPage(DetailPage, Generic[S]):
     when the latest was, then every one of them over its whole history, with the same
     menus and selection as Transacciones.
 
-    «Editar» and «Unir con…» are in the header; deleting is in the «Zona de peligro».
+    «Editar» and «Unir con…» are in the header; deleting, the rare one, in its «⋯».
     Subclasses load the item and carry out the actions; ``CAPTIONS`` name the figures
     after the shared ones, which ``extra_figures`` fills.
     """
@@ -45,7 +46,6 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         services: Services,
         event_bus: EventBus,
         theme_manager: ThemeManager,
-        delete_action: str,
     ) -> None:
         super().__init__(detail_id, theme_manager)
         self._services = services
@@ -58,6 +58,8 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self.merge_button = self.add_header_button(_("Unir con…"))
         self.merge_button.setToolTip(_("Le pasa sus movimientos a otro y lo elimina"))
         self.merge_button.clicked.connect(lambda: self.merge_item(self.summary))
+        self.more_button = MoreButton(self.more_actions)
+        self.add_header_widget(self.more_button)
 
         # Keyed by the untranslated caption, which the code looks up; filled in this order.
         self.figure_labels: dict[str, QLabel] = {N_("Total"): QLabel()}
@@ -72,10 +74,6 @@ class SummaryDetailPage(DetailPage, Generic[S]):
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
         self.content_layout.addWidget(self.list_view, stretch=1)
-
-        self.danger_card, self.delete_button = danger_zone("", delete_action, self._delete)
-        self._danger_text = self.danger_card.findChild(QLabel, "FieldHint")
-        self.content_layout.addWidget(self.danger_card)
 
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
@@ -110,9 +108,6 @@ class SummaryDetailPage(DetailPage, Generic[S]):
     def merge_item(self, summary: S) -> None:
         raise NotImplementedError
 
-    def delete_warning(self, summary: S) -> str:
-        raise NotImplementedError
-
     def delete_item(self, summary: S) -> bool:
         """Deletes the item once the user confirms; True if it was deleted."""
         raise NotImplementedError
@@ -145,7 +140,6 @@ class SummaryDetailPage(DetailPage, Generic[S]):
             label.setText(value)
         self.figures.relayout()
         self.list_view.show_matching(self.criteria(summary))
-        self._danger_text.setText(self.delete_warning(summary))
 
     def _total_text(self, summary: S) -> str:
         """Income minus expenses in pesos; the tooltip counts what lacks a rate."""
@@ -155,7 +149,16 @@ class SummaryDetailPage(DetailPage, Generic[S]):
             return NO_MOVEMENTS
         return masked(summary.net) if self._hidden else summary.net.format()
 
-    def _delete(self) -> None:
+    def more_actions(self) -> list[RowAction]:
+        if self.summary is None:
+            return []
+        return [
+            RowAction(
+                _("Eliminar"), self.delete, "trash", destructive=True, effect=Effect.CONFIRMED
+            )
+        ]
+
+    def delete(self) -> None:
         if self.delete_item(self.summary):
             self.back_requested.emit()
 

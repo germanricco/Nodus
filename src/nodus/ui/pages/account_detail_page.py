@@ -25,7 +25,6 @@ from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
 from nodus.ui.actions.accounts import (
-    account_delete_warning,
     delete_account,
     edit_account,
     toggle_account_archived,
@@ -35,7 +34,7 @@ from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
-from nodus.ui.pages.base.detail_page import DetailPage, danger_zone
+from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
 from nodus.ui.text.formatting import signed
 from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, estimate_text
@@ -74,8 +73,7 @@ class AccountDetailPage(DetailPage):
     still owes in installments, the goals it fills, the payments due from it, the balance
     over time and every movement, with the same menus and selection as Transacciones.
 
-    The everyday actions are in the header; deleting, which takes the movements with it,
-    is in the «Zona de peligro» at the foot.
+    The actions are in the header; archiving and deleting, the rare ones, in its «⋯».
     """
 
     goal_requested = Signal(int)  # goal id
@@ -115,10 +113,6 @@ class AccountDetailPage(DetailPage):
         self.list_view.table.setColumnHidden(ACCOUNT, True)
         self.list_view.setMinimumHeight(Layout.DETAIL_LIST_MIN_HEIGHT)
         body.addWidget(self.list_view, stretch=1)
-
-        self.danger_card, self.delete_button = danger_zone("", _("Eliminar cuenta"), self.delete)
-        self._danger_text = self.danger_card.findChild(QLabel, "FieldHint")
-        body.addWidget(self.danger_card)
 
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
@@ -206,7 +200,6 @@ class AccountDetailPage(DetailPage):
         self._show_chart(account, today)
         self.list_view.show_matching(TransactionFilter(account_id=account.id))
         self._set_empty_message(account)
-        self._danger_text.setText(account_delete_warning(self._services, account))
 
     def _set_empty_message(self, account: Account) -> None:
         """An active account offers its first movement; an archived one takes none."""
@@ -229,7 +222,10 @@ class AccountDetailPage(DetailPage):
                 self.toggle_archived,
                 "archive",
                 effect=Effect.TOGGLE,
-            )
+            ),
+            RowAction(
+                _("Eliminar"), self.delete, "trash", destructive=True, effect=Effect.CONFIRMED
+            ),
         ]
 
     def edit(self) -> None:

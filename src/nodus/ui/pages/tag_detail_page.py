@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from nodus.i18n import N_, _
+from nodus.i18n import N_
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.classification.tag_service import TagSummary
 from nodus.services.container import Services
-from nodus.ui.actions.tags import delete_tags, tag_delete_warning
+from nodus.ui.actions.tags import delete_tags
 from nodus.ui.dialogs.tag_dialogs import MergeTagDialog, TagDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.event_bus import EventBus
@@ -25,7 +25,7 @@ class TagDetailPage(SummaryDetailPage[TagSummary]):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__(DetailId.TAG, services, event_bus, theme_manager, _("Eliminar etiqueta"))
+        super().__init__(DetailId.TAG, services, event_bus, theme_manager)
 
     def load_summary(self, item_id: int) -> TagSummary:
         return self._services.tags.summary(item_id)
@@ -50,9 +50,6 @@ class TagDetailPage(SummaryDetailPage[TagSummary]):
 
     def merge_item(self, summary: TagSummary) -> None:
         MergeTagDialog(self._services, self._event_bus, [summary.tag], parent=self.window()).exec()
-
-    def delete_warning(self, summary: TagSummary) -> str:
-        return tag_delete_warning(self._services, [summary])
 
     def delete_item(self, summary: TagSummary) -> bool:
         return delete_tags(self.window(), self._services, self._event_bus, [summary])

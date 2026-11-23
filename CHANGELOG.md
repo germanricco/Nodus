@@ -5,6 +5,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 ## 1.12.0
 
 - Las pantallas que responden una pregunta muestran la respuesta arriba, grande y sola, como el patrimonio en el Inicio: el saldo en una cuenta, lo ahorrado en una meta, el total en un beneficiario o una etiqueta, y lo que cuestan por mes los pagos recurrentes. Las demás cifras van debajo, en recuadros iguales entre sí, así la vista cae primero en lo importante.
+- Eliminar una cuenta, un beneficiario o una etiqueta está en el menú «⋯» de arriba de su página, como en las metas, en lugar de la tarjeta roja que estaba al pie. Nodus sigue preguntando antes y dice qué se lleva consigo.
 
 ## 1.11.0 — 2026-11-21
 

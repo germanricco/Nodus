@@ -615,8 +615,8 @@ msgid ""
 "No se pudo reemplazar Nodus en su carpeta. Revisa que puedas escribir en ella, o descarga la "
 "versión nueva desde GitHub."
 msgstr ""
-"Nodus could not be replaced in its folder. Check that you can write to it, or download the "
-"new version from GitHub."
+"Nodus could not be replaced in its folder. Check that you can write to it, or download the new "
+"version from GitHub."
 
 #: nodus/services/planning/budget_service.py
 msgid "El límite del presupuesto va en pesos."
@@ -1090,7 +1090,8 @@ msgstr "Edit"
 msgid "Eliminar compra"
 msgstr "Delete purchase"
 
-#: nodus/ui/pages/accounts_page.py nodus/ui/pages/base/summary_page.py
+#: nodus/ui/pages/account_detail_page.py nodus/ui/pages/accounts_page.py
+#: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
 #: nodus/ui/pages/base/transaction_list_view.py nodus/ui/pages/categories_page.py
 #: nodus/ui/pages/goal_detail_page.py nodus/ui/pages/goals_page.py nodus/ui/pages/recurring_page.py
 #: nodus/ui/pages/settings/rates_card.py nodus/ui/transaction_rows.py
@@ -1144,7 +1145,7 @@ msgstr[1] "Its {count} recurring charges are deleted too."
 msgid "Para conservar el historial, archívala en su lugar."
 msgstr "To keep the history, archive it instead."
 
-#: nodus/ui/actions/accounts.py nodus/ui/pages/account_detail_page.py
+#: nodus/ui/actions/accounts.py
 msgid "Eliminar cuenta"
 msgstr "Delete account"
 
@@ -1174,7 +1175,7 @@ msgid_plural "{count} movimientos quedan sin beneficiario."
 msgstr[0] "{count} transaction is left without a payee."
 msgstr[1] "{count} transactions are left without a payee."
 
-#: nodus/ui/actions/payees.py nodus/ui/pages/payee_detail_page.py
+#: nodus/ui/actions/payees.py
 #, python-brace-format
 msgid "Eliminar beneficiario"
 msgid_plural "Eliminar {count} beneficiarios"
@@ -1215,7 +1216,7 @@ msgid_plural "{count} movimientos pierden alguna; los movimientos no se borran."
 msgstr[0] "{count} transaction loses one of them; no transactions are deleted."
 msgstr[1] "{count} transactions lose one of them; no transactions are deleted."
 
-#: nodus/ui/actions/tags.py nodus/ui/pages/tag_detail_page.py
+#: nodus/ui/actions/tags.py
 #, python-brace-format
 msgid "Eliminar etiqueta"
 msgid_plural "Eliminar {count} etiquetas"
@@ -2257,12 +2258,12 @@ msgid "Todo"
 msgstr "All"
 
 #: nodus/ui/pages/account_detail_page.py
-msgid "Anota lo que vale hoy; la diferencia es rendimiento, no un ingreso"
-msgstr "Enter what it's worth today; the difference is return, not income"
-
-#: nodus/ui/pages/account_detail_page.py
 msgid "Saldo"
 msgstr "Balance"
+
+#: nodus/ui/pages/account_detail_page.py
+msgid "Anota lo que vale hoy; la diferencia es rendimiento, no un ingreso"
+msgstr "Enter what it's worth today; the difference is return, not income"
 
 #: nodus/ui/pages/account_detail_page.py
 msgid "En pesos"
@@ -2861,10 +2862,6 @@ msgstr "Back to {page} (Esc)"
 #, python-brace-format
 msgid "Volver a {page}"
 msgstr "Back to {page}"
-
-#: nodus/ui/pages/base/detail_page.py
-msgid "Zona de peligro"
-msgstr "Danger zone"
 
 #: nodus/ui/pages/base/net_worth_card.py
 msgid "vs. inicio del período"

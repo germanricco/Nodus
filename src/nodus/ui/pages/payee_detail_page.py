@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from nodus.i18n import N_, _
+from nodus.i18n import N_
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.classification.payee_service import PayeeSummary
 from nodus.services.container import Services
-from nodus.ui.actions.payees import delete_payees, payee_delete_warning
+from nodus.ui.actions.payees import delete_payees
 from nodus.ui.dialogs.payee_dialogs import MergePayeeDialog, PayeeDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.event_bus import EventBus
@@ -24,9 +24,7 @@ class PayeeDetailPage(SummaryDetailPage[PayeeSummary]):
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
-        super().__init__(
-            DetailId.PAYEE, services, event_bus, theme_manager, _("Eliminar beneficiario")
-        )
+        super().__init__(DetailId.PAYEE, services, event_bus, theme_manager)
         # Every row would repeat the payee.
         self.list_view.table.setColumnHidden(PAYEE, True)
 
@@ -56,9 +54,6 @@ class PayeeDetailPage(SummaryDetailPage[PayeeSummary]):
         MergePayeeDialog(
             self._services, self._event_bus, [summary.payee], parent=self.window()
         ).exec()
-
-    def delete_warning(self, summary: PayeeSummary) -> str:
-        return payee_delete_warning([summary])
 
     def delete_item(self, summary: PayeeSummary) -> bool:
         return delete_payees(self.window(), self._services, self._event_bus, [summary])

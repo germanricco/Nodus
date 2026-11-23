@@ -112,7 +112,7 @@ class TestAccountDetail:
 
         assert window.detail(DetailId.ACCOUNT).back_button.toolTip() == "Volver a Cuentas (Esc)"
 
-    def test_the_danger_zone_asks_before_deleting(
+    def test_deleting_is_in_the_header_menu_and_asks_first(
         self, monkeypatch, services, window, pesos, dollars
     ):
         answers = []
@@ -121,7 +121,9 @@ class TestAccountDetail:
         )
         window.show_detail(DetailId.ACCOUNT, pesos.id)
 
-        window.detail(DetailId.ACCOUNT).delete_button.click()
+        actions = window.detail(DetailId.ACCOUNT).more_actions()
+        assert actions[-1].text == "Eliminar" and actions[-1].destructive
+        run_action(actions, "Eliminar")
 
         assert answers and "«Banco»" in answers[0]
         assert [a.id for a in services.accounts.list_accounts()] == [dollars.id]
@@ -152,7 +154,7 @@ class TestPayeeDetail:
         qtbot.keyClick(detail, Qt.Key.Key_Escape)
         assert window.current_page is payees
 
-    def test_the_danger_zone_keeps_the_movements(self, monkeypatch, services, window, pesos):
+    def test_deleting_from_the_menu_keeps_the_movements(self, monkeypatch, services, window, pesos):
         services.transactions.create(
             expense_draft(services, pesos.id, ars("100"), payee_name="Coto")
         )
@@ -163,11 +165,10 @@ class TestPayeeDetail:
         )
         window.show_detail(DetailId.PAYEE, coto.id)
         detail = window.detail(DetailId.PAYEE)
-        assert "1 movimiento queda sin beneficiario" in detail.delete_warning(detail.summary)
 
-        detail.delete_button.click()
+        run_action(detail.more_actions(), "Eliminar")
 
-        assert answers
+        assert "1 movimiento queda sin beneficiario" in answers[0]
         assert services.payees.find("Coto") is None
         assert len(services.transactions.list_transactions(TransactionFilter())) == 1
         assert window.current_page is window.page(PageId.PAYEES)
