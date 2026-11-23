@@ -2,9 +2,9 @@
 
 Deleting asks before and is never undone.
 What is undone is what runs on one click: skipping or paying a recurring charge,
-paying off installments, editing several transactions, merging payees or tags. Each
-of those actions leaves an ``UndoRecord`` here, built in the same database
-transaction from what was there before, and the interface offers «Deshacer».
+paying off installments, editing several transactions, merging payees, tags or
+categories. Each of those actions leaves an ``UndoRecord`` here, built in the same
+database transaction from what was there before, and the interface offers «Deshacer».
 """
 
 from __future__ import annotations

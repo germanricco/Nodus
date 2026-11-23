@@ -53,6 +53,7 @@ from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog  # no
 from nodus.ui.event_bus import EventBus  # noqa: E402
 from nodus.ui.navigation import DetailId, PageId  # noqa: E402
 from nodus.ui.pages.accounts_page import AccountRow  # noqa: E402
+from nodus.ui.pages.categories_page import CategoryRow  # noqa: E402
 from nodus.ui.qt_language import QtLanguage  # noqa: E402
 from nodus.ui.shell.main_window import MainWindow  # noqa: E402
 from nodus.ui.shell.tour import ADD_TRANSACTION  # noqa: E402
@@ -478,6 +479,16 @@ def capture_rows(shots: Shots) -> None:
     shots.save(window, "transactions-selection")
     transactions.table.clearSelection()
     transactions.table.hovered_row = -1
+    # Two categories chosen in Categorías, to merge or delete them together.
+    window.show_page(PageId.CATEGORIES)
+    categories = window.page(PageId.CATEGORIES)
+    shots.settle()
+    chosen = [r for r in categories.findChildren(CategoryRow) if r.check_box.isVisible()][1:3]
+    for row in chosen:
+        row.check_box.setChecked(True)
+    shots.settle()
+    shots.save(window, "categories-selection")
+    categories.clear_chosen()
 
 
 def capture_messages(shots: Shots) -> None:

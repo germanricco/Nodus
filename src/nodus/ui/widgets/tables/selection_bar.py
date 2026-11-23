@@ -32,7 +32,9 @@ class SelectionBar(QFrame):
         self.detail_label = muted_label("")
         self.detail_label.hide()
         layout.addWidget(self.count_label)
-        layout.addWidget(self.detail_label, stretch=1)
+        layout.addWidget(self.detail_label)
+        # The free room stays here even without a detail, so the buttons keep their size.
+        layout.addStretch(1)
         self._actions = QHBoxLayout()
         self._actions.setSpacing(Space.S)
         layout.addLayout(self._actions)

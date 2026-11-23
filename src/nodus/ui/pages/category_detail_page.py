@@ -15,7 +15,7 @@ from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.conversion import relative_change
 from nodus.services.reports.category_report_service import CategorySummary
-from nodus.ui.actions.categories import delete_category
+from nodus.ui.actions.categories import delete_categories
 from nodus.ui.dialogs.category_dialog import CategoryDialog, MergeCategoryDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.event_bus import EventBus
@@ -103,11 +103,11 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
 
     def merge_item(self, summary: CategorySummary) -> None:
         MergeCategoryDialog(
-            self._services, self._event_bus, summary.category, parent=self.window()
+            self._services, self._event_bus, [summary.category], parent=self.window()
         ).exec()
 
     def delete_item(self, summary: CategorySummary) -> bool:
-        return delete_category(self.window(), self._services, self._event_bus, summary.category)
+        return delete_categories(self.window(), self._services, self._event_bus, [summary.category])
 
     def more_actions(self) -> list[RowAction]:
         summary = self.summary

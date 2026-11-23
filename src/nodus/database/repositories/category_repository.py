@@ -14,6 +14,12 @@ class CategoryRepository(Repository):
     """Reads and writes the ``categories`` table; the rules live in ``CategoryService``."""
 
     TABLE = "categories"
+    # What points to a category and moves with it when it is merged: (table, column).
+    REFERENCES = (
+        ("transactions", "category_id"),
+        ("recurring_charges", "category_id"),
+        ("payees", "default_category_id"),
+    )
 
     def add(self, category: Category) -> Category:
         category_id = self._insert(
@@ -87,6 +93,63 @@ class CategoryRepository(Repository):
 
     def delete(self, category_id: int) -> None:
         self._delete_id(category_id)
+
+    def row(self, category_id: int) -> dict | None:
+        """The category as stored, for ``put_back`` (undoing a merge)."""
+        return self._row(self.TABLE, category_id)
+
+    def put_back(self, row: dict) -> None:
+        self._put_back(self.TABLE, row)
+
+    def references(self, category_id: int) -> dict[tuple[str, str], list[int]]:
+        """The ids of the rows of each of ``REFERENCES`` that point to the category."""
+        return {
+            (table, column): [
+                row["id"]
+                for row in self._fetch_all(
+                    f"SELECT id FROM {table} WHERE {column} = ?", (category_id,)
+                )
+            ]
+            for table, column in self.REFERENCES
+        }
+
+    def point_to(self, references: dict[tuple[str, str], list[int]], category_id: int) -> None:
+        """Makes the rows of ``references`` point to ``category_id`` again."""
+        for (table, column), ids in references.items():
+            self._database.connection.executemany(
+                f"UPDATE {table} SET {column} = ? WHERE id = ?",
+                [(category_id, row_id) for row_id in ids],
+            )
+
+    def budget_rows(self, category_id: int) -> list[dict]:
+        """The category's monthly limits as stored: deleting it deletes them too."""
+        rows = self._fetch_all("SELECT * FROM budget_limits WHERE category_id = ?", (category_id,))
+        return [dict(row) for row in rows]
+
+    def put_back_budget(self, row: dict) -> None:
+        self._put_back("budget_limits", row)
+
+    def move_budgets(self, from_category_id: int, to_category_id: int) -> None:
+        """Gives one category's budget, with its history, to another."""
+        self._execute(
+            "UPDATE budget_limits SET category_id = ? WHERE category_id = ?",
+            (to_category_id, from_category_id),
+        )
+
+    def delete_budget_rows(self, row_ids: list[int]) -> None:
+        self._database.connection.executemany(
+            "DELETE FROM budget_limits WHERE id = ?", [(row_id,) for row_id in row_ids]
+        )
+
+    def name_taken(self, kind: TransactionType, parent_id: int | None, name: str) -> bool:
+        """Whether a category of ``kind`` under ``parent_id`` has ``name``, ignoring case,
+        as the unique index of the table compares them."""
+        row = self._fetch_one(
+            "SELECT 1 FROM categories WHERE kind = ? AND COALESCE(parent_id, 0) = ?"
+            " AND name = ? COLLATE NOCASE",
+            (kind.value, parent_id or 0, name),
+        )
+        return row is not None
 
     @staticmethod
     def _from_row(row: sqlite3.Row) -> Category:

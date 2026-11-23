@@ -7,7 +7,8 @@ import dataclasses
 from datetime import date
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
+from PySide6.QtGui import QKeyEvent
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit, QWidget
 
 from nodus.i18n import N_, _
 from nodus.models.category import Category
@@ -20,12 +21,13 @@ from nodus.services.reports.category_report_service import (
     CategoryReport,
     CategorySection,
 )
-from nodus.ui.actions.categories import delete_category
+from nodus.ui.actions.categories import delete_categories
 from nodus.ui.dialogs.category_dialog import CategoryDialog, MergeCategoryDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, history_focus
 from nodus.ui.pages.base.page import Page
 from nodus.ui.period_selector import PeriodSelector
+from nodus.ui.shortcuts import CLEAR_SELECTION, DELETE_ROWS
 from nodus.ui.text.formatting import rate_text
 from nodus.ui.text.labels import unconverted_note
 from nodus.ui.theme.design import Layout, Space
@@ -39,6 +41,8 @@ from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.money_label import amount_text
 from nodus.ui.widgets.style import RIGHT_ALIGNED, clear_layout, hint_label, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.tables.selection_bar import SelectionBar
+from nodus.ui.widgets.tables.table import DELETE_KEY_HINT
 
 SECTION_TITLES = {TransactionType.EXPENSE: N_("Gastos"), TransactionType.INCOME: N_("Ingresos")}
 NOTHING_TEXTS = {
@@ -48,16 +52,22 @@ NOTHING_TEXTS = {
 SYSTEM_HINT = N_("Recibe las transacciones de las categorías que se eliminan.")
 REFUNDS_HINT = N_("Sus ingresos se pueden vincular al gasto que devuelven, con «Reembolso de».")
 NO_MATCHES_TEXT = N_("Ninguna categoría coincide con la búsqueda.")
+CANNOT_MERGE_TEXT = N_(
+    "Se unen categorías del mismo tipo, sin subcategorías y que no sean de sistema."
+)
 
 
 class CategoryRow(QWidget):
     """One category in the period: color and name, how much of its kind it weighs (bar and
     percent), the amount and the menu of what it allows. Budgets stay in Presupuestos.
 
-    Subcategories are indented. A system category («Otros», «Reembolsos») cannot change,
-    so its menu only shows its movements. The bar, percent and amount keep their width on
-    every row, so they line up down the list.
+    A check box at the start chooses it, to merge or delete several at once.
+    Subcategories are indented after it. A system category («Otros», «Reembolsos») cannot
+    change, so it has no box and its menu only opens it and shows its movements. The box,
+    bar, percent and amount keep their place on every row, so they line up down the list.
     """
+
+    chosen_changed = Signal(object, bool)  # Category, chosen
 
     open_requested = Signal(object)  # Category
     transactions_requested = Signal(object)  # Category
@@ -76,19 +86,28 @@ class CategoryRow(QWidget):
         has_movements: bool = True,
         start: float | None = None,
         can_merge: bool = False,
+        chosen: bool = False,
     ) -> None:
         """``hidden`` masks the amount; ``has_movements`` says whether the category has
         any at all, in any period; ``start`` is where its bar begins (``ProgressStrip``);
-        ``can_merge`` whether it can join another (``CategoryService.can_merge``)."""
+        ``can_merge`` whether it can join another (``CategoryService.can_merge``);
+        ``chosen`` whether its box starts checked."""
         super().__init__()
         self.figures = figures
         self.category = category = figures.category
         self.has_movements = has_movements
         self.can_merge = can_merge
         layout = QHBoxLayout(self)
-        indent = self.INDENT if category.is_subcategory else 0
-        layout.setContentsMargins(Space.S + indent, Space.XS, Space.S, Space.XS)
+        layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
         layout.setSpacing(Space.S)
+        self.check_box = QCheckBox()
+        self.check_box.setAccessibleName(_("Elegir «{name}»").format(name=category.name))
+        self.check_box.setChecked(chosen)
+        self.check_box.toggled.connect(lambda on: self.chosen_changed.emit(category, on))
+        keep_place(self.check_box)
+        layout.addWidget(self.check_box)
+        if category.is_subcategory:
+            layout.addSpacing(self.INDENT)
         layout.addWidget(ColorDot(category.color))
         name = QLabel(category.name)
         name.setObjectName("RowTitle")
@@ -109,14 +128,13 @@ class CategoryRow(QWidget):
         self.percent_label.setAlignment(RIGHT_ALIGNED)
         self.amount_label = self._amount(figures, hidden)
         for widget in (self.bar, self.percent_label):
-            policy = widget.sizePolicy()
-            policy.setRetainSizeWhenHidden(True)
-            widget.setSizePolicy(policy)
+            keep_place(widget)
         layout.addWidget(self.bar, alignment=Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(self.percent_label)
         layout.addWidget(self.amount_label)
-        # Hidden once in the row: shown before it has a parent, it would flash as a window.
+        # Hidden once in the row: shown before it has a parent, they would flash as windows.
         self.bar.setHidden(not shows_share)
+        self.check_box.setHidden(category.is_fixed)
 
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
@@ -196,7 +214,9 @@ class CategoriesPage(Page):
     categories from the largest down, subcategories under their parent. A search narrows
     them by name.
 
-    The period starts on the current month.
+    The period starts on the current month. With two or more chosen, the header becomes
+    the selection bar, to merge or delete them together; Supr deletes the chosen ones and
+    Esc lets them go.
     """
 
     transactions_requested = Signal(object)  # TransactionFocus
@@ -211,6 +231,7 @@ class CategoriesPage(Page):
         self._theme_manager = theme_manager
         self._report: CategoryReport | None = None
         self._rows: dict[int, CategoryRow] = {}
+        self._chosen: dict[int, Category] = {}  # by id, in the order they were chosen
 
         self.period_selector = PeriodSelector(Period.of_months(Month.of(date.today())))
         self.add_header_widget(self.period_selector)
@@ -222,6 +243,15 @@ class CategoriesPage(Page):
         self.create_button = self.add_header_button(_("Agregar categoría"), primary=True)
         self.create_button.clicked.connect(lambda: self.open_category_dialog())
 
+        self.selection_bar = SelectionBar(_("seleccionadas"))
+        self.merge_button = self.selection_bar.add_action(_("Unir…"), self.merge_chosen)
+        self.delete_button = self.selection_bar.add_action(
+            _("Eliminar"), self.delete_chosen, destructive=True
+        )
+        self.delete_button.setToolTip(_(DELETE_KEY_HINT))
+        self.selection_bar.cleared.connect(self.clear_chosen)
+        self.set_selection_bar(self.selection_bar)
+
         self._sections = self.scrolling_body()
 
         self.period_selector.period_changed.connect(lambda _period: self.refresh())
@@ -229,7 +259,67 @@ class CategoriesPage(Page):
 
     def refresh(self) -> None:
         self._report = self._services.category_report.report(self.period_selector.period())
+        # A chosen category that was deleted or merged is no longer chosen.
+        existing = {c.id: c for c in self._services.categories.list_categories()}
+        self._chosen = {i: existing[i] for i in self._chosen if i in existing}
         self._show()
+        self._update_selection()
+
+    @property
+    def chosen(self) -> list[Category]:
+        return list(self._chosen.values())
+
+    def clear_chosen(self) -> None:
+        self._chosen.clear()
+        for row in self._rows.values():
+            row.check_box.setChecked(False)
+        self._update_selection()
+
+    def merge_chosen(self) -> None:
+        if not self._services.categories.can_merge_together(list(self._chosen)):
+            return
+        if MergeCategoryDialog(
+            self._services, self._event_bus, self.chosen, parent=self.window()
+        ).exec():
+            self.clear_chosen()
+
+    def delete_chosen(self) -> None:
+        if self._chosen and delete_categories(
+            self.window(), self._services, self._event_bus, self.chosen
+        ):
+            self.clear_chosen()
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
+        # Reaches the page when no field used it, as on the lists that are tables.
+        if CLEAR_SELECTION.matches(event) and self._chosen:
+            self.clear_chosen()
+            return
+        if DELETE_ROWS.matches(event) and self._chosen:
+            self.delete_chosen()
+            return
+        super().keyPressEvent(event)
+
+    def _choose(self, category: Category, chosen: bool) -> None:
+        if chosen:
+            self._chosen[category.id] = category
+        else:
+            self._chosen.pop(category.id, None)
+        self._update_selection()
+
+    def _update_selection(self) -> None:
+        """With two or more chosen, the header becomes the selection bar."""
+        count = len(self._chosen)
+        self.show_selection_bar(count > 1)
+        if count < 2:
+            return
+        self.selection_bar.set_count(count)
+        together = self._services.categories.can_merge_together(list(self._chosen))
+        self.merge_button.setEnabled(together)
+        self.merge_button.setToolTip(
+            _("Deja una sola y le pasa los movimientos de las demás")
+            if together
+            else _(CANNOT_MERGE_TEXT)
+        )
 
     def open_category_dialog(
         self,
@@ -242,7 +332,7 @@ class CategoriesPage(Page):
         ).exec()
 
     def delete_category(self, category: Category) -> None:
-        delete_category(self.window(), self._services, self._event_bus, category)
+        delete_categories(self.window(), self._services, self._event_bus, [category])
 
     def _show(self) -> None:
         """The report's sections, narrowed to the categories the search matches."""
@@ -294,7 +384,9 @@ class CategoriesPage(Page):
             has_movements=focus is not None,
             start=starts.get(category.id),
             can_merge=self._services.categories.can_merge(category.id),
+            chosen=category.id in self._chosen,
         )
+        row.chosen_changed.connect(self._choose)
         self._rows[category.id] = row
         row.transactions_requested.connect(
             lambda _category: self.transactions_requested.emit(focus)
@@ -303,7 +395,7 @@ class CategoriesPage(Page):
         row.edit_requested.connect(self.open_category_dialog)
         row.merge_requested.connect(
             lambda c: MergeCategoryDialog(
-                self._services, self._event_bus, c, parent=self.window()
+                self._services, self._event_bus, [c], parent=self.window()
             ).exec()
         )
         row.delete_requested.connect(self.delete_category)
@@ -328,3 +420,10 @@ def _matching(categories: list[CategoryFigures], wanted: str) -> list[CategoryFi
         if children:
             kept.append(dataclasses.replace(figures, children=children))
     return kept
+
+
+def keep_place(widget: QWidget) -> None:
+    """``widget`` keeps its room while hidden, so the columns of every row line up."""
+    policy = widget.sizePolicy()
+    policy.setRetainSizeWhenHidden(True)
+    widget.setSizePolicy(policy)

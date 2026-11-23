@@ -1,8 +1,10 @@
 import pytest
-from factories import ars, category_id, charge_draft, expense_draft, services_for
+from factories import ars, category_id, charge_draft, expense_draft, services_for, table_rows
 
 from nodus.database.database import Database
+from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
+from nodus.services.app.undo_service import UndoError
 from nodus.services.errors import ValidationError
 
 EXPENSE = TransactionType.EXPENSE
@@ -218,6 +220,64 @@ class TestMerge:
         assert [c.category_id for c in services.recurring.list_charges()] == [ropa]
         assert services.payees.get(cine.id).default_category_id == ropa
 
+    def test_undoing_puts_everything_back_as_it_was(self, services, database, pesos):
+        ocio, ropa = (category_id(services, name, EXPENSE) for name in ("Ocio", "Ropa"))
+        services.transactions.create(
+            expense_draft(services, pesos.id, ars("10"), category_id=ocio, payee_name="Cine")
+        )
+        services.transactions.create(expense_draft(services, pesos.id, ars("7"), category_id=ropa))
+        services.recurring.create(charge_draft(services, pesos.id, ars("5"), category_id=ocio))
+        services.payees.update(services.payees.find("Cine").id, "Cine", ocio)
+        services.budgets.set_limit(ocio, Month(2026, 11), ars("100"))
+        tables = ("categories", "transactions", "recurring_charges", "payees", "budget_limits")
+        before = table_rows(database, *tables)
+
+        services.categories.merge(ocio, ropa)
+        services.undo.undo()
+
+        assert table_rows(database, *tables) == before
+
+    def test_the_target_without_a_budget_takes_the_merged_one(self, services, database):
+        ocio, ropa, salud = (category_id(services, n, EXPENSE) for n in ("Ocio", "Ropa", "Salud"))
+        services.budgets.set_limit(ocio, Month(2026, 11), ars("100"))
+        services.budgets.set_limit(salud, Month(2026, 11), ars("300"))
+        before = table_rows(database, "budget_limits")
+
+        services.categories.merge_many([ocio, salud], ropa)
+
+        assert services.budgets.limits_on(Month(2026, 11)) == {ropa: ars("100")}
+        services.undo.undo()
+        assert table_rows(database, "budget_limits") == before
+
+    def test_a_target_keeps_its_own_budget(self, services):
+        ocio, ropa = (category_id(services, n, EXPENSE) for n in ("Ocio", "Ropa"))
+        services.budgets.set_limit(ocio, Month(2026, 11), ars("100"))
+        services.budgets.set_limit(ropa, Month(2026, 11), ars("50"))
+
+        services.categories.merge(ocio, ropa)
+
+        assert services.budgets.limits_on(Month(2026, 11)) == {ropa: ars("50")}
+
+    def test_not_undone_once_another_category_took_its_name(self, services, pesos):
+        ocio, ropa = (category_id(services, name, EXPENSE) for name in ("Ocio", "Ropa"))
+        services.categories.merge(ocio, ropa)
+        services.categories.create("ocio", EXPENSE, "#000000")
+
+        with pytest.raises(UndoError, match="Ya hay otra categoría «Ocio»"):
+            services.undo.undo()
+
+    def test_not_undone_once_a_moved_movement_moved_on(self, services, pesos):
+        ocio, ropa = (category_id(services, name, EXPENSE) for name in ("Ocio", "Ropa"))
+        moved = services.transactions.create(
+            expense_draft(services, pesos.id, ars("10"), category_id=ocio)
+        )
+        services.categories.merge(ocio, ropa)
+        services.categories.delete(ropa)  # its movements go to «Otros»
+
+        with pytest.raises(UndoError):
+            services.undo.undo()
+        assert services.transactions.get(moved.id).category_id != ocio
+
     def test_targets_are_the_other_managed_categories_of_its_kind(self, services):
         vivienda = category_id(services, "Vivienda", EXPENSE)
         alquiler = services.categories.create("Alquiler", EXPENSE, "#000000", vivienda)
@@ -252,3 +312,50 @@ class TestMerge:
             services.categories.merge(ocio, sueldo)
         with pytest.raises(ValidationError):
             services.categories.merge(ocio, ocio)
+
+
+class TestSeveral:
+    def test_deleting_a_parent_with_its_chosen_subcategory_takes_one_copy(
+        self, services, pesos, monkeypatch
+    ):
+        vivienda = category_id(services, "Vivienda", EXPENSE)
+        alquiler = services.categories.create("Alquiler", EXPENSE, "#000000", vivienda)
+        ocio = category_id(services, "Ocio", EXPENSE)
+        for category in (alquiler.id, ocio):
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars("10"), category_id=category)
+            )
+        copies = []
+        monkeypatch.setattr(services.backups, "create_before_delete", copies.append)
+        assert services.categories.transactions_in([vivienda, alquiler.id, ocio]) == 2
+
+        services.categories.delete_many([vivienda, alquiler.id, ocio])
+
+        assert not {"Vivienda", "Alquiler", "Ocio"} & set(names(services, EXPENSE))
+        otros = next(c for c in services.categories.list_categories(EXPENSE) if c.is_system)
+        assert services.categories.transaction_count(otros.id) == 2
+        assert len(copies) == 1
+
+    def test_merging_several_into_one_of_them(self, services, pesos):
+        ocio, ropa, salud = (category_id(services, n, EXPENSE) for n in ("Ocio", "Ropa", "Salud"))
+        for category in (ocio, ropa):
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars("10"), category_id=category)
+            )
+
+        services.categories.merge_many([ocio, ropa, salud], ropa)
+
+        assert "Ropa" in names(services, EXPENSE)
+        assert not {"Ocio", "Salud"} & set(names(services, EXPENSE))
+        assert services.categories.transaction_count(ropa) == 2
+
+    def test_which_can_merge_together(self, services):
+        ocio, ropa = category_id(services, "Ocio", EXPENSE), category_id(services, "Ropa", EXPENSE)
+        sueldo = category_id(services, "Sueldo", INCOME)
+        vivienda = category_id(services, "Vivienda", EXPENSE)
+        services.categories.create("Alquiler", EXPENSE, "#000000", vivienda)
+
+        assert services.categories.can_merge_together([ocio, ropa])
+        assert not services.categories.can_merge_together([ocio])
+        assert not services.categories.can_merge_together([ocio, sueldo])  # two kinds
+        assert not services.categories.can_merge_together([ocio, vivienda])  # subcategories

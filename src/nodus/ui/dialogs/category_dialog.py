@@ -13,6 +13,7 @@ from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
 from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.text.labels import TRANSACTION_TYPE_LABELS
+from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.inputs.combo_box import ComboBox
 
 NO_PARENT_LABEL = N_("Ninguna (categoría principal)")
@@ -102,28 +103,37 @@ class CategoryDialog(FormDialog):
 
 
 class MergeCategoryDialog(MergeDialog):
-    """Moves the movements of ``category`` to another of its kind and deletes it, for
+    """Moves the movements of ``categories`` to one category and deletes the rest, for
     duplicates such as «Comida» and «Supermercado». A copy of the data is made first, as
-    when deleting."""
+    when deleting.
+
+    One category joins another of its kind; several join the one the user keeps.
+    """
 
     def __init__(
         self,
         services: Services,
         event_bus: EventBus,
-        category: Category,
+        categories: list[Category],
         parent: QWidget | None = None,
     ) -> None:
-        categories = services.categories
-        others = [(c.name, c.id) for c in categories.merge_targets(category.id)]
-        source = MergeItem(category.name, category.id, categories.transaction_count(category.id))
-        super().__init__([source], _("Categoría"), "", others, parent)
+        service = services.categories
+        others = [(c.name, c.id) for c in service.merge_targets(categories[0].id)]
+        sources = [MergeItem(c.name, c.id, service.transaction_count(c.id)) for c in categories]
+        several_title = _("Unir {count} categorías").format(count=len(categories))
+        super().__init__(sources, _("Categoría"), several_title, others, parent)
         self._services = services
         self._event_bus = event_bus
 
     def merge(self, source_ids: list[int], target_id: int) -> None:
-        (source_id,) = source_ids
-        self._services.categories.merge(source_id, target_id)
+        self._services.categories.merge_many(source_ids, target_id)
         bus = self._event_bus
-        bus.categories_changed.emit()
-        bus.transactions_changed.emit()
-        bus.payees_changed.emit()
+        signals = (
+            bus.categories_changed,
+            bus.transactions_changed,
+            bus.payees_changed,
+            bus.budgets_changed,
+        )
+        for signal in signals:
+            signal.emit()
+        offer_undo(self, self._services, *signals)

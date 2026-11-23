@@ -511,12 +511,32 @@ msgid "La categoría no existe."
 msgstr "The category doesn't exist."
 
 #: nodus/services/classification/category_service.py
+msgid "Elige otra categoría del mismo tipo para unir."
+msgstr "Choose another category of the same kind to merge with."
+
+#: nodus/services/classification/category_service.py
 msgid "Primero une o elimina sus subcategorías."
 msgstr "First merge or delete its subcategories."
 
 #: nodus/services/classification/category_service.py
-msgid "Elige otra categoría del mismo tipo para unir."
-msgstr "Choose another category of the same kind to merge with."
+#, python-brace-format
+msgid "Se unieron {count} categorías en «{target}»."
+msgstr "{count} categories were merged into “{target}”."
+
+#: nodus/services/classification/category_service.py
+#, python-brace-format
+msgid "La categoría de «{name}»"
+msgstr "The category of “{name}”"
+
+#: nodus/services/classification/category_service.py
+#, python-brace-format
+msgid "Ya hay otra categoría «{name}»."
+msgstr "There is another “{name}” category now."
+
+#: nodus/services/classification/category_service.py nodus/services/classification/named_records.py
+#, python-brace-format
+msgid "Algún movimiento de «{name}»"
+msgstr "A transaction in “{name}”"
 
 #: nodus/services/classification/category_service.py
 #, python-brace-format
@@ -535,11 +555,6 @@ msgstr "Subcategories can't be added to “{parent}”."
 #: nodus/services/classification/category_service.py
 msgid "Una subcategoría debe ser del mismo tipo que su categoría."
 msgstr "A subcategory must be of the same kind as its category."
-
-#: nodus/services/classification/named_records.py
-#, python-brace-format
-msgid "Algún movimiento de «{name}»"
-msgstr "A transaction in “{name}”"
 
 #: nodus/services/classification/payee_service.py
 msgid "El beneficiario no existe."
@@ -1170,14 +1185,40 @@ msgstr "“{name}” will be deleted."
 
 #: nodus/ui/actions/categories.py
 #, python-brace-format
+msgid "Se van a eliminar {count} categorías y sus subcategorías."
+msgstr "{count} categories and their subcategories will be deleted."
+
+#: nodus/ui/actions/categories.py
+#, python-brace-format
+msgid "Se van a eliminar {count} categorías."
+msgstr "{count} categories will be deleted."
+
+#: nodus/ui/actions/categories.py
+#, python-brace-format
 msgid "Su única transacción pasa a «Otros»."
 msgid_plural "Sus {count} transacciones pasan a «Otros»."
 msgstr[0] "Its only transaction moves to “Other”."
 msgstr[1] "Its {count} transactions move to “Other”."
 
 #: nodus/ui/actions/categories.py
+#, python-brace-format
+msgid "Entre todas tienen una transacción, que pasa a «Otros»."
+msgid_plural "Entre todas tienen {count} transacciones, que pasan a «Otros»."
+msgstr[0] "Between them they have one transaction, which moves to “Other”."
+msgstr[1] "Between them they have {count} transactions, which move to “Other”."
+
+#: nodus/ui/actions/categories.py
+msgid "Ninguna tiene transacciones."
+msgstr "None of them has transactions."
+
+#: nodus/ui/actions/categories.py
 msgid "Eliminar categoría"
 msgstr "Delete category"
+
+#: nodus/ui/actions/categories.py
+#, python-brace-format
+msgid "Eliminar {count} categorías"
+msgstr "Delete {count} categories"
 
 #: nodus/ui/actions/goals.py
 #, python-brace-format
@@ -1484,6 +1525,11 @@ msgstr "Parent"
 #: nodus/ui/dialogs/category_dialog.py nodus/ui/dialogs/tag_dialogs.py
 msgid "Color"
 msgstr "Color"
+
+#: nodus/ui/dialogs/category_dialog.py
+#, python-brace-format
+msgid "Unir {count} categorías"
+msgstr "Merge {count} categories"
 
 #: nodus/ui/dialogs/confirm.py nodus/ui/dialogs/external_backup.py nodus/ui/dialogs/form_dialog.py
 #: nodus/ui/dialogs/update_dialog.py nodus/ui/widgets/inputs/color_wheel.py
@@ -2543,6 +2589,15 @@ msgid "Ninguna categoría coincide con la búsqueda."
 msgstr "No categories match your search."
 
 #: nodus/ui/pages/categories_page.py
+msgid "Se unen categorías del mismo tipo, sin subcategorías y que no sean de sistema."
+msgstr "Only categories of one kind, without subcategories and not built in, can be merged."
+
+#: nodus/ui/pages/categories_page.py
+#, python-brace-format
+msgid "Elegir «{name}»"
+msgstr "Choose “{name}”"
+
+#: nodus/ui/pages/categories_page.py
 msgid "sistema"
 msgstr "system"
 
@@ -2558,6 +2613,19 @@ msgstr "Merge with…"
 #: nodus/ui/pages/categories_page.py
 msgid "Buscar categoría…"
 msgstr "Search categories…"
+
+#: nodus/ui/pages/base/summary_page.py nodus/ui/pages/base/transaction_list_view.py
+#: nodus/ui/pages/categories_page.py nodus/ui/widgets/tables/selection_bar.py
+msgid "seleccionadas"
+msgstr "selected"
+
+#: nodus/ui/pages/base/summary_page.py nodus/ui/pages/categories_page.py
+msgid "Unir…"
+msgstr "Merge…"
+
+#: nodus/ui/pages/categories_page.py
+msgid "Deja una sola y le pasa los movimientos de las demás"
+msgstr "Keeps one and moves the others' movements to it"
 
 #: nodus/ui/pages/base/summary_page.py nodus/ui/pages/categories_page.py
 msgid "Borrar búsqueda"
@@ -2974,11 +3042,6 @@ msgstr "Last transaction"
 msgid "Todavía no tiene movimientos."
 msgstr "No transactions yet."
 
-#: nodus/ui/pages/base/summary_page.py nodus/ui/pages/base/transaction_list_view.py
-#: nodus/ui/widgets/tables/selection_bar.py
-msgid "seleccionadas"
-msgstr "selected"
-
 #: nodus/ui/pages/base/summary_page.py
 #, python-brace-format
 msgid "Buscar {noun}…"
@@ -2988,10 +3051,6 @@ msgstr "Search {noun}s…"
 #, python-brace-format
 msgid "Agregar {noun}"
 msgstr "Add {noun}"
-
-#: nodus/ui/pages/base/summary_page.py
-msgid "Unir…"
-msgstr "Merge…"
 
 #: nodus/ui/pages/base/summary_page.py
 msgid "Deja uno solo y le pasa los movimientos de los demás"
@@ -4196,21 +4255,23 @@ msgstr ""
 msgid ""
 "Categorías muestra cuánto sumó cada una en el período que elijas, de la más grande a la más "
 "chica, con una barra de cuánto pesa en el total. Un clic en una abre su página, con lo que sumó "
-"mes a mes, y «Unir con…» pasa sus movimientos a otra si tienes dos que son lo mismo. Cada una "
-"puede tener subcategorías, como Supermercado dentro de Comida, con «Agregar subcategoría» en su "
-"menú. Si eliminas una, sus movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» "
-"son de sistema: Nodus las usa, así que no se renombran ni se eliminan. Para el color, además de "
-"la paleta, el «+» abre una rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano"
-" después de la paleta, también para las etiquetas."
+"mes a mes, y «Unir con…» pasa sus movimientos a otra si tienes dos que son lo mismo; con sus "
+"casillas marcas varias y las unes o eliminas juntas. Cada una puede tener subcategorías, como "
+"Supermercado dentro de Comida, con «Agregar subcategoría» en su menú. Si eliminas una, sus "
+"movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de sistema: Nodus las "
+"usa, así que no se renombran ni se eliminan. Para el color, además de la paleta, el «+» abre una "
+"rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano después de la paleta, "
+"también para las etiquetas."
 msgstr ""
 "Categories shows how much each one added up to in the period you choose, from the largest down, "
 "with a bar of how much it weighs in the total. Clicking one opens its page, with what it added up"
 " to month by month, and “Merge with…” moves its transactions to another one if you have two that "
-"are the same. Each one can have subcategories, such as Supermarket inside Food, with “Add "
-"subcategory” in its menu. If you delete one, its transactions move to “Other” and aren't lost. "
-"“Other” and “Refunds” belong to the system: Nodus uses them, so they can't be renamed or deleted."
-" For the color, besides the palette, the “+” opens a color wheel with any other color, and the "
-"last ones you chose there stay at hand after the palette, for tags too."
+"are the same; with their check boxes you choose several and merge or delete them together. Each "
+"one can have subcategories, such as Supermarket inside Food, with “Add subcategory” in its menu. "
+"If you delete one, its transactions move to “Other” and aren't lost. “Other” and “Refunds” belong"
+" to the system: Nodus uses them, so they can't be renamed or deleted. For the color, besides the "
+"palette, the “+” opens a color wheel with any other color, and the last ones you chose there stay"
+" at hand after the palette, for tags too."
 
 #: nodus/ui/text/help_texts.py
 msgid ""

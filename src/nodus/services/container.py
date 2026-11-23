@@ -101,7 +101,7 @@ class Services:
             database, account_repository, ValueAdjustmentRepository(database), backups
         )
         exchange_rates = ExchangeRateService(database, ExchangeRateRepository(database))
-        categories = CategoryService(database, category_repository, backups)
+        categories = CategoryService(database, category_repository, backups, undo)
         if database.created:
             categories.name_defaults()
         transaction_repository = TransactionRepository(database)

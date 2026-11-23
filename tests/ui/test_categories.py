@@ -10,7 +10,11 @@ from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.services.reports.category_report_service import CategoryFigures
 from nodus.ui.dialogs import confirm as confirm_dialog
-from nodus.ui.dialogs.category_dialog import NO_PARENT_LABEL, CategoryDialog
+from nodus.ui.dialogs.category_dialog import (
+    NO_PARENT_LABEL,
+    CategoryDialog,
+    MergeCategoryDialog,
+)
 from nodus.ui.pages import categories_page
 from nodus.ui.pages.categories_page import CategoriesPage, CategoryRow
 from nodus.ui.widgets.empty_state import EmptyState
@@ -173,6 +177,95 @@ class TestCategoriesPage:
         run_action(row_named(page, "Ocio").actions(), "Eliminar")
 
         assert "Ocio" in [c.name for c in services.categories.list_categories(EXPENSE)]
+
+
+class TestSeveralChosen:
+    """Two or more chosen categories are merged or deleted together."""
+
+    def choose(self, page, *names):
+        for name in names:
+            row_named(page, name).check_box.setChecked(True)
+
+    def test_two_chosen_turn_the_header_into_the_selection_bar(self, page):
+        self.choose(page, "Ocio")
+        assert not page.selection_bar.isVisibleTo(page)
+
+        self.choose(page, "Ropa")
+
+        assert page.selection_bar.isVisibleTo(page)
+        assert page.selection_bar.count_label.text() == "2 seleccionadas"
+        assert page.merge_button.isEnabled()
+
+    def test_esc_lets_them_go(self, qtbot, page):
+        self.choose(page, "Ocio", "Ropa")
+
+        qtbot.keyClick(page, Qt.Key.Key_Escape)
+
+        assert page.chosen == []
+        assert not row_named(page, "Ocio").check_box.isChecked()
+        assert not page.selection_bar.isVisibleTo(page)
+
+    def test_system_categories_cannot_be_chosen(self, page):
+        otros = next(r for r in rows(page) if r.category.is_system)
+        assert not otros.check_box.isVisibleTo(page)
+
+    def test_two_kinds_cannot_merge(self, page):
+        self.choose(page, "Ocio")
+        row_named(page, "Sueldo", INCOME).check_box.setChecked(True)
+
+        assert not page.merge_button.isEnabled()
+
+    def test_deleting_them_together_after_one_confirmation(
+        self, qtbot, monkeypatch, services, event_bus, page, pesos
+    ):
+        ocio = category_id(services, "Ocio", EXPENSE)
+        services.transactions.create(expense_draft(services, pesos.id, ars("10"), category_id=ocio))
+        page.refresh()
+        warnings = []
+        monkeypatch.setattr(
+            confirm_dialog, "confirm", lambda _parent, _title, text: warnings.append(text) or True
+        )
+        self.choose(page, "Ocio", "Ropa")
+
+        with qtbot.waitSignal(event_bus.categories_changed):
+            qtbot.keyClick(page, Qt.Key.Key_Delete)
+
+        assert warnings == [
+            (
+                "Se van a eliminar 2 categorías. "
+                "Entre todas tienen una transacción, que pasa a «Otros»."
+            )
+        ]
+        assert not {"Ocio", "Ropa"} & {r.category.name for r in rows(page)}
+        assert page.chosen == []
+        assert not page.selection_bar.isVisibleTo(page)
+
+    def test_the_choice_survives_a_refresh_but_not_a_deletion(self, services, page):
+        self.choose(page, "Ocio", "Ropa")
+        services.categories.delete(category_id(services, "Ropa", EXPENSE))
+
+        page.refresh()
+
+        assert [c.name for c in page.chosen] == ["Ocio"]
+        assert row_named(page, "Ocio").check_box.isChecked()
+        assert not page.selection_bar.isVisibleTo(page)
+
+    def test_merging_them_keeps_the_one_chosen(self, qtbot, services, event_bus, pesos):
+        ocio, ropa = category_id(services, "Ocio", EXPENSE), category_id(services, "Ropa", EXPENSE)
+        services.transactions.create(expense_draft(services, pesos.id, ars("10"), category_id=ocio))
+        dialog = MergeCategoryDialog(
+            services, event_bus, [services.categories.get(i) for i in (ocio, ropa)]
+        )
+        qtbot.addWidget(dialog)
+        dialog.target_input.setCurrentIndex(dialog.target_input.findText("Ropa"))
+
+        assert dialog.windowTitle() == "Unir 2 categorías"
+        with qtbot.waitSignal(event_bus.categories_changed):
+            qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+        names = [c.name for c in services.categories.list_categories(EXPENSE)]
+        assert "Ropa" in names and "Ocio" not in names
+        assert services.categories.transaction_count(ropa) == 1
 
 
 class TestCategoryFigures:

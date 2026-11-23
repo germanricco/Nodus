@@ -8,7 +8,8 @@ What each version brings, newest first. To update, click “Update” when Nodus
 - Deleting an account, a payee or a tag is in the “⋯” menu at the top of its page, as with goals, instead of the red card that sat at the foot. Nodus still asks first and says what goes with it.
 - Categories shows how much each one added up to in the period you choose, from the largest down, with a bar of how much it weighs in total expenses or income. Subcategories go under their category, which adds them all up. A search at the top finds a category by its name.
 - Each category has its own page, like accounts and payees: a click in Categories opens it. It shows how much it added up to in total, this month (with the change from the previous month, as on Home) and on average per month, a bar for each month of the last year (a click on a month opens its transactions), its subcategories or the category it sits in, and all its transactions. “Add transaction” from there starts with the category already chosen.
-- “Merge with…” joins two categories that are the same: the transactions, recurring payments and payees that had it by default move to the one you choose, and the other is deleted. Nodus first saves a copy of your data, as when deleting.
+- “Merge with…” joins two categories that are the same: the transactions, recurring payments and payees that had it by default move to the one you choose, and the other is deleted. If the one that stays had no budget, it takes the other's. As when merging payees, the notice offers “Undo” (or Ctrl+Z), and Nodus also saves a copy of your data first.
+- In Categories, each one has its check box, as in Payees: choose several and merge or delete them together, with a single confirmation.
 
 ## 1.11.0 — 2026-11-21
 
