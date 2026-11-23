@@ -232,6 +232,10 @@ class Layout:
     LIST_MIN_CHARACTERS = 14  # how wide a selector is, in characters of its names
     LIST_INDENT = 18  # a subcategory in a list
     TREE_INDENT = 28  # a subcategory in Categorías, which has room for more
+    # The columns of Categorías, the same on every row so the bars and amounts line up.
+    SHARE_BAR_WIDTH = 160
+    SHARE_PERCENT_WIDTH = 48
+    SHARE_AMOUNT_WIDTH = 150
     CHECK_COLUMN = 34  # a table's check boxes
     MORE_COLUMN = 32  # a table's «⋯»
     GRID_CARD_MIN_WIDTH = 360  # a card of CardGrid: its main figure, «de …» and a pill fit

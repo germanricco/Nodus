@@ -386,7 +386,10 @@ HELP_TOPICS = [
         ),
         (
             N_(
-                "En Categorías, cada una puede tener subcategorías, como Supermercado dentro de"
+                "Categorías muestra cuánto sumó cada una en el período que elijas, de la más"
+                " grande a la más chica, con una barra de cuánto pesa en el total. Cada una puede"
+                " tener subcategorías,"
+                " como Supermercado dentro de"
                 " Comida, con «Agregar subcategoría» en su menú. Si eliminas una, sus movimientos"
                 " pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de sistema: Nodus"
                 " las usa, así que no se renombran ni se eliminan. Para el color, además de la"

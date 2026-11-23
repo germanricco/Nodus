@@ -40,6 +40,7 @@ from nodus.services.external.update_service import UpdateService
 from nodus.services.planning.budget_service import BudgetService
 from nodus.services.planning.goal_service import GoalService
 from nodus.services.reports.analysis_service import AnalysisService
+from nodus.services.reports.category_report_service import CategoryReportService
 from nodus.services.reports.dashboard_service import DashboardService
 from nodus.services.reports.export_service import ExportService
 from nodus.services.reports.net_worth_service import NetWorthService
@@ -82,6 +83,7 @@ class Services:
     budgets: BudgetService
     payees: PayeeService
     analysis: AnalysisService
+    category_report: CategoryReportService
     tags: TagService
     startup: StartupService
     news: NewsService
@@ -183,6 +185,7 @@ class Services:
             budgets=budgets,
             payees=payees,
             analysis=AnalysisService(transactions, categories, payees, exchange_rates),
+            category_report=CategoryReportService(categories, transactions, exchange_rates),
             tags=TagService(database, tag_repository, transactions, exchange_rates, undo),
             startup=StartupService.for_this_program(),
             news=NewsService(settings, __version__, first_start=database.created),

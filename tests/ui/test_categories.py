@@ -1,24 +1,28 @@
 from datetime import date
 
 import pytest
-from factories import ars, category_id, expense_draft, in_view
+from factories import ars, category_id, expense_draft, in_view, light_theme
 from menus import run_action, texts
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
+from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
+from nodus.services.reports.category_report_service import CategoryFigures
 from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs.category_dialog import NO_PARENT_LABEL, CategoryDialog
 from nodus.ui.pages import categories_page
 from nodus.ui.pages.categories_page import CategoriesPage, CategoryRow
+from nodus.ui.widgets.empty_state import EmptyState
 
 EXPENSE = TransactionType.EXPENSE
 INCOME = TransactionType.INCOME
+NOVEMBER = Period.of_months(Month(2026, 11))
 
 
 @pytest.fixture
 def page(qtbot, services, event_bus) -> CategoriesPage:
-    categories = CategoriesPage(services, event_bus)
+    categories = CategoriesPage(services, event_bus, light_theme())
     qtbot.addWidget(categories)
     in_view(categories, event_bus)
     categories.refresh()
@@ -163,3 +167,77 @@ class TestCategoriesPage:
         run_action(row_named(page, "Ocio").actions(), "Eliminar")
 
         assert "Ocio" in [c.name for c in services.categories.list_categories(EXPENSE)]
+
+
+class TestCategoryFigures:
+    """What the list says of each category in the period."""
+
+    @pytest.fixture
+    def november(self, services, page, pesos):
+        """Two expenses in November 2026 and one in October, out of the period."""
+        for amount, name, day in (
+            ("300", "Ocio", date(2026, 11, 3)),
+            ("100", "Supermercado y comida", date(2026, 11, 4)),
+            ("999", "Ropa", date(2026, 10, 30)),
+        ):
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars(amount), day,
+                              category_id=category_id(services, name, EXPENSE))
+            )  # fmt: skip
+        page.period_selector.set_period(NOVEMBER)
+        page.refresh()
+
+    def test_amounts_and_shares_from_the_largest_down(self, page, november):
+        expense_names = [r.category.name for r in rows(page) if r.category.kind is EXPENSE]
+        assert expense_names[:2] == ["Ocio", "Supermercado y comida"]
+        ocio = row_named(page, "Ocio")
+        assert ocio.amount_label.text() == "$ 300,00"
+        assert ocio.percent_label.text() == "75 %"
+        assert ocio.bar.fraction == pytest.approx(0.75)
+        assert row_named(page, "Ropa").amount_label.text() == "Sin gastos"
+        assert not row_named(page, "Ropa").bar.isVisibleTo(page)
+        assert row_named(page, "Sueldo", INCOME).amount_label.text() == "Sin ingresos"
+
+    def test_another_period_changes_the_figures(self, page, november):
+        page.period_selector.set_period(Period.of_months(Month(2026, 10)))
+
+        assert rows(page)[0].category.name == "Ropa"
+        assert rows(page)[0].amount_label.text() == "$ 999,00"
+
+    def test_hidden_amounts_show_only_the_currency(self, services, event_bus, page, november):
+        services.settings.set_amounts_hidden(True)
+        event_bus.amounts_hidden_changed.emit(True)
+
+        assert row_named(page, "Ocio").amount_label.text() == "$ ••••"
+
+    def test_budgets_stay_in_presupuestos(self, services, page, november):
+        ocio = category_id(services, "Ocio", EXPENSE)
+        services.budgets.set_limit(ocio, Month(2026, 11), ars("1000"))
+        page.refresh()
+
+        assert row_named(page, "Ocio").findChildren(QLabel, "ChangeBadge") == []
+
+    def test_the_search_ignores_accents_and_keeps_the_parent(self, services, page):
+        vivienda = category_id(services, "Vivienda", EXPENSE)
+        services.categories.create("Alquiler", EXPENSE, "#000000", parent_id=vivienda)
+        page.refresh()
+
+        page.search_input.setText("ALQUILER")
+        assert [r.category.name for r in rows(page)] == ["Vivienda", "Alquiler"]
+
+        page.search_input.setText("educacion")
+        assert [r.category.name for r in rows(page)] == ["Educación"]
+
+        page.search_input.setText("zzz")
+        assert rows(page) == []
+        empty = page.findChild(EmptyState)
+        assert empty.isVisibleTo(page)
+
+    def test_more_refunds_than_spending_show_no_bar(self, qtbot, services):
+        ropa = services.categories.get(category_id(services, "Ropa", EXPENSE))
+        row = CategoryRow(CategoryFigures(ropa, ars("-45"), 2, -0.06), light_theme().theme)
+        qtbot.addWidget(row)
+
+        assert row.amount_label.text() == "-$ 45,00"
+        assert row.bar.isHidden()
+        assert row.percent_label.text() == ""

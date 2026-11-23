@@ -4,7 +4,7 @@ runs on a double click, and its light goes off when a menu closes elsewhere."""
 from datetime import date
 from decimal import Decimal
 
-from factories import TODAY, ars, charge_draft, expense_draft
+from factories import TODAY, ars, charge_draft, expense_draft, light_theme
 from menus import double_click, double_click_row, main_action
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QCursor
@@ -22,7 +22,7 @@ FAR_AWAY = QPoint(5000, 5000)
 
 
 def category_rows(qtbot, services, event_bus) -> list[CategoryRow]:
-    page = CategoriesPage(services, event_bus)
+    page = CategoriesPage(services, event_bus, light_theme())
     qtbot.addWidget(page)
     page.refresh()
     page.show()

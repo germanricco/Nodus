@@ -2495,6 +2495,14 @@ msgstr "Set limit"
 msgid "Todavía no hay presupuestos"
 msgstr "No budgets yet"
 
+#: nodus/ui/pages/categories_page.py nodus/ui/pages/dashboard/expenses_card.py
+msgid "Sin gastos"
+msgstr "No expenses"
+
+#: nodus/ui/pages/categories_page.py
+msgid "Sin ingresos"
+msgstr "No income"
+
 #: nodus/ui/pages/categories_page.py
 msgid "Recibe las transacciones de las categorías que se eliminan."
 msgstr "Receives the transactions of categories that are deleted."
@@ -2504,12 +2512,24 @@ msgid "Sus ingresos se pueden vincular al gasto que devuelven, con «Reembolso d
 msgstr "Its income can be linked to the expense it pays back, with “Refund of”."
 
 #: nodus/ui/pages/categories_page.py
+msgid "Ninguna categoría coincide con la búsqueda."
+msgstr "No categories match your search."
+
+#: nodus/ui/pages/categories_page.py
 msgid "sistema"
 msgstr "system"
 
 #: nodus/ui/pages/categories_page.py
+msgid "Buscar categoría…"
+msgstr "Search categories…"
+
+#: nodus/ui/pages/categories_page.py
 msgid "Eliminar categoría"
 msgstr "Delete category"
+
+#: nodus/ui/pages/base/summary_page.py nodus/ui/pages/categories_page.py
+msgid "Borrar búsqueda"
+msgstr "Clear search"
 
 #: nodus/ui/pages/categories_page.py
 #, python-brace-format
@@ -2927,10 +2947,6 @@ msgstr "Merge…"
 msgid "Deja uno solo y le pasa los movimientos de los demás"
 msgstr "Keeps just one and moves the others' transactions to it"
 
-#: nodus/ui/pages/base/summary_page.py
-msgid "Borrar búsqueda"
-msgstr "Clear search"
-
 #: nodus/ui/pages/base/transaction_list_view.py nodus/ui/widgets/charts/bar_chart.py
 #, python-brace-format
 msgid "Ingresos {amount}"
@@ -3010,10 +3026,6 @@ msgstr "Expenses by category"
 #: nodus/ui/pages/dashboard/expenses_card.py
 msgid "Gastos frente al período anterior"
 msgstr "Expenses compared with the previous period"
-
-#: nodus/ui/pages/dashboard/expenses_card.py
-msgid "Sin gastos"
-msgstr "No expenses"
 
 #: nodus/ui/pages/dashboard/expenses_card.py
 msgid "en el período"
@@ -4136,17 +4148,21 @@ msgstr ""
 
 #: nodus/ui/text/help_texts.py
 msgid ""
-"En Categorías, cada una puede tener subcategorías, como Supermercado dentro de Comida, con "
-"«Agregar subcategoría» en su menú. Si eliminas una, sus movimientos pasan a «Otros» y no se "
-"pierden. «Otros» y «Reembolsos» son de sistema: Nodus las usa, así que no se renombran ni se "
-"eliminan. Para el color, además de la paleta, el «+» abre una rueda con cualquier otro, y los "
-"últimos que elegiste ahí quedan a mano después de la paleta, también para las etiquetas."
+"Categorías muestra cuánto sumó cada una en el período que elijas, de la más grande a la más "
+"chica, con una barra de cuánto pesa en el total. Cada una puede tener subcategorías, como "
+"Supermercado dentro de Comida, con «Agregar subcategoría» en su menú. Si eliminas una, sus "
+"movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de sistema: Nodus las "
+"usa, así que no se renombran ni se eliminan. Para el color, además de la paleta, el «+» abre una "
+"rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano después de la paleta, "
+"también para las etiquetas."
 msgstr ""
-"In Categories, each one can have subcategories, such as Supermarket inside Food, with “Add "
-"subcategory” in its menu. If you delete one, its transactions move to “Other” and aren't lost. "
-"“Other” and “Refunds” belong to the system: Nodus uses them, so they can't be renamed or deleted."
-" For the color, besides the palette, the “+” opens a color wheel with any other color, and the "
-"last ones you chose there stay at hand after the palette, for tags too."
+"Categories shows how much each one added up to in the period you choose, from the largest down, "
+"with a bar of how much it weighs in the total. Each one can have subcategories, such as "
+"Supermarket inside Food, with “Add subcategory” in its menu. If you delete one, its transactions "
+"move to “Other” and aren't lost. “Other” and “Refunds” belong to the system: Nodus uses them, so "
+"they can't be renamed or deleted. For the color, besides the palette, the “+” opens a color wheel"
+" with any other color, and the last ones you chose there stay at hand after the palette, for tags"
+" too."
 
 #: nodus/ui/text/help_texts.py
 msgid ""
