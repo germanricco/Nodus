@@ -2,6 +2,10 @@
 
 What each version brings, newest first. To update, click “Update” when Nodus tells you there's a new version: your data is kept. The versions before 1.10, when Nodus spoke only Spanish, are described in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.12.0
+
+- Screens that answer a question show the answer at the top, large and on its own, like the net worth on Home: an account's balance, what's saved toward a goal, a payee's or tag's total, and what recurring payments cost per month. The other figures go below, in boxes that all look alike, so your eye lands on what matters first.
+
 ## 1.11.0 — 2026-11-21
 
 - Nodus comes to Linux as an AppImage: a single file that opens with a double click on almost any distribution, with nothing to install. It shows up in the applications menu, can open when you sign in and updates itself, as on Windows.

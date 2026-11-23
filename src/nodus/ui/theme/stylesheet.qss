@@ -188,11 +188,6 @@ QMainWindow, #ContentArea, #PageStack {
     font-weight: $strong_weight;
 }
 
-#TileValue {
-    font-size: $figure_size;
-    font-weight: $figure_weight;
-}
-
 /* Small label next to a name, like "sistema" on the "Otros" category */
 #Tag {
     background: $accent_soft;

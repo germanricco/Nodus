@@ -2,6 +2,10 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.12.0
+
+- Las pantallas que responden una pregunta muestran la respuesta arriba, grande y sola, como el patrimonio en el Inicio: el saldo en una cuenta, lo ahorrado en una meta, el total en un beneficiario o una etiqueta, y lo que cuestan por mes los pagos recurrentes. Las demás cifras van debajo, en recuadros iguales entre sí, así la vista cae primero en lo importante.
+
 ## 1.11.0 — 2026-11-21
 
 - Nodus llega a Linux como AppImage: un solo archivo que se abre con doble clic en casi cualquier distribución, sin instalar nada. Aparece en el menú de aplicaciones, puede abrirse al iniciar sesión y se actualiza solo, como en Windows.

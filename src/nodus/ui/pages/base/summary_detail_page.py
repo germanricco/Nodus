@@ -21,6 +21,7 @@ from nodus.ui.text.labels import unconverted_note
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
+from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.money_label import masked
 
 NO_MOVEMENTS = "—"
@@ -58,14 +59,15 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self.merge_button.setToolTip(_("Le pasa sus movimientos a otro y lo elimina"))
         self.merge_button.clicked.connect(lambda: self.merge_item(self.summary))
 
+        # Keyed by the untranslated caption, which the code looks up; filled in this order.
+        self.figure_labels: dict[str, QLabel] = {N_("Total"): QLabel()}
+        # The total answers the page; the rest go in boxes under it.
+        self.content_layout.addWidget(HeroFigure(_("Total"), self.figure_labels["Total"]))
         self.figures = FigureRow()
-        self.figure_labels: dict[str, QLabel] = {}
-        # Keyed by the untranslated caption, which the code looks up.
-        captions = (N_("Movimientos"), N_("Total"), N_("Último movimiento"), *self.CAPTIONS)
-        for caption in captions:
+        for caption in (N_("Movimientos"), N_("Último movimiento"), *self.CAPTIONS):
             label = QLabel()
             self.figure_labels[caption] = label
-            self.figures.add_tile(FigureTile(_(caption), label, large=True))
+            self.figures.add_tile(FigureTile(_(caption), label))
         self.content_layout.addWidget(self.figures)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
@@ -134,8 +136,8 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         )
         self.merge_button.setEnabled(self.has_others())
         values = [
-            str(summary.count),
             self._total_text(summary),
+            str(summary.count),
             format_date(summary.last_on) if summary.last_on else NO_MOVEMENTS,
             *self.extra_figures(summary),
         ]

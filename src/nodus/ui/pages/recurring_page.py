@@ -31,6 +31,7 @@ from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import Tone, status_pill
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.figure_tile import FigureTile
+from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.pay_button import PayButton
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.charge_row import due_status_label, seen_actions
@@ -338,7 +339,7 @@ class RecurringPage(Page):
     def _summary_card(self, summary: RecurringSummary, today: date) -> Card:
         card = Card()
         tiles = QHBoxLayout()
-        tiles.setSpacing(Space.S)
+        tiles.setSpacing(Space.L)
         monthly, yearly = summary_text(summary)
         self.monthly_label = QLabel(monthly)
         self.yearly_label = QLabel(yearly)
@@ -347,8 +348,10 @@ class RecurringPage(Page):
         self.installments_label = QLabel(
             " + ".join(amount.format() for amount in installments) or "—"
         )
+        # What the charges cost each month answers the page; the rest go in boxes under it.
+        card.body.addWidget(HeroFigure(_("Por mes"), self.monthly_label))
+        card.body.addSpacing(Space.S)
         for caption, value in (
-            (_("Por mes"), self.monthly_label),
             (_("Por año"), self.yearly_label),
             (_("Activos"), self.active_label),
             (_("Cuotas por mes"), self.installments_label),

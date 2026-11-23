@@ -136,7 +136,7 @@ class CashFlowView(AnalysisView):
             (_("Tasa de ahorro"), self.rate_label, self.rate_badge),
         ):
             badge.setToolTip(badge.toolTip() or _(VERSUS_PREVIOUS_TEXT))
-            tiles.addWidget(FigureTile(caption, value, badge, large=True), stretch=1)
+            tiles.addWidget(FigureTile(caption, value, badge), stretch=1)
         layout.addLayout(tiles)
 
         self.chart = BarChart(theme_manager.theme)

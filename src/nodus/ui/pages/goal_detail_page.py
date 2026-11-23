@@ -29,6 +29,7 @@ from nodus.ui.widgets.charts.goal_bar import goal_pill, goal_sentence
 from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint, money_formats
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
+from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.money_label import amount_text, month_change_text
 from nodus.ui.widgets.style import clear_layout, make_hoverable, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
@@ -107,12 +108,12 @@ class GoalDetailPage(DetailPage):
         self.remaining_label = QLabel()
         self.needed_label = QLabel()
         self.pace_label, self.pace_note = QLabel(), muted_label("")
+        self.content_layout.addWidget(HeroFigure(_("Ahorrado"), self.saved_label, self.change_note))
         for tile in (
-            FigureTile(_("Objetivo"), self.target_label, self.target_note, large=True),
-            FigureTile(_("Ahorrado"), self.saved_label, self.change_note, large=True),
-            FigureTile(_("Falta"), self.remaining_label, large=True),
-            FigureTile(_("Por mes"), self.needed_label, large=True),
-            FigureTile(_("Ritmo por mes"), self.pace_label, self.pace_note, large=True),
+            FigureTile(_("Objetivo"), self.target_label, self.target_note),
+            FigureTile(_("Falta"), self.remaining_label),
+            FigureTile(_("Por mes"), self.needed_label),
+            FigureTile(_("Ritmo por mes"), self.pace_label, self.pace_note),
         ):
             self.figures.add_tile(tile)
         self.content_layout.addWidget(self.figures)

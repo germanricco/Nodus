@@ -12,13 +12,11 @@ class FigureTile(QFrame):
     """A boxed caption and value, like the Income / Expenses / Saved boxes of the reference,
     optionally with a ``badge`` under the value (e.g. a ``ChangeBadge``).
 
-    ``large`` makes the value stand out above its caption, for pages whose tiles are the
-    figures that matter (Análisis).
+    Every tile has the same size of figure, so a row of tiles reads as peers; the figure a
+    page is about goes above them, in a ``HeroFigure`` (plan 029a, 5.2).
     """
 
-    def __init__(
-        self, caption: str, value: QLabel, badge: QWidget | None = None, large: bool = False
-    ) -> None:
+    def __init__(self, caption: str, value: QLabel, badge: QWidget | None = None) -> None:
         super().__init__()
         self.setObjectName("FigureTile")
         layout = QVBoxLayout(self)
@@ -28,7 +26,7 @@ class FigureTile(QFrame):
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         caption_label = QLabel(caption.upper())
         caption_label.setObjectName("StatCaption")
-        value.setObjectName("TileValue" if large else "RowTitle")
+        value.setObjectName("StatValue")
         value.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.value = value
         layout.addWidget(caption_label)

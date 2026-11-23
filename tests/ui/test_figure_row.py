@@ -18,7 +18,7 @@ def test_rows_are_spread_evenly(count, fits, columns):
 def figures(qtbot) -> FigureRow:
     row = FigureRow()
     for caption in ("Objetivo", "Ahorrado", "Falta", "Por mes", "Ritmo"):
-        row.add_tile(FigureTile(caption, QLabel("US$ 12.345.678,90"), large=True))
+        row.add_tile(FigureTile(caption, QLabel("US$ 12.345.678,90")))
     qtbot.addWidget(row)
     row.show()
     return row

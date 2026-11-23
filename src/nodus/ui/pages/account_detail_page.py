@@ -46,6 +46,7 @@ from nodus.ui.widgets.change_badge import format_signed_percent
 from nodus.ui.widgets.charts.line_chart import LineChart, LinePoint, money_formats
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
+from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.money_label import MoneyLabel, amount_text, masked, month_change_text
 from nodus.ui.widgets.style import clear_layout, muted_label
@@ -96,6 +97,10 @@ class AccountDetailPage(DetailPage):
         # What the account is, in one quiet line under its name: type, currency, group.
         self.context_label = muted_label("")
         body.addWidget(self.context_label)
+        self.balance_label = MoneyLabel()
+        self.balance_note = muted_label("")
+        self.balance_figure = HeroFigure(_("Saldo"), self.balance_label, self.balance_note)
+        body.addWidget(self.balance_figure)
         body.addWidget(self._figures())
         self.goals_line = QWidget()
         self._goals_layout = QHBoxLayout(self.goals_line)
@@ -129,10 +134,8 @@ class AccountDetailPage(DetailPage):
         self.add_header_widget(self.more_button)
 
     def _figures(self) -> FigureRow:
-        """The figures; the ones that do not apply to this account hide."""
+        """The figures under the balance; the ones that do not apply to this account hide."""
         self.figures = FigureRow()
-        self.balance_label = MoneyLabel()
-        self.balance_note = muted_label("")
         self.converted_label = QLabel()
         self.incoming_label, self.incoming_note = QLabel(), muted_label("")
         self.outgoing_label, self.outgoing_note = QLabel(), muted_label("")
@@ -140,23 +143,18 @@ class AccountDetailPage(DetailPage):
         # What is still to come off the account in installments, as a card's statement
         # lists the installments ahead.
         self.pending_label, self.pending_note = QLabel(), muted_label("")
-        self.balance_tile = FigureTile(
-            _("Saldo"), self.balance_label, self.balance_note, large=True
-        )
-        self.converted_tile = FigureTile(_("En pesos"), self.converted_label, large=True)
+        self.converted_tile = FigureTile(_("En pesos"), self.converted_label)
         self.incoming_tile = FigureTile(
-            _("Entró este mes"), self.incoming_label, self.incoming_note, large=True
+            _("Entró este mes"), self.incoming_label, self.incoming_note
         )
         self.outgoing_tile = FigureTile(
-            _("Salió este mes"), self.outgoing_label, self.outgoing_note, large=True
+            _("Salió este mes"), self.outgoing_label, self.outgoing_note
         )
-        self.gain_tile = FigureTile(_("Rendimiento"), self.gain_label, self.gain_note, large=True)
-        self.pending_tile = FigureTile(
-            _("Cuotas por pagar"), self.pending_label, self.pending_note, large=True
-        )
+        self.gain_tile = FigureTile(_("Rendimiento"), self.gain_label, self.gain_note)
+        self.pending_tile = FigureTile(_("Cuotas por pagar"), self.pending_label, self.pending_note)
         tiles = (
-            self.balance_tile, self.converted_tile, self.incoming_tile, self.outgoing_tile,
-            self.gain_tile, self.pending_tile,
+            self.converted_tile, self.incoming_tile, self.outgoing_tile, self.gain_tile,
+            self.pending_tile,
         )  # fmt: skip
         for tile in tiles:
             self.figures.add_tile(tile)
