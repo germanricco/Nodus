@@ -7,6 +7,8 @@ What each version brings, newest first. To update, click “Update” when Nodus
 - Screens that answer a question show the answer at the top, large and on its own, like the net worth on Home: an account's balance, what's saved toward a goal, a payee's or tag's total, and what recurring payments cost per month. The other figures go below, in boxes that all look alike, so your eye lands on what matters first.
 - Deleting an account, a payee or a tag is in the “⋯” menu at the top of its page, as with goals, instead of the red card that sat at the foot. Nodus still asks first and says what goes with it.
 - Categories shows how much each one added up to in the period you choose, from the largest down, with a bar of how much it weighs in total expenses or income. Subcategories go under their category, which adds them all up. A search at the top finds a category by its name.
+- Each category has its own page, like accounts and payees: a click in Categories opens it. It shows how much it added up to in total, this month (with the change from the previous month, as on Home) and on average per month, a bar for each month of the last year (a click on a month opens its transactions), its subcategories or the category it sits in, and all its transactions. “Add transaction” from there starts with the category already chosen.
+- “Merge with…” joins two categories that are the same: the transactions, recurring payments and payees that had it by default move to the one you choose, and the other is deleted. Nodus first saves a copy of your data, as when deleting.
 
 ## 1.11.0 — 2026-11-21
 

@@ -435,6 +435,7 @@ class MainWindow(QMainWindow):
             ("tour_requested", self.start_tour),
             ("help_requested", self.toggle_help),
             ("account_requested", partial(self.show_detail, DetailId.ACCOUNT)),
+            ("category_requested", partial(self.show_detail, DetailId.CATEGORY)),
             ("goal_requested", partial(self.show_detail, DetailId.GOAL)),
         ):
             signal = getattr(page, name, None)

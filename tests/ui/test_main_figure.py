@@ -30,6 +30,7 @@ def test_every_page_has_at_most_one_hero_figure(window, services):
     window._event_bus.emit_all()
     visits = [(page_id,) for page_id in PageId] + [
         (DetailId.ACCOUNT, services.accounts.list_accounts()[0].id),
+        (DetailId.CATEGORY, services.categories.list_categories()[0].id),
         (DetailId.GOAL, services.goals.list_goals()[0].id),
         (DetailId.PAYEE, services.payees.list_payees()[0].id),
     ]
@@ -44,5 +45,11 @@ def test_every_page_has_at_most_one_hero_figure(window, services):
         if heroes:
             with_hero.append(visit[0])
     # The pages whose question has one answer; Análisis shows peers, all in boxes.
-    assert {PageId.RECURRING, DetailId.ACCOUNT, DetailId.GOAL, DetailId.PAYEE} <= set(with_hero)
+    assert {
+        PageId.RECURRING,
+        DetailId.ACCOUNT,
+        DetailId.CATEGORY,
+        DetailId.GOAL,
+        DetailId.PAYEE,
+    } <= set(with_hero)
     assert PageId.ANALYSIS not in with_hero

@@ -53,11 +53,13 @@ _MODE_TYPES = {EXPENSE_MODE: TransactionType.EXPENSE, INCOME_MODE: TransactionTy
 @dataclass(frozen=True)
 class TransactionStart:
     """What a new movement starts with when it is added from a page about one account,
-    payee or tag: that item, already in its field."""
+    category, payee or tag: that item, already in its field. A category also sets the
+    kind of movement, expense or income."""
 
     account_id: int | None = None
     payee: str = ""
     tag: str = ""
+    category_id: int | None = None
 
 
 class TransactionDialog(FormDialog):
@@ -212,6 +214,12 @@ class TransactionDialog(FormDialog):
                 self._suggest_category(payee)
         if start.tag:
             self.tag_input.set_names([start.tag])
+        if start.category_id is not None:
+            category = self._services.categories.get(start.category_id)
+            income = category.kind is TransactionType.INCOME
+            self.mode_input.set_index(INCOME_MODE if income else EXPENSE_MODE)
+            self.category_input.select(category.id)
+            self._category_picked = True
 
     def _payee_context(self) -> tuple[TransactionType | None, int | None]:
         """The kind and category the payee suggestions follow; none for a transfer."""

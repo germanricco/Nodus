@@ -1,4 +1,4 @@
-"""Dialog to create or edit a category."""
+"""Dialogs to create, edit and merge categories."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from nodus.models.transaction import TransactionType
 from nodus.services.container import Services
 from nodus.ui.dialogs.color_choice import color_picker, remember_color
 from nodus.ui.dialogs.form_dialog import SAVE_CHANGES, TYPE_NAME, FormDialog
+from nodus.ui.dialogs.merge_dialog import MergeDialog, MergeItem
 from nodus.ui.event_bus import EventBus
 from nodus.ui.text.labels import TRANSACTION_TYPE_LABELS
 from nodus.ui.widgets.inputs.combo_box import ComboBox
@@ -98,3 +99,31 @@ class CategoryDialog(FormDialog):
             )
         remember_color(self._services, color)
         self._event_bus.categories_changed.emit()
+
+
+class MergeCategoryDialog(MergeDialog):
+    """Moves the movements of ``category`` to another of its kind and deletes it, for
+    duplicates such as «Comida» and «Supermercado». A copy of the data is made first, as
+    when deleting."""
+
+    def __init__(
+        self,
+        services: Services,
+        event_bus: EventBus,
+        category: Category,
+        parent: QWidget | None = None,
+    ) -> None:
+        categories = services.categories
+        others = [(c.name, c.id) for c in categories.merge_targets(category.id)]
+        source = MergeItem(category.name, category.id, categories.transaction_count(category.id))
+        super().__init__([source], _("Categoría"), "", others, parent)
+        self._services = services
+        self._event_bus = event_bus
+
+    def merge(self, source_ids: list[int], target_id: int) -> None:
+        (source_id,) = source_ids
+        self._services.categories.merge(source_id, target_id)
+        bus = self._event_bus
+        bus.categories_changed.emit()
+        bus.transactions_changed.emit()
+        bus.payees_changed.emit()

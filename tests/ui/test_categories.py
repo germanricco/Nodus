@@ -37,6 +37,10 @@ def row_named(page, name: str, kind: TransactionType = EXPENSE) -> CategoryRow:
     return next(r for r in rows(page) if r.category.name == name and r.category.kind is kind)
 
 
+def action(row: CategoryRow, text: str):
+    return next(a for a in row.actions() if a.text == text)
+
+
 def make_dialog(qtbot, services, event_bus, **kwargs) -> CategoryDialog:
     dialog = CategoryDialog(services, event_bus, **kwargs)
     qtbot.addWidget(dialog)
@@ -114,19 +118,21 @@ class TestCategoriesPage:
         income_names = [r.category.name for r in rows(page) if r.category.kind is INCOME]
         assert income_names == ["Reembolsos", "Sueldo", "Trabajo freelance", "Otros"]
 
-    def test_otros_only_shows_movements_and_subcategories_cannot_nest(self, services, page):
+    def test_otros_only_opens_and_subcategories_cannot_nest(self, services, page):
         vivienda = category_id(services, "Vivienda", EXPENSE)
         services.categories.create("Alquiler", EXPENSE, "#000000", parent_id=vivienda)
         page.refresh()
 
         otros = row_named(page, "Otros")
-        assert texts(otros.actions()) == ["Ver movimientos"]
+        assert texts(otros.actions()) == ["Abrir", "Ver movimientos"]
         tags = [label for label in otros.findChildren(QLabel) if label.objectName() == "Tag"]
         assert [tag.text() for tag in tags] == ["sistema"]
         assert tags[0].toolTip() == categories_page.SYSTEM_HINT
         assert texts(row_named(page, "Alquiler").actions()) == [
+            "Abrir",
             "Ver movimientos",
             "Editar",
+            "Unir con…",
             "Eliminar",
         ]
         assert "Agregar subcategoría" in texts(row_named(page, "Vivienda").actions())
@@ -137,7 +143,7 @@ class TestCategoriesPage:
             expense_draft(services, pesos.id, ars("10"), date(2026, 3, 5), category_id=ocio)
         )
         page.refresh()
-        assert not row_named(page, "Ropa").actions()[0].enabled  # no movements
+        assert not action(row_named(page, "Ropa"), "Ver movimientos").enabled  # no movements
 
         with qtbot.waitSignal(page.transactions_requested) as signal:
             run_action(row_named(page, "Ocio").actions(), "Ver movimientos")

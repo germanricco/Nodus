@@ -15,6 +15,7 @@ from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.page import Page
 from nodus.ui.pages.budgets_page import BudgetsPage
 from nodus.ui.pages.categories_page import CategoriesPage
+from nodus.ui.pages.category_detail_page import CategoryDetailPage
 from nodus.ui.pages.dashboard.dashboard_page import DashboardPage
 from nodus.ui.pages.goal_detail_page import GoalDetailPage
 from nodus.ui.pages.goals_page import GoalsPage
@@ -42,6 +43,7 @@ PAGE_TYPES: dict[PageId, type[Page]] = {
 
 DETAIL_TYPES: dict[DetailId, type[DetailPage]] = {
     DetailId.ACCOUNT: AccountDetailPage,
+    DetailId.CATEGORY: CategoryDetailPage,
     DetailId.PAYEE: PayeeDetailPage,
     DetailId.TAG: TagDetailPage,
     DetailId.GOAL: GoalDetailPage,

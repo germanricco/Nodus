@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Generic
 
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.i18n import N_, _
 from nodus.models.transaction_filter import TransactionFilter
@@ -69,7 +69,8 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         for caption in (N_("Movimientos"), N_("Último movimiento"), *self.CAPTIONS):
             label = QLabel()
             self.figure_labels[caption] = label
-            self.figures.add_tile(FigureTile(_(caption), label))
+            badge = self.figure_badge(caption)
+            self.figures.add_tile(FigureTile(_(caption), label, badge, badge_beside=True))
         self.content_layout.addWidget(self.figures)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
@@ -89,6 +90,11 @@ class SummaryDetailPage(DetailPage, Generic[S]):
     def criteria(self, summary: S) -> TransactionFilter:
         """Its movements, over its whole history."""
         raise NotImplementedError
+
+    def figure_badge(self, caption: str) -> QWidget | None:
+        """A badge for the tile of ``caption`` (untranslated), such as a change, beside its
+        figure; none by default. Called while the page is built."""
+        return None
 
     def extra_figures(self, summary: S) -> list[str]:
         """The values of ``CAPTIONS``, in their order."""
@@ -120,6 +126,7 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         try:
             summary = self.summary = self.load_summary(self.item_id)
         except NotFoundError:
+            self.summary = None
             self.back_requested.emit()
             return
         self.title_label.setText(self.name(summary))

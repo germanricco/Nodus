@@ -5,13 +5,10 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
-    QHBoxLayout,
     QLabel,
-    QPushButton,
     QVBoxLayout,
-    QWidget,
 )
 
 from nodus.i18n import N_, _, ngettext
@@ -38,7 +35,7 @@ from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
 from nodus.ui.text.formatting import signed
 from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, estimate_text
-from nodus.ui.theme.design import Chart, Layout, Space
+from nodus.ui.theme.design import Chart, Layout
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import format_signed_percent
@@ -47,6 +44,7 @@ from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
+from nodus.ui.widgets.link_line import Link, LinkLine
 from nodus.ui.widgets.money_label import MoneyLabel, amount_text, masked, month_change_text
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.charge_row import UpcomingPaymentRow
@@ -100,10 +98,7 @@ class AccountDetailPage(DetailPage):
         self.balance_figure = HeroFigure(_("Saldo"), self.balance_label, self.balance_note)
         body.addWidget(self.balance_figure)
         body.addWidget(self._figures())
-        self.goals_line = QWidget()
-        self._goals_layout = QHBoxLayout(self.goals_line)
-        self._goals_layout.setContentsMargins(0, 0, 0, 0)
-        self._goals_layout.setSpacing(Space.S)
+        self.goals_line = LinkLine()
         body.addWidget(self.goals_line)
         body.addWidget(self._payments_card())
         body.addWidget(self._chart_card(services, theme_manager))
@@ -328,20 +323,18 @@ class AccountDetailPage(DetailPage):
     def _show_goals(self, account: Account) -> None:
         """ "Aporta a: Vacaciones (100 %)", each goal a link to its page; nothing when
         the account fills no goal, so spending from it is not a surprise to the goal."""
-        clear_layout(self._goals_layout)
         goals = self._services.goals.goals_for_account(account.id)
-        self.goals_line.setVisible(bool(goals))
-        if not goals:
-            return
-        self._goals_layout.addWidget(muted_label(_("Aporta a:")))
-        for goal, percent in goals:
-            link = QPushButton(f"{goal.name} ({format_percent(percent)})")
-            link.setObjectName("LinkButton")
-            link.setCursor(Qt.CursorShape.PointingHandCursor)
-            link.setToolTip(_("Abrir la meta"))
-            link.clicked.connect(lambda _checked=False, i=goal.id: self.goal_requested.emit(i))
-            self._goals_layout.addWidget(link)
-        self._goals_layout.addStretch()
+        self.goals_line.set_links(
+            _("Aporta a:"),
+            [
+                Link(
+                    f"{goal.name} ({format_percent(percent)})",
+                    _("Abrir la meta"),
+                    lambda i=goal.id: self.goal_requested.emit(i),
+                )
+                for goal, percent in goals
+            ],
+        )
 
     def _show_payments(self, account: Account, today: date) -> None:
         """The account's active recurring charges, the soonest first; no card without."""

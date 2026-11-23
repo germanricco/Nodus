@@ -375,6 +375,17 @@ def capture_details(shots: Shots) -> None:
     window.show_detail(DetailId.PAYEE, payee.id)
     shots.settle()
     shots.save(window, "payee-detail")
+    # The page of a category with a subcategory.
+    housing = next(c for c in services.categories.list_categories() if c.name == "Vivienda")
+    window.show_detail(DetailId.CATEGORY, housing.id)
+    shots.settle()
+    shots.save(window, "category-detail")
+    # The same page in the narrowest window: the change beside «Este mes» wraps its tile.
+    window.resize(window.minimumWidth(), wide.height())
+    shots.settle()
+    shots.save(window, "category-detail-narrow")
+    window.resize(wide)
+    shots.settle()
 
 
 def capture_empty_searches(shots: Shots) -> None:

@@ -1,5 +1,5 @@
 import pytest
-from factories import ars, category_id, expense_draft, services_for
+from factories import ars, category_id, charge_draft, expense_draft, services_for
 
 from nodus.database.database import Database
 from nodus.models.transaction import TransactionType
@@ -197,3 +197,58 @@ def test_in_spanish_a_fixed_category_keeps_the_name_the_database_has(services, d
         connection.execute("UPDATE categories SET name = 'Devoluciones' WHERE is_refunds = 1")
 
     assert "Devoluciones" in names(services, TransactionType.INCOME)
+
+
+class TestMerge:
+    """Merging is deleting into a category the user chose instead of «Otros»."""
+
+    def test_moves_movements_charges_and_payee_defaults_then_deletes(self, services, pesos):
+        ocio, ropa = (category_id(services, name, EXPENSE) for name in ("Ocio", "Ropa"))
+        services.transactions.create(
+            expense_draft(services, pesos.id, ars("10"), category_id=ocio, payee_name="Cine")
+        )
+        services.recurring.create(charge_draft(services, pesos.id, ars("5"), category_id=ocio))
+        cine = services.payees.find("Cine")
+        services.payees.update(cine.id, "Cine", ocio)
+
+        services.categories.merge(ocio, ropa)
+
+        assert "Ocio" not in names(services, EXPENSE)
+        assert services.categories.transaction_count(ropa) == 1
+        assert [c.category_id for c in services.recurring.list_charges()] == [ropa]
+        assert services.payees.get(cine.id).default_category_id == ropa
+
+    def test_targets_are_the_other_managed_categories_of_its_kind(self, services):
+        vivienda = category_id(services, "Vivienda", EXPENSE)
+        alquiler = services.categories.create("Alquiler", EXPENSE, "#000000", vivienda)
+
+        targets = [c.name for c in services.categories.merge_targets(vivienda)]
+
+        assert "Vivienda" not in targets
+        assert "Alquiler" not in targets  # its own subcategory
+        assert "Otros" not in targets
+        assert "Sueldo" not in targets
+        assert "Vivienda" in [c.name for c in services.categories.merge_targets(alquiler.id)]
+
+    def test_a_category_with_subcategories_or_of_the_system_cannot_merge(self, services):
+        vivienda = category_id(services, "Vivienda", EXPENSE)
+        services.categories.create("Alquiler", EXPENSE, "#000000", vivienda)
+        otros = next(c for c in services.categories.list_categories(EXPENSE) if c.is_system)
+        ocio = category_id(services, "Ocio", EXPENSE)
+
+        assert not services.categories.can_merge(vivienda)
+        assert not services.categories.can_merge(otros.id)
+        assert services.categories.can_merge(ocio)
+        with pytest.raises(ValidationError):
+            services.categories.merge(vivienda, ocio)
+        with pytest.raises(ValidationError):
+            services.categories.merge(otros.id, ocio)
+
+    def test_only_into_a_category_of_its_kind(self, services):
+        ocio = category_id(services, "Ocio", EXPENSE)
+        sueldo = category_id(services, "Sueldo", INCOME)
+
+        with pytest.raises(ValidationError):
+            services.categories.merge(ocio, sueldo)
+        with pytest.raises(ValidationError):
+            services.categories.merge(ocio, ocio)

@@ -78,6 +78,13 @@ class CategoryRepository(Repository):
                 (to_category_id, from_category_id),
             )
 
+    def reassign_payee_defaults(self, from_category_id: int, to_category_id: int) -> None:
+        """The payees whose default is one category take another instead."""
+        self._execute(
+            "UPDATE payees SET default_category_id = ? WHERE default_category_id = ?",
+            (to_category_id, from_category_id),
+        )
+
     def delete(self, category_id: int) -> None:
         self._delete_id(category_id)
 

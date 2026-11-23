@@ -121,6 +121,43 @@ class CategoryService:
                 self._categories.reassign_transactions(doomed_id, fallback.id)
                 self._categories.delete(doomed_id)
 
+    def merge_targets(self, category_id: int) -> list[Category]:
+        """What ``category_id`` can join: the other categories of its kind that the user
+        manages, in display order, none of them its own subcategory."""
+        category = self.get(category_id)
+        return [
+            other
+            for node in self.category_tree(category.kind)
+            for other in (node.category, *node.children)
+            if other.id != category.id and other.parent_id != category.id and not other.is_fixed
+        ]
+
+    def can_merge(self, category_id: int) -> bool:
+        """Whether ``category_id`` can join another: one the user manages, without
+        subcategories (they would go with it) and with somewhere to go."""
+        category = self.get(category_id)
+        return (
+            not category.is_fixed
+            and not self._categories.subcategory_ids(category_id)
+            and bool(self.merge_targets(category_id))
+        )
+
+    def merge(self, source_id: int, target_id: int) -> None:
+        """Moves the movements and recurring charges of ``source_id`` to ``target_id``, and
+        the payees that had it by default, then deletes it: deleting it, but into the
+        category the user chose instead of «Otros». The data is copied first, as for a
+        delete."""
+        source = self._require_editable(source_id)
+        if self._categories.subcategory_ids(source_id):
+            raise ValidationError(_("Primero une o elimina sus subcategorías."))
+        if target_id not in {c.id for c in self.merge_targets(source_id)}:
+            raise ValidationError(_("Elige otra categoría del mismo tipo para unir."))
+        self._backups.create_before_delete(datetime.now())
+        with self._database.transaction():
+            self._categories.reassign_transactions(source.id, target_id)
+            self._categories.reassign_payee_defaults(source.id, target_id)
+            self._categories.delete(source.id)
+
     def _require_editable(self, category_id: int) -> Category:
         category = self.get(category_id)
         if category.is_fixed:

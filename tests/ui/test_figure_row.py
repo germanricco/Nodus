@@ -3,6 +3,7 @@
 import pytest
 from PySide6.QtWidgets import QLabel
 
+from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.figure_row import FigureRow, balanced_columns
 from nodus.ui.widgets.figure_tile import FigureTile
 
@@ -45,3 +46,29 @@ def test_a_hidden_tile_takes_no_place(figures, qtbot):
     figures.relayout()
 
     assert figures.columns() == 4
+
+
+def test_a_badge_beside_its_figure_wraps_the_row_rather_than_being_cut(qtbot):
+    """The widest case: a long figure with a three-digit change beside it."""
+    row = FigureRow()
+    qtbot.addWidget(row)
+    badge = ChangeBadge()
+    tiles = [FigureTile("Movimientos", QLabel("12")),
+             FigureTile("Este mes", QLabel("$ 12.345.678,90"), badge, badge_beside=True),
+             FigureTile("Promedio por mes", QLabel("$ 12.345.678,90"))]  # fmt: skip
+    for tile in tiles:
+        row.add_tile(tile)
+    badge.set_change(3.0)
+    assert badge.text() == "↗ 300 %"
+    row.show()
+    narrow = 2 * tiles[1].sizeHint().width() + FigureRow.SPACING
+
+    row.resize(narrow, 100)
+    row.relayout()
+    row.layout().activate()
+
+    assert row.columns() == 2
+    value = tiles[1].value
+    assert value.width() >= value.sizeHint().width()
+    assert badge.width() >= badge.sizeHint().width()
+    assert badge.geometry().left() > value.geometry().right()  # beside, not under

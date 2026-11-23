@@ -511,6 +511,14 @@ msgid "La categoría no existe."
 msgstr "The category doesn't exist."
 
 #: nodus/services/classification/category_service.py
+msgid "Primero une o elimina sus subcategorías."
+msgstr "First merge or delete its subcategories."
+
+#: nodus/services/classification/category_service.py
+msgid "Elige otra categoría del mismo tipo para unir."
+msgstr "Choose another category of the same kind to merge with."
+
+#: nodus/services/classification/category_service.py
 #, python-brace-format
 msgid "La categoría «{category}» no se puede modificar."
 msgstr "The category “{category}” can't be changed."
@@ -702,9 +710,10 @@ msgid "Cuenta"
 msgstr "Account"
 
 #: nodus/services/reports/export_service.py nodus/ui/dialogs/budget_dialog.py
-#: nodus/ui/dialogs/bulk_edit_dialog.py nodus/ui/dialogs/payee_dialogs.py
-#: nodus/ui/dialogs/recurring_charge_dialog.py nodus/ui/dialogs/transaction_dialog.py
-#: nodus/ui/pages/transactions_page.py nodus/ui/widgets/tables/transaction_table.py
+#: nodus/ui/dialogs/bulk_edit_dialog.py nodus/ui/dialogs/category_dialog.py
+#: nodus/ui/dialogs/payee_dialogs.py nodus/ui/dialogs/recurring_charge_dialog.py
+#: nodus/ui/dialogs/transaction_dialog.py nodus/ui/pages/transactions_page.py
+#: nodus/ui/widgets/tables/transaction_table.py
 msgid "Categoría"
 msgstr "Category"
 
@@ -1116,7 +1125,7 @@ msgstr "Undone."
 msgid "Se va a eliminar la cuenta «{name}»."
 msgstr "The account “{name}” will be deleted."
 
-#: nodus/ui/actions/accounts.py nodus/ui/pages/categories_page.py
+#: nodus/ui/actions/accounts.py nodus/ui/actions/categories.py
 msgid "No tiene transacciones."
 msgstr "It has no transactions."
 
@@ -1149,6 +1158,27 @@ msgstr "To keep the history, archive it instead."
 msgid "Eliminar cuenta"
 msgstr "Delete account"
 
+#: nodus/ui/actions/categories.py
+#, python-brace-format
+msgid "Se va a eliminar «{name}» y sus subcategorías."
+msgstr "“{name}” and its subcategories will be deleted."
+
+#: nodus/ui/actions/categories.py nodus/ui/actions/payees.py nodus/ui/actions/tags.py
+#, python-brace-format
+msgid "Se va a eliminar «{name}»."
+msgstr "“{name}” will be deleted."
+
+#: nodus/ui/actions/categories.py
+#, python-brace-format
+msgid "Su única transacción pasa a «Otros»."
+msgid_plural "Sus {count} transacciones pasan a «Otros»."
+msgstr[0] "Its only transaction moves to “Other”."
+msgstr[1] "Its {count} transactions move to “Other”."
+
+#: nodus/ui/actions/categories.py
+msgid "Eliminar categoría"
+msgstr "Delete category"
+
 #: nodus/ui/actions/goals.py
 #, python-brace-format
 msgid "Se elimina la meta «{name}». Las cuentas y sus movimientos no se tocan."
@@ -1157,11 +1187,6 @@ msgstr "The goal “{name}” will be deleted. Your accounts and their transacti
 #: nodus/ui/actions/goals.py
 msgid "Eliminar meta"
 msgstr "Delete goal"
-
-#: nodus/ui/actions/payees.py nodus/ui/actions/tags.py nodus/ui/pages/categories_page.py
-#, python-brace-format
-msgid "Se va a eliminar «{name}»."
-msgstr "“{name}” will be deleted."
 
 #: nodus/ui/actions/payees.py
 #, python-brace-format
@@ -1432,6 +1457,7 @@ msgid "Ninguna (categoría principal)"
 msgstr "None (main category)"
 
 #: nodus/ui/dialogs/category_dialog.py nodus/ui/pages/categories_page.py
+#: nodus/ui/pages/category_detail_page.py
 msgid "Agregar subcategoría"
 msgstr "Add subcategory"
 
@@ -2356,7 +2382,8 @@ msgstr "Return {amount}"
 msgid "Abrir la cuenta"
 msgstr "Open the account"
 
-#: nodus/ui/pages/accounts_page.py nodus/ui/pages/base/summary_page.py nodus/ui/pages/goals_page.py
+#: nodus/ui/pages/accounts_page.py nodus/ui/pages/base/summary_page.py
+#: nodus/ui/pages/categories_page.py nodus/ui/pages/goals_page.py
 msgid "Abrir"
 msgstr "Open"
 
@@ -2519,29 +2546,60 @@ msgstr "No categories match your search."
 msgid "sistema"
 msgstr "system"
 
+#: nodus/ui/pages/categories_page.py nodus/ui/pages/category_detail_page.py
+msgid "Abrir la categoría"
+msgstr "Open the category"
+
+#: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
+#: nodus/ui/pages/categories_page.py
+msgid "Unir con…"
+msgstr "Merge with…"
+
 #: nodus/ui/pages/categories_page.py
 msgid "Buscar categoría…"
 msgstr "Search categories…"
-
-#: nodus/ui/pages/categories_page.py
-msgid "Eliminar categoría"
-msgstr "Delete category"
 
 #: nodus/ui/pages/base/summary_page.py nodus/ui/pages/categories_page.py
 msgid "Borrar búsqueda"
 msgstr "Clear search"
 
-#: nodus/ui/pages/categories_page.py
-#, python-brace-format
-msgid "Se va a eliminar «{name}» y sus subcategorías."
-msgstr "“{name}” and its subcategories will be deleted."
+#: nodus/ui/pages/category_detail_page.py
+msgid "Este mes"
+msgstr "This month"
 
-#: nodus/ui/pages/categories_page.py
+#: nodus/ui/pages/category_detail_page.py
+msgid "Para unirla, primero une o elimina sus subcategorías."
+msgstr "To merge it, first merge or delete its subcategories."
+
+#: nodus/ui/pages/category_detail_page.py
+msgid "Promedio por mes"
+msgstr "Monthly average"
+
+#: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/analysis/trends_view.py
+#: nodus/ui/pages/category_detail_page.py
+msgid "Mes a mes"
+msgstr "Month by month"
+
+#: nodus/ui/pages/category_detail_page.py nodus/ui/pages/dashboard/comparison_card.py
+msgid "Nueva"
+msgstr "New"
+
+#: nodus/ui/pages/category_detail_page.py
+msgid "Le pasa sus movimientos a otra y la elimina"
+msgstr "Moves its transactions to another one and deletes it"
+
+#: nodus/ui/pages/category_detail_page.py
+msgid "Dentro de:"
+msgstr "Inside:"
+
+#: nodus/ui/pages/category_detail_page.py
+msgid "Subcategorías:"
+msgstr "Subcategories:"
+
+#: nodus/ui/pages/category_detail_page.py
 #, python-brace-format
-msgid "Su única transacción pasa a «Otros»."
-msgid_plural "Sus {count} transacciones pasan a «Otros»."
-msgstr[0] "Its only transaction moves to “Other”."
-msgstr[1] "Its {count} transactions move to “Other”."
+msgid "Mes anterior: {amount}"
+msgstr "Previous month: {amount}"
 
 #: nodus/ui/pages/goal_detail_page.py
 #, python-brace-format
@@ -2793,10 +2851,6 @@ msgstr "What comes in versus what goes out each month, and how much is left."
 msgid "Diferencia en puntos porcentuales"
 msgstr "Difference in percentage points"
 
-#: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/analysis/trends_view.py
-msgid "Mes a mes"
-msgstr "Month by month"
-
 #: nodus/ui/pages/analysis/cash_flow_view.py
 msgid "Detalle por mes"
 msgstr "Monthly detail"
@@ -2904,10 +2958,6 @@ msgstr "Needed to add up your accounts in other currencies"
 msgid "El resto de la variación es por tus movimientos."
 msgstr "The rest of the change comes from your transactions."
 
-#: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
-msgid "Unir con…"
-msgstr "Merge with…"
-
 #: nodus/ui/pages/base/summary_detail_page.py
 msgid "Le pasa sus movimientos a otro y lo elimina"
 msgstr "Moves its transactions to another one and deletes it"
@@ -2989,10 +3039,6 @@ msgstr "Compared with the previous period"
 #: nodus/ui/pages/dashboard/comparison_card.py
 msgid "Sin gastos en el período."
 msgstr "No expenses in this period."
-
-#: nodus/ui/pages/dashboard/comparison_card.py
-msgid "Nueva"
-msgstr "New"
 
 #: nodus/ui/pages/dashboard/comparison_card.py
 #, python-brace-format
@@ -4149,20 +4195,22 @@ msgstr ""
 #: nodus/ui/text/help_texts.py
 msgid ""
 "Categorías muestra cuánto sumó cada una en el período que elijas, de la más grande a la más "
-"chica, con una barra de cuánto pesa en el total. Cada una puede tener subcategorías, como "
-"Supermercado dentro de Comida, con «Agregar subcategoría» en su menú. Si eliminas una, sus "
-"movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de sistema: Nodus las "
-"usa, así que no se renombran ni se eliminan. Para el color, además de la paleta, el «+» abre una "
-"rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano después de la paleta, "
-"también para las etiquetas."
+"chica, con una barra de cuánto pesa en el total. Un clic en una abre su página, con lo que sumó "
+"mes a mes, y «Unir con…» pasa sus movimientos a otra si tienes dos que son lo mismo. Cada una "
+"puede tener subcategorías, como Supermercado dentro de Comida, con «Agregar subcategoría» en su "
+"menú. Si eliminas una, sus movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» "
+"son de sistema: Nodus las usa, así que no se renombran ni se eliminan. Para el color, además de "
+"la paleta, el «+» abre una rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano"
+" después de la paleta, también para las etiquetas."
 msgstr ""
 "Categories shows how much each one added up to in the period you choose, from the largest down, "
-"with a bar of how much it weighs in the total. Each one can have subcategories, such as "
-"Supermarket inside Food, with “Add subcategory” in its menu. If you delete one, its transactions "
-"move to “Other” and aren't lost. “Other” and “Refunds” belong to the system: Nodus uses them, so "
-"they can't be renamed or deleted. For the color, besides the palette, the “+” opens a color wheel"
-" with any other color, and the last ones you chose there stay at hand after the palette, for tags"
-" too."
+"with a bar of how much it weighs in the total. Clicking one opens its page, with what it added up"
+" to month by month, and “Merge with…” moves its transactions to another one if you have two that "
+"are the same. Each one can have subcategories, such as Supermarket inside Food, with “Add "
+"subcategory” in its menu. If you delete one, its transactions move to “Other” and aren't lost. "
+"“Other” and “Refunds” belong to the system: Nodus uses them, so they can't be renamed or deleted."
+" For the color, besides the palette, the “+” opens a color wheel with any other color, and the "
+"last ones you chose there stay at hand after the palette, for tags too."
 
 #: nodus/ui/text/help_texts.py
 msgid ""

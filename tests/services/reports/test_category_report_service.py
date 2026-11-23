@@ -98,3 +98,40 @@ def test_expenses_match_the_dashboard_ring(services, pesos, dollars, rent):
     assert [(t.category.id, t.total) for t in ring] == [
         (f.category.id, f.total) for f in listed if f.count
     ]
+
+
+class TestSummary:
+    """A category's own page: its whole history, with its subcategories."""
+
+    def test_adds_up_its_history_and_its_subcategories(self, services, pesos, rent):
+        spend(services, pesos, ars("400"), "Alquiler")
+        spend(services, pesos, ars("100"), "Vivienda", on=date(2026, 9, 10))
+        spend(services, pesos, ars("999"), "Ocio")
+
+        summary = services.category_report.summary(
+            category_id(services, "Vivienda", EXPENSE), TODAY
+        )
+
+        assert summary.net == ars("500")
+        assert summary.count == 2
+        assert summary.this_month == ars("400")
+        assert [c.name for c in summary.children] == ["Alquiler"]
+        assert (summary.first_on, summary.last_on) == (date(2026, 9, 10), TODAY)
+
+    def test_twelve_months_and_the_average_since_its_first_movement(self, services, pesos):
+        spend(services, pesos, ars("300"), "Ocio", on=date(2026, 9, 1))
+        spend(services, pesos, ars("300"), "Ocio")
+
+        summary = services.category_report.summary(category_id(services, "Ocio", EXPENSE), TODAY)
+
+        assert len(summary.months) == 12
+        assert summary.months[-1] == (Month(2026, 11), ars("300"))
+        assert summary.months[-3] == (Month(2026, 9), ars("300"))
+        # September to November: three months of history, not twelve.
+        assert summary.average == ars("200")
+
+    def test_a_category_without_movements(self, services):
+        summary = services.category_report.summary(category_id(services, "Ropa", EXPENSE), TODAY)
+
+        assert (summary.count, summary.average, summary.first_on) == (0, None, None)
+        assert summary.net.is_zero

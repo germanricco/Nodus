@@ -5,7 +5,7 @@ from datetime import date
 from decimal import Decimal
 
 from factories import TODAY, ars, charge_draft, expense_draft, light_theme
-from menus import double_click, double_click_row, main_action
+from menus import click_at, double_click, double_click_row, main_action
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QMenu, QWidget
@@ -43,24 +43,18 @@ def test_the_main_action_is_bold_in_the_menu(qtbot):
     assert menu.defaultAction().text() == "Editar"
 
 
-def test_a_double_click_on_a_category_edits_it(qtbot, services, event_bus):
+def test_a_click_on_a_category_opens_its_page_even_otros(qtbot, services, event_bus):
     rows = category_rows(qtbot, services, event_bus)
-    row = next(r for r in rows if not r.category.is_system)
-    edited = []
-    row.edit_requested.disconnect()  # the page would open its dialog
-    row.edit_requested.connect(edited.append)
+    opened = []
+    for row in (next(r for r in rows if not r.category.is_fixed),
+                next(r for r in rows if r.category.is_system)):  # fmt: skip
+        row.open_requested.disconnect()  # the page would open it
+        row.open_requested.connect(opened.append)
 
-    double_click(row)
+        click_at(row, QPoint(4, row.height() // 2))
 
-    assert edited == [row.category]
-    assert main_action(row.actions()) == "Editar"
-
-
-def test_otros_cannot_change_so_its_main_action_shows_its_movements(qtbot, services, event_bus):
-    rows = category_rows(qtbot, services, event_bus)
-    otros = next(r for r in rows if r.category.is_system)
-
-    assert main_action(otros.actions()) == "Ver movimientos"
+        assert opened[-1] == row.category
+        assert main_action(row.actions()) == "Abrir"
 
 
 def test_a_charge_is_paid_with_a_double_click_and_a_paused_one_edited(services, pesos, qtbot):
@@ -80,7 +74,7 @@ def test_a_charge_is_paid_with_a_double_click_and_a_paused_one_edited(services, 
     assert main_action(paused.actions()) == "Editar"
 
 
-def test_a_row_whose_only_action_deletes_has_no_main_action():
+def test_a_row_whose_only_action_deletes_has_no_main_action(qtbot):
     rate = ExchangeRate(1, date(2026, 11, 1), Currency.USD, Currency.ARS, Decimal("1000"))
     assert main_action(RateRow(rate).actions()) is None
 

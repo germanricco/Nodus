@@ -7,6 +7,8 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Las pantallas que responden una pregunta muestran la respuesta arriba, grande y sola, como el patrimonio en el Inicio: el saldo en una cuenta, lo ahorrado en una meta, el total en un beneficiario o una etiqueta, y lo que cuestan por mes los pagos recurrentes. Las demás cifras van debajo, en recuadros iguales entre sí, así la vista cae primero en lo importante.
 - Eliminar una cuenta, un beneficiario o una etiqueta está en el menú «⋯» de arriba de su página, como en las metas, en lugar de la tarjeta roja que estaba al pie. Nodus sigue preguntando antes y dice qué se lleva consigo.
 - Categorías muestra cuánto sumó cada una en el período que elijas, de la más grande a la más chica, con una barra de cuánto pesa en el total de gastos o de ingresos. Las subcategorías van debajo de su categoría, que suma lo de todas. Un buscador arriba encuentra una categoría por su nombre.
+- Cada categoría tiene su página, como las cuentas y los beneficiarios: un clic en Categorías la abre. Muestra cuánto sumó en total, este mes (con la variación frente al mes anterior, como en el Inicio) y en promedio por mes, una barra por cada mes del último año (un clic en un mes abre sus movimientos), sus subcategorías o la categoría en la que está, y todos sus movimientos. «Agregar transacción» desde ahí empieza con la categoría ya elegida.
+- «Unir con…» junta dos categorías que son lo mismo: los movimientos, los pagos recurrentes y los beneficiarios que la tenían por defecto pasan a la que elijas, y la otra se elimina. Antes, Nodus guarda una copia de tus datos, como al eliminar.
 
 ## 1.11.0 — 2026-11-21
 

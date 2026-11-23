@@ -38,11 +38,12 @@ class PageId(Enum):
 
 
 class DetailId(Enum):
-    """A page about one item (an account, a payee, a tag, a goal), reached from its list and not
-    from the sidebar. Each value is the list page it belongs to, which the sidebar keeps
-    selected and «‹ Volver» goes back to."""
+    """A page about one item (an account, a category, a payee, a tag, a goal), reached from
+    its list and not from the sidebar. Each value is the list page it belongs to, which the
+    sidebar keeps selected and «‹ Volver» goes back to."""
 
     ACCOUNT = PageId.ACCOUNTS
+    CATEGORY = PageId.CATEGORIES
     PAYEE = PageId.PAYEES
     TAG = PageId.TAGS
     GOAL = PageId.GOALS

@@ -58,6 +58,7 @@ def items(services, pesos) -> dict[DetailId, int]:
     )
     return {
         DetailId.ACCOUNT: pesos.id,
+        DetailId.CATEGORY: expense.category_id,
         DetailId.PAYEE: expense.payee_id,
         DetailId.TAG: services.tags.list_tags()[0].id,
         DetailId.GOAL: goal.id,

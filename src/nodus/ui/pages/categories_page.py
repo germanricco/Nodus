@@ -9,7 +9,7 @@ from datetime import date
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
 
-from nodus.i18n import N_, _, ngettext
+from nodus.i18n import N_, _
 from nodus.models.category import Category
 from nodus.models.names import normalize_name
 from nodus.models.period import Month, Period
@@ -20,8 +20,8 @@ from nodus.services.reports.category_report_service import (
     CategoryReport,
     CategorySection,
 )
-from nodus.ui.dialogs.category_dialog import CategoryDialog
-from nodus.ui.dialogs.confirm import delete_with_confirm
+from nodus.ui.actions.categories import delete_category
+from nodus.ui.dialogs.category_dialog import CategoryDialog, MergeCategoryDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, history_focus
 from nodus.ui.pages.base.page import Page
@@ -59,8 +59,10 @@ class CategoryRow(QWidget):
     every row, so they line up down the list.
     """
 
+    open_requested = Signal(object)  # Category
     transactions_requested = Signal(object)  # Category
     edit_requested = Signal(object)  # Category
+    merge_requested = Signal(object)  # Category
     delete_requested = Signal(object)  # Category
     add_subcategory_requested = Signal(object)  # Category
 
@@ -73,13 +75,16 @@ class CategoryRow(QWidget):
         hidden: bool = False,
         has_movements: bool = True,
         start: float | None = None,
+        can_merge: bool = False,
     ) -> None:
         """``hidden`` masks the amount; ``has_movements`` says whether the category has
-        any at all, in any period; ``start`` is where its bar begins (``ProgressStrip``)."""
+        any at all, in any period; ``start`` is where its bar begins (``ProgressStrip``);
+        ``can_merge`` whether it can join another (``CategoryService.can_merge``)."""
         super().__init__()
         self.figures = figures
         self.category = category = figures.category
         self.has_movements = has_movements
+        self.can_merge = can_merge
         layout = QHBoxLayout(self)
         indent = self.INDENT if category.is_subcategory else 0
         layout.setContentsMargins(Space.S + indent, Space.XS, Space.S, Space.XS)
@@ -115,7 +120,7 @@ class CategoryRow(QWidget):
 
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
-        install_row_actions(self, self.actions)
+        install_row_actions(self, self.actions, open_on_click=_("Abrir la categoría"))
 
     @staticmethod
     def _amount(figures: CategoryFigures, hidden: bool) -> QLabel:
@@ -129,19 +134,24 @@ class CategoryRow(QWidget):
         return label
 
     def actions(self) -> list[RowAction]:
-        """Its movements, editing and deleting; a system category («Otros», «Reembolsos»)
-        only shows its movements, since it cannot change."""
+        """Its page (what a click opens), its movements, and editing, merging and
+        deleting it; a system category («Otros», «Reembolsos») cannot change, so it only
+        opens."""
         category = self.category
         result = [
+            RowAction(
+                _("Abrir"),
+                lambda: self.open_requested.emit(category),
+                default=True,
+                effect=Effect.OPEN,
+            ),
             RowAction(
                 _("Ver movimientos"),
                 lambda: self.transactions_requested.emit(category),
                 "list",
                 enabled=self.has_movements,
-                # A system category cannot change, so its movements are what it opens.
-                default=category.is_fixed,
                 effect=Effect.OPEN,
-            )
+            ),
         ]
         if category.is_fixed:
             return result
@@ -150,7 +160,6 @@ class CategoryRow(QWidget):
                 _("Editar"),
                 lambda: self.edit_requested.emit(category),
                 "pencil",
-                default=True,
                 effect=Effect.OPEN,
             )
         )
@@ -163,15 +172,22 @@ class CategoryRow(QWidget):
                     effect=Effect.OPEN,
                 )
             )
-        result.append(
+        result += [
+            RowAction(
+                _("Unir con…"),
+                lambda: self.merge_requested.emit(category),
+                "merge",
+                enabled=self.can_merge,
+                effect=Effect.OPEN,
+            ),
             RowAction(
                 _("Eliminar"),
                 lambda: self.delete_requested.emit(category),
                 "trash",
                 destructive=True,
                 effect=Effect.CONFIRMED,
-            )
-        )
+            ),
+        ]
         return result
 
 
@@ -184,6 +200,7 @@ class CategoriesPage(Page):
     """
 
     transactions_requested = Signal(object)  # TransactionFocus
+    detail_requested = Signal(int)  # category id
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -209,8 +226,6 @@ class CategoriesPage(Page):
 
         self.period_selector.period_changed.connect(lambda _period: self.refresh())
         self.search_input.textChanged.connect(lambda _text: self._show())
-        theme_manager.theme_changed.connect(self.request_refresh)
-        event_bus.amounts_hidden_changed.connect(self.request_refresh)
 
     def refresh(self) -> None:
         self._report = self._services.category_report.report(self.period_selector.period())
@@ -227,14 +242,7 @@ class CategoriesPage(Page):
         ).exec()
 
     def delete_category(self, category: Category) -> None:
-        delete_with_confirm(
-            self.window(),
-            _("Eliminar categoría"),
-            self._delete_warning(category),
-            lambda: self._services.categories.delete(category.id),
-            self._event_bus.categories_changed,
-            self._event_bus.transactions_changed,
-        )
+        delete_category(self.window(), self._services, self._event_bus, category)
 
     def _show(self) -> None:
         """The report's sections, narrowed to the categories the search matches."""
@@ -285,37 +293,24 @@ class CategoriesPage(Page):
             hidden,
             has_movements=focus is not None,
             start=starts.get(category.id),
+            can_merge=self._services.categories.can_merge(category.id),
         )
         self._rows[category.id] = row
         row.transactions_requested.connect(
             lambda _category: self.transactions_requested.emit(focus)
         )
+        row.open_requested.connect(lambda c: self.detail_requested.emit(c.id))
         row.edit_requested.connect(self.open_category_dialog)
+        row.merge_requested.connect(
+            lambda c: MergeCategoryDialog(
+                self._services, self._event_bus, c, parent=self.window()
+            ).exec()
+        )
         row.delete_requested.connect(self.delete_category)
         row.add_subcategory_requested.connect(
             lambda parent: self.open_category_dialog(kind=parent.kind, parent_id=parent.id)
         )
         return row
-
-    def _delete_warning(self, category: Category) -> str:
-        has_children = any(
-            node.category.id == category.id and node.children
-            for node in self._services.categories.category_tree(category.kind)
-        )
-        if has_children:
-            deletion = _("Se va a eliminar «{name}» y sus subcategorías.")
-        else:
-            deletion = _("Se va a eliminar «{name}».")
-        count = self._services.categories.transaction_count(category.id)
-        if count == 0:
-            consequence = _("No tiene transacciones.")
-        else:
-            consequence = ngettext(
-                "Su única transacción pasa a «Otros».",
-                "Sus {count} transacciones pasan a «Otros».",
-                count,
-            ).format(count=count)
-        return f"{deletion.format(name=category.name)} {consequence}"
 
 
 def _matching(categories: list[CategoryFigures], wanted: str) -> list[CategoryFigures]:

@@ -1,13 +1,31 @@
 """Pages about one item: how to get there and back, what they show, and deleting."""
 
-from factories import TODAY, ars, charge_draft, expense_draft, income_draft, usd
-from menus import double_click_row, run_action
+from datetime import date
+
+import pytest
+from factories import (
+    TODAY,
+    ars,
+    category_id,
+    charge_draft,
+    expense_draft,
+    income_draft,
+    light_theme,
+    usd,
+)
+from menus import double_click_row, run_action, texts
 from PySide6.QtCore import Qt
 
+from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.ui.dialogs import confirm as confirm_dialog
+from nodus.ui.dialogs.transaction_dialog import INCOME_MODE, TransactionDialog, TransactionStart
 from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.pages.accounts_page import AccountRow
+from nodus.ui.pages.categories_page import CategoryRow
+from nodus.ui.widgets.tables.transaction_table import CATEGORY
+
+EXPENSE, INCOME = TransactionType.EXPENSE, TransactionType.INCOME
 
 
 def account_row(window, account_id: int) -> AccountRow:
@@ -193,3 +211,106 @@ class TestTagDetail:
         services.tags.merge_many([viaje.id], vacaciones.id)
         event_bus.tags_changed.emit()
         assert window.current_page is tags
+
+
+class TestCategoryDetail:
+    @pytest.fixture
+    def vivienda(self, services, window, pesos):
+        """«Vivienda» with «Alquiler» inside, a movement in each, the page set on TODAY."""
+        vivienda = category_id(services, "Vivienda", EXPENSE)
+        alquiler = services.categories.create("Alquiler", EXPENSE, "#000000", vivienda)
+        for amount, category in (("400", alquiler.id), ("100", vivienda)):
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars(amount), category_id=category)
+            )
+        window.detail(DetailId.CATEGORY).today = TODAY
+        return services.categories.get(vivienda)
+
+    def open(self, window, category_id):
+        window.show_detail(DetailId.CATEGORY, category_id)
+        return window.detail(DetailId.CATEGORY)
+
+    def test_a_click_in_categorias_opens_it(self, window, vivienda):
+        window.show_page(PageId.CATEGORIES)
+        categories = window.page(PageId.CATEGORIES)
+        row = next(r for r in categories.findChildren(CategoryRow) if r.category == vivienda)
+
+        run_action(row.actions(), "Abrir")
+
+        detail = window.detail(DetailId.CATEGORY)
+        assert window.current_page is detail
+        assert detail.title_label.text() == "Vivienda"
+
+    def test_its_figures_months_and_subcategories(self, window, vivienda):
+        detail = self.open(window, vivienda.id)
+
+        figures = {caption: label.text() for caption, label in detail.figure_labels.items()}
+        assert figures["Total"] == "$ 500,00"
+        assert figures["Este mes"] == "$ 500,00"
+        assert figures["Movimientos"] == "2"
+        assert len(detail.chart.bars()) == 12
+        assert [link.text() for link in detail.related_line.links] == ["Alquiler"]
+        # Its movements may be in a subcategory, so the list says which.
+        assert not detail.list_view.table.isColumnHidden(CATEGORY)
+        assert detail.list_view.model.rowCount() == 2
+
+    def test_a_subcategory_links_to_its_parent(self, services, window, vivienda):
+        alquiler = next(c for c in services.categories.list_categories(EXPENSE)
+                        if c.name == "Alquiler")  # fmt: skip
+        detail = self.open(window, alquiler.id)
+
+        assert detail.list_view.table.isColumnHidden(CATEGORY)
+        detail.related_line.links[0].click()
+
+        assert detail.title_label.text() == "Vivienda"
+        # With subcategories, merging would take them along: first they go.
+        assert not detail.merge_button.isEnabled()
+
+    def test_otros_is_only_shown(self, services, window):
+        otros = next(c for c in services.categories.list_categories(EXPENSE) if c.is_system)
+
+        detail = self.open(window, otros.id)
+
+        assert not detail.edit_button.isVisibleTo(detail)
+        assert not detail.merge_button.isVisibleTo(detail)
+        assert detail.more_actions() == []
+
+    def test_deleting_from_the_menu_goes_back(self, monkeypatch, services, window, vivienda):
+        monkeypatch.setattr(confirm_dialog, "confirm", lambda *_args: True)
+        detail = self.open(window, vivienda.id)
+        assert texts(detail.more_actions()) == ["Agregar subcategoría", "Eliminar"]
+
+        run_action(detail.more_actions(), "Eliminar")
+
+        assert "Vivienda" not in [c.name for c in services.categories.list_categories(EXPENSE)]
+        assert window.current_page is window.page(PageId.CATEGORIES)
+
+    def test_a_new_movement_starts_in_the_category(self, qtbot, services, event_bus, window):
+        sueldo = category_id(services, "Sueldo", INCOME)
+        start = TransactionStart(category_id=sueldo)
+
+        dialog = TransactionDialog(services, event_bus, light_theme(), start=start)
+        qtbot.addWidget(dialog)
+
+        assert dialog.mode_input.index() == INCOME_MODE
+        assert dialog.category_input.current_id() == sueldo
+
+    def test_this_month_against_the_one_before(self, services, window, pesos):
+        ocio = category_id(services, "Ocio", EXPENSE)
+        for amount, day in (("100", date(2026, 10, 3)), ("150", TODAY)):
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars(amount), day, category_id=ocio)
+            )
+        window.detail(DetailId.CATEGORY).today = TODAY
+
+        badge = self.open(window, ocio).change_badge
+
+        assert badge.text() == "↗ 50 %"
+        assert badge.property("tone") == "bad"  # more spending
+        assert badge.toolTip() == "Mes anterior: $ 100,00"
+
+    def test_new_this_month_or_nothing_to_compare(self, services, window, vivienda):
+        assert self.open(window, vivienda.id).change_badge.text() == "Nueva"
+
+        ropa = category_id(services, "Ropa", EXPENSE)
+        assert not self.open(window, ropa).change_badge.isVisibleTo(window)
