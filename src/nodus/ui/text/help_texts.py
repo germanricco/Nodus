@@ -56,8 +56,9 @@ HELP_TOPICS = [
             ),
             N_(
                 "El Inicio muestra tu patrimonio neto, los próximos pagos, en qué se fue el dinero"
-                " y tus presupuestos. Arriba a la derecha eliges el período, y un clic en una"
-                " categoría abre su página. Toda fila que lleva a otra página termina en «›»."
+                " y tus presupuestos. Arriba a la derecha eliges el período. Un clic en una"
+                " categoría abre su página, y uno en un mes de «Flujo de caja», sus movimientos."
+                " Toda fila que lleva a otra página termina en «›»."
             ),
             N_(
                 "Si quieres ver dónde está cada cosa, «Ver el recorrido», al pie de la lista de"

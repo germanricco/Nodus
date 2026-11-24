@@ -455,3 +455,18 @@ def test_many_currencies_never_push_the_cards_off_the_window(
     page = window.page(PageId.DASHBOARD)
     scroll = page.findChild(QScrollArea)
     assert scroll.widget().width() <= scroll.viewport().width()
+
+
+def test_a_month_of_the_cash_flow_opens_its_movements(qtbot, window, services, pesos):
+    """As in Análisis, a month of «Flujo de caja» opens that month's movements."""
+    month = Month.of(date.today())
+    services.transactions.create(expense_draft(services, pesos.id, ars("250"), on=month.start))
+    page = dashboard(window)
+    page.refresh()
+    groups = page.flow_card.chart.groups()
+    index = next(i for i, group in enumerate(groups) if group.key == month)
+
+    page.flow_card.chart.clicked.emit(index)
+
+    assert window.current_page is window.page(PageId.TRANSACTIONS)
+    assert window.page(PageId.TRANSACTIONS).period_selector.period() == Period.of_months(month)

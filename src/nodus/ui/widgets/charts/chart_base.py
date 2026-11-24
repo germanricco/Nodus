@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Hashable, Mapping, Sequence
 from typing import Protocol, TypeVar
 
-from PySide6.QtCore import QEvent, QPointF, QRectF, Qt
+from PySide6.QtCore import QEvent, QMetaMethod, QPointF, QRectF, Qt, SignalInstance
 from PySide6.QtGui import (
     QColor,
     QFont,
@@ -287,16 +287,26 @@ class ColumnHoverChart(AnimatedChart):
 
 
 class BarColumn(Protocol):
-    """What a bar chart's column shows besides its bars: a label and a tooltip."""
+    """What a bar chart's column shows besides its bars: a label and a tooltip, and
+    whether it has anything to open."""
 
     label: str
     tooltip_title: str
     tooltip_lines: tuple[str, ...]
 
+    @property
+    def has_data(self) -> bool: ...
+
 
 class BarColumnsChart(ColumnHoverChart):
     """Bars in equal columns, a label under each and a baseline across: what the cash
-    flow and the trend charts share. Subclasses give their columns and draw the bars."""
+    flow and the trend charts share. Subclasses give their columns, draw the bars and
+    say in ``click_signal`` what a click emits.
+
+    A column opens something, as a row with «›» does, when it has bars and the page
+    listens to its click: only then does it show the hand and take the click
+    (``navigation.py``, the click rule).
+    """
 
     BOTTOM = 22.0  # geometry: room for the labels under the axis
 
@@ -309,6 +319,22 @@ class BarColumnsChart(ColumnHoverChart):
 
     def index_at(self, x: float) -> int | None:
         return slot_index(self.slots(), x)
+
+    def click_signal(self) -> SignalInstance:
+        raise NotImplementedError
+
+    def opens(self, index: int | None) -> bool:
+        """Whether a click on column ``index`` opens something."""
+        if index is None or not self.columns()[index].has_data:
+            return False
+        return self.isSignalConnected(QMetaMethod.fromSignal(self.click_signal()))
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        super().mouseMoveEvent(event)
+        if self.opens(self.hover_index):
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self.unsetCursor()
 
     def paint_label(self, painter: QPainter, slot: QRectF, text: str, selected: bool) -> None:
         """``text`` under the axis, bolder and darker for the column being viewed."""
@@ -335,10 +361,11 @@ class BarColumnsChart(ColumnHoverChart):
         self.paint_tooltip(painter, center, column.tooltip_title, column.tooltip_lines)
 
     def clicked_index(self, event: QMouseEvent) -> int | None:
-        """The column a left click fell on, if any."""
+        """The column a left click fell on, if it opens something."""
         if event.button() is not Qt.MouseButton.LeftButton:
             return None
-        return self.index_at(event.position().x())
+        index = self.index_at(event.position().x())
+        return index if self.opens(index) else None
 
 
 def column_slots(count: int, width: float, height: float) -> list[QRectF]:

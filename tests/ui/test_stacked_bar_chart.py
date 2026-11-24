@@ -95,3 +95,25 @@ def test_click_reports_the_month_and_category(qtbot):
     qtbot.mouseMove(chart, QPoint(int(WIDTH * 0.75), 100))
     assert chart.hover_index == 1
     chart.grab()
+
+
+def test_a_month_that_opens_something_shows_the_hand(qtbot):
+    """A month with bars, on a chart whose click a page listens to, shows the hand and
+    takes the click; an empty month, or a chart nobody listens to, does neither."""
+    chart = make_chart(qtbot)
+    chart.set_bars([bar("Oct", (1, 300)), bar("Nov")])
+    oct_point, nov_point = QPoint(WIDTH // 4, 100), QPoint(WIDTH * 3 // 4, 100)
+
+    qtbot.mouseMove(chart, oct_point)
+    assert chart.cursor().shape() != Qt.CursorShape.PointingHandCursor  # nobody listens
+
+    opened = []
+    chart.clicked.connect(lambda index, _key: opened.append(index))
+    qtbot.mouseMove(chart, nov_point)
+    assert chart.cursor().shape() != Qt.CursorShape.PointingHandCursor  # empty month
+    qtbot.mouseMove(chart, oct_point)
+    assert chart.cursor().shape() == Qt.CursorShape.PointingHandCursor
+
+    qtbot.mouseClick(chart, Qt.MouseButton.LeftButton, pos=nov_point)
+    qtbot.mouseClick(chart, Qt.MouseButton.LeftButton, pos=oct_point)
+    assert opened == [0]

@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.i18n import _
-from nodus.models.period import Month
+from nodus.models.period import Month, Period
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
 from nodus.ui.actions.recurring import pay_charge, skip_charge, toggle_seen
@@ -118,6 +118,7 @@ class DashboardPage(Page):
             lambda: self.navigate_requested.emit(PageId.RECURRING)
         )
         self.flow_card = CashFlowCard(theme_manager)
+        self.flow_card.month_requested.connect(self._show_month)
         self.budgets_card = BudgetsCard(services, theme_manager)
         self.budgets_card.record_requested.connect(self.record_requested)
         self.budgets_card.see_all_requested.connect(
@@ -185,6 +186,10 @@ class DashboardPage(Page):
     def _budgets_month(self) -> Month:
         """The month whose budgets the dashboard shows: the last of the period."""
         return self.period_selector.period().last_month
+
+    def _show_month(self, month: Month) -> None:
+        """A month of «Flujo de caja», clicked: its movements, as in Análisis."""
+        self.transactions_requested.emit(TransactionFocus(Period.of_months(month)))
 
     def open_pay_dialog(self, charge: RecurringCharge) -> None:
         pay_charge(self, self._services, self._event_bus, charge)

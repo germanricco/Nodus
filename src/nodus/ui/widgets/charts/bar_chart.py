@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Hashable
 from dataclasses import dataclass
 
-from PySide6.QtCore import QRectF, QSize, Qt, Signal
+from PySide6.QtCore import QRectF, QSize, Qt, Signal, SignalInstance
 from PySide6.QtGui import QMouseEvent, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
 
@@ -40,6 +40,10 @@ class BarGroup:
     @property
     def identity(self) -> Hashable:
         return self.label if self.key is None else self.key
+
+    @property
+    def has_data(self) -> bool:
+        return bool(self.income or self.expenses)
 
 
 class BarChart(BarColumnsChart):
@@ -76,6 +80,9 @@ class BarChart(BarColumnsChart):
         self._groups = groups
         self.hover_index = None
         self._start_transition()
+
+    def click_signal(self) -> SignalInstance:
+        return self.clicked
 
     def groups(self) -> list[BarGroup]:
         return self._groups

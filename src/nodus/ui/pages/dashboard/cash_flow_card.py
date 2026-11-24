@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel
 
 from nodus.i18n import N_, _
+from nodus.models.period import Month
 from nodus.services.reports.dashboard_service import Comparison, MonthFlow
 from nodus.ui.text.formatting import rate_text
 from nodus.ui.text.labels import unconverted_note
@@ -23,7 +24,10 @@ from nodus.ui.widgets.style import muted_label
 
 
 class CashFlowCard(Card):
-    """What was saved in the period, against the previous one, and month by month."""
+    """What was saved in the period, against the previous one, and month by month; a
+    click on a month asks for its movements."""
+
+    month_requested = Signal(object)  # Month
 
     def __init__(self, theme_manager: ThemeManager) -> None:
         super().__init__()
@@ -63,6 +67,8 @@ class CashFlowCard(Card):
         self.body.addSpacing(Space.S)
         self.body.addWidget(trend_title)
         self.chart = BarChart(theme)
+        self._months: list[Month] = []
+        self.chart.clicked.connect(lambda index: self.month_requested.emit(self._months[index]))
         self.body.addWidget(self.chart, stretch=1)
         self._theme = theme
         theme_manager.theme_changed.connect(self._set_theme)
@@ -84,6 +90,7 @@ class CashFlowCard(Card):
         self.figures.relayout()  # the figures may need more room now
         self.unconverted_label.setText(unconverted_note(summary.unconverted))
         self.unconverted_label.setVisible(bool(summary.unconverted))
+        self._months = [month.month for month in flow]
         single_month = len(summary.period.months()) == 1
         self.chart.set_groups(
             flow_bar_groups(flow, summary.period.first_month if single_month else None)
