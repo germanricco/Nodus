@@ -226,6 +226,36 @@ class TestPage:
         assert opened.args == [RecordLink.category(food)]
         assert movements.args == [TransactionFocus(Period.of_months(NOVEMBER), food)]
 
+    def test_a_category_without_a_budget_is_a_row_like_a_budget(
+        self, qtbot, services, pesos, page, monkeypatch
+    ):
+        """It opens with a click, has the same menu and «›», and its «Poner límite»
+        ends where the pills do, so both cards line up."""
+        food, rent = expense("Supermercado y comida", services), expense("Vivienda", services)
+        services.budgets.set_limit(food, NOVEMBER, ars("300"))
+        spend(services, pesos.id, "500", rent)
+        page.resize(900, 900)
+        page.refresh(TODAY)
+        page.show()
+        qtbot.waitExposed(page)
+        budgeted, unbudgeted = page.rows[0], page.unbudgeted_rows[0]
+        asked: list[int | None] = []
+        monkeypatch.setattr(page, "open_budget_dialog", lambda c=None: asked.append(c.id))
+
+        with qtbot.waitSignal(page.record_requested) as opened:
+            qtbot.mouseClick(unbudgeted.line, Qt.MouseButton.LeftButton)
+        qtbot.mouseClick(unbudgeted.limit_button, Qt.MouseButton.LeftButton)
+        run_action(unbudgeted.actions(), "Poner límite")
+
+        assert opened.args == [RecordLink.category(rent)]
+        assert asked == [rent, rent]
+
+        def right_edge(widget):
+            return widget.mapTo(page, widget.rect().topRight()).x()
+
+        assert right_edge(unbudgeted.limit_button) == right_edge(budgeted.pill)
+        assert right_edge(unbudgeted.more_button) == right_edge(budgeted.more_button)
+
     def test_the_name_and_the_bar_open_alike_with_one_click(self, qtbot, services, page):
         """The whole row is one target: a click on the name or on the bar opens the
         category, once."""

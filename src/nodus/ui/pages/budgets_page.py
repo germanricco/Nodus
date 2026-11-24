@@ -17,7 +17,7 @@ from nodus.services.reports.dashboard_service import CategoryTotal
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
 from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import PageId, RecordLink, TransactionFocus
+from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.base.page import Page
 from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.text.labels import days_left_text, names_text, unconverted_note
@@ -38,8 +38,7 @@ from nodus.ui.widgets.style import (
     hint_label,
     muted_label,
 )
-from nodus.ui.widgets.tables.budget_row import BudgetRow
-from nodus.ui.widgets.tables.category_line import CategoryLine
+from nodus.ui.widgets.tables.budget_row import BudgetRow, CategoryRow
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
 from nodus.ui.widgets.tables.row_layout import row_list
 
@@ -118,6 +117,33 @@ class BudgetPageRow(BudgetRow):
         ]
 
 
+class UnbudgetedRow(CategoryRow):
+    """A category spent in without a budget: what went, the button to give it a limit,
+    and the same «⋯» and «›» as a budget's row, so the button lines up with the pills."""
+
+    transactions_requested = Signal()
+    limit_requested = Signal()
+
+    def __init__(self, total: CategoryTotal) -> None:
+        super().__init__(total.category)
+        self.line.add(amount_label(total.total))
+        self.limit_button = self.line.add(QPushButton(_("Poner límite")))
+        self.limit_button.setObjectName("SmallButton")
+        self.limit_button.clicked.connect(self.limit_requested.emit)
+        self.more_button = self.line.add(MoreButton(self.actions))
+
+    def actions(self) -> list[RowAction]:
+        """Its category's page first, as a click on the row; its movements of the month;
+        then giving it a limit, as the button."""
+        return [
+            *super().actions(),
+            RowAction(
+                _("Ver movimientos"), self.transactions_requested.emit, "list", effect=Effect.OPEN
+            ),
+            RowAction(_("Poner límite"), self.limit_requested.emit, "plus", effect=Effect.OPEN),
+        ]
+
+
 class BudgetsPage(Page):
     """A month at a time. On top, the answer to «how much can I still spend?»: what is
     left of all the budgets, how much a day, the month's bar and, only when there are,
@@ -142,7 +168,7 @@ class BudgetsPage(Page):
         self._sections = self.scrolling_body()
         self.rows: list[BudgetPageRow] = []
         self._shown: dict[int | None, float] = {}  # each bar, where its next one starts
-        self.unbudgeted_rows: list[CategoryLine] = []
+        self.unbudgeted_rows: list[UnbudgetedRow] = []
         self.unbudgeted_card: Card | None = None
         self.remaining_label = MoneyLabel()
         self.per_day_label = muted_label("")
@@ -287,20 +313,16 @@ class BudgetsPage(Page):
         card = Card(_("Sin presupuesto"))
         hint = hint_label(_("Lo gastado en el mes en categorías sin límite."))
         card.body.addWidget(hint)
+        column = row_list()
+        card.body.addLayout(column)
         for total in totals:
             category = total.category
-            line = CategoryLine(
-                category.color, category.name, link=RecordLink.category(category.id)
-            )
-            line.opened.connect(self.record_requested)
-            amount = amount_label(total.total)
-            line.add(amount)
-            button = QPushButton(_("Poner límite"))
-            button.setObjectName("SmallButton")
-            button.clicked.connect(lambda _checked=False, c=category: self.open_budget_dialog(c))
-            line.add(button)
-            card.body.addWidget(line)
-            self.unbudgeted_rows.append(line)
+            row = UnbudgetedRow(total)
+            row.opened.connect(self.record_requested)
+            row.transactions_requested.connect(lambda c=category: self._show_transactions(c))
+            row.limit_requested.connect(lambda c=category: self.open_budget_dialog(c))
+            column.addWidget(row)
+            self.unbudgeted_rows.append(row)
         return card
 
     def _empty_state(self) -> Card:
