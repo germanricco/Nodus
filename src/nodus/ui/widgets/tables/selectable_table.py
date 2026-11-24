@@ -191,10 +191,13 @@ class _SelectionHeader(QHeaderView):
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         x = int(event.position().x())
         section = self.logicalIndexAt(x)
-        first, _last = self._table.edge_columns()
+        first, last = self._table.edge_columns()
         if section == first and x < self.sectionViewportPosition(section) + CHECK_GUTTER:
             self._table.toggle_all()
             return
+        end = self.sectionViewportPosition(last) + self.sectionSize(last)
+        if section == last and x >= end - MORE_GUTTER:
+            return  # the empty space over the «⋯» sorts nothing
         super().mousePressEvent(event)
 
 
@@ -223,9 +226,20 @@ class SelectableTable(QTableView):
         configure_record_table(self, model, stretch_column)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setItemDelegate(_RowControlsDelegate(self))
+
         self.setMouseTracking(True)
         self.selectionModel().selectionChanged.connect(self._on_selection_changed)
         model.modelReset.connect(self._on_selection_changed)
+
+    def setSortingEnabled(self, enable: bool) -> None:  # noqa: N802
+        """Sorting by a click on a column's title, with the hand over the titles. The
+        header this table puts in place of Qt's takes no clicks until told to, and its
+        sort arrow would then promise what a click does not do."""
+        super().setSortingEnabled(enable)
+        header = self.horizontalHeader()
+        header.setSectionsClickable(enable)
+        cursor = Qt.CursorShape.PointingHandCursor if enable else Qt.CursorShape.ArrowCursor
+        header.setCursor(cursor)
 
     # Selection
 

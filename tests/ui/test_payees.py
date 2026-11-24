@@ -5,7 +5,8 @@ from datetime import date
 import pytest
 from factories import ars, category_id, expense_draft, in_view, income_draft
 from menus import run_action, texts
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QPixmap
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
@@ -58,31 +59,71 @@ def test_empty_state_explains_how_payees_appear(page):
     assert page.empty_state.text() == NO_PAYEES_TEXT
 
 
-def test_lists_most_used_first_with_totals(services, page, populated):
+def test_lists_the_payees_of_each_side_most_used_first(services, page, populated):
+    """Gastos first; Empresa, which pays, is on the side of Ingresos. Kiosco, with no
+    movements or category, counts as an expense."""
     page.refresh()
 
-    assert column(page, NAME) == ["Coto", "Empresa", "Kiosco"]
-    assert column(page, COUNT) == ["3", "1", "0"]
-    assert column(page, TOTAL) == ["-$ 350,00", "$ 1.000,00", "—"]
+    assert [button.text() for button in page.kind_input.buttons] == ["Gastos", "Ingresos"]
+    assert column(page, NAME) == ["Coto", "Kiosco"]
+    assert column(page, COUNT) == ["3", "0"]
+    assert column(page, TOTAL) == ["-$ 350,00", "—"]
+    page.kind_input.set_index(1)
+    assert column(page, NAME) == ["Empresa"]
+    assert column(page, TOTAL) == ["$ 1.000,00"]
+
+
+def test_each_name_has_its_initial_in_the_color_of_its_usual_category(services, page, populated):
+    """Coto, always in Supermercado, takes its color; Kiosco, without movements, gray."""
+    page.refresh()
+    names = column(page, NAME)
+    decorations = {
+        name: page.proxy.index(row, NAME).data(Qt.ItemDataRole.DecorationRole)
+        for row, name in enumerate(names)
+    }
+
+    coto, kiosco = decorations["Coto"], decorations["Kiosco"]
+    assert isinstance(coto, QPixmap) and isinstance(kiosco, QPixmap)
+    assert coto.toImage() != kiosco.toImage()
 
 
 def test_the_period_narrows_the_movements_and_totals_as_in_categories(page, populated):
     page.period_selector.set_period(Period.of_months(Month(2026, 11)))
 
     # Coto's movements are all in October; the menu still reaches them.
-    assert column(page, NAME) == ["Empresa", "Coto", "Kiosco"]
-    assert column(page, COUNT) == ["1", "0", "0"]
-    assert column(page, TOTAL) == ["$ 1.000,00", "—", "—"]
+    assert column(page, NAME) == ["Coto", "Kiosco"]
+    assert column(page, COUNT) == ["0", "0"]
+    assert column(page, TOTAL) == ["—", "—"]
     assert actions_of(page, "Coto")[1].enabled
 
 
 def test_sorts_by_any_column(page, populated):
     page.refresh()
 
-    page.table.sortByColumn(TOTAL, Qt.SortOrder.DescendingOrder)
-    assert column(page, NAME)[0] == "Empresa"
+    page.table.sortByColumn(NAME, Qt.SortOrder.DescendingOrder)
+    assert column(page, NAME) == ["Kiosco", "Coto"]
     page.table.sortByColumn(NAME, Qt.SortOrder.AscendingOrder)
-    assert column(page, NAME) == ["Coto", "Empresa", "Kiosco"]
+    assert column(page, NAME) == ["Coto", "Kiosco"]
+
+
+def test_a_click_on_a_columns_title_sorts_by_it(qtbot, page, populated):
+    """The arrow in the header is a promise: a click on a title sorts by that column, and
+    another click turns the order around."""
+    page.refresh()
+    header = page.table.horizontalHeader()
+
+    def click(section: int) -> None:
+        x = header.sectionViewportPosition(section) + header.sectionSize(section) // 2
+        qtbot.mouseClick(header.viewport(), Qt.MouseButton.LeftButton, pos=QPoint(x, 10))
+
+    click(NAME)
+    assert column(page, NAME) == ["Coto", "Kiosco"]
+    click(NAME)
+    assert column(page, NAME) == ["Kiosco", "Coto"]
+    assert (
+        page.table.model().headerData(NAME, Qt.Orientation.Horizontal, Qt.ItemDataRole.ToolTipRole)
+        == "Ordenar por nombre"
+    )
 
 
 def test_search_ignores_case_and_accents(services, page, populated):
@@ -120,7 +161,7 @@ def test_selection_bar_merges_and_deletes_several(
         confirm_dialog, "confirm", lambda _parent, _title, text: warnings.append(text) or True
     )
     select(page, "Coto")
-    page.table.toggle_row(column(page, NAME).index("Empresa"))
+    page.table.toggle_row(column(page, NAME).index("Kiosco"))
 
     assert page.selection_bar.isVisible()
     assert page.selection_bar.count_label.text() == "2 seleccionados"
@@ -128,8 +169,10 @@ def test_selection_bar_merges_and_deletes_several(
     with qtbot.waitSignal(event_bus.payees_changed):
         qtbot.keyClick(page.table, Qt.Key.Key_Delete)
 
-    assert warnings == ["Se van a eliminar 2 beneficiarios. 4 movimientos quedan sin beneficiario."]
-    assert column(page, NAME) == ["Kiosco"]
+    assert warnings == ["Se van a eliminar 2 beneficiarios. 3 movimientos quedan sin beneficiario."]
+    # Empresa is left, on the other side: the empty side says so.
+    assert column(page, NAME) == []
+    assert page.empty_state.text() == "Todavía no hay beneficiarios de gastos."
 
 
 def test_see_transactions_spans_the_whole_history(qtbot, page, populated, services):
@@ -154,7 +197,7 @@ def test_delete_after_confirmation(monkeypatch, qtbot, services, event_bus, page
         page.delete_button.click()
 
     assert warnings == ["Se va a eliminar «Coto». 3 movimientos quedan sin beneficiario."]
-    assert column(page, NAME) == ["Empresa", "Kiosco"]
+    assert column(page, NAME) == ["Kiosco"]
 
 
 def test_delete_is_cancelled_when_not_confirmed(monkeypatch, page, services, populated):
@@ -238,4 +281,5 @@ def test_in_english_the_page_and_its_table_speak_english(english, populated, pag
     """Built after the language is set, the page shows its texts and figures in English."""
     assert page.search_input.placeholderText() == "Search payees…"
     assert page.model.headerData(COUNT, Qt.Orientation.Horizontal, 0) == "Transactions"
-    assert column(page, TOTAL)[:2] == ["-$350.00", "$1,000.00"]
+    assert column(page, TOTAL)[0] == "-$350.00"
+    assert [button.text() for button in page.kind_input.buttons] == ["Expenses", "Income"]

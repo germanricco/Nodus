@@ -29,7 +29,7 @@ from nodus.ui.pages.base.page import Page
 from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.shortcuts import CLEAR_SELECTION, DELETE_ROWS
 from nodus.ui.text.formatting import rate_text
-from nodus.ui.text.labels import unconverted_note
+from nodus.ui.text.labels import KIND_TITLES, unconverted_note
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -50,7 +50,6 @@ from nodus.ui.widgets.tables.row_actions import (
 from nodus.ui.widgets.tables.selection_bar import SelectionBar
 from nodus.ui.widgets.tables.table import DELETE_KEY_HINT
 
-SECTION_TITLES = {TransactionType.EXPENSE: N_("Gastos"), TransactionType.INCOME: N_("Ingresos")}
 NOTHING_TEXTS = {
     TransactionType.EXPENSE: N_("Sin gastos"),
     TransactionType.INCOME: N_("Sin ingresos"),
@@ -405,10 +404,10 @@ class CategoriesPage(Page):
         total = QLabel(amount_text(section.total, hidden))
         total.setAccessibleName(
             _("Total de {kind}: {amount}").format(
-                kind=_(SECTION_TITLES[section.kind]).lower(), amount=total.text()
+                kind=_(KIND_TITLES[section.kind]).lower(), amount=total.text()
             )
         )
-        titled_figure(card, _(SECTION_TITLES[section.kind]), total)
+        titled_figure(card, _(KIND_TITLES[section.kind]), total)
         # A search shows the subcategories it found, even in a folded category.
         folded_ids = set() if searching else self._services.settings.folded_categories()
         for position, figures in enumerate(categories):

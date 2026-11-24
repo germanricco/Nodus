@@ -414,9 +414,10 @@ HELP_TOPICS = [
                 "Beneficiarios y Etiquetas muestran cuántos movimientos y cuánto dinero sumó cada"
                 " uno en el período que elijas; un doble clic abre su página, con lo que sumó en"
                 " los últimos 12 meses y todos sus movimientos. En estas tres páginas un clic"
-                " elige, por eso abren con doble clic. Si tienes"
-                " repetidos, como «Coto» y «Coto Online», «Unir con…» los junta en uno, y el"
-                " aviso que aparece abajo te deja deshacerlo."
+                " elige, por eso abren con doble clic. Beneficiarios separa a quienes les pagas de"
+                " quienes te pagan, y un clic en el título de una columna ordena por ella."
+                " Si tienes repetidos, como «Coto» y «Coto Online», «Unir con…» los junta en"
+                " uno, y el aviso que aparece abajo te deja deshacerlo."
             ),
         ),
         ("transactions", "search"),

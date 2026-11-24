@@ -94,7 +94,8 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
         self._theme = theme
         if self._summaries:
             last = len(self._summaries) - 1
-            self.dataChanged.emit(self.index(0, TOTAL), self.index(last, TOTAL))
+            # Every column: amounts and drawn icons both take the theme's colors.
+            self.dataChanged.emit(self.index(0, 0), self.index(last, self.columnCount() - 1))
 
     def summary(self, row: int) -> S:
         return self._summaries[row]
@@ -108,6 +109,8 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = 0) -> object:  # noqa: N802
         if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return _(self.TITLES[section])
+        if orientation is Qt.Orientation.Horizontal and role == Qt.ItemDataRole.ToolTipRole:
+            return _("Ordenar por {column}").format(column=_(self.TITLES[section]).lower())
         if role == Qt.ItemDataRole.TextAlignmentRole and section in (COUNT, TOTAL):
             return RIGHT_ALIGNED
         return None

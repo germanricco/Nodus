@@ -43,6 +43,16 @@ class PayeeSummary:
     first_on: date | None
     last_on: date | None
 
+    @property
+    def kind(self) -> TransactionType:
+        """Whether the user pays this payee or is paid by it: the kind of its usual
+        category; without one, the sign of its total in the period. One with neither
+        counts as an expense, the usual case."""
+        if self.top_category is not None:
+            return self.top_category.kind
+        income = self.totals.net.cents > 0
+        return TransactionType.INCOME if income else TransactionType.EXPENSE
+
 
 class PayeeService(NamedRecordService[Payee]):
     """Payees: suggestions while typing, the category each one usually takes, and what

@@ -43,6 +43,9 @@ TRANSACTION_TYPE_LABELS = {
     TransactionType.INCOME: N_("Ingreso"),
 }
 
+# What each side is called when it heads a list: Categorías' sections, Beneficiarios' tabs.
+KIND_TITLES = {TransactionType.EXPENSE: N_("Gastos"), TransactionType.INCOME: N_("Ingresos")}
+
 FREQUENCY_LABELS = {
     Frequency.WEEKLY: N_("Semanal"),
     Frequency.BIWEEKLY: N_("Quincenal"),

@@ -5,10 +5,12 @@ import pytest
 from factories import TODAY, ars, category_id, eur, expense_draft, income_draft, usd
 
 from nodus.models.installment_plan import InstallmentPlan
+from nodus.models.payee import Payee
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
-from nodus.services.classification.payee_service import PayeeService
+from nodus.services.classification.payee_service import PayeeService, PayeeSummary
+from nodus.services.conversion import PeriodTotals
 from nodus.services.errors import NotFoundError, ValidationError
 
 EXPENSE, INCOME = TransactionType.EXPENSE, TransactionType.INCOME
@@ -395,3 +397,20 @@ class TestSuggestionsByUse:
         services.payees.create("Coto")
 
         assert services.payees.frequent(EXPENSE, today=TODAY) == []
+
+
+@pytest.mark.parametrize(
+    ("amount", "kind"),
+    [
+        ("500", TransactionType.INCOME),
+        ("-500", TransactionType.EXPENSE),
+        ("0", TransactionType.EXPENSE),
+    ],
+)
+def test_a_payee_without_a_usual_category_takes_its_side_from_its_total(amount, kind):
+    """The usual category decides; without one, money in is income, and nothing or money
+    out an expense."""
+    totals = PeriodTotals(Period.of_months(Month(2026, 11)), 1, ars(amount), 0)
+    summary = PayeeSummary(Payee(1, "Alguien"), 1, totals, None, None, None)
+
+    assert summary.kind is kind

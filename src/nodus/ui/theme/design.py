@@ -141,6 +141,7 @@ class Opacity:
     DISABLED = 0.4  # a control that cannot be used
     DRAGGED = 0.85  # a row on the move, so where it lands shows beneath it
     SCRIM = 0.55  # the page dimmed under the guided tour, around what it points at
+    BADGE_FILL = 0.18  # the soft circle behind an initial, in the color of its letter
     SHADOW = 0.22  # the shadow of a raised surface (``Elevation``)
 
 

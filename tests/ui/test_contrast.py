@@ -9,9 +9,12 @@ from nodus.models.palette import PALETTE
 from nodus.ui.theme.contrast import (
     SHAPE_CONTRAST,
     TEXT_CONTRAST,
+    blend,
     contrast_ratio,
     outline_for,
+    shade_to_contrast,
 )
+from nodus.ui.theme.design import Opacity
 from nodus.ui.theme.theme import DARK, LIGHT, Theme
 
 THEMES = [LIGHT, DARK]
@@ -80,3 +83,13 @@ def test_every_palette_color_stands_out_as_a_dot(theme: Theme):
             assert outline is None
         else:
             assert contrast_ratio(outline, theme.surface) >= SHAPE_CONTRAST
+
+
+@pytest.mark.parametrize("theme", THEMES, ids=lambda theme: theme.name)
+def test_an_initial_reads_on_its_soft_circle_in_every_palette_color(theme: Theme):
+    """The letter of an ``InitialBadge`` keeps the hue of its category and reads as text
+    on the soft fill of that same color, as on the gray of a payee without one."""
+    for color in [*PALETTE, theme.text_muted]:
+        fill = blend(color, theme.surface, Opacity.BADGE_FILL)
+        letter = shade_to_contrast(color, fill, TEXT_CONTRAST)
+        assert contrast_ratio(letter, fill) >= TEXT_CONTRAST, color

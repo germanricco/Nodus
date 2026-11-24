@@ -691,14 +691,14 @@ msgid "Cada cuenta va una sola vez."
 msgstr "Each account can be chosen only once."
 
 #: nodus/services/reports/analysis_service.py nodus/ui/dialogs/payee_dialogs.py
-#: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/categories_page.py
-#: nodus/ui/pages/dashboard/cash_flow_card.py nodus/ui/pages/transactions_page.py
+#: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/dashboard/cash_flow_card.py
+#: nodus/ui/pages/transactions_page.py nodus/ui/text/labels.py
 msgid "Gastos"
 msgstr "Expenses"
 
 #: nodus/services/reports/analysis_service.py nodus/ui/dialogs/payee_dialogs.py
-#: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/categories_page.py
-#: nodus/ui/pages/dashboard/cash_flow_card.py nodus/ui/pages/transactions_page.py
+#: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/dashboard/cash_flow_card.py
+#: nodus/ui/pages/transactions_page.py nodus/ui/text/labels.py
 msgid "Ingresos"
 msgstr "Income"
 
@@ -2483,10 +2483,6 @@ msgid "Cuentas activas"
 msgstr "Active accounts"
 
 #: nodus/ui/pages/accounts_page.py
-msgid "Archivadas"
-msgstr "Archived"
-
-#: nodus/ui/pages/accounts_page.py
 msgid "No hay cuentas activas."
 msgstr "There are no active accounts."
 
@@ -2815,6 +2811,14 @@ msgid "Ningún beneficiario coincide con la búsqueda."
 msgstr "No payees match your search."
 
 #: nodus/ui/pages/payees_page.py
+msgid "Todavía no hay beneficiarios de gastos."
+msgstr "No expense payees yet."
+
+#: nodus/ui/pages/payees_page.py
+msgid "Todavía no hay beneficiarios de ingresos: los que te pagan, como tu empleador."
+msgstr "No income payees yet: those who pay you, such as your employer."
+
+#: nodus/ui/pages/payees_page.py
 msgid "beneficiario"
 msgstr "payee"
 
@@ -3100,6 +3104,11 @@ msgstr "Transactions in {count} months"
 #: nodus/ui/pages/base/summary_detail_page.py
 msgid "Todavía no tiene movimientos."
 msgstr "No transactions yet."
+
+#: nodus/ui/pages/base/summary_page.py
+#, python-brace-format
+msgid "Ordenar por {column}"
+msgstr "Sort by {column}"
 
 #: nodus/ui/pages/base/summary_page.py
 #, python-brace-format
@@ -4342,15 +4351,17 @@ msgstr ""
 msgid ""
 "Beneficiarios y Etiquetas muestran cuántos movimientos y cuánto dinero sumó cada uno en el "
 "período que elijas; un doble clic abre su página, con lo que sumó en los últimos 12 meses y todos"
-" sus movimientos. En estas tres páginas un clic elige, por eso abren con doble clic. Si tienes "
-"repetidos, como «Coto» y «Coto Online», «Unir con…» los junta en uno, y el aviso que aparece "
-"abajo te deja deshacerlo."
+" sus movimientos. En estas tres páginas un clic elige, por eso abren con doble clic. "
+"Beneficiarios separa a quienes les pagas de quienes te pagan, y un clic en el título de una "
+"columna ordena por ella. Si tienes repetidos, como «Coto» y «Coto Online», «Unir con…» los junta "
+"en uno, y el aviso que aparece abajo te deja deshacerlo."
 msgstr ""
 "Payees and Tags show how many transactions and how much money each one added up to in the period "
 "you choose; a double-click opens its page, with what it added up to over the last 12 months and "
 "all its transactions. On these three pages a click chooses, which is why they open with a double-"
-"click. If you have duplicates, such as “Walmart” and “Walmart Online”, “Merge with…” combines "
-"them into one, and the notice that appears at the bottom lets you undo it."
+"click. Payees keeps those you pay apart from those who pay you, and a click on a column's title "
+"sorts by it. If you have duplicates, such as “Walmart” and “Walmart Online”, “Merge with…” "
+"combines them into one, and the notice that appears at the bottom lets you undo it."
 
 #: nodus/ui/text/help_texts.py
 msgid "Monedas y cotizaciones"
@@ -4618,6 +4629,10 @@ msgid "{count} día restante"
 msgid_plural "{count} días restantes"
 msgstr[0] "{count} day left"
 msgstr[1] "{count} days left"
+
+#: nodus/ui/widgets/archived_section.py
+msgid "Archivadas"
+msgstr "Archived"
 
 #: nodus/ui/widgets/empty_state.py
 msgid "Sin movimientos en el período."

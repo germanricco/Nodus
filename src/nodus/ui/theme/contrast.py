@@ -32,14 +32,32 @@ def contrast_ratio(first: str, second: str) -> float:
 
 def outline_for(color: str, background: str) -> str | None:
     """A ring for a dot in ``color`` that would not stand out on ``background``: the
-    same hue, darkened on a light background or lightened on a dark one, just enough
-    to reach the contrast of a shape. None when the dot stands out by itself."""
+    same hue, shaded just enough to reach the contrast of a shape. None when the dot
+    stands out by itself."""
     if contrast_ratio(color, background) >= SHAPE_CONTRAST:
         return None
-    on_light = relative_luminance(background) > relative_luminance(color)
-    outline = QColor(color)
+    return shade_to_contrast(color, background, SHAPE_CONTRAST)
+
+
+def shade_to_contrast(color: str, background: str, ratio: float) -> str:
+    """``color``, or the nearest shade of its hue that reaches ``ratio`` on
+    ``background``: darkened on a light background, lightened on a dark one."""
+    on_light = relative_luminance(background) > 0.5
+    shade = QColor(color)
     for _ in range(20):
-        outline = outline.darker(_OUTLINE_STEP) if on_light else outline.lighter(_OUTLINE_STEP)
-        if contrast_ratio(outline.name(), background) >= SHAPE_CONTRAST:
+        if contrast_ratio(shade.name(), background) >= ratio:
             break
-    return outline.name()
+        shade = shade.darker(_OUTLINE_STEP) if on_light else shade.lighter(_OUTLINE_STEP)
+    return shade.name()
+
+
+def blend(color: str, background: str, amount: float) -> str:
+    """``color`` laid over ``background`` at ``amount`` (0 to 1) of opacity, as one
+    opaque color, so its contrast can be measured."""
+    top, bottom = QColor(color), QColor(background)
+    mixed = QColor(
+        round(top.red() * amount + bottom.red() * (1 - amount)),
+        round(top.green() * amount + bottom.green() * (1 - amount)),
+        round(top.blue() * amount + bottom.blue() * (1 - amount)),
+    )
+    return mixed.name()
