@@ -15,6 +15,7 @@ from factories import (
 )
 from menus import double_click_row, run_action, texts
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication
 
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
@@ -147,6 +148,18 @@ class TestAccountDetail:
         assert answers and "«Banco»" in answers[0]
         assert [a.id for a in services.accounts.list_accounts()] == [dollars.id]
         assert window.current_page is window.page(PageId.ACCOUNTS)
+
+
+def test_without_movements_the_room_left_stays_under_the_list(window, pesos):
+    """A tall window and no movements: the cards above keep their height, so the chart's
+    header does not stretch into the room the short list leaves."""
+    window.resize(1280, 1500)
+    window.show_detail(DetailId.ACCOUNT, pesos.id)
+    detail = window.detail(DetailId.ACCOUNT)
+    QApplication.processEvents()
+    card = detail.chart.parentWidget()
+
+    assert card.height() == card.sizeHint().height()
 
 
 class TestPayeeDetail:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from html import escape
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QLabel, QSizePolicy
+from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout
 
 from nodus.i18n import _
 from nodus.models.money import Money
@@ -111,6 +111,7 @@ class TransactionListView(Card):
         self._theme_manager = theme_manager
         self._page = page
         self._omit = omit
+        self._page_body: QVBoxLayout | None = None  # the record's page it ends
         self._builder = TransactionListBuilder(services)
         self._caption = ""
         self._totals: FilteredTotals | None = None
@@ -167,18 +168,25 @@ class TransactionListView(Card):
         self._update_actions()
         return has_rows
 
-    def keep_height(self, rows_height: int) -> None:
-        """On a record's page: at least ``rows_height`` tall with movements, and only as
-        tall as its message without them, so an empty list does not fill the page."""
+    def add_to_page(self, body: QVBoxLayout, rows_height: int) -> None:
+        """Last on a record's page: at least ``rows_height`` tall with movements, and only
+        as tall as its message without them, so an empty list does not fill the page. The
+        room it leaves stays empty below it, instead of stretching a card above."""
         self._rows_height = rows_height
+        body.addWidget(self, stretch=1)
+        body.addStretch()
+        self._page_body = body
         self._fit_height(self.table.isVisibleTo(self))
 
     def _fit_height(self, has_rows: bool) -> None:
-        if self._rows_height is None:
+        if self._rows_height is None or self._page_body is None:
             return  # the list is the page: it fills it, with movements or not
         self.setMinimumHeight(self._rows_height if has_rows else 0)
         vertical = QSizePolicy.Policy.Expanding if has_rows else QSizePolicy.Policy.Maximum
         self.setSizePolicy(QSizePolicy.Policy.Preferred, vertical)
+        # Without rows, the room below takes what the list leaves, ahead of any card.
+        body = self._page_body
+        body.setStretch(body.count() - 1, 0 if has_rows else 1)
 
     def selected_items(self) -> list[TransactionListItem]:
         return [self.model.item(row) for row in self.table.selected_rows()]

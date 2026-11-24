@@ -106,8 +106,7 @@ class AccountDetailPage(DetailPage):
         # Every row would repeat the account.
         self.list_view = TransactionListView(services, event_bus, theme_manager, self, Omit.ACCOUNT)
         self.list_view.record_requested.connect(self.record_requested)
-        self.list_view.keep_height(Layout.DETAIL_LIST_MIN_HEIGHT)
-        body.addWidget(self.list_view, stretch=1)
+        self.list_view.add_to_page(body, Layout.DETAIL_LIST_MIN_HEIGHT)
 
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
