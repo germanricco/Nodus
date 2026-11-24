@@ -10,6 +10,7 @@ from nodus.models.period import Period
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
 from nodus.ui.widgets.style import muted_label
+from nodus.ui.widgets.tables.row_layout import row_list
 
 # What the change badges of Analysis compare against.
 VERSUS_PREVIOUS_TEXT = N_("Frente al período anterior, del mismo largo")
@@ -36,8 +37,7 @@ def rows_card(title: str) -> tuple[Card, QVBoxLayout]:
     """A card with ``title`` and a column of rows to fill, as the breakdowns use."""
     card = Card()
     card_header(card, title)
-    rows = QVBoxLayout()
-    rows.setSpacing(0)
+    rows = row_list()
     card.body.addLayout(rows)
     card.body.addStretch()
     return card, rows

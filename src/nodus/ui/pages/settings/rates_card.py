@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 
 from nodus.i18n import _
 from nodus.models.currency import FOREIGN_CURRENCIES, HOME_CURRENCY, Currency
@@ -21,7 +21,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.rate_updater import shared_rate_updater
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import NO_RATE_TEXT, rate_text
-from nodus.ui.theme.design import Layout, Space
+from nodus.ui.theme.design import Layout, RowRole, Space
 from nodus.ui.widgets.busy import start_busy, stop_busy
 from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.empty_state import EmptyState
@@ -31,6 +31,7 @@ from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.setting_row import SettingRow
 from nodus.ui.widgets.style import clear_layout, muted_label, secondary_button
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.tables.row_layout import row_layout, row_list
 from nodus.ui.widgets.toast import show_toast
 
 
@@ -59,8 +60,7 @@ class RateRow(QWidget):
     def __init__(self, rate: ExchangeRate) -> None:
         super().__init__()
         self.rate = rate
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(Space.S, Space.XXS, Space.S, Space.XXS)
+        layout = row_layout(self, RowRole.SINGLE)
         day = muted_label(format_date(rate.rate_date))
         day.setMinimumWidth(Layout.DAY_FIELD_MIN_WIDTH)
         layout.addWidget(day)
@@ -95,8 +95,7 @@ class RatesCard(Card):
         history_title = card_title(_("Historial"))
         self.body.addSpacing(Space.S)
         self.body.addWidget(history_title)
-        self._history = QVBoxLayout()
-        self._history.setSpacing(0)
+        self._history = row_list()
         self.body.addLayout(self._history)
 
         self._rate_updater = shared_rate_updater(services, event_bus)

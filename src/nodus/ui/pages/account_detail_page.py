@@ -8,7 +8,6 @@ from datetime import date
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QLabel,
-    QVBoxLayout,
 )
 
 from nodus.i18n import N_, _, ngettext
@@ -49,6 +48,7 @@ from nodus.ui.widgets.money_label import MoneyLabel, amount_text, masked, month_
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.charge_row import UpcomingPaymentRow
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
+from nodus.ui.widgets.tables.row_layout import row_list
 from nodus.ui.widgets.tables.transaction_table import Omit
 
 # How far back the balance chart looks: months, or None for the account's whole life.
@@ -152,8 +152,7 @@ class AccountDetailPage(DetailPage):
     def _payments_card(self) -> Card:
         """The recurring charges paid from this account, each with its «Pagar»."""
         self.payments_card = Card(_("Próximos pagos"))
-        self._payment_rows = QVBoxLayout()
-        self._payment_rows.setSpacing(0)
+        self._payment_rows = row_list()
         self.payments_card.body.addLayout(self._payment_rows)
         self.payment_rows: list[UpcomingPaymentRow] = []
         return self.payments_card

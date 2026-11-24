@@ -7,7 +7,7 @@ from datetime import date
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QMouseEvent
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from nodus.i18n import _
 from nodus.models.goal import Goal, GoalProgress, GoalState
@@ -22,7 +22,7 @@ from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId, RecordLink
 from nodus.ui.pages.base.detail_page import DetailPage
-from nodus.ui.theme.design import Chart, Space
+from nodus.ui.theme.design import Chart, RowRole, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.charts.goal_bar import goal_pill, goal_sentence
@@ -33,6 +33,7 @@ from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.money_label import amount_text, month_change_text
 from nodus.ui.widgets.style import clear_layout, make_hoverable, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, open_cue
+from nodus.ui.widgets.tables.row_layout import row_layout, row_lines, row_list
 
 HISTORY_MONTHS = 12
 
@@ -45,10 +46,8 @@ class ContributionRow(QWidget):
 
     def __init__(self, contribution: GoalContribution, hidden: bool) -> None:
         super().__init__()
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
-        texts = QVBoxLayout()
-        texts.setSpacing(0)
+        layout = row_layout(self, RowRole.DOUBLE)
+        texts = row_lines()
         name = QLabel(contribution.account.name)
         name.setObjectName("RowTitle")
         balance = amount_text(contribution.balance, hidden)
@@ -137,8 +136,7 @@ class GoalDetailPage(DetailPage):
         self.body.addWidget(chart_card)
 
         self.accounts_card = Card(_("Cuentas"))
-        self._account_rows = QVBoxLayout()
-        self._account_rows.setSpacing(0)
+        self._account_rows = row_list()
         self.accounts_card.body.addLayout(self._account_rows)
         self.body.addWidget(self.accounts_card)
         self.body.addStretch(1)  # the cards keep their height; the rest is blank

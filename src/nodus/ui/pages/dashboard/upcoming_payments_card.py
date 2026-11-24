@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QVBoxLayout
 
 from nodus.i18n import _, ngettext
 from nodus.services.container import Services
@@ -14,6 +13,7 @@ from nodus.ui.text.labels import estimate_text
 from nodus.ui.widgets.card import Card, card_header, see_all_link
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.charge_row import UpcomingPaymentRow
+from nodus.ui.widgets.tables.row_layout import row_list
 
 # Upcoming charges listed on the dashboard; the page has them all.
 UPCOMING_COUNT = 3
@@ -35,8 +35,7 @@ class UpcomingPaymentsCard(Card):
         self.monthly_label.setToolTip(_("Lo que suman tus cargos recurrentes en un mes"))
         header.addWidget(self.monthly_label)
         self.see_all_button = see_all_link(header, _("Ver todos"), self.see_all_requested)
-        self._rows = QVBoxLayout()
-        self._rows.setSpacing(0)
+        self._rows = row_list()
         self.body.addLayout(self._rows)
         # Extra height goes below the rows, keeping the title on top.
         self.body.addStretch()

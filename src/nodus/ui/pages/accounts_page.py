@@ -29,7 +29,7 @@ from nodus.ui.pages.base.net_worth_card import NetWorthCard
 from nodus.ui.pages.base.page import Page
 from nodus.ui.text.formatting import signed
 from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import RowRole, RowSpace, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.archived_section import ArchivedSection
@@ -45,6 +45,7 @@ from nodus.ui.widgets.tables.row_actions import (
     install_row_actions,
     open_cue,
 )
+from nodus.ui.widgets.tables.row_layout import row_layout, row_lines, row_list
 
 # The lists of the groups' cards, which take each other's accounts.
 ACCOUNTS_FAMILY = "accounts"
@@ -80,16 +81,13 @@ class AccountRow(QWidget):
         super().__init__()
         self.account = account
         self.has_movements = has_movements
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
-        layout.setSpacing(Space.M)
+        layout = row_layout(self, RowRole.DOUBLE)
 
         badge = QLabel(account.currency.value)
         badge.setObjectName("Badge")
         layout.addWidget(badge)
 
-        texts = QVBoxLayout()
-        texts.setSpacing(0)
+        texts = row_lines()
         name = QLabel(account.name)
         name.setObjectName("RowTitle")
         details = [_(ACCOUNT_TYPE_LABELS[account.type]), account.currency.value]
@@ -312,8 +310,8 @@ class AccountsPage(Page):
         group = section.group
         card = Card()
         header = QHBoxLayout()
-        header.setSpacing(Space.M)  # as in the rows, so the subtotal sits over their amounts
-        header.setContentsMargins(0, 0, Space.S, 0)
+        header.setSpacing(RowSpace.GAP)  # as in the rows, so the subtotal sits over their amounts
+        header.setContentsMargins(0, 0, RowSpace.SIDE, 0)
         title = card_title(group.name if group else _("Sin grupo"))
         header.addWidget(title, stretch=1)
         total = self._services.account_groups.total(section.accounts, balances, date.today())
@@ -402,12 +400,15 @@ class AccountsPage(Page):
         ``account_lists`` under ``key``, once there is more than one account; with a
         ``family`` (a group's card) always, since its rows also go to the other groups."""
         rows = None
+        column = row_list()
         if reorderable and (len(accounts) > 1 or family is not None):
             rows = ReorderableList(family=family)
             rows.order_changed.connect(self._save_order)
             self.account_lists[key] = rows
             self.account_list = self.account_list or rows
             card.body.addWidget(rows)
+        else:
+            card.body.addLayout(column)
         for account in accounts:
             gain = self._services.accounts.value_gain(account, balances[account.id])
             value_change = gain.amount if gain else None
@@ -430,7 +431,7 @@ class AccountsPage(Page):
             row.archive_toggled.connect(self._toggle_archived)
             row.delete_requested.connect(self._delete_account)
             if rows is None:
-                card.body.addWidget(row)
+                column.addWidget(row)
             else:
                 rows.add_row(account.id, row)
         return rows

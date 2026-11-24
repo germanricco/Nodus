@@ -161,7 +161,7 @@ class ReorderableList(QWidget):
     order_changed = Signal(list)
     row_received = Signal(object, int)  # key, gap
 
-    SPACING = Space.S  # as between the rows of a Card, so a reorderable list looks the same
+    SPACING = 0  # the rows touch, as in every list (``row_layout.py``)
 
     def __init__(self, parent: QWidget | None = None, family: str | None = None) -> None:
         super().__init__(parent)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QLabel, QVBoxLayout
+from PySide6.QtWidgets import QLabel
 
 from nodus.i18n import N_, _
 from nodus.models.money import Money
@@ -22,6 +22,7 @@ from nodus.ui.widgets.charts.share_bar import ShareBar
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.style import amount_label, clear_layout
 from nodus.ui.widgets.tables.category_line import CategoryLine
+from nodus.ui.widgets.tables.row_layout import row_list
 
 # Categories listed one by one; the rest are added up as one line.
 LISTED_CATEGORIES = 6
@@ -61,8 +62,7 @@ class CategoriesCard(Card):
         self.change_badge = ChangeBadge(higher_is_better=False)
         self.change_badge.setToolTip(_("Gastos frente al período anterior"))
         header.addWidget(self.change_badge, alignment=Qt.AlignmentFlag.AlignTop)
-        self._rows = QVBoxLayout()
-        self._rows.setSpacing(0)
+        self._rows = row_list()
         self.body.addLayout(self._rows)
         self.body.addStretch()
         self.rows: list[CategoryLine] = []

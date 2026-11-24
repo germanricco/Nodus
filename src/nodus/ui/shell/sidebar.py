@@ -27,7 +27,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, RecordLink
 from nodus.ui.shell import tour
 from nodus.ui.shell.coach_marks import mark_target
-from nodus.ui.theme.design import ControlSize, IconSize, Layout, Space
+from nodus.ui.theme.design import ControlSize, IconSize, Layout, RowRole, Space
 from nodus.ui.theme.icons import icon, logo_pixmap
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -41,6 +41,7 @@ from nodus.ui.widgets.style import (
     scrolling,
     set_style_property,
 )
+from nodus.ui.widgets.tables.row_layout import row_layout, row_list
 
 
 def keep_whole(label: QLabel) -> None:
@@ -56,9 +57,8 @@ class SidebarAccountRow(QWidget):
 
     def __init__(self, name: str, balance: Money, hidden: bool, indent: int = 0) -> None:
         super().__init__()
-        layout = QHBoxLayout(self)
+        layout = row_layout(self, RowRole.SIDEBAR, indent)
         make_hoverable(self)
-        layout.setContentsMargins(Space.S + indent, Space.XXS, Space.S, Space.XXS)
         self.name_label = ElidedLabel(name)
         layout.addWidget(self.name_label, stretch=1)
         self.amount_label = MoneyLabel()
@@ -83,9 +83,8 @@ class SidebarGroupRow(QWidget):
     def __init__(self, name: str, folded: bool, total: str, tooltip: str) -> None:
         super().__init__()
         self.setObjectName("SidebarGroup")
-        layout = QHBoxLayout(self)
+        layout = row_layout(self, RowRole.SIDEBAR)
         make_hoverable(self)
-        layout.setContentsMargins(Space.S, Space.XXS, Space.S, Space.XXS)
         self.name_label = ElidedLabel(f"{'▸' if folded else '▾'}  {name}")
         self.name_label.setObjectName("SidebarGroupName")
         layout.addWidget(self.name_label, stretch=1)
@@ -305,9 +304,8 @@ class Sidebar(QFrame):
     def _build_accounts_area(self) -> QScrollArea:
         container = QWidget()
         container.setObjectName("SidebarAccounts")
-        self._accounts_layout = QVBoxLayout(container)
-        self._accounts_layout.setContentsMargins(0, 0, 0, 0)
-        self._accounts_layout.setSpacing(Space.S)
+        self._accounts_layout = row_list()
+        container.setLayout(self._accounts_layout)
         scroll = scrolling(container, horizontal=False)
         scroll.viewport().setObjectName("SidebarAccounts")
         return scroll

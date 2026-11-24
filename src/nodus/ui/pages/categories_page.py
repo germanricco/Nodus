@@ -8,7 +8,7 @@ from datetime import date
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QCheckBox, QLabel, QLineEdit, QWidget
 
 from nodus.i18n import N_, _, ngettext
 from nodus.models.category import Category
@@ -30,7 +30,7 @@ from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.shortcuts import CLEAR_SELECTION, DELETE_ROWS
 from nodus.ui.text.formatting import rate_text
 from nodus.ui.text.labels import KIND_TITLES, unconverted_note
-from nodus.ui.theme.design import Layout, Space
+from nodus.ui.theme.design import Layout, RowRole
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, titled_figure
@@ -47,6 +47,7 @@ from nodus.ui.widgets.tables.row_actions import (
     RowAction,
     install_row_actions,
 )
+from nodus.ui.widgets.tables.row_layout import row_layout, row_list
 from nodus.ui.widgets.tables.selection_bar import SelectionBar
 from nodus.ui.widgets.tables.table import DELETE_KEY_HINT
 
@@ -107,9 +108,7 @@ class CategoryRow(QWidget):
         self.category = category = figures.category
         self.has_movements = has_movements
         self.can_merge = can_merge
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
-        layout.setSpacing(Space.S)
+        layout = row_layout(self, RowRole.SINGLE)
         self.check_box = QCheckBox()
         self.check_box.setAccessibleName(_("Elegir «{name}»").format(name=category.name))
         self.check_box.setChecked(chosen)
@@ -410,13 +409,14 @@ class CategoriesPage(Page):
         titled_figure(card, _(KIND_TITLES[section.kind]), total)
         # A search shows the subcategories it found, even in a folded category.
         folded_ids = set() if searching else self._services.settings.folded_categories()
+        column = row_list()
+        card.body.addLayout(column)
         for position, figures in enumerate(categories):
             if position:
-                card.body.addWidget(separator())
+                column.addWidget(separator())
             group = QWidget()
-            rows = QVBoxLayout(group)
-            rows.setContentsMargins(0, 0, 0, 0)
-            rows.setSpacing(0)
+            rows = row_list()
+            group.setLayout(rows)
             folded = figures.category.id in folded_ids
             rows.addWidget(self._row(figures, hidden, starts, folded))
             children = [self._row(child, hidden, starts) for child in figures.children]
@@ -424,7 +424,7 @@ class CategoriesPage(Page):
                 rows.addWidget(child)
                 child.setHidden(folded)
             self._children[figures.category.id] = children
-            card.body.addWidget(group)
+            column.addWidget(group)
         return card
 
     def _fold(self, category: Category, folded: bool) -> None:

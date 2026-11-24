@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 
 from nodus.i18n import N_
 from nodus.ui.shortcuts import DELETE_ROWS
-from nodus.ui.theme.design import ControlSize
+from nodus.ui.theme.design import RowRole
 from nodus.ui.theme.theme_manager import active_theme
 
 
@@ -42,7 +42,7 @@ def configure_record_table(
     table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
     table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
     table.verticalHeader().hide()
-    table.verticalHeader().setDefaultSectionSize(ControlSize.TABLE_ROW)
+    table.verticalHeader().setDefaultSectionSize(RowRole.SINGLE)
     header = table.horizontalHeader()
     header.setHighlightSections(False)
     header.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)

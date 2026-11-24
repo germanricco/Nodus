@@ -110,14 +110,30 @@ class ControlSize:
     PROGRESS_HEIGHT = 8  # a progress bar: an update's download, a budget
     DOT = 12  # a category's color beside its name
     DOT_SMALL = 10  # the same in a dense row, and a tag's chip
-    TABLE_ROW = 40  # a row of a table
-    TWO_LINE_ROW = 52  # a row of movements: what it was, and its details under it
-    FIRST_LINE = 20  # the heights of those two lines, the same in every column
+    FIRST_LINE = 20  # the heights of a movement's two lines, the same in every column
     SECOND_LINE = 18
     SCROLL_BAR_WIDTH = 10
     SCROLL_HANDLE_MIN_LENGTH = 24
     SLIDER_GROOVE = 6
     SLIDER_HANDLE = 16
+
+
+class RowRole(IntEnum):
+    """The height of a row of a list, by what it holds, as ``TextRole`` sizes text: the
+    rows of a role read alike on every page, tables included. A row centers what it
+    holds in its height and the rows of a list touch (``row_layout.py``)."""
+
+    SINGLE = 40  # one line: a tag, a category, a rate, a line of a breakdown
+    DOUBLE = 52  # a title over its detail, an initial, or a name over its bar
+    SIDEBAR = 28  # the sidebar's accounts: navigation, denser on purpose
+
+
+class RowSpace:
+    """Room inside a row of a list, in pixels, the same in every list."""
+
+    SIDE = Space.S  # from its edges to its first and last pieces
+    GAP = Space.S  # between its pieces
+    EDGE = Space.XS  # the least above and below, when wrapped text makes it taller
 
 
 class Line:

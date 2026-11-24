@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QVBoxLayout
 
 from nodus.i18n import _
 from nodus.models.period import Period
@@ -22,6 +21,7 @@ from nodus.ui.widgets.card import Card, card_header, see_all_link
 from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
 from nodus.ui.widgets.style import clear_layout
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
+from nodus.ui.widgets.tables.row_layout import row_list
 from nodus.ui.widgets.tables.transaction_table import CompactMovementRow, TransactionTableModel
 
 LATEST_COUNT = 6
@@ -48,8 +48,7 @@ class LatestTransactionsCard(Card):
         theme_manager.theme_changed.connect(self.model.set_theme)
         header = card_header(self, _("Últimas transacciones"))
         self.see_all_button = see_all_link(header, _("Ver todas"), self.see_all_requested)
-        self._rows = QVBoxLayout()
-        self._rows.setSpacing(0)
+        self._rows = row_list()
         self.body.addLayout(self._rows)
         self.body.addStretch()
 

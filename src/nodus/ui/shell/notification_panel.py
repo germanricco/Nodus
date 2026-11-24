@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from nodus.i18n import N_, _
 from nodus.services.app.notification_service import Notice, NoticeKind
 from nodus.ui.shell.notices import NOTICES
-from nodus.ui.theme.design import Layout, Space
+from nodus.ui.theme.design import Layout, RowRole, Space
 from nodus.ui.theme.theme_manager import active_theme
 from nodus.ui.widgets.card import card_title
 from nodus.ui.widgets.color_dot import ColorDot
@@ -21,6 +21,7 @@ from nodus.ui.widgets.style import (
     show_below,
 )
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
+from nodus.ui.widgets.tables.row_layout import row_layout, row_lines, row_list
 
 NEWS_LABEL = N_("Qué trae")
 
@@ -36,14 +37,11 @@ class NoticeRow(QWidget):
     def __init__(self, notice: Notice) -> None:
         super().__init__()
         self.notice = notice
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
-        layout.setSpacing(Space.S)
+        layout = row_layout(self, RowRole.DOUBLE)
         # An empty dot once seen, so every title starts at the same place.
         self.dot = ColorDot("" if notice.seen else active_theme().accent, Layout.UNSEEN_DOT)
-        layout.addWidget(self.dot, alignment=Qt.AlignmentFlag.AlignTop)
-        texts = QVBoxLayout()
-        texts.setSpacing(Space.XXS)
+        layout.addWidget(self.dot)
+        texts = row_lines()
         title = QLabel(notice.title)
         title.setWordWrap(True)
         if notice.seen:
@@ -116,8 +114,7 @@ class NotificationPanel(QFrame):
         self.unseen_label = muted_label("")
         header.addWidget(self.unseen_label)
         layout.addLayout(header)
-        self._rows = QVBoxLayout()
-        self._rows.setSpacing(0)
+        self._rows = row_list()
         layout.addLayout(self._rows)
         self.rows: list[NoticeRow] = []
 

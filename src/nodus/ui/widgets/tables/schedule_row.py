@@ -4,12 +4,13 @@ installments."""
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLabel, QWidget
 
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import RowRole
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.style import muted_label
 from nodus.ui.widgets.tables.row_actions import ActionsFor, MoreButton, install_row_actions
+from nodus.ui.widgets.tables.row_layout import row_layout, row_lines
 
 
 class ScheduleRow(QWidget):
@@ -32,13 +33,10 @@ class ScheduleRow(QWidget):
         button: QWidget | None = None,
     ) -> None:
         super().__init__()
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(Space.S, Space.S, Space.S, Space.S)
-        layout.setSpacing(Space.M)
+        layout = row_layout(self, RowRole.DOUBLE)
         layout.addWidget(ColorDot(color))
 
-        texts = QVBoxLayout()
-        texts.setSpacing(0)
+        texts = row_lines()
         self.title_label = QLabel(title)
         self.title_label.setObjectName("RowTitle")
         self.detail_label = muted_label(detail)
@@ -46,8 +44,7 @@ class ScheduleRow(QWidget):
         texts.addWidget(self.detail_label)
         layout.addLayout(texts, stretch=1)
 
-        amounts = QVBoxLayout()
-        amounts.setSpacing(0)
+        amounts = row_lines()
         self.amount_label = QLabel(amount_text)
         self.amount_label.setObjectName("RowAmount")
         self.amount_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)

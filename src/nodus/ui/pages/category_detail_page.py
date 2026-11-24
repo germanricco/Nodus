@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QVBoxLayout, QWidget
+from PySide6.QtWidgets import QWidget
 
 from nodus.i18n import N_, _
 from nodus.models.money import Money
@@ -32,6 +32,7 @@ from nodus.ui.widgets.money_label import amount_text
 from nodus.ui.widgets.style import amount_label, clear_layout, muted_label
 from nodus.ui.widgets.tables.category_line import CategoryLine
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
+from nodus.ui.widgets.tables.row_layout import row_list
 from nodus.ui.widgets.tables.transaction_table import CATEGORY
 
 THIS_MONTH = N_("Este mes")
@@ -69,8 +70,7 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
         chart_card.body.addWidget(self.chart)
         self.parts_card = Card()
         card_header(self.parts_card, _("Por subcategoría"))
-        self._part_rows = QVBoxLayout()
-        self._part_rows.setSpacing(0)
+        self._part_rows = row_list()
         self.parts_card.body.addLayout(self._part_rows)
         self.part_lines: list[CategoryLine] = []
         at = self.body.indexOf(self.list_view)

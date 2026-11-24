@@ -36,6 +36,7 @@ from nodus.ui.widgets.pay_button import PayButton
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.charge_row import due_status_label, seen_actions
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
+from nodus.ui.widgets.tables.row_layout import row_list
 from nodus.ui.widgets.tables.schedule_row import ScheduleRow
 
 # Untranslated: each is translated, with its days, where a card shows it.
@@ -239,6 +240,8 @@ class RecurringPage(Page):
                 continue
             name = _(title).format(days=SOON_DAYS)
             card = Card(f"{name} ({len(members)})")
+            column = row_list()
+            card.body.addLayout(column)
             for charge in members:
                 row = RecurringChargeRow(
                     charge, categories[charge.category_id], accounts[charge.account_id], today,
@@ -248,7 +251,7 @@ class RecurringPage(Page):
                     ),
                 )  # fmt: skip
                 self._connect(row)
-                card.body.addWidget(row)
+                column.addWidget(row)
                 self.rows.append(row)
             self._sections.addWidget(card)
         if purchases:
@@ -262,6 +265,8 @@ class RecurringPage(Page):
         their installments."""
         name = _(INSTALLMENTS_TITLE)
         card = Card(f"{name} ({len(purchases)})")
+        column = row_list()
+        card.body.addLayout(column)
         items = TransactionListBuilder(self._services).build([p.upcoming for p in purchases])
         for summary, item in zip(purchases, items, strict=True):
             row = InstallmentPlanRow(
@@ -271,7 +276,7 @@ class RecurringPage(Page):
                 today,
                 self._installment_actions(item),
             )
-            card.body.addWidget(row)
+            column.addWidget(row)
             self.installment_rows.append(row)
         return card
 

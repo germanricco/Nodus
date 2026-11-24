@@ -41,6 +41,7 @@ from nodus.ui.widgets.style import (
 from nodus.ui.widgets.tables.budget_row import BudgetRow
 from nodus.ui.widgets.tables.category_line import CategoryLine
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
+from nodus.ui.widgets.tables.row_layout import row_list
 
 EMPTY_TEXT = N_(
     "Ponle un límite mensual a las categorías que quieres cuidar, como el supermercado o "
@@ -268,6 +269,8 @@ class BudgetsPage(Page):
                 count=over
             )
         card = Card(title)
+        column = row_list()
+        card.body.addLayout(column)
         theme = self._theme_manager.theme
         for budget in month.budgets:
             row = BudgetPageRow(budget, theme, self._shown.get(budget.category.id))
@@ -276,7 +279,7 @@ class BudgetsPage(Page):
             row.transactions_requested.connect(lambda c=category: self._show_transactions(c))
             row.edit_requested.connect(lambda c=category: self.open_budget_dialog(c))
             row.remove_requested.connect(lambda c=category: self.remove_budget(c))
-            card.body.addWidget(row)
+            column.addWidget(row)
             self.rows.append(row)
         return card
 

@@ -6,17 +6,18 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import Qt, Signal, SignalInstance
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.i18n import N_, _
 from nodus.models.recurring_charge import DueStatus, RecurringCharge
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import due_label
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import RowRole
 from nodus.ui.widgets.change_badge import Tone, status_pill
 from nodus.ui.widgets.pay_button import PayButton
 from nodus.ui.widgets.style import RIGHT_ALIGNED, amount_label, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
+from nodus.ui.widgets.tables.row_layout import row_layout, row_lines
 
 DUE_TONES = {
     DueStatus.OVERDUE: Tone.BAD,
@@ -83,11 +84,8 @@ class UpcomingPaymentRow(QWidget):
         self._today = today
         self._quiet = quiet
         install_row_actions(self, self.actions)
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
-        layout.setSpacing(Space.S)
-        texts = QVBoxLayout()
-        texts.setSpacing(0)
+        layout = row_layout(self, RowRole.DOUBLE)
+        texts = row_lines()
         name = QLabel(charge.name)
         name.setObjectName("RowTitle")
         texts.addWidget(name)
@@ -95,8 +93,7 @@ class UpcomingPaymentRow(QWidget):
             due_status_label(charge, today, quiet), alignment=Qt.AlignmentFlag.AlignLeft
         )
         layout.addLayout(texts, stretch=1)
-        amounts = QVBoxLayout()
-        amounts.setSpacing(0)
+        amounts = row_lines()
         amount = amount_label(charge.amount)
         amount.setObjectName("RowAmount")
         amounts.addWidget(amount)

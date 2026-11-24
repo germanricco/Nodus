@@ -16,6 +16,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import TransactionFocus, history_period
 from nodus.ui.pages.base.summary_page import NAME, TOTAL, SummaryPage, SummaryTableModel
 from nodus.ui.text.labels import KIND_TITLES
+from nodus.ui.theme.design import RowRole
 from nodus.ui.theme.theme_manager import ThemeManager, active_theme
 from nodus.ui.widgets.initial_badge import initial_pixmap
 from nodus.ui.widgets.inputs.color import color_icon
@@ -85,6 +86,8 @@ class PayeesPage(SummaryPage[PayeeSummary]):
         kind_row.addWidget(self.kind_input)
         kind_row.addStretch()
         self.content_layout.insertLayout(0, kind_row)
+        # Each row starts with its initial, as a movement does: the same height.
+        self.table.verticalHeader().setDefaultSectionSize(RowRole.DOUBLE)
 
     @property
     def kind(self) -> TransactionType:

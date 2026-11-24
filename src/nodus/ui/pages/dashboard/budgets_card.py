@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QVBoxLayout
 
 from nodus.i18n import _
 from nodus.models.period import Month, format_month
@@ -17,6 +16,7 @@ from nodus.ui.widgets.charts.budget_bar import spent_of_limit
 from nodus.ui.widgets.charts.chart_base import shown_fractions
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.budget_row import BudgetRow
+from nodus.ui.widgets.tables.row_layout import row_list
 
 # Budgets on the dashboard, the closest to their limit first; the page has them all.
 BUDGETS_COUNT = 4
@@ -37,8 +37,7 @@ class BudgetsCard(Card):
         self.when_label = muted_label("")
         header.addWidget(self.when_label)
         self.see_all_button = see_all_link(header, _("Ver todos"), self.see_all_requested)
-        self._rows = QVBoxLayout()
-        self._rows.setSpacing(0)
+        self._rows = row_list()
         self.body.addLayout(self._rows)
         self.body.addStretch()
         self.rows: list[BudgetRow] = []

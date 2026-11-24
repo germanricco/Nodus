@@ -4,14 +4,15 @@ from __future__ import annotations
 
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QEnterEvent, QMouseEvent
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QWidget
 
 from nodus.ui.navigation import RecordLink
-from nodus.ui.theme.design import ControlSize, Space
+from nodus.ui.theme.design import ControlSize, RowRole
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.style import set_style_property
 from nodus.ui.widgets.tables.row_actions import open_cue
+from nodus.ui.widgets.tables.row_layout import row_layout, row_lines
 
 
 class CategoryLine(QFrame):
@@ -20,25 +21,30 @@ class CategoryLine(QFrame):
 
     With a ``link`` it leads to that record's page: it lights up under the mouse, shows
     the hand and ends in «›», and a click emits ``opened``. Without one it shows none of
-    the three, but keeps the room of the «›» so a list of both kinds lines up.
+    the three, but keeps the room of the «›» so a list of both kinds lines up. It takes
+    the height of one line, or of two with a ``detail``; ``inside`` a taller row (a
+    budget's name over its bar) it takes none of its own.
     """
 
     hovered = Signal(bool)
     opened = Signal(object)  # RecordLink
 
     def __init__(
-        self, color: str, name: str, detail: str = "", link: RecordLink | None = None
+        self,
+        color: str,
+        name: str,
+        detail: str = "",
+        link: RecordLink | None = None,
+        inside: bool = False,
     ) -> None:
         super().__init__()
         self.setObjectName("CategoryLine")
         self.name = name
         self.link = link
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
-        layout.setSpacing(Space.S)
+        role = RowRole.DOUBLE if detail else RowRole.SINGLE
+        layout = row_layout(self, None if inside else role)
         layout.addWidget(ColorDot(color, size=ControlSize.DOT_SMALL))
-        texts = QVBoxLayout()
-        texts.setSpacing(0)
+        texts = row_lines()
         texts.addWidget(ElidedLabel(name))
         if detail:
             detail_label = ElidedLabel(detail)

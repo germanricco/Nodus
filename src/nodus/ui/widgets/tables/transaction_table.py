@@ -41,7 +41,7 @@ from nodus.i18n import N_, _
 from nodus.models.period import format_day_month
 from nodus.services.sorting import name_sort_key
 from nodus.ui.text.formatting import signed
-from nodus.ui.theme.design import ControlSize, IconSize, Layout, Space, TextRole, role_font
+from nodus.ui.theme.design import ControlSize, IconSize, Layout, RowRole, Space, TextRole, role_font
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import active_theme
@@ -436,7 +436,7 @@ def show_movements(table: QTableView) -> None:
         table.setItemDelegate(MovementRowDelegate(table))
     else:
         table.setItemDelegate(_MovementDelegate(table))
-    table.verticalHeader().setDefaultSectionSize(ControlSize.TWO_LINE_ROW)
+    table.verticalHeader().setDefaultSectionSize(RowRole.DOUBLE)
     table.setTextElideMode(Qt.TextElideMode.ElideRight)
     table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
     header = table.horizontalHeader()
@@ -506,7 +506,7 @@ class CompactMovementRow(QWidget):
         self.model = model
         self.row = row
         self.item = model.item(row)
-        self.setFixedHeight(ControlSize.TWO_LINE_ROW)
+        self.setFixedHeight(RowRole.DOUBLE)
         install_row_actions(self, actions_for)
         make_hoverable(self)
 
