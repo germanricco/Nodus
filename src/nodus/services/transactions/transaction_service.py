@@ -199,6 +199,10 @@ class TransactionService:
     def list_transactions(self, criteria: TransactionFilter) -> list[Transaction]:
         return self._transactions.list(criteria)
 
+    def excluded_account_ids(self) -> frozenset[int]:
+        """The accounts whose movements no total counts (``conversion.counted``)."""
+        return self._accounts.excluded_ids()
+
     def last_expense(self) -> Transaction | None:
         """The expense recorded last, whatever its day, to record it again; never an
         installment, which belongs to a purchase."""

@@ -82,7 +82,6 @@ class BulkEditDialog(FormDialog):
         self.form.addRow(_("Agregar etiquetas"), self.add_tags_input)
         self.form.addRow(_("Quitar etiquetas"), self.remove_tags_input)
         hint = hint_label(self._hint(transactions, kind))
-        hint.setWordWrap(True)
         self.form.addRow("", hint)
 
     @staticmethod

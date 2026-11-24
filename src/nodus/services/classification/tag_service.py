@@ -19,7 +19,7 @@ from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.undo_service import UndoService
 from nodus.services.classification.named_records import NamedRecordService
-from nodus.services.conversion import PeriodTotals, period_totals
+from nodus.services.conversion import PeriodTotals, counted, period_totals
 from nodus.services.errors import clean_name, require_free_name
 from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transactions.transaction_service import TransactionService
@@ -158,6 +158,7 @@ class TagService(NamedRecordService[Tag]):
         return self._summary(tag, tagged, period)
 
     def _summary(self, tag: Tag, tagged: list[Transaction], period: Period) -> TagSummary:
+        tagged = counted(self._transactions, tagged)
         dates = [t.occurred_on for t in tagged]
         return TagSummary(
             tag,

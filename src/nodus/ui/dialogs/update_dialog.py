@@ -65,7 +65,6 @@ class UpdateDialog(QDialog):
         self.progress_bar.setTextVisible(False)
         layout.addWidget(self.progress_bar)
         self.detail_label = hint_label()
-        self.detail_label.setWordWrap(True)
         layout.addWidget(self.detail_label)
         self.error_detail = ErrorDetail()
         layout.addWidget(self.error_detail)

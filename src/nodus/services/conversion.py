@@ -2,7 +2,9 @@
 
 Each movement is converted at the rate of its day; a refund counts as less spending in
 the category of the expense it pays back; transfers only move money between accounts, so
-they are left out. The dashboard, the analysis, payees and tags all count from here.
+they are left out, and so are the movements of an account kept out of every total, such
+as one shared with a band (``counted``). The dashboard, the analysis, budgets,
+categories, payees and tags all count from here.
 """
 
 from __future__ import annotations
@@ -67,6 +69,16 @@ def period_filter(period: Period) -> TransactionFilter:
     return TransactionFilter(start=period.start, end=period.end)
 
 
+def counted(
+    transactions: TransactionService, listed: Iterable[Transaction], account_id: int | None = None
+) -> list[Transaction]:
+    """``listed`` without the movements of the accounts kept out of every total
+    (``Account.excluded``), unless the view is that ``account_id``'s own: its page and
+    its movements show what came in and went out of it."""
+    excluded = transactions.excluded_account_ids() - {account_id}
+    return [t for t in listed if t.account_id not in excluded]
+
+
 def converted_movements(
     transactions: TransactionService,
     exchange_rates: ExchangeRateService,
@@ -77,19 +89,21 @@ def converted_movements(
     if criteria.is_transfer:
         return ConvertedMovements([], 0)
     listed = transactions.list_transactions(dataclasses.replace(criteria, is_transfer=False))
-    return convert_movements(transactions, exchange_rates, listed)
+    return convert_movements(transactions, exchange_rates, listed, criteria.account_id)
 
 
 def convert_movements(
     transactions: TransactionService,
     exchange_rates: ExchangeRateService,
     listed: Iterable[Transaction],
+    account_id: int | None = None,
 ) -> ConvertedMovements:
-    """``listed`` in pesos, as ``converted_movements`` counts them; transfers are left out."""
+    """``listed`` in pesos, as ``converted_movements`` counts them; transfers are left out,
+    and so are the excluded accounts' movements unless the view is ``account_id``'s."""
     movements: list[ConvertedMovement] = []
     unconverted = 0
     refunded_categories: dict[int, int] = {}
-    for transaction in listed:
+    for transaction in counted(transactions, listed, account_id):
         if transaction.is_transfer:
             continue
         amount = exchange_rates.convert(transaction.amount, HOME_CURRENCY, transaction.occurred_on)

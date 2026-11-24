@@ -107,10 +107,12 @@ def muted_label(text: str) -> QLabel:
     return label
 
 
-def hint_label(text: str = "") -> QLabel:
-    """A small line that explains a field or a figure next to it."""
+def hint_label(text: str = "", wrap: bool = True) -> QLabel:
+    """A small line that explains a field or a figure next to it. A long one wraps, so it
+    never widens its dialog; ``wrap`` off keeps on one line one that sits beside a figure."""
     label = QLabel(text)
     label.setObjectName("FieldHint")
+    label.setWordWrap(wrap)
     return label
 
 

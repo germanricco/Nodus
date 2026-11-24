@@ -39,8 +39,8 @@ class AccountRepository(Repository):
     def add(self, account: Account) -> Account:
         account_id = self._insert(
             "INSERT INTO accounts"
-            " (name, type, currency, initial_balance_cents, is_archived, position, group_id)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            " (name, type, currency, initial_balance_cents, is_archived, position, group_id,"
+            " excluded) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 account.name,
                 account.type.value,
@@ -49,6 +49,7 @@ class AccountRepository(Repository):
                 account.is_archived,
                 account.position,
                 account.group_id,
+                account.excluded,
             ),
         )
         return dataclasses.replace(account, id=account_id)
@@ -56,7 +57,7 @@ class AccountRepository(Repository):
     def update(self, account: Account) -> None:
         self._execute(
             "UPDATE accounts SET name = ?, type = ?, currency = ?, initial_balance_cents = ?,"
-            " is_archived = ?, position = ?, group_id = ? WHERE id = ?",
+            " is_archived = ?, position = ?, group_id = ?, excluded = ? WHERE id = ?",
             (
                 account.name,
                 account.type.value,
@@ -65,6 +66,7 @@ class AccountRepository(Repository):
                 account.is_archived,
                 account.position,
                 account.group_id,
+                account.excluded,
                 account.id,
             ),
         )
@@ -78,6 +80,11 @@ class AccountRepository(Repository):
             sql += " WHERE is_archived = 0"
         rows = self._fetch_all(sql)
         return [self._from_row(row) for row in rows]
+
+    def excluded_ids(self) -> frozenset[int]:
+        """The accounts kept out of every total (``Account.excluded``)."""
+        rows = self._fetch_all("SELECT id FROM accounts WHERE excluded = 1")
+        return frozenset(row["id"] for row in rows)
 
     def next_position(self) -> int:
         return self._next_position()
@@ -140,4 +147,5 @@ class AccountRepository(Repository):
             is_archived=bool(row["is_archived"]),
             position=row["position"],
             group_id=row["group_id"],
+            excluded=bool(row["excluded"]),
         )

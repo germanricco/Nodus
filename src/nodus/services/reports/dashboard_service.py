@@ -176,10 +176,13 @@ class DashboardService:
         """What the movements matching ``criteria`` add up to, transfers aside."""
         return self._totals(converted_movements(self._transactions, self._exchange_rates, criteria))
 
-    def totals_of(self, transactions: list[Transaction]) -> FilteredTotals:
-        """What ``transactions`` add up to, transfers aside, as for a selection."""
+    def totals_of(
+        self, transactions: list[Transaction], account_id: int | None = None
+    ) -> FilteredTotals:
+        """What ``transactions`` add up to, transfers aside, as for a selection in a list
+        filtered by ``account_id``, which counts as that list's summary does."""
         return self._totals(
-            convert_movements(self._transactions, self._exchange_rates, transactions)
+            convert_movements(self._transactions, self._exchange_rates, transactions, account_id)
         )
 
     def _totals(self, converted: ConvertedMovements) -> FilteredTotals:

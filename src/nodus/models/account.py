@@ -44,6 +44,8 @@ class Account:
     position: int = 0
     # The group it is shown in (Bancos, Inversiones…), or None.
     group_id: int | None = None
+    # Kept but not the user's own, such as one shared with a band: out of every total.
+    excluded: bool = False
 
     def __post_init__(self) -> None:
         if self.initial_balance.currency is not self.currency:

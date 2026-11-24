@@ -111,6 +111,7 @@ class TransactionListView(Card):
         self._theme_manager = theme_manager
         self._page = page
         self._omit = omit
+        self._account_id: int | None = None  # the account the list is filtered by
         self._page_body: QVBoxLayout | None = None  # the record's page it ends
         self._builder = TransactionListBuilder(services)
         self._caption = ""
@@ -159,6 +160,7 @@ class TransactionListView(Card):
         self.model.set_items(self._builder.build(transactions))
         self._caption = caption
         self._totals = self._services.dashboard.totals(criteria)
+        self._account_id = criteria.account_id
         self._show_summary()
         has_rows = self.model.rowCount() > 0
         self.summary_label.setVisible(has_rows)
@@ -285,5 +287,7 @@ class TransactionListView(Card):
         self._page.show_selection_bar(several)
         if not several:
             return
-        totals = self._services.dashboard.totals_of([item.transaction for item in items])
+        totals = self._services.dashboard.totals_of(
+            [item.transaction for item in items], self._account_id
+        )
         self.selection_bar.set_count(len(items), totals_html(totals, self._theme_manager.theme))

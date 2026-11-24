@@ -203,7 +203,6 @@ class GoalDialog(FormDialog):
         self.dated_input.toggled.connect(self.date_input.setEnabled)
         self.shares_input = AccountShares(self._share_rows())
         self.summary_label = hint_label()
-        self.summary_label.setWordWrap(True)
 
         self.form.addRow(_("Nombre"), self.name_input)
         self.form.addRow(_("Objetivo"), self.target_input)

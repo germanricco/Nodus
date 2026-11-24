@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLineEdit, QWidget
+from PySide6.QtWidgets import QCheckBox, QLineEdit, QWidget
 
 from nodus.i18n import _
 from nodus.models.account import Account, AccountType
@@ -14,6 +14,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, currency_label
 from nodus.ui.widgets.inputs.amount_input import AmountInput
 from nodus.ui.widgets.inputs.combo_box import ComboBox
+from nodus.ui.widgets.style import hint_label
 
 
 class AccountDialog(FormDialog):
@@ -59,6 +60,17 @@ class AccountDialog(FormDialog):
         self.bind_field(self.name_input, "name")
         self.bind_field(self.balance_input, "initial_balance")
         self.group_picker = GroupPicker(self, services, account.group_id if account else None)
+        self.excluded_input = QCheckBox(_("No sumar a mi patrimonio"))
+        self.form.addRow("", self.excluded_input)
+        self.form.addRow(
+            "",
+            hint_label(
+                _(
+                    "Para una cuenta que manejas pero no es tuya, como una compartida o la de "
+                    "otra persona: no suma a tu patrimonio, tus totales ni tus análisis."
+                )
+            ),
+        )
 
         if account:
             self._load(account)
@@ -69,6 +81,7 @@ class AccountDialog(FormDialog):
         self.currency_input.setCurrentIndex(self.currency_input.findData(account.currency))
         self.currency_input.setEnabled(False)
         self.balance_input.set_money(account.initial_balance)
+        self.excluded_input.setChecked(account.excluded)
 
     def missing(self) -> dict[QWidget, str]:
         return self.required((self.name_input, _(TYPE_NAME)), self.group_picker.required())
@@ -78,12 +91,15 @@ class AccountDialog(FormDialog):
         account_type: AccountType = self.type_input.currentData()
         initial_balance = self.balance_input.money()
         group_id = self.group_picker.group_id()
+        excluded = self.excluded_input.isChecked()
         if self._account:
             account_id = self._account.id
-            self._services.accounts.update(account_id, name, account_type, initial_balance)
+            self._services.accounts.update(
+                account_id, name, account_type, initial_balance, excluded
+            )
         else:
             account_id = self._services.accounts.create(
-                name, account_type, self.currency_input.currentData(), initial_balance
+                name, account_type, self.currency_input.currentData(), initial_balance, excluded
             ).id
         self._services.account_groups.move_account(account_id, group_id)
         self._event_bus.accounts_changed.emit()

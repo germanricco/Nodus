@@ -26,6 +26,7 @@ from nodus.services.conversion import (
     PeriodTotals,
     convert_movements,
     converted_movements,
+    counted,
     period_filter,
 )
 from nodus.services.transactions.transaction_service import TransactionService
@@ -142,7 +143,10 @@ class CategoryReportService:
             [],
         )  # fmt: skip
         ids = {category_id, *(child.id for child in children)}
-        own = self._transactions.list_transactions(TransactionFilter(category_id=category_id))
+        own = counted(
+            self._transactions,
+            self._transactions.list_transactions(TransactionFilter(category_id=category_id)),
+        )
         # A refund counts against the expense it pays back, which may be in this category.
         everything = convert_movements(
             self._transactions,
@@ -160,10 +164,10 @@ class CategoryReportService:
         by_month: dict[Month, Money] = defaultdict(lambda: Money.zero(HOME_CURRENCY))
         for movement in mine:
             by_month[Month.of(movement.transaction.occurred_on)] += movement.amount
-        counted = window.months_since(first_on, today) if first_on else []
+        active = window.months_since(first_on, today) if first_on else []
         average = (
-            Money(round(_sum(by_month[m] for m in counted).cents / len(counted)), HOME_CURRENCY)
-            if counted
+            Money(round(_sum(by_month[m] for m in active).cents / len(active)), HOME_CURRENCY)
+            if active
             else None
         )
         return CategorySummary(

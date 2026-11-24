@@ -55,10 +55,11 @@ class LatestTransactionsCard(Card):
     def show_period(self, period: Period, count: int = LATEST_COUNT) -> None:
         clear_layout(self._rows)
         # Extra rows leave room for transfers, whose two legs become one item.
-        # Only what already happened: installments still to come are not the latest.
+        # Only what already happened: installments still to come are not the latest. Only
+        # the user's own: Home is about their money.
         end = min(period.end, date.today())
         transactions = self._services.transactions.list_transactions(
-            TransactionFilter(start=period.start, end=end, limit=count * 2)
+            TransactionFilter(start=period.start, end=end, limit=count * 2, own_only=True)
         )
         self.model.set_items(self._builder.build(transactions)[:count])
         if not self.model.rowCount():

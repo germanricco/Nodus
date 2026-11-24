@@ -56,7 +56,6 @@ class MergeDialog(FormDialog):
         for name, item_id in candidates:
             self.target_input.addItem(name, item_id)
         self.result_label = hint_label()
-        self.result_label.setWordWrap(True)
         self.form.addRow(field_label if single else _("Queda"), self.target_input)
         self.form.addRow("", self.result_label)
 

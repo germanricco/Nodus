@@ -133,6 +133,14 @@ HELP_TOPICS = [
                 " su saldo y todos sus movimientos. Una cuenta que ya no usas se archiva desde su"
                 " menú; deja de sumar en tu patrimonio neto, pero sus movimientos se conservan."
             ),
+            N_(
+                "Si manejas una cuenta que no es tuya, como una compartida con otras personas o"
+                " la de alguien que te pidió llevarla, marca «No sumar a mi patrimonio» al"
+                " agregarla o editarla. Su saldo y sus movimientos quedan fuera del patrimonio,"
+                " los totales, los presupuestos"
+                " y los análisis, y la cuenta dice «Fuera del patrimonio». Lo que pones en ella"
+                " es una transferencia: baja tu patrimonio, pero no cuenta como gasto."
+            ),
         ),
         ("investments", "currencies"),
     ),

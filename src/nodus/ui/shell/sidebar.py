@@ -28,6 +28,7 @@ from nodus.ui.navigation import PageId, RecordLink
 from nodus.ui.shell import tour
 from nodus.ui.shell.coach_marks import mark_target
 from nodus.ui.shortcuts import page_keys, with_keys
+from nodus.ui.text.labels import EXCLUDED_HINT, EXCLUDED_MARK
 from nodus.ui.theme.design import ControlSize, IconSize, Layout, RowRole, Space
 from nodus.ui.theme.icons import icon, logo_pixmap
 from nodus.ui.theme.theme import Theme
@@ -52,11 +53,14 @@ def keep_whole(label: QLabel) -> None:
 
 
 class SidebarAccountRow(QWidget):
-    """An account and its balance in the sidebar; a click opens the account's page."""
+    """An account and its balance in the sidebar; a click opens the account's page. One
+    kept out of every total shows its balance muted, and why in its tooltip."""
 
     clicked = Signal()
 
-    def __init__(self, name: str, balance: Money, hidden: bool, indent: int = 0) -> None:
+    def __init__(
+        self, name: str, balance: Money, hidden: bool, indent: int = 0, excluded: bool = False
+    ) -> None:
         super().__init__()
         layout = row_layout(self, RowRole.SIDEBAR, indent)
         make_hoverable(self)
@@ -67,6 +71,9 @@ class SidebarAccountRow(QWidget):
         self.amount_label.set_money(balance)
         keep_whole(self.amount_label)
         layout.addWidget(self.amount_label)
+        if excluded:
+            set_style_property(self.amount_label, "muted", True)
+            self.setToolTip(f"{_(EXCLUDED_MARK)}. {_(EXCLUDED_HINT)}")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
@@ -276,7 +283,9 @@ class Sidebar(QFrame):
     ) -> None:
         hidden = self._services.settings.amounts_hidden()
         for account in accounts:
-            row = SidebarAccountRow(account.name, balances[account.id], hidden, indent)
+            row = SidebarAccountRow(
+                account.name, balances[account.id], hidden, indent, account.excluded
+            )
             row.clicked.connect(
                 lambda a=account.id: self.record_requested.emit(RecordLink.account(a))
             )

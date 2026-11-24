@@ -33,6 +33,10 @@ ENGLISH = {
     "Ahorro en dólares": "Dollar savings",
     "Euros del viaje": "Travel euros",
     "Inversiones": "Investments",
+    "Banda de rock": "Rock band",
+    "Mi parte del mes": "My share this month",
+    "Sala de ensayo": "Rehearsal room",
+    "Show en el bar": "Gig at the bar",
     "Bancos": "Banks",
     "Billeteras": "Wallets",
     "Ahorro e inversiones": "Savings and investments",
@@ -116,6 +120,7 @@ class DemoData:
         self.add_accounts()
         self.add_history()
         self.add_this_month()
+        self.add_shared_account()
         self.add_charges()
         self.add_installments()
         self.add_groups()
@@ -307,6 +312,20 @@ class DemoData:
                              shown("Heladera"), shown("Frávega")),
             InstallmentPlan(None, 6, ars("750000"), first_installment),
         )  # fmt: skip
+
+    def add_shared_account(self) -> None:
+        """The band's account, shared with friends and kept out of every total: the user
+        puts in their part, the band pays the rehearsal room and is paid for a gig."""
+        band = self.services.accounts.create(
+            shown("Banda de rock"), AccountType.BANK, Currency.ARS, ars("85000"), excluded=True
+        )
+        self.services.transfers.create(
+            TransferDraft(self.banco.id, band.id, ars("30000"), self.days_ago(6),
+                          note=shown("Mi parte del mes"))
+        )  # fmt: skip
+        self.record(band.id, EXPENSE, "Ocio", ars("48000"), self.days_ago(4), "Sala de ensayo")
+        self.record(band.id, INCOME, "Trabajo freelance", ars("120000"), self.days_ago(1),
+                    "Show en el bar")  # fmt: skip
 
     def add_groups(self) -> None:
         """Groups as a user would make them: the banks with their card, the wallet apart,

@@ -54,27 +54,45 @@ class AccountService:
         self._backups = backups
 
     def create(
-        self, name: str, account_type: AccountType, currency: Currency, initial_balance: Money
+        self,
+        name: str,
+        account_type: AccountType,
+        currency: Currency,
+        initial_balance: Money,
+        excluded: bool = False,
     ) -> Account:
-        """Adds the account last in the user's order; its name must be free."""
+        """Adds the account last in the user's order; its name must be free. An
+        ``excluded`` one is kept out of every total (``Account.excluded``)."""
         require_storable(initial_balance, "initial_balance")
-        account = Account(None, clean_name(name), account_type, currency, initial_balance)
+        account = Account(
+            None, clean_name(name), account_type, currency, initial_balance, excluded=excluded
+        )
         self._require_new_name(account)
         with self._database.transaction():
             position = self._accounts.next_position()
             return self._accounts.add(dataclasses.replace(account, position=position))
 
     def update(
-        self, account_id: int, name: str, account_type: AccountType, initial_balance: Money
+        self,
+        account_id: int,
+        name: str,
+        account_type: AccountType,
+        initial_balance: Money,
+        excluded: bool | None = None,
     ) -> None:
-        """Edits an account. The currency is fixed at creation: changing it would silently
-        reinterpret every amount already recorded in the account."""
+        """Edits an account; ``excluded`` stays as it was when None. The currency is fixed
+        at creation: changing it would silently reinterpret every amount already recorded
+        in the account."""
         existing = self.get(account_id)
         require_storable(initial_balance, "initial_balance")
         if initial_balance.currency is not existing.currency:
             raise ValidationError(_("No se puede cambiar la moneda de una cuenta."))
         updated = dataclasses.replace(
-            existing, name=clean_name(name), type=account_type, initial_balance=initial_balance
+            existing,
+            name=clean_name(name),
+            type=account_type,
+            initial_balance=initial_balance,
+            excluded=existing.excluded if excluded is None else excluded,
         )
         # Two accounts that were already called the same can still be edited.
         if normalize_name(updated.name) != normalize_name(existing.name):

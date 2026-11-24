@@ -44,7 +44,9 @@ class RecurringChargeDraft:
 
 @dataclass(frozen=True)
 class RecurringSummary:
-    """What the active charges cost together, in pesos.
+    """What the active charges cost together, in pesos. Those of an account kept out of
+    every total (``Account.excluded``) do not cost the user, so they add nothing, though
+    ``active`` counts them.
 
     Charges in another currency are converted at the latest rate; without one they are
     added up apart, one total per currency, in ``unconverted_monthly`` instead of being
@@ -239,7 +241,8 @@ class RecurringChargeService:
         monthly = Money.zero(HOME_CURRENCY)
         unconverted = {currency: Money.zero(currency) for currency in Currency}
         active = [c for c in self._charges.list() if c.is_active]
-        for charge in active:
+        excluded = self._transactions.excluded_account_ids()
+        for charge in (c for c in active if c.account_id not in excluded):
             amount = charge.monthly_amount(self.estimated_payment(charge, today))
             converted = self._exchange_rates.convert(amount, HOME_CURRENCY, today)
             if converted is None:

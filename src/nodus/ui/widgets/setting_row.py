@@ -30,7 +30,6 @@ class SettingRow(QWidget):
         self.title.setObjectName("RowTitle")
         self.title.setWordWrap(True)  # in two lines in a narrow window, not past the card
         self.detail = hint_label(detail)
-        self.detail.setWordWrap(True)
         texts.addWidget(self.title)
         texts.addWidget(self.detail)
         layout.addLayout(texts, stretch=1)

@@ -177,7 +177,9 @@ class AccountGroupService:
 
     def total(self, accounts: list[Account], balances: dict[int, Money], day: date) -> GroupTotal:
         """What ``accounts`` hold together on ``day``: exact in their currency when they
-        share one, converted to the net worth's currency otherwise."""
+        share one, converted to the net worth's currency otherwise. An account kept out of
+        every total (``Account.excluded``) shows its balance but adds nothing."""
+        accounts = [account for account in accounts if not account.excluded]
         currencies = {account.currency for account in accounts}
         if len(currencies) <= 1:
             currency = currencies.pop() if currencies else self._settings.net_worth_currency()

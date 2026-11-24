@@ -61,13 +61,11 @@ class BudgetDialog(FormDialog):
         self.category_input.setEnabled(category is None)
         self.amount_input = AmountInput(HOME_CURRENCY)
         self.suggestion_hint = hint_label()
-        self.suggestion_hint.setWordWrap(True)
         scope_hint = hint_label(
             _("Rige desde {month} en adelante; los meses anteriores conservan su límite.").format(
                 month=format_month_in_sentence(month)
             )
         )
-        scope_hint.setWordWrap(True)
 
         self.form.addRow(_("Categoría"), self.category_input)
         self.bind_field(self.category_input, "category_id")

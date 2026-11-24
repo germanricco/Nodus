@@ -55,7 +55,6 @@ class ValueAdjustmentDialog(FormDialog):
                 " gastos."
             )
         )
-        hint.setWordWrap(True)
 
         self.form.addRow(_("Fecha"), self.date_input)
         self.form.addRow(_("Saldo en Nodus"), self.balance_label)

@@ -1461,6 +1461,18 @@ msgstr "Name"
 msgid "Saldo inicial"
 msgstr "Starting balance"
 
+#: nodus/ui/dialogs/account_dialog.py
+msgid "No sumar a mi patrimonio"
+msgstr "Leave out of my net worth"
+
+#: nodus/ui/dialogs/account_dialog.py
+msgid ""
+"Para una cuenta que manejas pero no es tuya, como una compartida o la de otra persona: no suma a "
+"tu patrimonio, tus totales ni tus análisis."
+msgstr ""
+"For an account you manage but that isn't yours, such as a shared one or someone else's: it adds "
+"to neither your net worth, your totals nor your analysis."
+
 #: nodus/ui/dialogs/account_group_dialogs.py nodus/ui/pages/accounts_page.py
 msgid "Sin grupo"
 msgstr "No group"
@@ -2624,6 +2636,10 @@ msgid "Quitar presupuesto"
 msgstr "Remove budget"
 
 #: nodus/ui/pages/budgets_page.py
+msgid "Poner límite"
+msgstr "Set limit"
+
+#: nodus/ui/pages/budgets_page.py
 #, python-brace-format
 msgid "«{name}» deja de tener presupuesto desde {month}. Los meses anteriores conservan su límite."
 msgstr "“{name}” has no budget from {month} on. Earlier months keep their limit."
@@ -2656,10 +2672,6 @@ msgstr "No budget"
 #: nodus/ui/pages/budgets_page.py
 msgid "Lo gastado en el mes en categorías sin límite."
 msgstr "What you spent this month in categories without a limit."
-
-#: nodus/ui/pages/budgets_page.py
-msgid "Poner límite"
-msgstr "Set limit"
 
 #: nodus/ui/pages/budgets_page.py
 msgid "Todavía no hay presupuestos"
@@ -4100,6 +4112,20 @@ msgstr ""
 "stops counting in your net worth, but its transactions are kept."
 
 #: nodus/ui/text/help_texts.py
+msgid ""
+"Si manejas una cuenta que no es tuya, como una compartida con otras personas o la de alguien que "
+"te pidió llevarla, marca «No sumar a mi patrimonio» al agregarla o editarla. Su saldo y sus "
+"movimientos quedan fuera del patrimonio, los totales, los presupuestos y los análisis, y la "
+"cuenta dice «Fuera del patrimonio». Lo que pones en ella es una transferencia: baja tu "
+"patrimonio, pero no cuenta como gasto."
+msgstr ""
+"If you manage an account that isn't yours, such as one shared with other people or one you keep "
+"for someone else, tick “Leave out of my net worth” when you add or edit it. Its balance and its "
+"transactions stay out of your net worth, the totals, budgets and the analysis, and the account "
+"says “Outside net worth”. What you put into it is a transfer: it lowers your net worth, but it "
+"doesn't count as spending."
+
+#: nodus/ui/text/help_texts.py
 msgid "Anotar transacciones"
 msgstr "Recording transactions"
 
@@ -4661,6 +4687,14 @@ msgstr "Credit card"
 #: nodus/ui/text/labels.py
 msgid "Inversión"
 msgstr "Investment"
+
+#: nodus/ui/text/labels.py
+msgid "Fuera del patrimonio"
+msgstr "Outside net worth"
+
+#: nodus/ui/text/labels.py
+msgid "No suma a tu patrimonio ni a ningún total: es una cuenta que manejas pero no es tuya."
+msgstr "It adds to neither your net worth nor any total: it is an account you manage but that isn't yours."
 
 #: nodus/ui/text/labels.py
 #, python-brace-format

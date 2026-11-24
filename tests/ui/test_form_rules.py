@@ -5,7 +5,8 @@ defecto), checked on all of them so a new form cannot skip them:
   border and the focus on the first one; the foot of the dialog stays for the rest;
 - a field's message goes away as soon as that field changes, and only that one;
 - an error of a service's rule goes under the field it names;
-- no list starts on a choice the user did not make.
+- no list starts on a choice the user did not make;
+- no hint under a field widens its dialog: a long one wraps.
 """
 
 from collections.abc import Callable
@@ -14,7 +15,7 @@ from dataclasses import dataclass
 import pytest
 from factories import ars, category_id, charge_draft, expense_draft, light_theme
 from PySide6.QtCore import QRect, Qt
-from PySide6.QtWidgets import QComboBox, QLineEdit, QWidget
+from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QWidget
 
 from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
@@ -140,6 +141,14 @@ def fill(widget: QWidget) -> None:
 
 def save(qtbot, dialog: FormDialog) -> None:
     qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+
+def test_no_hint_widens_its_dialog(opened):
+    """A hint as long as a sentence wraps; one that did not would stretch the dialog
+    to its whole width, as the account's «No sumar a mi patrimonio» did."""
+    hints = [label for label in opened.findChildren(QLabel) if label.objectName() == "FieldHint"]
+
+    assert [label.text() for label in hints if not label.wordWrap()] == []
 
 
 def test_every_missing_field_says_so_under_itself(qtbot, opened, form):

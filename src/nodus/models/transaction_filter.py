@@ -17,6 +17,9 @@ class TransactionFilter:
     ``is_transfer`` keeps only transfer legs (True) or only income and expenses (False), and
     ``refund_linked`` only refunds and refunded expenses (True) or neither (False).
     ``installment_plan_id`` keeps the installments of one purchase.
+    ``own_only`` leaves out the income and expenses of the accounts kept out of every
+    total (``Account.excluded``), for a list of the user's own movements; transfers stay,
+    since they move the user's money.
     Dates are inclusive.
     """
 
@@ -31,4 +34,5 @@ class TransactionFilter:
     is_transfer: bool | None = None
     refund_linked: bool | None = None
     installment_plan_id: int | None = None
+    own_only: bool = False
     limit: int | None = None

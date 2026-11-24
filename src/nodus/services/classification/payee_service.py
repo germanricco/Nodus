@@ -20,7 +20,7 @@ from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.undo_service import UndoService
 from nodus.services.classification.category_service import CategoryService
 from nodus.services.classification.named_records import NamedRecordService
-from nodus.services.conversion import PeriodTotals, period_totals
+from nodus.services.conversion import PeriodTotals, counted, period_totals
 from nodus.services.errors import clean_name, require_free_name
 from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transactions.transaction_service import TransactionService
@@ -230,6 +230,7 @@ class PayeeService(NamedRecordService[Payee]):
         categories: dict[int, Category],
         period: Period,
     ) -> PayeeSummary:
+        transactions = counted(self._transactions, transactions)
         usage = Counter(t.category_id for t in transactions).most_common(1)
         return PayeeSummary(
             payee=payee,

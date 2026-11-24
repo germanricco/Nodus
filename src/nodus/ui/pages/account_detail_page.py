@@ -33,7 +33,12 @@ from nodus.ui.navigation import DetailId, RecordLink
 from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
 from nodus.ui.text.formatting import masked, signed
-from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, estimate_text
+from nodus.ui.text.labels import (
+    ACCOUNT_TYPE_LABELS,
+    EXCLUDED_HINT,
+    EXCLUDED_MARK,
+    estimate_text,
+)
 from nodus.ui.theme.design import Chart, Layout
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
@@ -186,6 +191,7 @@ class AccountDetailPage(DetailPage):
         today = self.today or date.today()
         self.set_title(account.name)
         self.context_label.setText(self._context(account))
+        self.context_label.setToolTip(_(EXCLUDED_HINT) if account.excluded else "")
         self.value_button.setVisible(account.type.changes_value and not account.is_archived)
         self._show_figures(account, today)
         self._show_goals(account)
@@ -242,12 +248,15 @@ class AccountDetailPage(DetailPage):
     # Building
 
     def _context(self, account: Account) -> str:
-        """ "Inversión · ARS · Ahorro e inversiones · Archivada"."""
+        """ "Inversión · ARS · Ahorro e inversiones · Archivada", and whether it is out of
+        the net worth."""
         details = [_(ACCOUNT_TYPE_LABELS[account.type]), account.currency.value]
         if account.group_id is not None:
             details.append(self._services.account_groups.get(account.group_id).name)
         if account.is_archived:
             details.append(_("Archivada"))
+        if account.excluded:
+            details.append(_(EXCLUDED_MARK))
         return " · ".join(details)
 
     def _show_figures(self, account: Account, today: date) -> None:

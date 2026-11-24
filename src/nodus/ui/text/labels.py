@@ -22,6 +22,13 @@ ACCOUNT_TYPE_LABELS = {
 }
 
 
+# An account kept out of every total (``Account.excluded``): its mark, and why.
+EXCLUDED_MARK = N_("Fuera del patrimonio")
+EXCLUDED_HINT = N_(
+    "No suma a tu patrimonio ni a ningún total: es una cuenta que manejas pero no es tuya."
+)
+
+
 def currency_label(currency: Currency) -> str:
     """ "Dólares (USD)", how a currency is offered in a list to choose from."""
     return f"{currency.name_plural.capitalize()} ({currency.value})"

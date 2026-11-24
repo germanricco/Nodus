@@ -53,7 +53,6 @@ class PayeeDialog(FormDialog):
             _(NO_DEFAULT_CATEGORY),
         )
         hint = hint_label(_("Se completa sola al elegir este beneficiario en un movimiento."))
-        hint.setWordWrap(True)
 
         self.form.addRow(_("Nombre"), self.name_input)
         self.bind_field(self.name_input, "name")

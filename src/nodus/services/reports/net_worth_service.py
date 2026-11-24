@@ -119,7 +119,9 @@ def trend_days(period: Period, today: date) -> list[date]:
 
 
 class NetWorthService:
-    """Combines account balances and exchange rates. Archived accounts are left out."""
+    """Combines account balances and exchange rates. Archived accounts are left out, and so
+    are the ones kept out of every total (``Account.excluded``), such as one shared with a
+    band: money moved there leaves the net worth as it leaves the user's hands."""
 
     def __init__(
         self,
@@ -133,7 +135,7 @@ class NetWorthService:
 
     def net_worth(self, day: date) -> NetWorth:
         """Balances at the end of ``day``, converted at that day's rate."""
-        currencies = {a.id: a.currency for a in self._accounts.list_accounts()}
+        currencies = self._counted_currencies()
         return self._net_worth(self._by_currency(currencies, self._accounts.balances(day)), day)
 
     def history(self, period: Period, today: date) -> list[NetWorthPoint]:
@@ -210,7 +212,7 @@ class NetWorthService:
         instead of one query per point.
         """
         end = days[-1]
-        currencies = {a.id: a.currency for a in self._accounts.list_accounts()}
+        currencies = self._counted_currencies()
         balances = self._accounts.balances(period.start - timedelta(days=1))
         by_currency = self._by_currency(currencies, balances)
         # Every change to a balance in the period: movements and value adjustments.
@@ -232,10 +234,14 @@ class NetWorthService:
             while index < len(changes) and changes[index][0] <= day:
                 _day, account_id, amount = changes[index]
                 index += 1
-                if account_id in currencies:  # archived accounts are left out
+                if account_id in currencies:  # archived and excluded accounts are left out
                     by_currency[amount.currency] += amount
             points.append(NetWorthPoint(day, self._net_worth(dict(by_currency), day)))
         return points
+
+    def _counted_currencies(self) -> dict[int, Currency]:
+        """The currency of each account the net worth adds up: active and not excluded."""
+        return {a.id: a.currency for a in self._accounts.list_accounts() if not a.excluded}
 
     def rate_effect(self, end: NetWorthPoint, start_day: date, target: Currency) -> Money | None:
         """How much of the change in ``target`` since ``start_day`` comes from the rates

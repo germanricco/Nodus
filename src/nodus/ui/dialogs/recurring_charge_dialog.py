@@ -199,7 +199,6 @@ class PayChargeDialog(FormDialog):
         self.account_input.select(charge.account_id)
         self.charge_label = QLabel(charge.amount.format())
         self.rate_hint = hint_label()
-        self.rate_hint.setWordWrap(True)
         self.date_input = DateInput()
         self.date_input.set_day(self._today)
         self.next_hint = hint_label(
@@ -207,7 +206,6 @@ class PayChargeDialog(FormDialog):
                 date=format_date(charge.following_due())
             )
         )
-        self.next_hint.setWordWrap(True)
 
         self.form.addRow(_("Cargo"), self.charge_label)
         self.form.addRow(_("Monto"), self.amount_input)

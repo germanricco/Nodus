@@ -15,6 +15,7 @@ from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.navigation import PageId
 from nodus.ui.pages import accounts_page
 from nodus.ui.pages.accounts_page import AccountRow, AccountsPage
+from nodus.ui.shell.sidebar import SidebarAccountRow
 
 
 @pytest.fixture
@@ -33,6 +34,21 @@ def texts(widget) -> list[str]:
 def rows(page) -> list[AccountRow]:
     """Current rows; rows of a replaced card linger hidden until Qt deletes them."""
     return [row for row in page.findChildren(AccountRow) if row.isVisibleTo(page)]
+
+
+def test_an_account_out_of_the_net_worth_says_so(qtbot, services, event_bus, window):
+    """In Cuentas, in its detail line; in the sidebar, its balance muted, and why."""
+    services.accounts.create("Banda", AccountType.BANK, Currency.ARS, ars("50000"), excluded=True)
+    event_bus.accounts_changed.emit()
+    window.show_page(PageId.ACCOUNTS)
+    page = window.page(PageId.ACCOUNTS)
+
+    [row] = rows(page)
+    sidebar_row = window.sidebar.findChild(SidebarAccountRow)
+
+    assert "Cuenta bancaria · ARS · Fuera del patrimonio" in texts(row)
+    assert sidebar_row.amount_label.property("muted")
+    assert sidebar_row.toolTip().startswith("Fuera del patrimonio.")
 
 
 class TestAccountDialog:
@@ -56,6 +72,17 @@ class TestAccountDialog:
             "Dólares", AccountType.SAVINGS, usd("1500.50"),
         )  # fmt: skip
         assert dialog.result() == AccountDialog.DialogCode.Accepted
+
+    def test_an_account_can_be_left_out_of_the_net_worth(self, qtbot, services, event_bus):
+        """«No sumar a mi patrimonio», for one shared with a band; editing shows it."""
+        dialog = self.make(qtbot, services, event_bus)
+        dialog.name_input.setText("Banda")
+        dialog.excluded_input.setChecked(True)
+        qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
+
+        [band] = services.accounts.list_accounts()
+        assert band.excluded
+        assert self.make(qtbot, services, event_bus, band).excluded_input.isChecked()
 
     def test_validation_error_is_shown_and_dialog_stays_open(self, qtbot, services, event_bus):
         dialog = self.make(qtbot, services, event_bus)

@@ -130,7 +130,6 @@ class TransactionDialog(FormDialog):
         self.amount_in_input = AmountInput(Currency.USD)
         self.installment_fields = InstallmentFields()
         self.installments_hint = hint_label()
-        self.installments_hint.setWordWrap(True)  # a long hint wraps; it never widens
         self.installments_hint.hide()
         self.rate_hint = hint_label()
         self.payee_input = PayeeInput(services.payees, self._payee_context)

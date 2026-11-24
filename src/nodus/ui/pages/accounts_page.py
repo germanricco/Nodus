@@ -28,7 +28,7 @@ from nodus.ui.navigation import DetailId, PageId, history_focus
 from nodus.ui.pages.base.net_worth_card import NetWorthCard
 from nodus.ui.pages.base.page import Page
 from nodus.ui.text.formatting import masked, signed
-from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS
+from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, EXCLUDED_HINT, EXCLUDED_MARK
 from nodus.ui.theme.design import RowRole, RowSpace, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.undo import offer_undo
@@ -99,7 +99,11 @@ class AccountRow(QWidget):
         if value_change is not None and not value_change.is_zero:
             change = masked(value_change) if hide_balance else signed(value_change)
             details.append(_("Rendimiento {amount}").format(amount=change))
+        if account.excluded:
+            details.append(_(EXCLUDED_MARK))
         subtitle = row_detail(" · ".join(details))
+        if account.excluded:
+            subtitle.setToolTip(_(EXCLUDED_HINT))
         texts.addWidget(name)
         texts.addWidget(subtitle)
         layout.addLayout(texts, stretch=1)

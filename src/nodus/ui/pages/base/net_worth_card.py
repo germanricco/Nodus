@@ -127,7 +127,7 @@ class NetWorthCard(Card):
         header.addWidget(self.currency_input)
         header.addStretch()
         self.change_badge = ChangeBadge()
-        self.change_caption = hint_label(_(CHANGE_CAPTION))
+        self.change_caption = hint_label(_(CHANGE_CAPTION), wrap=False)
         change = QVBoxLayout()
         change.setSpacing(Space.XXS)
         change.addWidget(self.change_badge, alignment=Qt.AlignmentFlag.AlignRight)
@@ -186,7 +186,7 @@ class NetWorthCard(Card):
         self.legends = {currency: CurrencyLegend(currency) for currency in Currency}
         for item in self.legends.values():
             legend.addWidget(item)
-        self.rate_label = hint_label()
+        self.rate_label = hint_label(wrap=False)
         legend.addWidget(self.rate_label)
         self.body.addLayout(legend)
 

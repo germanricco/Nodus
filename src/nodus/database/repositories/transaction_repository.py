@@ -137,6 +137,8 @@ class TransactionRepository(Repository):
             if value is not None:
                 conditions.append(condition)
                 params.extend([_sql_value(value)] * condition.count("?"))
+        if criteria.own_only:
+            conditions.append("(a.excluded = 0 OR t.transfer_id IS NOT NULL)")
         if criteria.is_transfer is not None:
             conditions.append(
                 "t.transfer_id IS NOT NULL" if criteria.is_transfer else "t.transfer_id IS NULL"
