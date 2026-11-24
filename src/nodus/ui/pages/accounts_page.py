@@ -27,7 +27,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId, PageId, history_focus
 from nodus.ui.pages.base.net_worth_card import NetWorthCard
 from nodus.ui.pages.base.page import Page
-from nodus.ui.text.formatting import signed
+from nodus.ui.text.formatting import masked, signed
 from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.theme.design import RowRole, RowSpace, Space
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -35,7 +35,7 @@ from nodus.ui.undo import offer_undo
 from nodus.ui.widgets.archived_section import ArchivedSection
 from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
-from nodus.ui.widgets.money_label import MoneyLabel, masked, total_text
+from nodus.ui.widgets.money_label import MoneyLabel, total_text
 from nodus.ui.widgets.style import clear_layout
 from nodus.ui.widgets.tables.reorderable_list import ReorderableList
 from nodus.ui.widgets.tables.row_actions import (

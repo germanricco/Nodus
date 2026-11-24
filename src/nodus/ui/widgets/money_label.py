@@ -7,17 +7,12 @@ from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.i18n import _
-from nodus.models.language_format import with_symbol
 from nodus.models.money import Money
 from nodus.services.accounts.account_group_service import GroupTotal
+from nodus.ui.text.formatting import masked, signed
 from nodus.ui.theme.design import Easing, Motion, motion_ms
 from nodus.ui.widgets.charts import chart_base
 from nodus.ui.widgets.style import RIGHT_ALIGNED, set_style_property
-
-
-def masked(money: Money) -> str:
-    """ "$ ••••": only the currency of an amount the user chose to hide."""
-    return with_symbol(money.currency.symbol, "••••")
 
 
 def amount_text(money: Money, hidden: bool) -> str:
@@ -32,9 +27,7 @@ def month_change_text(change: Money | None, hidden: bool) -> str:
         return ""
     if change.is_zero:
         return _("Sin cambios este mes")
-    sign = "-" if change.is_negative else "+"
-    size = -change if change.is_negative else change
-    return _("{sign}{amount} este mes").format(sign=sign, amount=amount_text(size, hidden))
+    return _("{amount} este mes").format(amount=signed(change, hidden))
 
 
 def total_text(total: GroupTotal, hidden: bool) -> tuple[str, str]:

@@ -1,16 +1,29 @@
 """Formatting of values for display. Date and month formats live in models, so services can
 use them too; they are re-exported here for the interface."""
 
-from nodus.models.language_format import format_percent
+from nodus.models.language_format import format_percent, with_symbol
 from nodus.models.money import Money
 from nodus.models.period import format_date, format_month
 
 __all__ = ["format_date", "format_month"]
 
 
-def signed(money: Money) -> str:
-    """ "+$ 118.400,00" or "-$ 2.000,00": a change always shows its sign."""
-    return money.format() if money.is_negative else f"+{money.format()}"
+def sign(negative: bool) -> str:
+    """The sign every change shows, also a positive one: "-" or "+"."""
+    return "-" if negative else "+"
+
+
+def masked(money: Money) -> str:
+    """ "$ ••••": only the currency of an amount the user chose to hide."""
+    return with_symbol(money.currency.symbol, "••••")
+
+
+def signed(money: Money, hidden: bool = False) -> str:
+    """ "+$ 118.400,00" or "-$ 2.000,00": a change always shows its sign, also when the
+    amounts are hidden ("+$ ••••")."""
+    if hidden:
+        return f"{sign(money.is_negative)}{masked(money)}"
+    return money.format() if money.is_negative else f"{sign(False)}{money.format()}"
 
 
 def percent(part: Money, whole: Money) -> str:

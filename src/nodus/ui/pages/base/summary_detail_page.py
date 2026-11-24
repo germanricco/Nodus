@@ -20,14 +20,13 @@ from nodus.ui.navigation import DetailId
 from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.summary_page import S
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
-from nodus.ui.text.formatting import format_date
+from nodus.ui.text.formatting import format_date, masked
 from nodus.ui.text.labels import unconverted_note
 from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.hero_figure import HeroFigure
-from nodus.ui.widgets.money_label import masked
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
 from nodus.ui.widgets.tables.transaction_table import Omit
 

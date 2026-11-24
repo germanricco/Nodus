@@ -32,7 +32,7 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId, RecordLink
 from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
-from nodus.ui.text.formatting import signed
+from nodus.ui.text.formatting import masked, signed
 from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS, estimate_text
 from nodus.ui.theme.design import Chart, Layout
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -44,7 +44,7 @@ from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.link_line import Link, LinkLine
-from nodus.ui.widgets.money_label import MoneyLabel, amount_text, masked, month_change_text
+from nodus.ui.widgets.money_label import MoneyLabel, amount_text, month_change_text
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.charge_row import UpcomingPaymentRow
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction

@@ -7,6 +7,7 @@ from enum import Enum
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.models.language_format import format_decimal, format_percent
+from nodus.ui.text.formatting import sign
 from nodus.ui.widgets.style import set_style_property
 
 
@@ -20,7 +21,7 @@ def format_change(change: float, unit: str = "%") -> str:
 
 def format_signed_percent(change: float) -> str:
     """ "+1,2 %" or "-0,4 %": a part of a change, written as the badge writes it."""
-    return f"{'-' if change < 0 else '+'}{format_percent(_percent_number(change))}"
+    return f"{sign(change < 0)}{format_percent(_percent_number(change))}"
 
 
 def _percent_number(change: float) -> str:

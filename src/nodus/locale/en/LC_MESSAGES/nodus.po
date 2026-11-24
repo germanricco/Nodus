@@ -4760,8 +4760,8 @@ msgstr "No change this month"
 
 #: nodus/ui/widgets/money_label.py
 #, python-brace-format
-msgid "{sign}{amount} este mes"
-msgstr "{sign}{amount} this month"
+msgid "{amount} este mes"
+msgstr "{amount} this month"
 
 #: nodus/ui/widgets/money_label.py
 msgid "Falta una cotización para sumar las cuentas de este grupo."
