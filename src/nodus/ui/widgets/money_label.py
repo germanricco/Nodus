@@ -46,7 +46,9 @@ class MoneyLabel(QLabel):
 
     With ``highlight_positive`` positive amounts turn green too, which suits income and
     expense lists; balances leave them in the normal text color. ``set_hidden`` masks the
-    figure, for when someone else can see the screen.
+    figure, for when someone else can see the screen; the label keeps the width of the
+    figure, so hiding amounts never moves what is around them (a legend that wraps, the
+    chart under it).
     """
 
     def __init__(
@@ -72,6 +74,31 @@ class MoneyLabel(QLabel):
 
     def _text(self, money: Money) -> str:
         return masked(money) if self._hidden else money.format()
+
+    def _figure(self) -> Money | None:
+        """The amount it stands for, whatever it shows now."""
+        return self._value
+
+    def _sized_for_figure(self) -> bool:
+        """Whether the layout sizes it for the whole figure, not for what it shows."""
+        return self._hidden
+
+    def _figure_size(self, hint: QSize) -> QSize:
+        figure = self._figure()
+        if figure is None:
+            return hint
+        margins = self.contentsMargins()
+        width = self.fontMetrics().horizontalAdvance(figure.format())
+        width += margins.left() + margins.right() + 2 * self.margin()
+        return QSize(max(width, hint.width()), hint.height())
+
+    def sizeHint(self) -> QSize:  # noqa: N802
+        hint = super().sizeHint()
+        return self._figure_size(hint) if self._sized_for_figure() else hint
+
+    def minimumSizeHint(self) -> QSize:  # noqa: N802
+        hint = super().minimumSizeHint()
+        return self._figure_size(hint) if self._sized_for_figure() else hint
 
     def _tone(self, money: Money) -> str:
         if money.is_negative:
@@ -105,6 +132,12 @@ class AnimatedMoneyLabel(MoneyLabel):
 
     def money(self) -> Money | None:
         return self._money
+
+    def _figure(self) -> Money | None:
+        return self._money
+
+    def _sized_for_figure(self) -> bool:
+        return self._hidden or self._compact_when_narrow
 
     def set_money(self, money: Money) -> None:
         previous = self._money
@@ -151,21 +184,6 @@ class AnimatedMoneyLabel(MoneyLabel):
 
     def _fits(self, text: str) -> bool:
         return self.fontMetrics().horizontalAdvance(text) <= self.contentsRect().width()
-
-    def _full_text_size(self, hint: QSize) -> QSize:
-        if self._money is None:
-            return hint
-        margins = self.contentsMargins()
-        width = self.fontMetrics().horizontalAdvance(self._money.format())
-        return QSize(width + margins.left() + margins.right() + 2 * self.margin(), hint.height())
-
-    def sizeHint(self) -> QSize:  # noqa: N802
-        hint = super().sizeHint()
-        return self._full_text_size(hint) if self._compact_when_narrow else hint
-
-    def minimumSizeHint(self) -> QSize:  # noqa: N802
-        hint = super().minimumSizeHint()
-        return self._full_text_size(hint) if self._compact_when_narrow else hint
 
     def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802
         super().resizeEvent(event)

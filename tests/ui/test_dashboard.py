@@ -14,7 +14,7 @@ from factories import (
     usd,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QScrollArea
+from PySide6.QtWidgets import QApplication, QLabel, QScrollArea
 
 from nodus.database.database import Database
 from nodus.models.account import AccountType
@@ -487,3 +487,30 @@ def test_a_month_of_the_cash_flow_opens_its_movements(qtbot, window, services, p
 
     assert window.current_page is window.page(PageId.TRANSACTIONS)
     assert window.page(PageId.TRANSACTIONS).period_selector.period() == Period.of_months(month)
+
+
+def test_hiding_the_amounts_moves_nothing_on_the_net_worth(qtbot, window, services):
+    """A masked amount keeps the width of the figure, so the legend under the chart does
+    not fit in fewer lines and the chart does not grow (seen by the user)."""
+    for name, currency, amount in (
+        ("Banco", Currency.ARS, ars("1715086.85")),
+        ("Ahorro", Currency.USD, usd("1350")),
+        ("Viaje", Currency.EUR, eur("150")),
+    ):
+        services.accounts.create(name, AccountType.BANK, currency, amount)
+    first = date.today().replace(day=1)
+    services.exchange_rates.set_rate(first, Decimal("1215.50"))
+    services.exchange_rates.set_rate(first, Decimal("1410"), Currency.EUR)
+    window.resize(1100, 800)
+    window.show_page(PageId.DASHBOARD)
+    card = dashboard(window).net_worth_card
+    QApplication.processEvents()
+    shown = card.chart.height()
+    legend = card.legends[Currency.ARS].amount
+
+    window.toggle_amounts_hidden()
+    QApplication.processEvents()
+
+    assert legend.text().endswith("••••")
+    assert legend.sizeHint().width() >= legend.fontMetrics().horizontalAdvance("$ 1.715.086,85")
+    assert card.chart.height() == shown
