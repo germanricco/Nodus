@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QPushButton, QWidget
 
 from nodus.ui.dialogs.tag_dialogs import TagDialog
+from nodus.ui.navigation import PageId
 
 BUTTON_STYLES = ["PrimaryButton", "SecondaryButton", "SmallButton", "DangerButton"]
 # Buttons with a ring of their own: the sidebar, segments and tabs.
@@ -75,5 +76,43 @@ def test_closing_ayuda_leaves_no_button_focused(qtbot, window):
     window.toggle_help()
 
     window.toggle_help()
+
+    assert not isinstance(window.focusWidget(), QPushButton)
+
+
+def test_a_button_lets_go_of_a_focus_nobody_moved_to_it(qtbot, theme_manager):
+    _row, _field, button = row_with(qtbot, "SecondaryButton")
+
+    button.setFocus(Qt.FocusReason.OtherFocusReason)
+    qtbot.waitUntil(lambda: not button.hasFocus())
+
+
+def test_a_button_keeps_a_focus_moved_with_tab(qtbot, theme_manager):
+    _row, field, button = row_with(qtbot, "SecondaryButton")
+
+    qtbot.keyClick(field, Qt.Key.Key_Tab)
+    qtbot.wait(10)
+
+    assert button.hasFocus()
+
+
+@pytest.mark.parametrize(
+    ("start", "kind", "target"),
+    [
+        (PageId.TRANSACTIONS, QLineEdit, PageId.BUDGETS),
+        (PageId.PAYEES, QLineEdit, PageId.ANALYSIS),
+        (PageId.CATEGORIES, QLineEdit, PageId.DASHBOARD),
+    ],
+)
+def test_leaving_a_page_leaves_no_button_focused(qtbot, window, start, kind, target):
+    """The search field or the table held the focus; the next page's first button (the
+    month's «‹», «Tendencias», «Pagar») must not light up for it."""
+    window.activateWindow()
+    qtbot.waitUntil(window.isActiveWindow)
+    window.show_page(start)
+    next(w for w in window.page(start).findChildren(kind) if w.isVisible()).setFocus()
+
+    window.show_page(target)
+    qtbot.wait(10)
 
     assert not isinstance(window.focusWidget(), QPushButton)
