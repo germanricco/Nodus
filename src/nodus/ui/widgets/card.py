@@ -59,10 +59,15 @@ def titled_figure(card: Card, title: str, value: QLabel) -> QHBoxLayout:
     return row
 
 
+def link_text(text: str) -> str:
+    """``text`` with the «›» that ends every link leading to more."""
+    return f"{text} ›"
+
+
 def see_all_link(header: QHBoxLayout, text: str, slot: Callable[[], object]) -> QPushButton:
     """A small link at the right of a card's header to the page with the whole list, in
     the same place on every card and without taking a row of its own."""
-    button = QPushButton(f"{text} ›")
+    button = QPushButton(link_text(text))
     button.setObjectName("LinkButton")
     button.setCursor(Qt.CursorShape.PointingHandCursor)
     button.clicked.connect(slot)

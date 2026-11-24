@@ -23,7 +23,7 @@ from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import NO_RATE_TEXT, rate_text
 from nodus.ui.theme.design import Layout, RowRole, Space
 from nodus.ui.widgets.busy import start_busy, stop_busy
-from nodus.ui.widgets.card import Card, card_title
+from nodus.ui.widgets.card import Card, card_title, link_text, see_all_link
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.flow_layout import FlowLayout
 from nodus.ui.widgets.inputs.amount_input import AmountInput
@@ -34,6 +34,8 @@ from nodus.ui.widgets.style import clear_layout, muted_label, secondary_button
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
 from nodus.ui.widgets.tables.row_layout import row_layout, row_list
 from nodus.ui.widgets.toast import show_toast
+
+RATES_SHOWN = 3  # the history's last rates; «Ver todas» shows the rest
 
 
 def rate_currency_labels() -> list[str]:
@@ -93,9 +95,14 @@ class RatesCard(Card):
         self._add_current_rate()
         self._add_rate_form()
 
-        history_title = card_title(_("Historial"))
+        # The last few at a glance; the rest a click away, so the card stays short.
+        self._history_open = False
+        header = QHBoxLayout()
+        header.addWidget(card_title(_("Historial")))
+        header.addStretch()
+        self.see_all_button = see_all_link(header, _("Ver todas"), self._toggle_history)
         self.body.addSpacing(Space.S)
-        self.body.addWidget(history_title)
+        self.body.addLayout(header)
         self._history = row_list()
         self.body.addLayout(self._history)
 
@@ -265,10 +272,18 @@ class RatesCard(Card):
         history = self._services.exchange_rates.history(currency)
         if not history:
             self._history.addWidget(self._no_rates_state())
-        for rate in history:
+        self.see_all_button.setVisible(len(history) > RATES_SHOWN)
+        self.see_all_button.setText(
+            _("Ver menos") if self._history_open else link_text(_("Ver todas"))
+        )
+        for rate in history if self._history_open else history[:RATES_SHOWN]:
             row = RateRow(rate)
             row.delete_requested.connect(self._delete_rate)
             self._history.addWidget(row)
+
+    def _toggle_history(self) -> None:
+        self._history_open = not self._history_open
+        self._refresh_rates()
 
     def _no_rates_state(self) -> EmptyState:
         """No rates yet: fetch them now with an automatic source, or type one in."""

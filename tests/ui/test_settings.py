@@ -56,6 +56,35 @@ def test_saving_rate_adds_it_to_history(qtbot, services, event_bus, page):
     assert page.rates.rate_value_input.line_edit.text() == ""
 
 
+def test_the_history_shows_the_last_rates_and_the_rest_on_asking(services, event_bus, page):
+    for day in range(1, 6):
+        services.exchange_rates.set_rate(date(2026, 11, day), Decimal(1000 + day))
+    event_bus.exchange_rates_changed.emit()
+    page.refresh()
+
+    assert [row.rate.rate for row in rate_rows(page)] == [
+        Decimal(1005),
+        Decimal(1004),
+        Decimal(1003),
+    ]
+    assert page.rates.see_all_button.isVisibleTo(page)
+
+    page.rates.see_all_button.click()
+    assert len(rate_rows(page)) == 5
+    assert page.rates.see_all_button.text() == "Ver menos"
+
+    page.rates.see_all_button.click()
+    assert len(rate_rows(page)) == 3
+
+
+def test_a_short_history_has_nothing_more_to_show(services, page):
+    services.exchange_rates.set_rate(date(2026, 11, 1), Decimal(1000))
+    page.refresh()
+
+    assert len(rate_rows(page)) == 1
+    assert not page.rates.see_all_button.isVisibleTo(page)
+
+
 def test_invalid_rate_shows_error(services, page):
     page.rates.rate_value_input.line_edit.setText("0")
 

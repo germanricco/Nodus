@@ -5,7 +5,7 @@ from __future__ import annotations
 from html import escape
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QLabel, QSizePolicy
 
 from nodus.i18n import _
 from nodus.models.money import Money
@@ -140,6 +140,7 @@ class TransactionListView(Card):
         self.body.addWidget(self.summary_label)
         self.body.addWidget(self.table)
         self.body.addWidget(self.empty_state, stretch=1)
+        self._rows_height: int | None = None
         theme_manager.theme_changed.connect(self.model.set_theme)
         theme_manager.theme_changed.connect(self._show_summary)
         theme_manager.theme_changed.connect(self._update_actions)
@@ -157,8 +158,22 @@ class TransactionListView(Card):
         self.summary_label.setVisible(has_rows)
         self.table.setVisible(has_rows)
         self.empty_state.setVisible(not has_rows)
+        self._fit_height(has_rows)
         self._update_actions()
         return has_rows
+
+    def keep_height(self, rows_height: int) -> None:
+        """On a record's page: at least ``rows_height`` tall with movements, and only as
+        tall as its message without them, so an empty list does not fill the page."""
+        self._rows_height = rows_height
+        self._fit_height(self.table.isVisibleTo(self))
+
+    def _fit_height(self, has_rows: bool) -> None:
+        if self._rows_height is None:
+            return  # the list is the page: it fills it, with movements or not
+        self.setMinimumHeight(self._rows_height if has_rows else 0)
+        vertical = QSizePolicy.Policy.Expanding if has_rows else QSizePolicy.Policy.Maximum
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, vertical)
 
     def selected_items(self) -> list[TransactionListItem]:
         return [self.model.item(row) for row in self.table.selected_rows()]

@@ -100,3 +100,13 @@ def test_in_a_short_window_a_record_page_scrolls_instead_of_squeezing(window, se
             assert chart.height() == Chart.DETAIL_HEIGHT, visit
         for movements in shown(page, TransactionListView):
             assert movements.height() >= Layout.DETAIL_LIST_MIN_HEIGHT, visit
+
+
+def test_a_record_with_no_movements_shows_its_message_without_an_empty_card(window, pesos):
+    window.resize(1280, 1000)
+    window.show_detail(DetailId.ACCOUNT, pesos.id)
+    QApplication.processEvents()
+    page = window.current_page
+
+    assert page.list_view.empty_state.isVisibleTo(page)
+    assert page.list_view.height() < Layout.DETAIL_LIST_MIN_HEIGHT

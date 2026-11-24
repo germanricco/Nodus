@@ -3283,7 +3283,7 @@ msgstr "Bring my data from another computer"
 msgid "Últimas transacciones"
 msgstr "Latest transactions"
 
-#: nodus/ui/pages/dashboard/latest_transactions_card.py
+#: nodus/ui/pages/dashboard/latest_transactions_card.py nodus/ui/pages/settings/rates_card.py
 msgid "Ver todas"
 msgstr "View all"
 
@@ -3625,6 +3625,10 @@ msgstr "Offline"
 #: nodus/ui/pages/settings/rates_card.py
 msgid "Cotización guardada."
 msgstr "Exchange rate saved."
+
+#: nodus/ui/pages/settings/rates_card.py
+msgid "Ver menos"
+msgstr "See less"
 
 #: nodus/ui/pages/settings/rates_card.py
 msgid "Sin cotizaciones."
