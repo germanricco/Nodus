@@ -208,6 +208,9 @@ def test_categories_go_from_the_total_to_each_against_the_period_before(
     first, rest = card.rows[0], card.rows[-1]
     assert first.findChild(ChangeBadge).text() == "↗ 100 %"
     assert card.bars[first.link.item_id].fraction == pytest.approx(800 / 3600)
+    # Each share also in figures, as Categorías shows it: 800 of 3600, and the rest 300.
+    assert "22 %" in [label.text() for label in first.findChildren(QLabel)]
+    assert "8 %" in [label.text() for label in rest.findChildren(QLabel)]
     assert rest.link is None
     assert "$ 300,00" in [label.text() for label in rest.findChildren(QLabel)]  # 200 + 100
 

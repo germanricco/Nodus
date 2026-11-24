@@ -20,7 +20,7 @@ from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts.chart_base import shown_fractions
 from nodus.ui.widgets.charts.share_bar import ShareBar
 from nodus.ui.widgets.empty_state import EmptyState
-from nodus.ui.widgets.style import amount_label, clear_layout
+from nodus.ui.widgets.style import RIGHT_ALIGNED, amount_label, clear_layout, muted_label
 from nodus.ui.widgets.tables.category_line import CategoryLine
 from nodus.ui.widgets.tables.row_layout import row_list
 
@@ -48,9 +48,9 @@ class CategoryItem:
 class CategoriesCard(Card):
     """Where the money went in the period, from the whole to its parts: the total spent
     under the title, with its change against the previous period, then the categories
-    that took the most, each with a bar of its share on the same base, its amount and its
-    own change; the rest in one line. A click on a category opens its page (plan 029a,
-    5.7)."""
+    that took the most, each with a bar of its share on the same base, the share in
+    percent (as in Categorías), its amount and its own change; the rest in one line. A
+    click on a category opens its page (plan 029a, 5.7)."""
 
     record_requested = Signal(object)  # RecordLink
 
@@ -87,7 +87,9 @@ class CategoriesCard(Card):
             bar = ShareBar(theme, max(0.0, share), item.color, starts.get(item.key))
             bar.setMinimumWidth(Layout.SHARE_BAR_MIN_WIDTH)
             row.add(bar, stretch=1)
-            bar.setToolTip(percent(item.current, total))
+            share_label = row.add(muted_label(percent(item.current, total)))
+            share_label.setFixedWidth(Layout.SHARE_PERCENT_WIDTH)
+            share_label.setAlignment(RIGHT_ALIGNED)
             amount = row.add(amount_label(item.current))
             amount.setMinimumWidth(Layout.SHARE_AMOUNT_WIDTH)
             badge = ChangeBadge(higher_is_better=False, none_text=_("Nueva"))
