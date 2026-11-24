@@ -254,9 +254,12 @@ class Layout:
     TREE_INDENT = 28  # a subcategory in Categorías, which has room for more
     # The columns of Categorías, the same on every row so the bars and amounts line up.
     SHARE_BAR_WIDTH = 160
+    # A category row narrower than this leaves its name the room of its bar, its percent
+    # and its «sistema» tag.
+    CATEGORY_ROW_ROOM = 640
     SHARE_BAR_MIN_WIDTH = 80  # a bar that stretches with its card, at the least
     SHARE_PERCENT_WIDTH = 48
-    SHARE_AMOUNT_WIDTH = 150
+    SHARE_AMOUNT_WIDTH = 136
     CHECK_COLUMN = 34  # a table's check boxes
     # The columns of a list of movements, the same on every row so dates, categories and
     # amounts line up; only the movement itself stretches.
@@ -265,6 +268,8 @@ class Layout:
     MOVEMENT_CATEGORY_NARROW_WIDTH = 170  # in a list narrower than NARROW_LIST_WIDTH
     MOVEMENT_AMOUNT_WIDTH = 150
     NARROW_LIST_WIDTH = 900
+    # What a table keeps for its name or movement before it drops its other columns.
+    STRETCH_COLUMN_MIN = 120
     MORE_COLUMN = 32  # a table's «⋯»
     # A figure tile: narrower, its caption and value feel cramped, so FigureRow wraps.
     FIGURE_TILE_MIN_WIDTH = 160

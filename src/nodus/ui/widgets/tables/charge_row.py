@@ -17,7 +17,7 @@ from nodus.ui.widgets.change_badge import Tone, status_pill
 from nodus.ui.widgets.pay_button import PayButton
 from nodus.ui.widgets.style import RIGHT_ALIGNED, amount_label, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
-from nodus.ui.widgets.tables.row_layout import row_layout, row_lines
+from nodus.ui.widgets.tables.row_layout import row_layout, row_lines, row_title
 
 DUE_TONES = {
     DueStatus.OVERDUE: Tone.BAD,
@@ -86,8 +86,7 @@ class UpcomingPaymentRow(QWidget):
         install_row_actions(self, self.actions)
         layout = row_layout(self, RowRole.DOUBLE)
         texts = row_lines()
-        name = QLabel(charge.name)
-        name.setObjectName("RowTitle")
+        name = row_title(charge.name)
         texts.addWidget(name)
         texts.addWidget(
             due_status_label(charge, today, quiet), alignment=Qt.AlignmentFlag.AlignLeft

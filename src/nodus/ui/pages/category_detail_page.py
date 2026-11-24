@@ -33,6 +33,7 @@ from nodus.ui.widgets.style import amount_label, clear_layout, muted_label
 from nodus.ui.widgets.tables.category_line import CategoryLine
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
 from nodus.ui.widgets.tables.row_layout import row_list
+from nodus.ui.widgets.tables.table import set_column_shown
 from nodus.ui.widgets.tables.transaction_table import CATEGORY
 
 THIS_MONTH = N_("Este mes")
@@ -160,7 +161,7 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
             else _("Le pasa sus movimientos a otra y la elimina")
         )
         # A parent's movements may be in any of its subcategories, so its rows say which.
-        self.list_view.table.setColumnHidden(CATEGORY, not summary.children)
+        set_column_shown(self.list_view.table, CATEGORY, bool(summary.children))
         self._show_related(summary)
         colors = self._part_colors(summary)
         self._show_months(summary, colors)

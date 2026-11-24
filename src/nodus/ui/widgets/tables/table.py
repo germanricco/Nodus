@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QObject, Qt
 from PySide6.QtGui import QColor, QIcon, QKeyEvent, QMouseEvent, QPainter
@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 
 from nodus.i18n import N_
 from nodus.ui.shortcuts import DELETE_ROWS
-from nodus.ui.theme.design import RowRole
+from nodus.ui.theme.design import Layout, RowRole
 from nodus.ui.theme.theme_manager import active_theme
 
 
@@ -49,6 +49,85 @@ def configure_record_table(
     # Set for the whole header, so columns a model adds later also fit their content.
     header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
     header.setSectionResizeMode(stretch_column, QHeaderView.ResizeMode.Stretch)
+
+
+# Table properties: what drop_columns_to_fit may hide and what it hid, and what the page
+# hides for good (set_column_shown).
+DROPPABLE, DROPPED, HIDDEN = "droppableColumns", "droppedColumns", "hiddenColumns"
+
+
+def drop_columns_to_fit(table: QTableView, droppable: Sequence[int]) -> None:
+    """Hides the columns of ``droppable``, first to last, while the table's columns do
+    not fit its width, and shows them back when they do: a narrow window loses what
+    matters least (the usual category) instead of hiding the rest behind a horizontal
+    scroll bar. The stretching column counts at ``Layout.STRETCH_COLUMN_MIN``; a column
+    the page hides (``set_column_shown``) stays hidden."""
+    header = table.horizontalHeader()
+    table.setProperty(DROPPABLE, list(droppable))
+    hidden = table.property(HIDDEN) or []
+    for column in table.property(DROPPED) or []:
+        if column not in hidden:
+            header.setSectionHidden(column, False)  # back at the width it had
+    droppable = [c for c in droppable if c not in hidden]
+
+    def width(column: int) -> int:
+        mode = header.sectionResizeMode(column)
+        if mode == QHeaderView.ResizeMode.Stretch:
+            return Layout.STRETCH_COLUMN_MIN
+        if mode == QHeaderView.ResizeMode.ResizeToContents:
+            return max(header.sectionSizeHint(column), table.sizeHintForColumn(column))
+        return header.sectionSize(column)
+
+    bar = table.verticalScrollBar()
+    room = table.maximumViewportSize().width() - (bar.width() if bar.isVisible() else 0)
+    needed = sum(width(c) for c in range(header.count()) if not header.isSectionHidden(c))
+    dropped = []
+    for column in droppable:
+        if needed <= room:
+            break
+        needed -= width(column)
+        header.setSectionHidden(column, True)
+        dropped.append(column)
+    table.setProperty(DROPPED, dropped)
+
+
+def set_column_shown(table: QTableView, column: int, shown: bool) -> None:
+    """Shows or hides ``column`` as the page decides; a shown one still steps aside in a
+    narrow window (``drop_columns_to_fit``)."""
+    hidden = [c for c in table.property(HIDDEN) or [] if c != column]
+    if not shown:
+        hidden.append(column)
+    table.setProperty(HIDDEN, hidden)
+    table.setColumnHidden(column, not shown)
+    drop_columns_to_fit(table, table.property(DROPPABLE) or [])
+
+
+class _ColumnDropper(QObject):
+    """Runs ``drop_columns_to_fit`` each time its table resizes or its rows change."""
+
+    def __init__(self, table: QTableView, droppable: Sequence[int]) -> None:
+        super().__init__(table)
+        self._table = table
+        self._droppable = tuple(droppable)
+        model = table.model()
+        model.modelReset.connect(self.fit)
+        model.layoutChanged.connect(self.fit)
+
+    def fit(self) -> None:
+        drop_columns_to_fit(self._table, self._droppable)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802
+        if event.type() == QEvent.Type.Resize:
+            self.fit()
+        return False
+
+
+def drop_columns_when_narrow(table: QTableView, droppable: Sequence[int]) -> None:
+    """Keeps ``table`` fitting its width by dropping ``droppable`` as it narrows
+    (``drop_columns_to_fit``)."""
+    dropper = _ColumnDropper(table, droppable)
+    table.installEventFilter(dropper)
+    dropper.fit()
 
 
 DELETE_KEY_HINT = N_("También con la tecla Supr")

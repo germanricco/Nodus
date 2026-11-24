@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QPushButton, QSizePolicy
 
 from nodus.i18n import _
 from nodus.models.transaction_filter import TransactionFilter
@@ -46,6 +46,11 @@ class DataCard(Card):
         data_row = SettingRow(_("Archivo de datos"), str(data_file))
         self.data_path_label = data_row.detail
         self.data_path_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        # A path has no spaces to wrap at: a narrow window cuts it rather than the card
+        # growing past the page; it stays whole in its tooltip and to select and copy.
+        self.data_path_label.setWordWrap(False)
+        self.data_path_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.data_path_label.setToolTip(str(data_file))
         data_row.add(secondary_button(_("Abrir carpeta"), lambda: open_folder(data_file.parent)))
 
         self.backup_row = SettingRow(_("Copia de seguridad"))

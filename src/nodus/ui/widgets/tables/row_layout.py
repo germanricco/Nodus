@@ -11,6 +11,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
 from nodus.ui.theme.design import RowRole, RowSpace
+from nodus.ui.widgets.elided_label import ElidedLabel
+from nodus.ui.widgets.style import set_style_property
 
 
 def row_layout(row: QWidget, role: RowRole | None, indent: int = 0) -> QHBoxLayout:
@@ -33,6 +35,20 @@ def row_lines() -> QVBoxLayout:
     lines.setSpacing(0)
     lines.setAlignment(Qt.AlignmentFlag.AlignVCenter)
     return lines
+
+
+def row_title(text: str) -> ElidedLabel:
+    """A row's name: whole while there is room, ending in «…» in a narrow window."""
+    label = ElidedLabel(text)
+    label.setObjectName("RowTitle")
+    return label
+
+
+def row_detail(text: str) -> ElidedLabel:
+    """The gray line under a row's name, which shortens as ``row_title`` does."""
+    label = ElidedLabel(text)
+    set_style_property(label, "muted", True)
+    return label
 
 
 def row_list() -> QVBoxLayout:

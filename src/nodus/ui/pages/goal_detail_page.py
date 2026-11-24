@@ -33,7 +33,13 @@ from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.money_label import amount_text, month_change_text
 from nodus.ui.widgets.style import clear_layout, make_hoverable, muted_label
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, open_cue
-from nodus.ui.widgets.tables.row_layout import row_layout, row_lines, row_list
+from nodus.ui.widgets.tables.row_layout import (
+    row_detail,
+    row_layout,
+    row_lines,
+    row_list,
+    row_title,
+)
 
 HISTORY_MONTHS = 12
 
@@ -48,12 +54,11 @@ class ContributionRow(QWidget):
         super().__init__()
         layout = row_layout(self, RowRole.DOUBLE)
         texts = row_lines()
-        name = QLabel(contribution.account.name)
-        name.setObjectName("RowTitle")
+        name = row_title(contribution.account.name)
         balance = amount_text(contribution.balance, hidden)
         texts.addWidget(name)
         texts.addWidget(
-            muted_label(
+            row_detail(
                 _("{percent} de {balance}").format(
                     percent=format_percent(contribution.percent), balance=balance
                 )

@@ -12,7 +12,7 @@ from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.style import set_style_property
 from nodus.ui.widgets.tables.row_actions import open_cue
-from nodus.ui.widgets.tables.row_layout import row_layout, row_lines
+from nodus.ui.widgets.tables.row_layout import row_detail, row_layout, row_lines
 
 
 class CategoryLine(QFrame):
@@ -47,9 +47,7 @@ class CategoryLine(QFrame):
         texts = row_lines()
         texts.addWidget(ElidedLabel(name))
         if detail:
-            detail_label = ElidedLabel(detail)
-            set_style_property(detail_label, "muted", True)
-            texts.addWidget(detail_label)
+            texts.addWidget(row_detail(detail))
         layout.addLayout(texts, stretch=1)
         self.cue = open_cue()
         layout.addWidget(self.cue)

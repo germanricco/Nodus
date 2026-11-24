@@ -8,9 +8,8 @@ from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.ui.theme.design import RowRole
 from nodus.ui.widgets.color_dot import ColorDot
-from nodus.ui.widgets.style import muted_label
 from nodus.ui.widgets.tables.row_actions import ActionsFor, MoreButton, install_row_actions
-from nodus.ui.widgets.tables.row_layout import row_layout, row_lines
+from nodus.ui.widgets.tables.row_layout import row_detail, row_layout, row_lines, row_title
 
 
 class ScheduleRow(QWidget):
@@ -37,9 +36,8 @@ class ScheduleRow(QWidget):
         layout.addWidget(ColorDot(color))
 
         texts = row_lines()
-        self.title_label = QLabel(title)
-        self.title_label.setObjectName("RowTitle")
-        self.detail_label = muted_label(detail)
+        self.title_label = row_title(title)
+        self.detail_label = row_detail(detail)
         texts.addWidget(self.title_label)
         texts.addWidget(self.detail_label)
         layout.addLayout(texts, stretch=1)

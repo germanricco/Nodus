@@ -7,8 +7,8 @@ import dataclasses
 from datetime import date
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QCheckBox, QLabel, QLineEdit, QWidget
+from PySide6.QtGui import QKeyEvent, QResizeEvent
+from PySide6.QtWidgets import QCheckBox, QLabel, QLineEdit, QSizePolicy, QWidget
 
 from nodus.i18n import N_, _, ngettext
 from nodus.models.category import Category
@@ -37,6 +37,7 @@ from nodus.ui.widgets.card import Card, titled_figure
 from nodus.ui.widgets.charts.chart_base import shown_fractions
 from nodus.ui.widgets.charts.share_bar import ShareBar
 from nodus.ui.widgets.color_dot import ColorDot
+from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.money_label import amount_text
 from nodus.ui.widgets.style import RIGHT_ALIGNED, clear_layout, hint_label, muted_label, separator
@@ -123,14 +124,18 @@ class CategoryRow(QWidget):
         if category.is_subcategory:
             layout.addSpacing(self.INDENT)
         layout.addWidget(ColorDot(category.color))
-        name = QLabel(category.name)
+        # Whole while there is room; ending in «…» in a narrow window.
+        name = ElidedLabel(category.name)
+        name.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         name.setObjectName("RowTitle")
         layout.addWidget(name)
+        self.system_tag: QLabel | None = None
         if category.is_fixed:
-            tag = QLabel(_("sistema"))
+            tag = self.system_tag = QLabel(_("sistema"))
             tag.setObjectName("Tag")
             tag.setToolTip(_(SYSTEM_HINT) if category.is_system else _(REFUNDS_HINT))
             layout.addWidget(tag, alignment=Qt.AlignmentFlag.AlignVCenter)
+            tag.hide()  # until the row knows its width (resizeEvent)
         self.subcategories_label = muted_label(
             ngettext("{count} subcategoría", "{count} subcategorías", subcategories).format(
                 count=subcategories
@@ -142,9 +147,9 @@ class CategoryRow(QWidget):
         # A category whose refunds outweigh its spending has nothing to weigh.
         shows_share = figures.total.cents > 0 and figures.share is not None
         self.bar = ShareBar(theme, max(0.0, figures.share or 0.0), category.color, start)
-        self.bar.setFixedWidth(Layout.SHARE_BAR_WIDTH)
+        self.bar.setFixedWidth(0)  # until the row knows its width (resizeEvent)
         self.percent_label = muted_label(rate_text(figures.share) if shows_share else "")
-        self.percent_label.setFixedWidth(Layout.SHARE_PERCENT_WIDTH)
+        self.percent_label.setFixedWidth(0)  # as the bar
         self.percent_label.setAlignment(RIGHT_ALIGNED)
         self.amount_label = self._amount(figures, hidden)
         for widget in (self.bar, self.percent_label):
@@ -162,6 +167,17 @@ class CategoryRow(QWidget):
         layout.addWidget(self.more_button)
         # Its box chooses it, so it opens with a double click, as the lists that are tables.
         install_row_actions(self, self.actions)
+
+    def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802
+        """A narrow row leaves its name the room of its bar, its percent and its
+        «sistema» tag. Every row of a list has the same width, so they all keep them or
+        all leave them, and the columns still line up."""
+        super().resizeEvent(event)
+        wide = event.size().width() >= Layout.CATEGORY_ROW_ROOM
+        self.bar.setFixedWidth(Layout.SHARE_BAR_WIDTH if wide else 0)
+        self.percent_label.setFixedWidth(Layout.SHARE_PERCENT_WIDTH if wide else 0)
+        if self.system_tag is not None:
+            self.system_tag.setVisible(wide)
 
     def set_folded(self, folded: bool) -> None:
         self.fold_button.set_folded(folded)

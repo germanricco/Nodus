@@ -36,7 +36,11 @@ from nodus.ui.widgets.style import RIGHT_ALIGNED
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
 from nodus.ui.widgets.tables.selectable_table import SelectableTable
 from nodus.ui.widgets.tables.selection_bar import SelectionBar
-from nodus.ui.widgets.tables.table import DELETE_KEY_HINT, bind_delete_key
+from nodus.ui.widgets.tables.table import (
+    DELETE_KEY_HINT,
+    bind_delete_key,
+    drop_columns_when_narrow,
+)
 
 # The first three columns of every summary table; subclasses may add more after them.
 NAME, COUNT, TOTAL = range(3)
@@ -348,6 +352,9 @@ class SummaryPage(Page, Generic[S]):
         table = SelectableTable(self.proxy, NAME, self.row_actions)
         table.setSortingEnabled(True)
         table.sortByColumn(COUNT, Qt.SortOrder.DescendingOrder)
+        # A narrow window drops the columns a page adds (Beneficiarios' usual category).
+        extras = range(self.proxy.columnCount() - 1, TOTAL, -1)
+        drop_columns_when_narrow(table, extras)
         bind_delete_key(table, self.delete_selected)
         table.selection_changed.connect(self._update_actions)
         return table

@@ -36,7 +36,7 @@ from nodus.ui.widgets.archived_section import ArchivedSection
 from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
 from nodus.ui.widgets.money_label import MoneyLabel, masked, total_text
-from nodus.ui.widgets.style import clear_layout, muted_label
+from nodus.ui.widgets.style import clear_layout
 from nodus.ui.widgets.tables.reorderable_list import ReorderableList
 from nodus.ui.widgets.tables.row_actions import (
     Effect,
@@ -45,7 +45,13 @@ from nodus.ui.widgets.tables.row_actions import (
     install_row_actions,
     open_cue,
 )
-from nodus.ui.widgets.tables.row_layout import row_layout, row_lines, row_list
+from nodus.ui.widgets.tables.row_layout import (
+    row_detail,
+    row_layout,
+    row_lines,
+    row_list,
+    row_title,
+)
 
 # The lists of the groups' cards, which take each other's accounts.
 ACCOUNTS_FAMILY = "accounts"
@@ -88,13 +94,12 @@ class AccountRow(QWidget):
         layout.addWidget(badge)
 
         texts = row_lines()
-        name = QLabel(account.name)
-        name.setObjectName("RowTitle")
+        name = row_title(account.name)
         details = [_(ACCOUNT_TYPE_LABELS[account.type]), account.currency.value]
         if value_change is not None and not value_change.is_zero:
             change = masked(value_change) if hide_balance else signed(value_change)
             details.append(_("Rendimiento {amount}").format(amount=change))
-        subtitle = muted_label(" · ".join(details))
+        subtitle = row_detail(" · ".join(details))
         texts.addWidget(name)
         texts.addWidget(subtitle)
         layout.addLayout(texts, stretch=1)

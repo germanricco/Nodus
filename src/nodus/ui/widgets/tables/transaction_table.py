@@ -50,7 +50,7 @@ from nodus.ui.widgets.initial_badge import badge_pixmap, icon_badge_pixmap, init
 from nodus.ui.widgets.style import make_hoverable
 from nodus.ui.widgets.tables.row_actions import RowAction, install_row_actions
 from nodus.ui.widgets.tables.selectable_table import RowControlsDelegate, SelectableTable
-from nodus.ui.widgets.tables.table import draw_cell_background
+from nodus.ui.widgets.tables.table import draw_cell_background, drop_columns_to_fit
 
 DATE, BADGE, MOVEMENT, CATEGORY, AMOUNT = range(5)
 COLUMN_TITLES = [N_("Fecha"), "", N_("Movimiento"), N_("Categoría"), N_("Monto")]
@@ -471,7 +471,8 @@ class _ColumnFitter(QObject):
 
 def fit_movement_columns(table: QTableView) -> None:
     """The fixed widths, with room for the check box and the «⋯» in a
-    ``SelectableTable``; the category narrows in a narrow list."""
+    ``SelectableTable``; the category narrows in a narrow list, and in one narrower
+    still the category and then the initials step aside for the movement."""
     controls = isinstance(table, SelectableTable)
     header = table.horizontalHeader()
     padding = 2 * Space.S
@@ -486,6 +487,7 @@ def fit_movement_columns(table: QTableView) -> None:
     header.resizeSection(BADGE, ControlSize.BADGE + padding)
     header.resizeSection(CATEGORY, category + padding)
     header.resizeSection(AMOUNT, Layout.MOVEMENT_AMOUNT_WIDTH + padding + more)
+    drop_columns_to_fit(table, (CATEGORY, BADGE))
 
 
 class CompactMovementRow(QWidget):

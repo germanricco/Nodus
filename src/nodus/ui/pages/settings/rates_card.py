@@ -25,6 +25,7 @@ from nodus.ui.theme.design import Layout, RowRole, Space
 from nodus.ui.widgets.busy import start_busy, stop_busy
 from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.empty_state import EmptyState
+from nodus.ui.widgets.flow_layout import FlowLayout
 from nodus.ui.widgets.inputs.amount_input import AmountInput
 from nodus.ui.widgets.inputs.date_input import DateInput
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
@@ -158,15 +159,20 @@ class RatesCard(Card):
         )
         self.save_rate_button.clicked.connect(self.save_rate)
         self.rate_value_input.line_edit.returnPressed.connect(self.save_rate)
-        form = QHBoxLayout()
-        form.setSpacing(Space.S)
-        form.addWidget(self.rate_date_input)
+        # In lines, so a narrow window wraps the button under the value.
+        form_row = QWidget()
+        form = FlowLayout(form_row, h_spacing=Space.S, v_spacing=Space.S)
+        value = QWidget()  # «US$ 1 =» stays beside its field
+        value_layout = QHBoxLayout(value)
+        value_layout.setContentsMargins(0, 0, 0, 0)
+        value_layout.setSpacing(Space.S)
         self.rate_unit_label = QLabel()
-        form.addWidget(self.rate_unit_label)
-        form.addWidget(self.rate_value_input)
+        value_layout.addWidget(self.rate_unit_label)
+        value_layout.addWidget(self.rate_value_input)
+        form.addWidget(self.rate_date_input)
+        form.addWidget(value)
         form.addWidget(self.save_rate_button)
-        form.addStretch()
-        self.body.addLayout(form)
+        self.body.addWidget(form_row)
 
         self.rate_error_label = QLabel()
         self.rate_error_label.setObjectName("ErrorLabel")

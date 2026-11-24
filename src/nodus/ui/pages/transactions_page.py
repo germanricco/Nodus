@@ -5,10 +5,7 @@ from __future__ import annotations
 from functools import partial
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import (
-    QHBoxLayout,
-    QLineEdit,
-)
+from PySide6.QtWidgets import QLineEdit, QWidget
 
 from nodus.i18n import N_, _
 from nodus.models.transaction import TransactionType
@@ -22,6 +19,7 @@ from nodus.ui.pages.base.transaction_list_view import TransactionListView
 from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.flow_layout import FlowLayout
 from nodus.ui.widgets.inputs.combo_box import ComboBox
 from nodus.ui.widgets.inputs.selectors import (
     AccountComboBox,
@@ -90,14 +88,15 @@ class TransactionsPage(Page):
         self.search_input.setMinimumWidth(Layout.SEARCH_MIN_WIDTH)
         self.search_input.setClearButtonEnabled(True)
         self.clear_filters_button = secondary_button(_("Limpiar filtros"), self.clear_filters)
-        filters = QHBoxLayout()
-        filters.setSpacing(Space.S)
+        # In lines, so a narrow window wraps them instead of squeezing every list.
+        filters_row = QWidget()
+        filters = FlowLayout(filters_row, h_spacing=Space.S, v_spacing=Space.S)
         for combo in self._filter_combos():
             combo.narrow_to_label()
             filters.addWidget(combo)
-        filters.addWidget(self.search_input, stretch=1)
+        filters.add_growing(self.search_input)
         filters.addWidget(self.clear_filters_button)
-        self.content_layout.addLayout(filters)
+        self.content_layout.addWidget(filters_row)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
         self.list_view.record_requested.connect(self.record_requested)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from nodus.ui.theme.design import Space
@@ -24,6 +25,7 @@ class SettingRow(QWidget):
         texts.setSpacing(Space.XXS)
         self.title = QLabel(title)
         self.title.setObjectName("RowTitle")
+        self.title.setWordWrap(True)  # in two lines in a narrow window, not past the card
         self.detail = hint_label(detail)
         self.detail.setWordWrap(True)
         texts.addWidget(self.title)
@@ -34,7 +36,8 @@ class SettingRow(QWidget):
 
     def add(self, widget: QWidget) -> QWidget:
         """Appends a control on the right and returns it, so it can be kept in one line."""
-        self._controls.addWidget(widget)
+        # Centered at its height, so a detail in several lines does not stretch it.
+        self._controls.addWidget(widget, alignment=Qt.AlignmentFlag.AlignVCenter)
         return widget
 
     def set_detail(self, text: str, error: bool = False) -> None:
