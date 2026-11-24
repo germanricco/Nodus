@@ -79,6 +79,11 @@ QMainWindow, #ContentArea, #PageStack {
     color: $text;
 }
 
+/* On a page, flush with the cards under it. */
+#SectionToggle[flush="true"] {
+    padding: $space_s 0 0 0;
+}
+
 #SidebarAccounts {
     background: transparent;
 }
@@ -939,6 +944,12 @@ QPushButton#PayButton:hover {
 }
 
 [hoverable="true"]:hover, QFrame#CategoryLine[highlighted="true"] {
+    background: $hover;
+}
+
+/* A card of CardGrid that opens its page lights up whole, as a row does; the card's own
+   background would otherwise win. */
+#Card[hoverable="true"]:hover {
     background: $hover;
 }
 

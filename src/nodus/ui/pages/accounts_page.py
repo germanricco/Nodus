@@ -32,6 +32,7 @@ from nodus.ui.text.labels import ACCOUNT_TYPE_LABELS
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.undo import offer_undo
+from nodus.ui.widgets.archived_section import ArchivedSection
 from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
 from nodus.ui.widgets.money_label import MoneyLabel, masked, total_text
@@ -47,6 +48,9 @@ from nodus.ui.widgets.tables.row_actions import (
 
 # The lists of the groups' cards, which take each other's accounts.
 ACCOUNTS_FAMILY = "accounts"
+
+# Where the fold of the archived accounts is saved (``SettingsService.archive_folded``).
+ARCHIVE = "accounts"
 
 
 class AccountRow(QWidget):
@@ -240,6 +244,7 @@ class AccountsPage(Page):
         clear_layout(self._sections)
         self.account_list = None
         self.account_lists = {}
+        self.archived: ArchivedSection | None = None
         accounts = self._services.accounts.list_accounts(include_archived=True)
         self.net_worth_card.setVisible(bool(accounts))
         if not accounts:
@@ -259,7 +264,16 @@ class AccountsPage(Page):
                 self._accounts_card(_("Cuentas activas"), active, balances, reorderable=True)
             )
         if archived:
-            self._sections.addWidget(self._accounts_card(_("Archivadas"), archived, balances))
+            settings = self._services.settings
+            self.archived = ArchivedSection(
+                len(archived),
+                self._accounts_card(None, archived, balances),
+                settings.archive_folded(ARCHIVE),
+            )
+            self.archived.fold_toggled.connect(
+                lambda folded: settings.set_archive_folded(ARCHIVE, folded)
+            )
+            self._sections.addWidget(self.archived)
 
     def open_account_dialog(self, account: Account | None = None) -> None:
         edit_account(self, self._services, self._event_bus, account)
@@ -279,7 +293,7 @@ class AccountsPage(Page):
 
     def _accounts_card(
         self,
-        title: str,
+        title: str | None,
         accounts: list[Account],
         balances: dict[int, Money],
         reorderable: bool = False,

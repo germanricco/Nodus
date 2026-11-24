@@ -66,6 +66,26 @@ class GoalState(Enum):
     ON_TRACK = "on_track"
 
 
+# The order goals are shown in, from what asks for something to what is done: a date
+# that passed, a pace that falls short, a missing rate or history, then the goals that
+# go well, and last the ones reached.
+ATTENTION_ORDER = (
+    GoalState.OVERDUE,
+    GoalState.BEHIND,
+    GoalState.NO_RATE,
+    GoalState.NO_HISTORY,
+    GoalState.NO_DATE,
+    GoalState.ON_TRACK,
+    GoalState.REACHED,
+)
+
+
+def attention_key(goal: Goal, state: GoalState) -> tuple[int, date]:
+    """Sorts goals by ``ATTENTION_ORDER``, and within a state the nearest date first;
+    goals without a date go after the dated ones."""
+    return ATTENTION_ORDER.index(state), goal.target_date or date.max
+
+
 @dataclass(frozen=True)
 class GoalProgress:
     """What a goal has, what it lacks and whether the user's pace gets there in time.

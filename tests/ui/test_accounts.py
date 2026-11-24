@@ -158,7 +158,7 @@ class TestAccountsPage:
         run_action(row.actions(), "Archivar")
 
         assert services.accounts.get(dollars.id).is_archived
-        assert "ARCHIVADAS" in texts(page)
+        assert page.archived.toggle.text() == "ARCHIVADAS (1)  ▾"
         archived_row = next(r for r in rows(page) if r.account.id == dollars.id)
         assert [a.text for a in archived_row.actions()] == [
             "Abrir",
@@ -167,6 +167,20 @@ class TestAccountsPage:
             "Desarchivar",
             "Eliminar",
         ]
+
+    def test_archived_accounts_fold_away_as_archived_goals_do(self, services, page, pesos, dollars):
+        """The same title folds the archived items of every page, and each page
+        remembers its own choice."""
+        services.accounts.set_archived(dollars.id, True)
+        page.refresh()
+
+        page.archived.toggle.click()
+
+        assert services.settings.archive_folded("accounts")
+        assert not services.settings.archive_folded("goals")
+        assert not any(row.account.id == dollars.id for row in rows(page))
+        page.refresh()
+        assert page.archived.folded
 
     def test_see_movements_filters_by_the_account(self, qtbot, services, page, pesos, dollars):
         services.transactions.create(expense_draft(services, pesos.id, ars("10")))

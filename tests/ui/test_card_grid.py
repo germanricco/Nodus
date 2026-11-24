@@ -1,4 +1,4 @@
-"""The one grid of cards: columns from the width alone, spread evenly, at most three."""
+"""The one grid of cards: columns from the width alone, at most three."""
 
 import pytest
 
@@ -12,17 +12,11 @@ from nodus.ui.widgets.card_grid import CardGrid, grid_columns
     [(436, 1), (616, 1), (776, 2), (956, 2), (1100, 2), (1140, 3), (1600, 3)],
 )
 def test_the_width_alone_sets_the_columns(width, columns):
-    assert grid_columns(width, count=6) == columns
-
-
-def test_rows_are_even_and_never_more_columns_than_cards():
-    assert grid_columns(1600, count=5) == 3  # rows of 3 + 2
-    assert grid_columns(1600, count=4) == 2  # 2 + 2 rather than 3 + 1
-    assert grid_columns(1600, count=1) == 1
+    assert grid_columns(width) == columns
 
 
 def test_never_more_than_the_maximum():
-    assert grid_columns(10_000, count=10) == Layout.GRID_MAX_COLUMNS
+    assert grid_columns(10_000) == Layout.GRID_MAX_COLUMNS
 
 
 @pytest.fixture
@@ -55,4 +49,20 @@ def test_new_cards_replace_the_old_ones(grid, qtbot):
     old = grid.cards[0]
     grid.set_cards([Card("Única")])
     assert grid.cards[0] is not old and len(grid.cards) == 1
-    assert grid.columns() == 1
+
+
+def test_a_lone_card_is_as_wide_as_one_of_a_full_row(qtbot):
+    """The columns come from the width, not from the cards: a section with one card
+    shows it as wide as a section with two, at the same width."""
+    grids = []
+    for count in (2, 1):
+        grid = CardGrid()
+        qtbot.addWidget(grid)
+        grid.set_cards([Card(f"Meta {n}") for n in range(count)])
+        grid.resize(776, 300)
+        grid.show()
+        qtbot.waitUntil(lambda grid=grid: grid.columns() == 2)
+        grid.layout().activate()
+        grids.append(grid)
+    pair, lone = grids
+    assert abs(lone.cards[0].width() - pair.cards[0].width()) <= 1

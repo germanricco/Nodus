@@ -33,6 +33,7 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.money_label import MoneyLabel, total_text
+from nodus.ui.widgets.section_toggle import SectionToggle
 from nodus.ui.widgets.style import (
     clear_layout,
     make_hoverable,
@@ -131,11 +132,9 @@ class Sidebar(QFrame):
 
         self._nav_buttons = self._build_nav_buttons(layout)
 
-        self._accounts_title = QPushButton()
-        self._accounts_title.setObjectName("SectionToggle")
-        self._accounts_title.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._accounts_title.clicked.connect(self.toggle_accounts_folded)
         self._accounts_folded = services.settings.accounts_folded()
+        self._accounts_title = SectionToggle(_("Cuentas"), self._accounts_folded)
+        self._accounts_title.fold_toggled.connect(lambda _folded: self.toggle_accounts_folded())
         layout.addWidget(self._accounts_title)
         self._accounts_area = self._build_accounts_area()
         mark_target(self._accounts_title, tour.ACCOUNTS)
@@ -192,8 +191,7 @@ class Sidebar(QFrame):
         self._show_accounts_state()
 
     def _show_accounts_state(self) -> None:
-        arrow = "▸" if self._accounts_folded else "▾"
-        self._accounts_title.setText(_("CUENTAS") + f"  {arrow}")
+        self._accounts_title.set_folded(self._accounts_folded)
         self._accounts_area.setVisible(not (self._collapsed or self._accounts_folded))
 
     def select(self, page_id: PageId) -> None:

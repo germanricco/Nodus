@@ -3,7 +3,15 @@ from datetime import date
 import pytest
 from factories import TODAY, usd
 
-from nodus.models.goal import Goal, GoalShare, GoalState, goal_progress, median_cents, months_until
+from nodus.models.goal import (
+    Goal,
+    GoalShare,
+    GoalState,
+    attention_key,
+    goal_progress,
+    median_cents,
+    months_until,
+)
 from nodus.models.period import Month
 
 
@@ -109,3 +117,30 @@ def test_without_a_rate():
     progress = goal_progress(goal(), None, ends(), TODAY)
 
     assert (progress.state, progress.saved, progress.percent) == (GoalState.NO_RATE, None, 0)
+
+
+def test_goals_are_shown_from_what_asks_for_attention_to_what_is_done():
+    """Overdue and behind first, reached last; within a state, the nearest date first and
+    no date after every date."""
+    soon = Goal(1, "Pronto", usd("1"), date(2027, 1, 1), ())
+    later = Goal(2, "Después", usd("1"), date(2028, 1, 1), ())
+    undated = Goal(3, "Sin fecha", usd("1"), None, ())
+    states = [
+        (undated, GoalState.ON_TRACK),
+        (later, GoalState.ON_TRACK),
+        (soon, GoalState.REACHED),
+        (soon, GoalState.ON_TRACK),
+        (later, GoalState.OVERDUE),
+        (later, GoalState.BEHIND),
+    ]
+
+    ordered = sorted(states, key=lambda pair: attention_key(*pair))
+
+    assert [(g.name, s) for g, s in ordered] == [
+        ("Después", GoalState.OVERDUE),
+        ("Después", GoalState.BEHIND),
+        ("Pronto", GoalState.ON_TRACK),
+        ("Después", GoalState.ON_TRACK),
+        ("Sin fecha", GoalState.ON_TRACK),
+        ("Pronto", GoalState.REACHED),
+    ]

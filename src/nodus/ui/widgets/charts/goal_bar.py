@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.i18n import N_, _, ngettext
 from nodus.models.goal import Goal, GoalProgress, GoalState
-from nodus.models.language_format import format_percent
 from nodus.models.money import Money
 from nodus.models.period import Month, format_date, format_month_in_sentence
 from nodus.ui.text.labels import NO_RATE_TEXT
@@ -31,17 +30,6 @@ STATE_LABELS = {
     GoalState.NO_RATE: (NO_RATE_TEXT, Tone.NEUTRAL),
 }
 MISSING_RATE_SENTENCE = N_("Falta la cotización para sumar las cuentas en otras monedas.")
-
-
-def saved_of_target(progress: GoalProgress, hidden: bool) -> str:
-    """ "US$ 820,00 de US$ 2.000,00 · 41 %"; without a rate, "— de US$ 2.000,00"."""
-    target = amount_text(progress.target, hidden)
-    if progress.saved is None:
-        return _("— de {target}").format(target=target)
-    percent = format_percent(progress.percent)
-    return _("{saved} de {target} · {percent}").format(
-        saved=amount_text(progress.saved, hidden), target=target, percent=percent
-    )
 
 
 def goal_sentence(goal: Goal, progress: GoalProgress, hidden: bool = False) -> str:

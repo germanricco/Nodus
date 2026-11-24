@@ -924,6 +924,7 @@ msgid "Inicio"
 msgstr "Home"
 
 #: nodus/ui/dialogs/goal_dialog.py nodus/ui/navigation.py nodus/ui/pages/goal_detail_page.py
+#: nodus/ui/shell/sidebar.py
 msgid "Cuentas"
 msgstr "Accounts"
 
@@ -2481,7 +2482,7 @@ msgstr[1] ""
 msgid "Cuentas activas"
 msgstr "Active accounts"
 
-#: nodus/ui/pages/accounts_page.py nodus/ui/pages/goals_page.py
+#: nodus/ui/pages/accounts_page.py
 msgid "Archivadas"
 msgstr "Archived"
 
@@ -2750,7 +2751,7 @@ msgstr "Monthly pace"
 msgid "Lo ahorrado en el tiempo"
 msgstr "Saved over time"
 
-#: nodus/ui/pages/goal_detail_page.py
+#: nodus/ui/pages/goal_detail_page.py nodus/ui/pages/goals_page.py
 #, python-brace-format
 msgid "para {month}"
 msgstr "by {month}"
@@ -2792,17 +2793,14 @@ msgid_plural "{count} cuentas"
 msgstr[0] "{count} account"
 msgstr[1] "{count} accounts"
 
+#: nodus/ui/pages/goals_page.py
+#, python-brace-format
+msgid "de {amount}"
+msgstr "of {amount}"
+
 #: nodus/ui/pages/base/net_worth_card.py nodus/ui/pages/goals_page.py
 msgid "Cargar cotización"
 msgstr "Add exchange rate"
-
-#: nodus/ui/pages/goals_page.py
-msgid "En curso"
-msgstr "In progress"
-
-#: nodus/ui/pages/goals_page.py
-msgid "Alcanzadas"
-msgstr "Reached"
 
 #: nodus/ui/pages/payee_detail_page.py nodus/ui/pages/payees_page.py
 msgid "Categoría habitual"
@@ -3707,10 +3705,6 @@ msgstr "Expand the panel"
 msgid "Contraer el panel"
 msgstr "Collapse the panel"
 
-#: nodus/ui/shell/sidebar.py
-msgid "CUENTAS"
-msgstr "ACCOUNTS"
-
 #: nodus/ui/shell/top_bar.py
 #, python-brace-format
 msgid "Ayuda ({key})"
@@ -4268,12 +4262,13 @@ msgstr ""
 
 #: nodus/ui/text/help_texts.py
 msgid ""
-"Las metas nunca mueven dinero: crecen cuando pasas plata a sus cuentas. Cada una te dice si a tu "
-"ritmo llegas a tiempo y, si no, cuánto hace falta por mes. Cuando llegas, la campana te avisa."
+"Las metas nunca mueven dinero: crecen cuando pasas plata a sus cuentas. Cada una es una tarjeta "
+"con cuánto lleva, su estado y si a tu ritmo llegas a tiempo y, si no, cuánto hace falta por mes; "
+"un clic abre su página. Cuando llegas, la campana te avisa."
 msgstr ""
-"Goals never move money: they grow when you move money into their accounts. Each one tells you "
-"whether you'll make it in time at your pace and, if not, how much is needed per month. When you "
-"get there, the bell lets you know."
+"Goals never move money: they grow when you move money into their accounts. Each one is a card "
+"with how much it has, its state and whether you'll make it in time at your pace and, if not, how "
+"much is needed per month; a click opens its page. When you get there, the bell lets you know."
 
 #: nodus/ui/text/help_texts.py
 msgid ""
@@ -4649,6 +4644,14 @@ msgstr "Converted with the day's exchange rate."
 msgid "Registrar el pago"
 msgstr "Record the payment"
 
+#: nodus/ui/widgets/section_toggle.py
+msgid "Mostrar"
+msgstr "Show"
+
+#: nodus/ui/widgets/section_toggle.py
+msgid "Ocultar"
+msgstr "Hide"
+
 #: nodus/ui/widgets/charts/budget_bar.py
 #, python-brace-format
 msgid "{spent} de {limit}"
@@ -4702,16 +4705,6 @@ msgstr "No history"
 #: nodus/ui/widgets/charts/goal_bar.py
 msgid "Falta la cotización para sumar las cuentas en otras monedas."
 msgstr "An exchange rate is needed to add up the accounts in other currencies."
-
-#: nodus/ui/widgets/charts/goal_bar.py
-#, python-brace-format
-msgid "— de {target}"
-msgstr "— of {target}"
-
-#: nodus/ui/widgets/charts/goal_bar.py
-#, python-brace-format
-msgid "{saved} de {target} · {percent}"
-msgstr "{saved} of {target} · {percent}"
 
 #: nodus/ui/widgets/charts/goal_bar.py
 #, python-brace-format

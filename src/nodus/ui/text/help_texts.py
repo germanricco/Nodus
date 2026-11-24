@@ -352,8 +352,9 @@ HELP_TOPICS = [
             ),
             N_(
                 "Las metas nunca mueven dinero: crecen cuando pasas plata a sus cuentas. Cada una"
-                " te dice si a tu ritmo llegas a tiempo y, si no, cuánto hace falta por mes. Cuando"
-                " llegas, la campana te avisa."
+                " es una tarjeta con cuánto lleva, su estado y si a tu ritmo llegas a tiempo y, si"
+                " no, cuánto hace falta por mes; un clic abre su página. Cuando llegas, la campana"
+                " te avisa."
             ),
         ),
         ("accounts", "investments"),

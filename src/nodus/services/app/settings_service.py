@@ -37,6 +37,7 @@ class SettingsService:
     ACCOUNTS_FOLDED_KEY = "accounts_folded"
     FOLDED_GROUPS_KEY = "folded_account_groups"
     FOLDED_CATEGORIES_KEY = "folded_categories"
+    FOLDED_ARCHIVES_KEY = "folded_archives"
     AMOUNTS_HIDDEN_KEY = "amounts_hidden"
     REDUCE_MOTION_KEY = "reduce_motion"
     EXTERNAL_BACKUP_KEY = "last_external_backup"
@@ -109,6 +110,15 @@ class SettingsService:
 
     def set_accounts_folded(self, folded: bool) -> None:
         self._set_flag(self.ACCOUNTS_FOLDED_KEY, folded)
+
+    def archive_folded(self, page: str) -> bool:
+        """Whether ``page`` (e.g. "goals") keeps its archived items folded under their
+        title; they show until the user folds them."""
+        return page in self._list(self.FOLDED_ARCHIVES_KEY)
+
+    def set_archive_folded(self, page: str, folded: bool) -> None:
+        pages = set(self._list(self.FOLDED_ARCHIVES_KEY)) - {page}
+        self._set_list(self.FOLDED_ARCHIVES_KEY, sorted(pages | ({page} if folded else set())))
 
     def folded_groups(self) -> set[int]:
         """The account groups the sidebar keeps folded, showing only their subtotal."""

@@ -18,7 +18,7 @@ from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.pages import accounts_page, goals_page
 from nodus.ui.pages.accounts_page import AccountsPage
 from nodus.ui.pages.goals_page import GoalsPage
-from nodus.ui.widgets.charts.goal_bar import goal_sentence, saved_of_target
+from nodus.ui.widgets.charts.goal_bar import goal_sentence
 from nodus.ui.widgets.money_label import month_change_text
 
 
@@ -98,31 +98,43 @@ class TestSentences:
         shown = progress(GoalState.OVERDUE)
 
         assert "••••" in goal_sentence(GOAL, shown, hidden=True)
-        assert saved_of_target(shown, hidden=True) == "US$ •••• de US$ •••• · 41 %"
 
 
 class TestPage:
     def test_empty_offers_to_add_one(self, page):
-        assert page.rows == []
+        assert page.cards == []
         assert page.create_button.text() == "Agregar meta"
 
-    def test_goals_go_to_their_section(self, services, page, savings):
+    def test_followed_goals_share_a_grid_and_the_archived_fold_apart(self, services, page, savings):
+        """The reached goal goes after the one still followed, in the same grid; the
+        archived one under its own title, which folds it and remembers it."""
         archived = make_goal(services, savings, 100, name="Auto")
         services.goals.set_archived(archived.id, True)  # which frees the account
-        make_goal(services, savings, 60)
         make_goal(services, savings, 40, target="100", name="Regalo")
+        make_goal(services, savings, 60)
         page.refresh(TODAY)
 
-        assert page.section_titles == ["En curso", "Alcanzadas", "Archivadas"]
-        assert [row.goal.name for row in page.rows] == ["Viaje", "Regalo", "Auto"]
+        assert [card.goal.name for card in page.cards] == ["Viaje", "Regalo", "Auto"]
+        assert page.archived.toggle.text() == "ARCHIVADAS (1)  ▾"
+        assert page.archived.content.cards[0].goal.name == "Auto"
 
-    def test_a_row_says_how_far_it_got(self, services, page, savings):
+        page.archived.toggle.click()
+        assert services.settings.archive_folded("goals")
+        assert not page.archived.content.isVisibleTo(page)
+        page.refresh(TODAY)
+        assert page.archived.toggle.text() == "ARCHIVADAS (1)  ▸"
+        assert not page.archived.content.isVisibleTo(page)
+
+    def test_a_card_says_how_far_it_got_and_by_when(self, services, page, savings):
         make_goal(services, savings)
         page.refresh(TODAY)
 
-        [row] = page.rows
-        assert row.figures_label.text() == "US$ 500,00 de US$ 2.000,00 · 25 %"
-        assert row.pill.text() == "Atrasada"  # nothing saved since January
+        [card] = page.cards
+        assert card.context_label.text() == "Ahorro (100 %) · para marzo de 2027"
+        assert card.saved_label.text() == "US$ 500,00"
+        assert card.target_label.text() == "de US$ 2.000,00"
+        assert card.percent_label.text() == "25 %"
+        assert card.pill.text() == "Atrasada"  # nothing saved since January
 
     def test_without_a_rate_it_offers_to_load_it(self, services, page, savings):
         pesos = services.accounts.create("Banco", AccountType.BANK, Currency.ARS, ars("1000"))
@@ -131,28 +143,31 @@ class TestPage:
         )
         page.refresh(TODAY)
 
-        [row] = page.rows
-        assert row.pill.text() == "Sin cotización"
-        assert row.rate_button.isVisibleTo(row)
+        [card] = page.cards
+        assert card.pill.text() == "Sin cotización"
+        assert card.saved_label.text() == "—"
+        assert card.rate_button.isVisibleTo(card)
 
     def test_grows_with_the_balance(self, services, event_bus, page, savings):
         make_goal(services, savings)
         services.transactions.create(income_draft(services, savings.id, usd("500"), on=TODAY))
         event_bus.transactions_changed.emit()
 
-        assert page.rows[0].figures_label.text().startswith("US$ 1.000,00")
+        assert page.cards[0].saved_label.text() == "US$ 1.000,00"
 
     def test_hidden_amounts(self, services, event_bus, page, savings):
         make_goal(services, savings)
         services.settings.set_amounts_hidden(True)
         event_bus.amounts_hidden_changed.emit(True)
 
-        assert page.rows[0].figures_label.text() == "US$ •••• de US$ •••• · 25 %"
+        card = page.cards[0]
+        assert (card.saved_label.text(), card.target_label.text()) == ("US$ ••••", "de US$ ••••")
+        assert card.percent_label.text() == "25 %"
 
     def test_archive_and_delete(self, monkeypatch, services, page, savings):
         goal = make_goal(services, savings)
         page.refresh(TODAY)
-        page.toggle_archived(page.rows[0].goal)
+        page.toggle_archived(page.cards[0].goal)
         assert services.goals.get(goal.id).is_archived
 
         texts = []
@@ -343,12 +358,12 @@ class TestDetail:
         window.show_detail(DetailId.GOAL, goal.id)
         return page
 
-    def test_a_click_on_the_row_opens_it(self, qtbot, window, services, savings):
+    def test_a_click_on_the_card_opens_it(self, qtbot, window, services, savings):
         goal = make_goal(services, savings)
         window.show_page(PageId.GOALS)
-        [row] = window.page(PageId.GOALS).rows
+        [card] = window.page(PageId.GOALS).cards
 
-        qtbot.mouseClick(row, Qt.MouseButton.LeftButton)
+        qtbot.mouseClick(card, Qt.MouseButton.LeftButton)
 
         detail = window.detail(DetailId.GOAL)
         assert window.current_page is detail
@@ -457,12 +472,12 @@ class TestBarsAcrossRefreshes:
         make_goal(services, account)
         page.refresh(TODAY)
         page.show()
-        qtbot.waitUntil(lambda: page.rows[0].bar.progress == 1)
+        qtbot.waitUntil(lambda: page.cards[0].bar.progress == 1)
 
         services.settings.set_amounts_hidden(True)
         event_bus.amounts_hidden_changed.emit(True)
 
-        assert page.rows[0].bar.progress == 1
+        assert page.cards[0].bar.progress == 1
 
     def test_a_new_figure_moves_from_the_old_one(
         self, qtbot, page, services, event_bus, animations
@@ -471,12 +486,12 @@ class TestBarsAcrossRefreshes:
         make_goal(services, account)
         page.refresh(TODAY)
         page.show()
-        qtbot.waitUntil(lambda: page.rows[0].bar.progress == 1)
+        qtbot.waitUntil(lambda: page.cards[0].bar.progress == 1)
 
         services.transactions.create(income_draft(services, account.id, usd("500"), TODAY))
         event_bus.transactions_changed.emit()
 
-        bar = page.rows[0].bar
+        bar = page.cards[0].bar
         assert bar.progress < 1
         assert bar.shown_fraction == pytest.approx(0.25, abs=0.05)  # from 25 % toward 50 %
         qtbot.waitUntil(lambda: bar.progress == 1)
