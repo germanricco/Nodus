@@ -36,7 +36,6 @@ from nodus.ui.widgets.style import muted_label, scrolling, secondary_button, sep
 
 INDEX, TOPIC, SHORTCUTS_VIEW = range(3)
 SHORTCUTS_TITLE = N_("Atajos de teclado")
-TOPIC_ICON = "info"  # a topic about no page in particular
 
 
 def topic_html(topic: HelpTopic) -> str:
@@ -175,9 +174,7 @@ class HelpPanel(QFrame):
             self._section_labels[section] = label
             for topic in HELP_TOPICS:
                 if topic.section == section:
-                    button = self._topic_button(
-                        _(topic.title), topic.pages[0].icon_name if topic.pages else TOPIC_ICON
-                    )
+                    button = self._topic_button(_(topic.title), topic.icon_name)
                     button.clicked.connect(lambda _c=False, t=topic: self.show_topic(t))
                     self._topics_layout.addWidget(button)
                     self._topic_buttons[topic.key] = button

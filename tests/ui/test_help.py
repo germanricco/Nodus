@@ -1,6 +1,8 @@
 """Ayuda opens at the side from F1, the «?» and Ajustes, on the topic of the page shown,
 and lights up in the sidebar the pages a topic talks about."""
 
+from importlib import resources
+
 import pytest
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QKeyEvent
@@ -216,3 +218,10 @@ def test_each_shortcut_says_it_in_one_line_with_keys_all_alike(window):
 
 def test_in_english_too(english, window):
     one_line_each_and_keys_alike(window)
+
+
+def test_each_topic_has_an_icon_of_its_own():
+    icons = [topic.icon_name for topic in HELP_TOPICS]
+
+    assert len(set(icons)) == len(icons)
+    assert all(resources.files("nodus.ui.icons").joinpath(f"{n}.svg").is_file() for n in icons)

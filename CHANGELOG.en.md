@@ -36,6 +36,7 @@ What each version brings, newest first. To update, click “Update” when Nodus
 - With the sidebar collapsed, hovering over “Accounts” shows each account's balance and the total, which are otherwise hidden with the list (and it respects the eye that hides amounts).
 - In Settings, the rates history shows the last three; “See all” unfolds the rest. And the page of an account, a category, a payee or a tag with no transactions shows its message in a card of its own size, without an empty box down to the bottom.
 - Month charts start in the first month with transactions, instead of showing empty months that looked like zero, and the Cash flow chart, on Home and in Analysis, says which color is income and which expenses.
+- Each Help topic has an icon of its own, so they tell apart at a glance.
 - Fix: on opening Nodus, closing a dialog or coming back to the window, a button or a row was sometimes highlighted without touching the keyboard. Now the highlight only shows if you got there with Tab or a shortcut.
 - Fix: in a narrow window, the welcome's “Bring my data from another computer” button was cut, and in Settings the row of the rates' source made the page scroll sideways. Buttons that do not fit now go to the line below.
 - Fix: moving from one page to another sometimes left a button outlined that nobody had chosen, such as the previous month's arrow or “Trends” in Analysis. The outline now shows only when you move with Tab.

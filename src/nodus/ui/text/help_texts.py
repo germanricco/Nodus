@@ -20,11 +20,15 @@ DATA = N_("Tus datos")
 HELP_SECTIONS = [START, MONEY, PLANNING, ORDER, DATA]
 
 
+TOPIC_ICON = "info"  # a topic about no page in particular
+
+
 @dataclass(frozen=True)
 class HelpTopic:
     """``key`` names it for ``related``; ``pages`` are the pages it talks about, lit up
     in the sidebar while it is open and reached with «Ir a…». ``title``, ``section``,
-    ``intro`` and ``paragraphs`` hold ``N_()`` texts, translated where they are shown."""
+    ``intro`` and ``paragraphs`` hold ``N_()`` texts, translated where they are shown.
+    ``icon`` is its own when its first page's would repeat another topic's."""
 
     key: str
     title: str
@@ -33,6 +37,12 @@ class HelpTopic:
     intro: str
     paragraphs: tuple[str, ...]
     related: tuple[str, ...] = ()
+    icon: str = ""
+
+    @property
+    def icon_name(self) -> str:
+        """Its own icon, or the one of the page it talks about first."""
+        return self.icon or (self.pages[0].icon_name if self.pages else TOPIC_ICON)
 
 
 HELP_TOPICS = [
@@ -67,6 +77,7 @@ HELP_TOPICS = [
             ),
         ),
         ("first-month", "accounts"),
+        icon="map",
     ),
     HelpTopic(
         "first-month",
@@ -94,6 +105,7 @@ HELP_TOPICS = [
             ),
         ),
         ("overview", "transactions", "recurring"),
+        icon="flag",
     ),
     HelpTopic(
         "accounts",
@@ -161,6 +173,7 @@ HELP_TOPICS = [
             ),
         ),
         ("search", "transfers", "refunds"),
+        icon="pencil",
     ),
     HelpTopic(
         "search",
@@ -188,6 +201,7 @@ HELP_TOPICS = [
             ),
         ),
         ("transactions", "analysis"),
+        icon="search",
     ),
     HelpTopic(
         "transfers",
@@ -211,6 +225,7 @@ HELP_TOPICS = [
             ),
         ),
         ("accounts", "currencies"),
+        icon="transfer",
     ),
     HelpTopic(
         "installments",
@@ -234,6 +249,7 @@ HELP_TOPICS = [
             ),
         ),
         ("recurring", "transactions"),
+        icon="calendar",
     ),
     HelpTopic(
         "refunds",
@@ -258,6 +274,7 @@ HELP_TOPICS = [
             ),
         ),
         ("transactions", "budgets"),
+        icon="refund",
     ),
     HelpTopic(
         "investments",
@@ -280,6 +297,7 @@ HELP_TOPICS = [
             ),
         ),
         ("accounts", "goals"),
+        icon="trend",
     ),
     HelpTopic(
         "recurring",
@@ -445,6 +463,7 @@ HELP_TOPICS = [
             ),
         ),
         ("transfers", "accounts"),
+        icon="coins",
     ),
     HelpTopic(
         "backups",
@@ -480,6 +499,7 @@ HELP_TOPICS = [
             ),
         ),
         ("moving", "privacy"),
+        icon="backup",
     ),
     HelpTopic(
         "moving",
@@ -506,6 +526,7 @@ HELP_TOPICS = [
             ),
         ),
         ("backups",),
+        icon="laptop",
     ),
     HelpTopic(
         "privacy",
@@ -533,6 +554,7 @@ HELP_TOPICS = [
             ),
         ),
         ("backups",),
+        icon="shield",
     ),
 ]
 
