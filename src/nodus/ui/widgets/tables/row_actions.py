@@ -39,6 +39,7 @@ from nodus.ui.shortcuts import (
     UNFOLD_ROW,
 )
 from nodus.ui.theme.design import ControlSize, IconSize, Popup
+from nodus.ui.theme.focus import keyboard_only
 from nodus.ui.theme.icons import icon as tinted_icon
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
@@ -177,6 +178,7 @@ def install_row_actions(
     widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     # Only from the keyboard, as buttons (theme/focus.py): a click leaves no ring.
     widget.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+    keyboard_only(widget)
     widget.setProperty(KEYBOARD_ROW, True)
     if open_on_click:
         widget.setCursor(Qt.CursorShape.PointingHandCursor)

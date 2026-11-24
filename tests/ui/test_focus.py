@@ -6,6 +6,8 @@ from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QPushButton, QWidget
 
 from nodus.ui.dialogs.tag_dialogs import TagDialog
 from nodus.ui.navigation import PageId
+from nodus.ui.pages.accounts_page import AccountRow
+from nodus.ui.widgets.tables.row_actions import focus_row
 
 BUTTON_STYLES = ["PrimaryButton", "SecondaryButton", "SmallButton", "DangerButton"]
 # Buttons with a ring of their own: the sidebar, segments and tabs.
@@ -94,6 +96,40 @@ def test_a_button_keeps_a_focus_moved_with_tab(qtbot, theme_manager):
     qtbot.wait(10)
 
     assert button.hasFocus()
+
+
+def test_the_window_coming_back_lights_no_button_nobody_chose(qtbot, theme_manager):
+    """On starting, on closing a dialog or with Alt+Tab, Qt hands the focus to a button."""
+    _row, _field, button = row_with(qtbot, "SecondaryButton")
+
+    button.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+    qtbot.waitUntil(lambda: not button.hasFocus())
+
+
+def test_the_window_coming_back_returns_where_tab_had_left(qtbot, theme_manager):
+    _row, field, button = row_with(qtbot, "SecondaryButton")
+    qtbot.keyClick(field, Qt.Key.Key_Tab)
+    field.setFocus()
+
+    button.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+    qtbot.wait(10)
+
+    assert button.hasFocus()
+
+
+def test_a_row_lights_up_only_from_the_keyboard(qtbot, window, pesos):
+    window.sidebar.refresh_accounts()
+    window.show_page(PageId.ACCOUNTS)
+    window.activateWindow()
+    qtbot.waitUntil(window.isActiveWindow)
+    row = next(r for r in window.findChildren(AccountRow) if r.isVisible())
+
+    row.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+    qtbot.waitUntil(lambda: not row.hasFocus())
+    focus_row(row)
+    qtbot.wait(10)
+
+    assert row.hasFocus()
 
 
 @pytest.mark.parametrize(
