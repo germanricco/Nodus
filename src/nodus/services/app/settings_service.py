@@ -36,6 +36,7 @@ class SettingsService:
     SIDEBAR_COLLAPSED_KEY = "sidebar_collapsed"
     ACCOUNTS_FOLDED_KEY = "accounts_folded"
     FOLDED_GROUPS_KEY = "folded_account_groups"
+    FOLDED_CATEGORIES_KEY = "folded_categories"
     AMOUNTS_HIDDEN_KEY = "amounts_hidden"
     REDUCE_MOTION_KEY = "reduce_motion"
     EXTERNAL_BACKUP_KEY = "last_external_backup"
@@ -115,6 +116,13 @@ class SettingsService:
 
     def set_folded_groups(self, group_ids: set[int]) -> None:
         self._set_list(self.FOLDED_GROUPS_KEY, map(str, sorted(group_ids)))
+
+    def folded_categories(self) -> set[int]:
+        """The categories that Categorías shows without their subcategories."""
+        return {int(part) for part in self._list(self.FOLDED_CATEGORIES_KEY) if part.isdigit()}
+
+    def set_folded_categories(self, category_ids: set[int]) -> None:
+        self._set_list(self.FOLDED_CATEGORIES_KEY, map(str, sorted(category_ids)))
 
     def recent_colors(self) -> list[str]:
         """The colors outside the palette chosen last for a category or tag, the most

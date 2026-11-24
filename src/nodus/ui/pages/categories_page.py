@@ -8,9 +8,9 @@ from datetime import date
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
-from nodus.i18n import N_, _
+from nodus.i18n import N_, _, ngettext
 from nodus.models.category import Category
 from nodus.models.names import normalize_name
 from nodus.models.period import Month, Period
@@ -39,7 +39,8 @@ from nodus.ui.widgets.charts.share_bar import ShareBar
 from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.money_label import amount_text
-from nodus.ui.widgets.style import RIGHT_ALIGNED, clear_layout, hint_label, muted_label
+from nodus.ui.widgets.style import RIGHT_ALIGNED, clear_layout, hint_label, muted_label, separator
+from nodus.ui.widgets.tables.fold_button import FoldButton
 from nodus.ui.widgets.tables.row_actions import (
     Effect,
     MoreButton,
@@ -66,13 +67,16 @@ class CategoryRow(QWidget):
     """One category in the period: color and name, how much of its kind it weighs (bar and
     percent), the amount and the menu of what it allows. Budgets stay in Presupuestos.
 
-    A check box at the start chooses it, to merge or delete several at once.
-    Subcategories are indented after it. A system category («Otros», «Reembolsos») cannot
-    change, so it has no box and its menu only opens it and shows its movements. The box,
-    bar, percent and amount keep their place on every row, so they line up down the list.
+    A check box at the start chooses it, to merge or delete several at once. A category
+    with subcategories has an arrow after it that folds them; folded, it says how many it
+    holds, and its amount still adds them up. Subcategories are indented after it. A system
+    category («Otros», «Reembolsos») cannot change, so it has no box and its menu only opens
+    it and shows its movements. The box, the fold, bar, percent and amount keep their place
+    on every row, so they line up down the list.
     """
 
     chosen_changed = Signal(object, bool)  # Category, chosen
+    fold_toggled = Signal(object, bool)  # Category, folded
 
     open_requested = Signal(object)  # Category
     transactions_requested = Signal(object)  # Category
@@ -92,11 +96,13 @@ class CategoryRow(QWidget):
         start: float | None = None,
         can_merge: bool = False,
         chosen: bool = False,
+        folded: bool = False,
     ) -> None:
         """``hidden`` masks the amount; ``has_movements`` says whether the category has
         any at all, in any period; ``start`` is where its bar begins (``ProgressStrip``);
         ``can_merge`` whether it can join another (``CategoryService.can_merge``);
-        ``chosen`` whether its box starts checked."""
+        ``chosen`` whether its box starts checked; ``folded`` whether its subcategories
+        start hidden."""
         super().__init__()
         self.figures = figures
         self.category = category = figures.category
@@ -111,6 +117,11 @@ class CategoryRow(QWidget):
         self.check_box.toggled.connect(lambda on: self.chosen_changed.emit(category, on))
         keep_place(self.check_box)
         layout.addWidget(self.check_box)
+        subcategories = len(figures.children)
+        self.fold_button = FoldButton(category.name, folded)
+        self.fold_button.fold_toggled.connect(lambda on: self.fold_toggled.emit(category, on))
+        keep_place(self.fold_button)
+        layout.addWidget(self.fold_button)
         if category.is_subcategory:
             layout.addSpacing(self.INDENT)
         layout.addWidget(ColorDot(category.color))
@@ -122,6 +133,12 @@ class CategoryRow(QWidget):
             tag.setObjectName("Tag")
             tag.setToolTip(_(SYSTEM_HINT) if category.is_system else _(REFUNDS_HINT))
             layout.addWidget(tag, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.subcategories_label = muted_label(
+            ngettext("{count} subcategoría", "{count} subcategorías", subcategories).format(
+                count=subcategories
+            )
+        )
+        layout.addWidget(self.subcategories_label)
         layout.addStretch()
 
         # A category whose refunds outweigh its spending has nothing to weigh.
@@ -140,11 +157,17 @@ class CategoryRow(QWidget):
         # Hidden once in the row: shown before it has a parent, they would flash as windows.
         self.bar.setHidden(not shows_share)
         self.check_box.setHidden(category.is_fixed)
+        self.fold_button.setHidden(not subcategories)
+        self.subcategories_label.setHidden(not (subcategories and folded))
 
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
         # Its box chooses it, so it opens with a double click, as the lists that are tables.
         install_row_actions(self, self.actions)
+
+    def set_folded(self, folded: bool) -> None:
+        self.fold_button.set_folded(folded)
+        self.subcategories_label.setVisible(folded)
 
     @staticmethod
     def _amount(figures: CategoryFigures, hidden: bool) -> QLabel:
@@ -237,6 +260,7 @@ class CategoriesPage(Page):
         self._theme_manager = theme_manager
         self._report: CategoryReport | None = None
         self._rows: dict[int, CategoryRow] = {}
+        self._children: dict[int, list[CategoryRow]] = {}  # by the id of their category
         self._chosen: dict[int, Category] = {}  # by id, in the order they were chosen
 
         self.period_selector = PeriodSelector(Period.of_months(Month.of(date.today())))
@@ -348,12 +372,15 @@ class CategoriesPage(Page):
         starts = shown_fractions({key: row.bar for key, row in self._rows.items()})
         clear_layout(self._sections)
         self._rows = {}
+        self._children = {}
         hidden = self._services.settings.amounts_hidden()
         wanted = normalize_name(self.search_input.text())
         for section in report.sections:
             categories = _matching(section.categories, wanted)
             if categories:
-                self._sections.addWidget(self._section(section, categories, hidden, starts))
+                self._sections.addWidget(
+                    self._section(section, categories, hidden, starts, bool(wanted))
+                )
         if not self._rows:
             empty = EmptyState()
             empty.set_message(_(NO_MATCHES_TEXT), _("Borrar búsqueda"), self.search_input.clear)
@@ -368,19 +395,54 @@ class CategoriesPage(Page):
         categories: list[CategoryFigures],
         hidden: bool,
         starts: dict[int, float],
+        searching: bool,
     ) -> Card:
+        """A card with a group per category: the category, then its subcategories, which
+        it may fold. A thin line goes between groups, never inside one, so each category
+        reads as one block with what it holds."""
         card = Card()
         header = card_header(card, _(SECTION_TITLES[section.kind]))
         total = QLabel(amount_text(section.total, hidden))
         total.setObjectName("RowTitle")
         header.addWidget(total)
-        for figures in categories:
-            card.body.addWidget(self._row(figures, hidden, starts))
-            for child in figures.children:
-                card.body.addWidget(self._row(child, hidden, starts))
+        # A search shows the subcategories it found, even in a folded category.
+        folded_ids = set() if searching else self._services.settings.folded_categories()
+        for position, figures in enumerate(categories):
+            if position:
+                card.body.addWidget(separator())
+            group = QWidget()
+            rows = QVBoxLayout(group)
+            rows.setContentsMargins(0, 0, 0, 0)
+            rows.setSpacing(0)
+            folded = figures.category.id in folded_ids
+            rows.addWidget(self._row(figures, hidden, starts, folded))
+            children = [self._row(child, hidden, starts) for child in figures.children]
+            for child in children:
+                rows.addWidget(child)
+                child.setHidden(folded)
+            self._children[figures.category.id] = children
+            card.body.addWidget(group)
         return card
 
-    def _row(self, figures: CategoryFigures, hidden: bool, starts: dict[int, float]) -> CategoryRow:
+    def _fold(self, category: Category, folded: bool) -> None:
+        """Folds or unfolds the subcategories of ``category``, and remembers it."""
+        folded_ids = self._services.settings.folded_categories()
+        if folded:
+            folded_ids.add(category.id)
+        else:
+            folded_ids.discard(category.id)
+        self._services.settings.set_folded_categories(folded_ids)
+        self._rows[category.id].set_folded(folded)
+        for child in self._children.get(category.id, []):
+            child.setHidden(folded)
+
+    def _row(
+        self,
+        figures: CategoryFigures,
+        hidden: bool,
+        starts: dict[int, float],
+        folded: bool = False,
+    ) -> CategoryRow:
         category = figures.category
         focus = history_focus(self._services, category_id=category.id)
         row = CategoryRow(
@@ -391,8 +453,10 @@ class CategoriesPage(Page):
             start=starts.get(category.id),
             can_merge=self._services.categories.can_merge(category.id),
             chosen=category.id in self._chosen,
+            folded=folded,
         )
         row.chosen_changed.connect(self._choose)
+        row.fold_toggled.connect(self._fold)
         self._rows[category.id] = row
         row.transactions_requested.connect(
             lambda _category: self.transactions_requested.emit(focus)

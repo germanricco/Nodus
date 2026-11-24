@@ -361,16 +361,18 @@ QFrame#SelectionBar {
 
 /* The «⋯» that opens a row's actions */
 
-QPushButton#MoreButton {
+QPushButton#MoreButton, QPushButton#FoldButton {
     background: transparent;
     border: none;
     border-radius: $radius_m;
     padding: 0;
 }
 
-QPushButton#MoreButton:hover, QPushButton#MoreButton:pressed {
+QPushButton#MoreButton:hover, QPushButton#MoreButton:pressed,
+QPushButton#FoldButton:hover, QPushButton#FoldButton:pressed {
     background: $hover;
 }
+
 
 /* A link in a card's header, such as «Ver todas ›». */
 QPushButton#LinkButton {

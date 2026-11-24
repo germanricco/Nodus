@@ -2613,6 +2613,13 @@ msgstr "Choose “{name}”"
 msgid "sistema"
 msgstr "system"
 
+#: nodus/ui/pages/categories_page.py
+#, python-brace-format
+msgid "{count} subcategoría"
+msgid_plural "{count} subcategorías"
+msgstr[0] "{count} subcategory"
+msgstr[1] "{count} subcategories"
+
 #: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
 #: nodus/ui/pages/categories_page.py
 msgid "Unir con…"
@@ -3034,6 +3041,10 @@ msgstr "Needed to add up your accounts in other currencies"
 msgid "El resto de la variación es por tus movimientos."
 msgstr "The rest of the change comes from your transactions."
 
+#: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
+msgid "Movimientos"
+msgstr "Transactions"
+
 #: nodus/ui/pages/base/summary_detail_page.py
 msgid "Le pasa sus movimientos a otro y lo elimina"
 msgstr "Moves its transactions to another one and deletes it"
@@ -3042,10 +3053,6 @@ msgstr "Moves its transactions to another one and deletes it"
 #, python-brace-format
 msgid "Total de los últimos {count} meses"
 msgstr "Total over the last {count} months"
-
-#: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
-msgid "Movimientos"
-msgstr "Transactions"
 
 #: nodus/ui/pages/base/summary_detail_page.py
 msgid "Último movimiento"
@@ -4277,21 +4284,23 @@ msgid ""
 "chica, con una barra de cuánto pesa en el total. Un doble clic en una abre su página, con lo que "
 "sumó en los últimos 12 meses y mes a mes, y «Unir con…» pasa sus movimientos a otra si tienes dos"
 " que son lo mismo; con sus casillas marcas varias y las unes o eliminas juntas. Cada una puede "
-"tener subcategorías, como Supermercado dentro de Comida, con «Agregar subcategoría» en su menú. "
-"Si eliminas una, sus movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de "
-"sistema: Nodus las usa, así que no se renombran ni se eliminan. Para el color, además de la "
-"paleta, el «+» abre una rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano "
-"después de la paleta, también para las etiquetas."
+"tener subcategorías, como Supermercado dentro de Comida, con «Agregar subcategoría» en su menú; "
+"la flecha a su izquierda las oculta y las vuelve a mostrar, y Nodus lo recuerda. Si eliminas una,"
+" sus movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de sistema: Nodus "
+"las usa, así que no se renombran ni se eliminan. Para el color, además de la paleta, el «+» abre "
+"una rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano después de la paleta, "
+"también para las etiquetas."
 msgstr ""
 "Categories shows how much each one added up to in the period you choose, from the largest down, "
 "with a bar of how much it weighs in the total. Double-clicking one opens its page, with what it "
 "added up to over the last 12 months and month by month, and “Merge with…” moves its transactions "
 "to another one if you have two that are the same; with their check boxes you choose several and "
 "merge or delete them together. Each one can have subcategories, such as Supermarket inside Food, "
-"with “Add subcategory” in its menu. If you delete one, its transactions move to “Other” and "
-"aren't lost. “Other” and “Refunds” belong to the system: Nodus uses them, so they can't be "
-"renamed or deleted. For the color, besides the palette, the “+” opens a color wheel with any "
-"other color, and the last ones you chose there stay at hand after the palette, for tags too."
+"with “Add subcategory” in its menu; the arrow on its left hides them and shows them again, and "
+"Nodus remembers it. If you delete one, its transactions move to “Other” and aren't lost. “Other” "
+"and “Refunds” belong to the system: Nodus uses them, so they can't be renamed or deleted. For the"
+" color, besides the palette, the “+” opens a color wheel with any other color, and the last ones "
+"you chose there stay at hand after the palette, for tags too."
 
 #: nodus/ui/text/help_texts.py
 msgid ""
@@ -4303,9 +4312,9 @@ msgid ""
 msgstr ""
 "Payees and Tags show how many transactions and how much money each one added up to in the period "
 "you choose; a double-click opens its page, with what it added up to over the last 12 months and "
-"all its transactions. On these three pages a click chooses, which is why they open with a "
-"double-click. If you have duplicates, such as “Walmart” and “Walmart Online”, “Merge with…” "
-"combines them into one, and the notice that appears at the bottom lets you undo it."
+"all its transactions. On these three pages a click chooses, which is why they open with a double-"
+"click. If you have duplicates, such as “Walmart” and “Walmart Online”, “Merge with…” combines "
+"them into one, and the notice that appears at the bottom lets you undo it."
 
 #: nodus/ui/text/help_texts.py
 msgid "Monedas y cotizaciones"
@@ -4745,6 +4754,16 @@ msgstr "Marked as seen. We'll remind you tomorrow."
 #, python-brace-format
 msgid "Ya lo viste. Te lo recordamos el {date}."
 msgstr "Marked as seen. We'll remind you on {date}."
+
+#: nodus/ui/widgets/tables/fold_button.py
+#, python-brace-format
+msgid "Mostrar las subcategorías de «{name}»"
+msgstr "Show the subcategories of “{name}”"
+
+#: nodus/ui/widgets/tables/fold_button.py
+#, python-brace-format
+msgid "Ocultar las subcategorías de «{name}»"
+msgstr "Hide the subcategories of “{name}”"
 
 #: nodus/ui/widgets/tables/reorderable_list.py
 msgid "Arrastrar para ordenar"

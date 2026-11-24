@@ -389,19 +389,18 @@ HELP_TOPICS = [
         ),
         (
             N_(
-                "Categorías muestra cuánto sumó cada una en el período que elijas, de la más"
-                " grande a la más chica, con una barra de cuánto pesa en el total. Un doble clic"
-                " en una abre su página, con lo que sumó en los últimos 12 meses y mes a mes, y"
-                " «Unir con…» pasa sus movimientos a"
-                " otra si tienes dos que son lo mismo; con sus casillas marcas varias y las unes"
-                " o eliminas juntas. Cada una puede tener subcategorías,"
-                " como Supermercado dentro de"
-                " Comida, con «Agregar subcategoría» en su menú. Si eliminas una, sus movimientos"
-                " pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de sistema: Nodus"
-                " las usa, así que no se renombran ni se eliminan. Para el color, además de la"
-                " paleta, el «+»"
-                " abre una rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano"
-                " después de la paleta, también para las etiquetas."
+                "Categorías muestra cuánto sumó cada una en el período que elijas, de la más "
+                "grande a la más chica, con una barra de cuánto pesa en el total. Un doble clic "
+                "en una abre su página, con lo que sumó en los últimos 12 meses y mes a mes, y "
+                "«Unir con…» pasa sus movimientos a otra si tienes dos que son lo mismo; con sus "
+                "casillas marcas varias y las unes o eliminas juntas. Cada una puede tener "
+                "subcategorías, como Supermercado dentro de Comida, con «Agregar subcategoría» en"
+                " su menú; la flecha a su izquierda las oculta y las vuelve a mostrar, y Nodus lo"
+                " recuerda. Si eliminas una, sus movimientos pasan a «Otros» y no se pierden. "
+                "«Otros» y «Reembolsos» son de sistema: Nodus las usa, así que no se renombran ni"
+                " se eliminan. Para el color, además de la paleta, el «+» abre una rueda con "
+                "cualquier otro, y los últimos que elegiste ahí quedan a mano después de la "
+                "paleta, también para las etiquetas."
             ),
             N_(
                 "Beneficiarios y Etiquetas muestran cuántos movimientos y cuánto dinero sumó cada"

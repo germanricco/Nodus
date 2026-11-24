@@ -489,6 +489,12 @@ def capture_rows(shots: Shots) -> None:
     shots.settle()
     shots.save(window, "categories-selection")
     categories.clear_chosen()
+    # A category folded, with how many subcategories it holds; unfolded again after.
+    folding = next(r for r in categories.findChildren(CategoryRow) if r.fold_button.isVisible())
+    folding.fold_button.click()
+    shots.settle()
+    shots.save(window, "categories-folded")
+    folding.fold_button.click()
 
 
 def capture_messages(shots: Shots) -> None:

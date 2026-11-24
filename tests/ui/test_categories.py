@@ -4,7 +4,7 @@ import pytest
 from factories import ars, category_id, expense_draft, in_view, light_theme
 from menus import run_action, texts
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QFrame, QLabel
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
@@ -177,6 +177,94 @@ class TestCategoriesPage:
         run_action(row_named(page, "Ocio").actions(), "Eliminar")
 
         assert "Ocio" in [c.name for c in services.categories.list_categories(EXPENSE)]
+
+
+class TestFoldingSubcategories:
+    """A category and its subcategories are one group, which folds under its «▾»."""
+
+    @pytest.fixture
+    def housing(self, services) -> int:
+        vivienda = category_id(services, "Vivienda", EXPENSE)
+        for name in ("Alquiler", "Expensas"):
+            services.categories.create(name, EXPENSE, "#000000", parent_id=vivienda)
+        return vivienda
+
+    def test_only_a_category_with_subcategories_folds(self, services, page, housing):
+        page.refresh()
+
+        assert row_named(page, "Vivienda").fold_button.isVisibleTo(page)
+        for name in ("Alquiler", "Ocio", "Otros"):
+            fold = row_named(page, name).fold_button
+            assert fold.isHidden() and fold.sizePolicy().retainSizeWhenHidden()
+
+    def test_folding_hides_its_subcategories_and_says_how_many(
+        self, qtbot, services, page, housing
+    ):
+        page.refresh()
+        vivienda = row_named(page, "Vivienda")
+        assert not vivienda.fold_button.folded
+        assert vivienda.subcategories_label.isHidden()
+
+        qtbot.mouseClick(vivienda.fold_button, Qt.MouseButton.LeftButton)
+
+        names = [r.category.name for r in rows(page)]
+        assert "Vivienda" in names and "Alquiler" not in names and "Expensas" not in names
+        assert vivienda.fold_button.folded
+        assert vivienda.subcategories_label.isVisibleTo(page)
+        assert vivienda.subcategories_label.text() == "2 subcategorías"
+        assert services.settings.folded_categories() == {housing}
+
+        qtbot.mouseClick(vivienda.fold_button, Qt.MouseButton.LeftButton)
+        assert "Alquiler" in [r.category.name for r in rows(page)]
+        assert services.settings.folded_categories() == set()
+
+    def test_folded_stays_folded_and_still_adds_them_up(self, services, pesos, page, housing):
+        services.transactions.create(
+            expense_draft(
+                services, pesos.id, ars("400"), date.today(),
+                category_id=category_id(services, "Alquiler", EXPENSE),
+            )
+        )  # fmt: skip
+        services.settings.set_folded_categories({housing})
+
+        page.refresh()
+
+        vivienda = row_named(page, "Vivienda")
+        assert vivienda.fold_button.folded
+        assert "Alquiler" not in [r.category.name for r in rows(page)]
+        assert vivienda.amount_label.text() == "$ 400,00"
+
+    def test_a_search_shows_what_it_found_in_a_folded_category(self, services, page, housing):
+        services.settings.set_folded_categories({housing})
+        page.refresh()
+
+        page.search_input.setText("alqui")
+
+        assert [r.category.name for r in rows(page)] == ["Vivienda", "Alquiler"]
+        page.search_input.clear()
+        assert "Alquiler" not in [r.category.name for r in rows(page)]
+
+    def test_a_chosen_subcategory_stays_chosen_while_folded(self, qtbot, services, page, housing):
+        page.refresh()
+        row_named(page, "Alquiler").check_box.setChecked(True)
+        row_named(page, "Ocio").check_box.setChecked(True)
+
+        qtbot.mouseClick(row_named(page, "Vivienda").fold_button, Qt.MouseButton.LeftButton)
+
+        assert {c.name for c in page.chosen} == {"Alquiler", "Ocio"}
+        assert page.selection_bar.isVisibleTo(page)
+
+    def test_a_line_between_groups_never_inside_one(self, services, page, housing):
+        page.refresh()
+        vivienda = row_named(page, "Vivienda")
+        group = vivienda.parentWidget()
+
+        assert [r.category.name for r in group.findChildren(CategoryRow)] == [
+            "Vivienda", "Alquiler", "Expensas",
+        ]  # fmt: skip
+        assert not group.findChildren(QFrame, "Separator")
+        card_body = group.parentWidget()
+        assert card_body.findChildren(QFrame, "Separator")
 
 
 class TestSeveralChosen:
