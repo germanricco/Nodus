@@ -105,6 +105,7 @@ class ThemeManager(QObject):
             QPalette.ColorRole.PlaceholderText: theme.text_muted,
             QPalette.ColorRole.ToolTipBase: theme.surface,
             QPalette.ColorRole.ToolTipText: theme.text,
+            QPalette.ColorRole.Shadow: theme.shadow,  # a button rising (hover.py)
         }
         for role, color in roles.items():
             palette.setColor(role, QColor(color))

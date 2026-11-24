@@ -38,6 +38,7 @@ What each version brings, newest first. To update, click “Update” when Nodus
 - Month charts start in the first month with transactions, instead of showing empty months that looked like zero, and the Cash flow chart, on Home and in Analysis, says which color is income and which expenses.
 - Each Help topic has an icon of its own, so they tell apart at a glance.
 - What repeats without being a recurring payment is quicker to record: “Duplicate”, in each transaction’s “⋯” menu, opens the form with a copy dated today, and Ctrl+K has “Repeat the last expense”.
+- Action buttons, such as “Add transaction” or those at the top of each page, rise a little under the mouse and sink when pressed, as on a web page. With “Reduce animations”, they stay still.
 - Fix: on opening Nodus, closing a dialog or coming back to the window, a button or a row was sometimes highlighted without touching the keyboard. Now the highlight only shows if you got there with Tab or a shortcut.
 - Fix: in a narrow window, the welcome's “Bring my data from another computer” button was cut, and in Settings the row of the rates' source made the page scroll sideways. Buttons that do not fit now go to the line below.
 - Fix: moving from one page to another sometimes left a button outlined that nobody had chosen, such as the previous month's arrow or “Trends” in Analysis. The outline now shows only when you move with Tab.

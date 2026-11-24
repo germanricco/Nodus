@@ -163,6 +163,7 @@ class Opacity:
     SCRIM = 0.55  # the page dimmed under the guided tour, around what it points at
     BADGE_FILL = 0.18  # the soft circle behind an initial, in the color of its letter
     SHADOW = 0.22  # the shadow of a raised surface (``Elevation``)
+    LIFT = 0.12  # the shadow of a button under the mouse (``Lift``), at its highest
 
 
 class Elevation:
@@ -171,6 +172,15 @@ class Elevation:
 
     BLUR = 24
     OFFSET = 4  # downwards, as light from above
+
+
+class Lift:
+    """A button under the mouse rising to meet it (``theme/hover.py``): its shadow at
+    the highest, in pixels, and how much of it stays while the button is held down."""
+
+    BLUR = 12
+    OFFSET = 3  # downwards, as light from above
+    HELD = 0.3
 
 
 class Motion(IntEnum):

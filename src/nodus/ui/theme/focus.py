@@ -25,6 +25,7 @@ from PySide6.QtGui import QFocusEvent
 from PySide6.QtWidgets import QAbstractButton, QApplication, QProxyStyle, QPushButton, QWidget
 
 from nodus.ui.theme.design import ControlSize
+from nodus.ui.theme.hover import HoverLift
 from nodus.ui.theme.wheel import WheelGuard
 
 # How the keyboard moves the focus: Tab and a shortcut. Any other way is Qt's or the code's.
@@ -72,15 +73,16 @@ def _let_go(widget: QWidget) -> None:
 
 class KeyboardFocusStyle(QProxyStyle):
     """Fusion, with every push button that takes the focus on a click taking it only
-    from Tab and letting go of it when nobody moved it there (``KeyboardOnly``), and the
-    mouse wheel guarded (``WheelGuard``). A style sees each widget
-    once, as it gets its look (``polish``), which is far cheaper than watching every
-    event of the application."""
+    from Tab and letting go of it when nobody moved it there (``KeyboardOnly``), rising
+    under the mouse (``HoverLift``), and the mouse wheel guarded (``WheelGuard``). A
+    style sees each widget once, as it gets its look (``polish``), which is far cheaper
+    than watching every event of the application."""
 
     def __init__(self, key: str) -> None:
         super().__init__(key)
         self._wheel = WheelGuard(self)
         self.keyboard_only = KeyboardOnly(self)
+        self._hover_lift = HoverLift(self)
 
     def polish(self, widget: QWidget) -> None:  # type: ignore[override]
         super().polish(widget)
@@ -88,6 +90,8 @@ class KeyboardFocusStyle(QProxyStyle):
             widget.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         if isinstance(widget, QPushButton) and widget.focusPolicy() == Qt.FocusPolicy.TabFocus:
             widget.installEventFilter(self.keyboard_only)
+        if isinstance(widget, QPushButton):
+            widget.installEventFilter(self._hover_lift)  # it rises if it is ``LIFTED``
         if isinstance(widget, QAbstractButton):
             # Once the stylesheet gave it its padding, which comes after this.
             QTimer.singleShot(0, widget, partial(_raise_to_target, widget))

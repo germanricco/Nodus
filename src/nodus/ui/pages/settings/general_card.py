@@ -69,7 +69,7 @@ class GeneralCard(Card):
 
         motion_row = SettingRow(
             _("Reducir animaciones"),
-            _("Los gráficos y las cifras cambian de una vez, sin moverse."),
+            _("Los gráficos y las cifras cambian de una vez, y los botones no se elevan."),
         )
         self.reduce_motion_input = motion_row.add(ToggleSwitch())
         self.reduce_motion_input.clicked.connect(self._set_reduce_motion)
