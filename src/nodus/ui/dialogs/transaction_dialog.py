@@ -40,11 +40,13 @@ from nodus.ui.widgets.inputs.payee_input import PayeeInput
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.inputs.selectors import AccountComboBox, CategoryComboBox
 from nodus.ui.widgets.inputs.tag_input import TagInput
-from nodus.ui.widgets.style import hint_label
+from nodus.ui.widgets.style import form_section, hint_label
 
 # Segment order of the mode selector.
 EXPENSE_MODE, INCOME_MODE, TRANSFER_MODE = range(3)
 MODE_LABELS = [N_("Gasto"), N_("Ingreso"), N_("Transferencia")]
+# What the main button of a new movement adds, by mode.
+ADD_LABELS = [N_("Agregar gasto"), N_("Agregar ingreso"), N_("Agregar transferencia")]
 FIRST_INSTALLMENT_LABEL = N_("Primera cuota")
 _MODE_TYPES = {EXPENSE_MODE: TransactionType.EXPENSE, INCOME_MODE: TransactionType.INCOME}
 # The default income category for refunds.
@@ -126,7 +128,9 @@ class TransactionDialog(FormDialog):
         self.account_input.set_placeholder(_(ACCOUNT_PLACEHOLDER))
         self.to_account_input = AccountComboBox()
         self.to_account_input.set_placeholder(_(ACCOUNT_PLACEHOLDER))
-        self.amount_input = AmountInput(HOME_CURRENCY)
+        # The amount stays where a payment is thought (account, installments, amount), but
+        # it is the figure of the form, and the cursor starts in it.
+        self.amount_input = AmountInput(HOME_CURRENCY, prominent=True)
         self.amount_in_input = AmountInput(Currency.USD)
         self.installment_fields = InstallmentFields()
         self.installments_hint = hint_label()
@@ -136,9 +140,13 @@ class TransactionDialog(FormDialog):
         self.category_input = CategoryComboBox()
         self.category_input.set_placeholder(_(CATEGORY_PLACEHOLDER))
         self.date_input = DateInput()
+        # What may be left empty goes last, under «Opcional», so what is asked stands out
+        # and nothing is hidden.
+        self.optional_section = form_section(_("Opcional"))
         self.note_input = QLineEdit()
-        self.note_input.setPlaceholderText(_("Opcional"))
+        self.note_input.setPlaceholderText(_("Un detalle para recordar"))
         self.tag_input = TagInput(services.tags)
+        self.tag_input.line_edit.setPlaceholderText(_("Enter para agregar"))
         self.refund_input = RefundField(
             services, theme_manager, transaction.id if transaction else None
         )
@@ -173,6 +181,7 @@ class TransactionDialog(FormDialog):
         self.form.addRow(_("Categoría"), self.category_input)
         self.form.addRow(_("Reembolso de"), self.refund_input)
         self.form.addRow(_("Fecha"), self.date_input)
+        self.form.addRow(self.optional_section)
         self.form.addRow(_("Nota"), self.note_input)
         self.form.addRow(_("Etiquetas"), self.tag_input)
 
@@ -202,12 +211,17 @@ class TransactionDialog(FormDialog):
         come and go: the amount with «Total | Por cuota», and the labels with «Primera
         cuota». Measured here, once the style sheet has sized everything."""
         self.ensurePolished()
+        self.amount_input.keep_room()
         switch = self.installment_fields.amount_mode
         hidden = switch.isHidden()
         switch.show()
         self.amount_row.setMinimumWidth(self.amount_row.sizeHint().width())
         switch.setHidden(hidden)
         self.form.labelForField(self.date_input).setText(_(FIRST_INSTALLMENT_LABEL))
+        # The amount's label on the line of its larger text, as every label is on its field's.
+        taller = self.amount_input.sizeHint().height() - self.note_input.sizeHint().height()
+        half = taller // 2
+        self.form.labelForField(self.amount_row).setContentsMargins(0, half, 0, 0)
         super().showEvent(event)  # gives every label the width of the longest
         self._update_installments()
         # The amount is what is always typed, so it is ready for the keyboard.
@@ -344,6 +358,8 @@ class TransactionDialog(FormDialog):
 
     def _update_mode(self) -> None:
         transfer = self.is_transfer_mode
+        if self._transaction is None:
+            self.save_button.setText(_(ADD_LABELS[self.mode_input.index()]))
         self.form.labelForField(self.account_input).setText(_("Desde") if transfer else _("Cuenta"))
         self.form.setRowVisible(self.to_account_input, transfer)
         self.form.setRowVisible(self.payee_input, not transfer)

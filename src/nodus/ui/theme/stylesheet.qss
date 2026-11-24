@@ -133,7 +133,7 @@ QMainWindow, #ContentArea, #PageStack {
     border-radius: $radius_xl;
 }
 
-#CardTitle, #StatCaption {
+#CardTitle, #StatCaption, #FormSection {
     color: $text_muted;
     font-size: $label_size;
     font-weight: $label_weight;
@@ -498,12 +498,22 @@ QPushButton#HelpTopic {
     min-width: $amount_symbol_width;
 }
 
+/* The amount of a movement, the figure of its form. */
+#AmountSymbol[prominent="true"] {
+    font-size: $figure_small_size;
+}
+
 QLineEdit, QComboBox, QDateEdit {
     background: $background;
     border: $line_thin solid $border;
     border-radius: $radius_m;
     padding: $space_xs $space_s;
     min-height: $field_height;
+}
+
+QLineEdit[prominent="true"] {
+    font-size: $figure_small_size;
+    font-weight: $figure_small_weight;
 }
 
 QLineEdit:focus, QComboBox:focus, QDateEdit:focus {

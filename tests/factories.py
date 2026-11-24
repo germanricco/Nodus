@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QFormLayout, QLabel
 
 from nodus.config.paths import AppPaths
 from nodus.database.database import Database
@@ -110,6 +110,25 @@ def transaction_dialog(
     if show:
         dialog.show()
     return dialog
+
+
+def visible_rows(dialog) -> list[str]:
+    """The rows a form shows, top to bottom, by their label: "" for a line under a
+    field, and a row across the form (a caption like «OPCIONAL») by its text."""
+    form = dialog.form
+    rows = []
+    for row in range(form.rowCount()):
+        spanning = form.itemAt(row, QFormLayout.ItemRole.SpanningRole)
+        field = (spanning or form.itemAt(row, QFormLayout.ItemRole.FieldRole)).widget()
+        if not form.isRowVisible(field):
+            continue
+        if spanning is not None:
+            captions = [label.text() for label in field.findChildren(QLabel)]
+            rows.append(captions[0] if captions else "")
+        else:
+            label = form.labelForField(field)
+            rows.append(label.text() if label else "")
+    return rows
 
 
 class FakeRegistry:

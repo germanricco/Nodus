@@ -9,6 +9,7 @@ from factories import (
     income_draft,
     light_theme,
     transaction_dialog,
+    visible_rows,
 )
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
@@ -259,18 +260,6 @@ class TestRefundWithExtra:
         assert not dialog.result()
         assert "$ 600,00" in dialog.findChild(QLabel, FIELD_ERROR).text()
         assert len(services.refunds.summary(shoes.id).refunds) == 1
-
-
-def visible_rows(dialog) -> list[str]:
-    """The labels of the rows the form shows, top to bottom ("" for a line under a field)."""
-    form = dialog.form
-    rows = []
-    for row in range(form.rowCount()):
-        field = form.itemAt(row, form.ItemRole.FieldRole).widget()
-        if form.isRowVisible(field):
-            label = form.labelForField(field)
-            rows.append(label.text() if label else "")
-    return rows
 
 
 def test_each_line_goes_under_the_field_it_follows(

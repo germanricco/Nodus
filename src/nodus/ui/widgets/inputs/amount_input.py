@@ -2,19 +2,29 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QSizePolicy, QWidget
 
 from nodus.models.amount_parsing import AmountTextError, parse_amount
 from nodus.models.currency import Currency
 from nodus.models.language_format import format_decimal
 from nodus.models.money import Money
+from nodus.ui.theme.design import Space
 from nodus.ui.widgets.inputs.input_error import InputError
+from nodus.ui.widgets.style import set_style_property
+
+# The amount a prominent field keeps room for: millions with cents.
+_ROOM_SAMPLE = "9.999.999,99"
 
 
 class AmountInput(QWidget):
-    """An amount field with the currency symbol in front, e.g. "US$ [ 1.234,56 ]"."""
+    """An amount field with the currency symbol in front, e.g. "US$ [ 1.234,56 ]".
 
-    def __init__(self, currency: Currency, parent: QWidget | None = None) -> None:
+    ``prominent`` makes it the figure of its form, larger, as the amount of a movement:
+    the one field always typed."""
+
+    def __init__(
+        self, currency: Currency, parent: QWidget | None = None, prominent: bool = False
+    ) -> None:
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -23,8 +33,21 @@ class AmountInput(QWidget):
         self.line_edit = QLineEdit()
         layout.addWidget(self._symbol)
         layout.addWidget(self.line_edit, stretch=1)
+        for part in (self._symbol, self.line_edit):
+            set_style_property(part, "prominent", prominent)
+        if prominent:
+            # Its larger text would ask for the room of a long text; it asks for the room
+            # of an amount instead (``keep_room``), and takes the rest of its row.
+            self.line_edit.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
         self._zero_hint = ""
         self.set_currency(currency)
+
+    def keep_room(self) -> None:
+        """Keeps the field wide enough for a large amount, «9.999.999,99», in the font
+        the style sheet gives it, so a typed amount is never cut. Call it once styled."""
+        self.line_edit.ensurePolished()
+        sample = self.line_edit.fontMetrics().horizontalAdvance(_ROOM_SAMPLE)
+        self.line_edit.setMinimumWidth(sample + 2 * Space.M)
 
     def set_currency(self, currency: Currency) -> None:
         self._currency = currency

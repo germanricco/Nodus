@@ -11,11 +11,12 @@ from PySide6.QtWidgets import (
     QLayout,
     QPushButton,
     QScrollArea,
+    QVBoxLayout,
     QWidget,
 )
 
 from nodus.models.money import Money
-from nodus.ui.theme.design import Dwell, Elevation, Line, Opacity, Popup
+from nodus.ui.theme.design import Dwell, Elevation, Line, Opacity, Popup, Space
 from nodus.ui.theme.theme import Theme
 
 # Figures line up at their right edge, centered in their row.
@@ -98,6 +99,20 @@ def separator() -> QFrame:
     line.setObjectName("Separator")
     line.setFixedHeight(Line.THIN)
     return line
+
+
+def form_section(title: str) -> QWidget:
+    """A line across a form and a caption under it, «OPCIONAL», that starts a group of
+    its fields; it takes a whole row of the form."""
+    section = QWidget()
+    layout = QVBoxLayout(section)
+    layout.setContentsMargins(0, Space.XS, 0, 0)
+    layout.setSpacing(Space.M)
+    layout.addWidget(separator())
+    caption = QLabel(title.upper())
+    caption.setObjectName("FormSection")
+    layout.addWidget(caption)
+    return section
 
 
 def muted_label(text: str) -> QLabel:

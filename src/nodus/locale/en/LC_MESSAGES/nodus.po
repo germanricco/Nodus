@@ -2243,6 +2243,18 @@ msgid "Etiqueta"
 msgstr "Tag"
 
 #: nodus/ui/dialogs/transaction_dialog.py
+msgid "Agregar gasto"
+msgstr "Add expense"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Agregar ingreso"
+msgstr "Add income"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Agregar transferencia"
+msgstr "Add transfer"
+
+#: nodus/ui/dialogs/transaction_dialog.py
 msgid "Primera cuota"
 msgstr "First installment"
 
@@ -2259,6 +2271,14 @@ msgstr "New transaction"
 #: nodus/ui/shell/main_window.py nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
 msgid "Agregar transacción"
 msgstr "Add transaction"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Un detalle para recordar"
+msgstr "A detail to remember"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+msgid "Enter para agregar"
+msgstr "Enter to add"
 
 #: nodus/ui/dialogs/transaction_dialog.py
 msgid "Hacia"

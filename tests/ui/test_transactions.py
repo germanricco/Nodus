@@ -9,6 +9,7 @@ from factories import (
     income_draft,
     transaction_dialog,
     usd,
+    visible_rows,
 )
 from menus import run_action, texts
 from PySide6.QtCore import Qt
@@ -796,3 +797,36 @@ def test_filters_stay_while_the_app_is_open(window, services, pesos):
     assert page.type_filter.currentIndex() == 1
     assert page.account_filter.current_id() == pesos.id
     assert page.search_input.text() == "café"
+
+
+@pytest.mark.parametrize(
+    ("mode", "rows", "button"),
+    [
+        (
+            EXPENSE_MODE,
+            ["Cuenta", "Cuotas", "Monto", "Beneficiario", "Categoría", "Fecha"],
+            "Agregar gasto",
+        ),
+        (INCOME_MODE, ["Cuenta", "Monto", "Beneficiario", "Categoría", "Fecha"], "Agregar ingreso"),
+        (TRANSFER_MODE, ["Desde", "Hacia", "Sale", "Fecha"], "Agregar transferencia"),
+    ],
+)
+def test_each_mode_asks_first_then_leaves_the_optional_last(
+    qtbot, services, event_bus, pesos, mode, rows, button
+):
+    """Account, how it is paid and the amount, as a payment is thought; what may stay
+    empty under «Opcional», in sight; and the button says what it adds."""
+    dialog = transaction_dialog(qtbot, services, event_bus)
+    dialog.mode_input.set_index(mode)
+
+    optional = ["Nota"] if mode == TRANSFER_MODE else ["Nota", "Etiquetas"]
+    assert visible_rows(dialog) == [*rows, "OPCIONAL", *optional]
+    assert dialog.save_button.text() == button
+    assert dialog.amount_input.line_edit.property("prominent")
+
+
+def test_an_edited_movement_keeps_its_button(qtbot, services, event_bus, pesos):
+    expense = services.transactions.create(expense_draft(services, pesos.id, ars("100")))
+    dialog = transaction_dialog(qtbot, services, event_bus, expense)
+
+    assert dialog.save_button.text() == "Guardar cambios"
