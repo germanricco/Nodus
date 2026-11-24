@@ -464,7 +464,7 @@ class TestTransactionsList:
         services.transactions.create(expense_draft(services, pesos.id, ars("10"), TODAY))
         page.refresh()
 
-        assert texts(page.list_view.row_actions(0)) == ["Editar", "Eliminar"]
+        assert texts(page.list_view.row_actions(0)) == ["Editar", "Duplicar", "Eliminar"]
 
     def test_a_double_click_opens_the_purchase_and_never_deletes(
         self, monkeypatch, services, heladera, page

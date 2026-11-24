@@ -437,8 +437,8 @@ class TestTransactionsPage:
         populate(services, pesos, dollars)
         page.refresh()
 
-        assert texts(page.row_actions(0)) == ["Editar", "Eliminar"]  # the transfer
-        assert texts(page.row_actions(1)) == ["Editar", "Eliminar"]
+        assert texts(page.row_actions(0)) == ["Editar", "Duplicar", "Eliminar"]  # the transfer
+        assert texts(page.row_actions(1)) == ["Editar", "Duplicar", "Eliminar"]
 
     def test_selection_bar_takes_the_header_with_two_rows(self, services, page, pesos, dollars):
         populate(services, pesos, dollars)

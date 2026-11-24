@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QWidget
 from nodus.i18n import _, ngettext
 from nodus.services.container import Services
 from nodus.ui.dialogs.confirm import delete_with_confirm
-from nodus.ui.dialogs.transaction_dialog import TransactionDialog
+from nodus.ui.dialogs.transaction_dialog import TransactionDialog, TransactionStart
 from nodus.ui.event_bus import EventBus
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import transactions_text
@@ -31,6 +31,19 @@ def edit_transaction(
 ) -> None:
     """Opens the form of ``item``, wherever its row is (Transacciones, the Dashboard)."""
     TransactionDialog(services, event_bus, theme_manager, item.transaction, parent=parent).exec()
+
+
+def duplicate_transaction(
+    services: Services,
+    event_bus: EventBus,
+    theme_manager: ThemeManager,
+    item: TransactionListItem,
+    parent: QWidget,
+) -> None:
+    """Opens the form of a new movement, a copy of ``item`` dated today, to record again
+    what repeats without being a recurring payment."""
+    start = TransactionStart(copy_of=item.transaction)
+    TransactionDialog(services, event_bus, theme_manager, parent=parent, start=start).exec()
 
 
 def delete_transactions(

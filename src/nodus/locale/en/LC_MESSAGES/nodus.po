@@ -3227,6 +3227,10 @@ msgid "Cambia la categoría, el beneficiario, la nota o las etiquetas"
 msgstr "Changes the category, payee, note or tags"
 
 #: nodus/ui/pages/base/transaction_list_view.py
+msgid "Duplicar"
+msgstr "Duplicate"
+
+#: nodus/ui/pages/base/transaction_list_view.py
 msgid "Ver beneficiario"
 msgstr "View payee"
 
@@ -3752,6 +3756,10 @@ msgstr "Open Help"
 #: nodus/ui/shell/main_window.py nodus/ui/text/labels.py
 msgid "Ver el recorrido"
 msgstr "Take the tour"
+
+#: nodus/ui/shell/main_window.py
+msgid "Repetir el último gasto"
+msgstr "Repeat the last expense"
 
 #: nodus/ui/shell/main_window.py
 msgid "Primero, una cuenta"

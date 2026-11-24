@@ -1,4 +1,5 @@
 import dataclasses
+from datetime import date
 
 import pytest
 from factories import TODAY, ars, category_id, expense_draft, income_draft, usd
@@ -6,6 +7,7 @@ from factories import TODAY, ars, category_id, expense_draft, income_draft, usd
 from nodus.models.account import AccountType
 from nodus.models.bulk_changes import BulkChanges
 from nodus.models.currency import Currency
+from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import NotFoundError, ValidationError
@@ -282,3 +284,23 @@ def test_in_english_a_rule_the_user_broke_is_told_in_english(english, services, 
     """The services write their messages for the user in the language Nodus is in."""
     with pytest.raises(ValidationError, match="The amount must be greater than zero."):
         services.transactions.create(expense_draft(services, pesos.id, ars("0"), TODAY))
+
+
+class TestLastExpense:
+    def test_is_the_one_recorded_last_whatever_its_day(self, services, pesos):
+        services.transactions.create(expense_draft(services, pesos.id, ars("2500")))
+        earlier = expense_draft(services, pesos.id, ars("800"), date(2026, 1, 5))
+        recorded_last = services.transactions.create(earlier)
+
+        assert services.transactions.last_expense() == recorded_last
+
+    def test_never_an_income_or_an_installment(self, services, pesos):
+        cafe = services.transactions.create(expense_draft(services, pesos.id, ars("2500")))
+        services.transactions.create(income_draft(services, pesos.id, ars("900")))
+        draft = expense_draft(services, pesos.id, ars("60000"), TODAY, note="Heladera")
+        services.installments.create(draft, InstallmentPlan(None, 6, ars("60000"), TODAY))
+
+        assert services.transactions.last_expense() == cafe
+
+    def test_none_without_expenses(self, services):
+        assert services.transactions.last_expense() is None

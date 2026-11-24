@@ -54,12 +54,17 @@ _MODE_TYPES = {EXPENSE_MODE: TransactionType.EXPENSE, INCOME_MODE: TransactionTy
 class TransactionStart:
     """What a new movement starts with when it is added from a page about one account,
     category, payee or tag: that item, already in its field. A category also sets the
-    kind of movement, expense or income."""
+    kind of movement, expense or income.
+
+    ``copy_of`` starts it as a copy of a movement («Duplicar»): its kind, accounts,
+    amount, payee, category, tags and note, dated today. Never an installment, which
+    belongs to a purchase."""
 
     account_id: int | None = None
     payee: str = ""
     tag: str = ""
     category_id: int | None = None
+    copy_of: Transaction | None = None
 
 
 class TransactionDialog(FormDialog):
@@ -96,6 +101,10 @@ class TransactionDialog(FormDialog):
         self._event_bus = event_bus
         self._transaction = transaction
         self._category_picked = transaction is not None
+        # The category the form keeps through changes of mode: the edited or copied one's.
+        self._kept_category_id = (
+            transaction.category_id if transaction and not transaction.is_transfer else None
+        )
         self._create_fields(services, theme_manager, transaction)
         self._lay_out()
         self._connect()
@@ -206,6 +215,9 @@ class TransactionDialog(FormDialog):
     def _start(self, start: TransactionStart) -> None:
         """Fills what the page it was opened from already knows; otherwise the account is
         the last one used, where most movements go."""
+        if start.copy_of is not None:
+            self._copy(start.copy_of)
+            return
         self.account_input.offer(start.account_id or self._services.settings.last_account_id())
         if start.payee:
             self.payee_input.set_text(start.payee)
@@ -273,6 +285,29 @@ class TransactionDialog(FormDialog):
         self.date_input.set_day(transaction.occurred_on)
         self.note_input.setText(transaction.note)
 
+    def _copy(self, original: Transaction) -> None:
+        """Everything of ``original`` but its day: a copy is dated today."""
+        if original.is_transfer:
+            transfer = self._services.transfers.get(original.transfer_id)
+            self.mode_input.set_index(TRANSFER_MODE)
+            self.account_input.offer(transfer.outgoing.account_id)
+            self.to_account_input.select(transfer.incoming.account_id)
+            self.amount_input.set_money(transfer.outgoing.amount)
+            self.amount_in_input.set_money(transfer.incoming.amount)
+        else:
+            income = original.type is TransactionType.INCOME
+            self._kept_category_id = original.category_id
+            self._category_picked = True
+            self.mode_input.set_index(INCOME_MODE if income else EXPENSE_MODE)
+            self.account_input.offer(original.account_id)
+            self.amount_input.set_money(original.amount)
+            self.category_input.select(original.category_id)
+            if original.payee_id is not None:
+                self.payee_input.set_text(self._services.payees.get(original.payee_id).name)
+            tags = self._services.transactions.tags_for([original.id])
+            self.tag_input.set_names([tag.name for tag in tags.get(original.id, [])])
+        self.note_input.setText(original.note)
+
     def _load_purchase(self, installment: Transaction) -> None:
         """An installment opens its whole purchase: the total, the count and the first day.
         A purchase stays an expense."""
@@ -320,8 +355,8 @@ class TransactionDialog(FormDialog):
             self.category_input.set_categories(
                 [(None, self._services.categories.category_tree(kind))]
             )
-            if self._transaction and not self._transaction.is_transfer:
-                self.category_input.select(self._transaction.category_id)
+            if self._kept_category_id is not None:
+                self.category_input.select(self._kept_category_id)
             payee = self._services.payees.find(self.payee_input.text())
             if payee is not None:
                 self._suggest_category(payee)

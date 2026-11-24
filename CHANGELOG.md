@@ -37,6 +37,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - En Ajustes, el historial de cotizaciones muestra las tres últimas; «Ver todas» despliega el resto. Y la página de una cuenta, una categoría, un beneficiario o una etiqueta sin movimientos muestra su mensaje en una tarjeta a su medida, sin un recuadro vacío hasta el fondo.
 - Los gráficos de meses empiezan en el primer mes con movimientos, en lugar de mostrar meses vacíos que parecían en cero, y el de Flujo de caja, en el Inicio y en Análisis, dice qué color es ingresos y cuál gastos.
 - Cada tema de la Ayuda tiene su propio ícono, así se distinguen de un vistazo.
+- Lo que se repite sin ser un pago recurrente se anota más rápido: «Duplicar», en el menú «⋯» de cada movimiento, abre el formulario con una copia fechada hoy, y en Ctrl+K está «Repetir el último gasto».
 - Arreglo: al abrir Nodus, al cerrar un diálogo o al volver a la ventana, a veces un botón o una fila quedaba resaltado sin haber tocado el teclado. Ahora el resaltado aparece solo si llegaste ahí con Tab o con un atajo.
 - Arreglo: en una ventana angosta, el botón «Traer mis datos de otra computadora» de la bienvenida se cortaba, y en Ajustes la fila de la fuente de las cotizaciones hacía desplazar la página hacia los costados. Ahora los botones que no entran pasan a la línea de abajo.
 - Arreglo: al pasar de una página a otra, a veces quedaba un botón recuadrado sin haberlo elegido, como la flecha del mes anterior o «Tendencias» en Análisis. El recuadro ahora aparece solo cuando te movés con Tab.

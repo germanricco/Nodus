@@ -554,7 +554,23 @@ class MainWindow(QMainWindow):
                     self.toggle_amounts_hidden, HIDE_AMOUNTS.label),
             Command("action:help", _("Abrir la Ayuda"), action, self.show_help, HELP.label),
             Command("action:tour", _("Ver el recorrido"), action, self.start_tour),
+            *self._repeat_commands(action),
         ]  # fmt: skip
+
+    def _repeat_commands(self, section: str) -> list[Command]:
+        """«Repetir el último gasto», with what it was, when there is one to repeat."""
+        last = self._services.transactions.last_expense()
+        if last is None:
+            return []
+        start = TransactionStart(copy_of=last)
+        return [
+            Command(
+                "action:repeat",
+                _("Repetir el último gasto"),
+                section,
+                lambda: self.open_new_transaction(start),
+            )
+        ]
 
     def _run_command(self, command: Command) -> None:
         self._services.settings.add_recent_command(command.key)

@@ -12,7 +12,12 @@ from nodus.models.money import Money
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.reports.dashboard_service import FilteredTotals
-from nodus.ui.actions.transactions import delete_transactions, edit_transaction, pay_off_actions
+from nodus.ui.actions.transactions import (
+    delete_transactions,
+    duplicate_transaction,
+    edit_transaction,
+    pay_off_actions,
+)
 from nodus.ui.dialogs.bulk_edit_dialog import BulkEditDialog
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import RecordLink
@@ -191,6 +196,7 @@ class TransactionListView(Card):
                 default=True,
                 effect=Effect.OPEN,
             ),
+            *self._duplicate_actions(item),
             *self._payee_actions(item),
             *pay_off_actions(self, self._services, self._event_bus, item),
             RowAction(
@@ -200,6 +206,22 @@ class TransactionListView(Card):
                 destructive=True,
                 effect=Effect.CONFIRMED,
             ),
+        ]
+
+    def _duplicate_actions(self, item: TransactionListItem) -> list[RowAction]:
+        """«Duplicar»: the form of a new movement, a copy of this one dated today. Not for
+        an installment, which belongs to its purchase."""
+        if item.transaction.installment is not None:
+            return []
+        return [
+            RowAction(
+                _("Duplicar"),
+                lambda: duplicate_transaction(
+                    self._services, self._event_bus, self._theme_manager, item, self.window()
+                ),
+                "copy",
+                effect=Effect.OPEN,
+            )
         ]
 
     def _payee_actions(self, item: TransactionListItem) -> list[RowAction]:

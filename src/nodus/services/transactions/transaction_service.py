@@ -199,6 +199,14 @@ class TransactionService:
     def list_transactions(self, criteria: TransactionFilter) -> list[Transaction]:
         return self._transactions.list(criteria)
 
+    def last_expense(self) -> Transaction | None:
+        """The expense recorded last, whatever its day, to record it again; never an
+        installment, which belongs to a purchase."""
+        expenses = self._transactions.list(
+            TransactionFilter(type=TransactionType.EXPENSE, is_transfer=False)
+        )
+        return max((t for t in expenses if t.installment is None), key=lambda t: t.id, default=None)
+
     def account_activity(self, account: Account, start: date, end: date) -> AccountActivity:
         """What came into and went out of ``account`` from ``start`` to ``end``."""
         zero = Money.zero(account.currency)
