@@ -219,6 +219,11 @@ class TransactionService:
         """The first and last day of the transactions matching ``criteria``, if any."""
         return self._transactions.date_range(criteria)
 
+    def first_month(self) -> Month | None:
+        """The month of the first movement: no chart starts before it."""
+        span = self.date_range(TransactionFilter())
+        return Month.of(span[0]) if span else None
+
     def history_months(self, period: Period, today: date | None = None) -> list[Month]:
         """The months of ``period`` with a history (``Period.months_since``): what a monthly
         average divides by. None of them before the first movement."""

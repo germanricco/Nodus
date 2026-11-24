@@ -148,6 +148,7 @@ class CategoryReportService:
         )
         mine = [m for m in everything.movements if m.category_id in ids and m.kind is category.kind]
         window = Period.recent(today)
+        charted = window.from_month(self._transactions.first_month())
         recent = [t for t in own if window.contains(t.occurred_on)]
         unconverted = convert_movements(
             self._transactions, self._exchange_rates, recent
@@ -172,9 +173,9 @@ class CategoryReportService:
             last_on=max((t.occurred_on for t in own), default=None),
             this_month=by_month[Month.of(today)],
             average=average,
-            months=[(month, by_month[month]) for month in window.months()],
+            months=[(month, by_month[month]) for month in charted.months()],
             children=list(children),
-            parts=self._parts(category, children, mine, window) if children else [],
+            parts=self._parts(category, children, mine, charted) if children else [],
         )
 
     @staticmethod

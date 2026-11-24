@@ -146,3 +146,18 @@ def test_in_spanish_months_inside_a_sentence_are_lowercase_and_hours_go_to_24():
 
 def test_in_english_the_ready_made_periods_are_named_in_english(english):
     assert [quick.label for quick in QuickPeriod][:2] == ["This month", "Last 3 months"]
+
+
+class TestFromMonth:
+    YEAR = Period.of_months(Month(2025, 12), Month(2026, 11))
+
+    def test_drops_the_months_before_the_first_movement(self):
+        assert self.YEAR.from_month(Month(2026, 6)).months()[0] == Month(2026, 6)
+        assert self.YEAR.from_month(Month(2026, 6)).last_month == Month(2026, 11)
+
+    def test_without_movements_or_with_them_since_before_it_stays_whole(self):
+        assert self.YEAR.from_month(None) == self.YEAR
+        assert self.YEAR.from_month(Month(2020, 1)) == self.YEAR
+
+    def test_a_period_before_the_first_movement_stays_whole_to_say_so(self):
+        assert self.YEAR.from_month(Month(2027, 3)) == self.YEAR

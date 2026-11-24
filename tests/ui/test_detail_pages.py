@@ -267,7 +267,7 @@ class TestCategoryDetail:
         assert figures["Total"] == "$ 500,00"
         assert figures["Este mes"] == "$ 500,00"
         assert figures["Movimientos"] == "2"
-        assert len(detail.chart.bars()) == 12
+        assert len(detail.chart.bars()) == 1  # Nodus has movements only this month
         # Its subcategories are in «Por subcategoría», with their amounts, not in a line.
         assert detail.related_line.isHidden()
         # Its movements may be in a subcategory, so the list says which.

@@ -189,6 +189,14 @@ class Period:
         first, current = Month.of(first_day), Month.of(today)
         return [month for month in self.months() if first <= month <= current]
 
+    def from_month(self, first: Month | None) -> Period:
+        """The period without the months before ``first`` (the first movement): a chart
+        starts there instead of showing empty months that read as months at zero. A
+        period that ends before ``first`` stays whole, to say it has no movements."""
+        if first is None or not self.first_month < first <= self.last_month:
+            return self
+        return Period.of_months(first, self.last_month)
+
     def contains(self, day: date) -> bool:
         return self.start <= day <= self.end
 

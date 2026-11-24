@@ -692,13 +692,13 @@ msgstr "Each account can be chosen only once."
 
 #: nodus/services/reports/analysis_service.py nodus/ui/dialogs/payee_dialogs.py
 #: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/dashboard/cash_flow_card.py
-#: nodus/ui/pages/transactions_page.py nodus/ui/text/labels.py
+#: nodus/ui/pages/transactions_page.py nodus/ui/text/labels.py nodus/ui/widgets/charts/chart_legend.py
 msgid "Gastos"
 msgstr "Expenses"
 
 #: nodus/services/reports/analysis_service.py nodus/ui/dialogs/payee_dialogs.py
 #: nodus/ui/pages/analysis/cash_flow_view.py nodus/ui/pages/dashboard/cash_flow_card.py
-#: nodus/ui/pages/transactions_page.py nodus/ui/text/labels.py
+#: nodus/ui/pages/transactions_page.py nodus/ui/text/labels.py nodus/ui/widgets/charts/chart_legend.py
 msgid "Ingresos"
 msgstr "Income"
 

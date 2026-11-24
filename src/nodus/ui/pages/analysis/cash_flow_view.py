@@ -28,6 +28,7 @@ from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts.bar_chart import BarChart, flow_bar_groups
 from nodus.ui.widgets.charts.chart_base import compact_pesos
+from nodus.ui.widgets.charts.chart_legend import income_expense_legend
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
@@ -143,7 +144,9 @@ class CashFlowView(AnalysisView):
         self.chart = BarChart(theme_manager.theme, compact_pesos)
         self.chart.setMinimumHeight(Chart.STACKED_MIN_HEIGHT)
         self.chart.clicked.connect(lambda index: self._open_month(self._report.months[index]))
-        card, self.empty_label, self.unconverted_label = chart_card(_("Mes a mes"), self.chart)
+        card, self.empty_label, self.unconverted_label = chart_card(
+            _("Mes a mes"), self.chart, income_expense_legend(theme_manager)
+        )
         layout.addWidget(card)
 
         table_card = self.table_card = Card()

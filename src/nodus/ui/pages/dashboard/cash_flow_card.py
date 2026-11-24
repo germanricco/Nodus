@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QHBoxLayout, QLabel
 
 from nodus.i18n import N_, _
 from nodus.models.period import Month
@@ -17,6 +17,7 @@ from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts.bar_chart import BarChart, flow_bar_groups
 from nodus.ui.widgets.charts.chart_base import compact_pesos
+from nodus.ui.widgets.charts.chart_legend import income_expense_legend
 from nodus.ui.widgets.charts.share_charts import ProportionBar, Segment
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
@@ -65,8 +66,12 @@ class CashFlowCard(Card):
         self.body.addWidget(self.unconverted_label)
         trend_title = QLabel(_("MES A MES"))
         trend_title.setObjectName("StatCaption")
+        trend_header = QHBoxLayout()
+        trend_header.addWidget(trend_title)
+        trend_header.addStretch()
+        trend_header.addWidget(income_expense_legend(theme_manager))
         self.body.addSpacing(Space.S)
-        self.body.addWidget(trend_title)
+        self.body.addLayout(trend_header)
         self.chart = BarChart(theme, compact_pesos)
         self._months: list[Month] = []
         self.chart.clicked.connect(lambda index: self.month_requested.emit(self._months[index]))

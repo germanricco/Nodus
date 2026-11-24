@@ -271,7 +271,11 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
         """This month against the one before, as Inicio compares each category: more
         spending is bad news, more income good news; «Nueva» when the month before had
         nothing, and no badge when neither had anything."""
-        this_month, previous = summary.this_month, summary.months[-2][1]
+        this_month = summary.this_month
+        # Nothing before this month when the first movement is from it.
+        previous = (
+            summary.months[-2][1] if len(summary.months) > 1 else Money.zero(this_month.currency)
+        )
         badge = self.change_badge
         badge.set_higher_is_better(summary.category.kind is TransactionType.INCOME)
         badge.set_change(relative_change(this_month, previous))

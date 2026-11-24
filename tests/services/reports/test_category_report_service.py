@@ -121,15 +121,16 @@ class TestSummary:
         assert [c.name for c in summary.children] == ["Alquiler"]
         assert (summary.first_on, summary.last_on) == (date(2025, 11, 30), TODAY)
 
-    def test_twelve_months_and_the_average_since_its_first_movement(self, services, pesos):
+    def test_its_months_since_the_first_movement_and_the_average(self, services, pesos):
         spend(services, pesos, ars("300"), "Ocio", on=date(2026, 9, 1))
         spend(services, pesos, ars("300"), "Ocio")
 
         summary = services.category_report.summary(category_id(services, "Ocio", EXPENSE), TODAY)
 
-        assert len(summary.months) == 12
+        # Of the last twelve months, those since Nodus has movements: no empty ones before.
+        assert [month for month, _total in summary.months] == [Month(2026, m) for m in (9, 10, 11)]
         assert summary.months[-1] == (Month(2026, 11), ars("300"))
-        assert summary.months[-3] == (Month(2026, 9), ars("300"))
+        assert summary.months[0] == (Month(2026, 9), ars("300"))
         # September to November: three months of history, not twelve.
         assert summary.average == ars("200")
 

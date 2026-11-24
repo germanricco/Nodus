@@ -19,11 +19,16 @@ ModelIndex = QModelIndex | QPersistentModelIndex
 MONTH = 0
 
 
-def chart_card(title: str, chart: QWidget) -> tuple[Card, EmptyState, QLabel]:
-    """A card with ``chart``, the label shown instead of it when the period is empty and
-    the note about movements left out for lack of an exchange rate."""
+def chart_card(
+    title: str, chart: QWidget, legend: QWidget | None = None
+) -> tuple[Card, EmptyState, QLabel]:
+    """A card with ``chart`` (and its ``legend`` beside the title), the label shown
+    instead of it when the period is empty and the note about movements left out for lack
+    of an exchange rate."""
     card = Card()
-    card_header(card, title)
+    header = card_header(card, title)
+    if legend is not None:
+        header.addWidget(legend)
     empty_label = EmptyState(_(NO_MOVEMENTS_TEXT), compact=True)
     unconverted_label = muted_label("")
     unconverted_label.setWordWrap(True)

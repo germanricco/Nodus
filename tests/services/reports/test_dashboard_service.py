@@ -97,7 +97,9 @@ def test_comparison_with_the_previous_period(services, pesos):
     assert comparison.savings_change == pytest.approx((3700 - 3200) / 3200)
 
 
-def test_monthly_flow_of_one_month_shows_the_year_leading_to_it(services, pesos):
+def test_monthly_flow_of_one_month_shows_the_year_leading_to_it_since_the_first_movement(
+    services, pesos
+):
     services.transactions.create(
         expense_draft(services, pesos.id, ars("100"), on=date(2026, 6, 30))
     )
@@ -105,8 +107,8 @@ def test_monthly_flow_of_one_month_shows_the_year_leading_to_it(services, pesos)
 
     flow = services.dashboard.monthly_flow(NOVEMBER)
 
-    assert [f.month for f in flow] == [Month(2025, 12)] + [Month(2026, m) for m in range(1, 12)]
-    assert (flow[6].expenses, flow[6].savings) == (ars("100"), ars("-100"))
+    assert [f.month for f in flow] == [Month(2026, m) for m in range(6, 12)]
+    assert (flow[0].expenses, flow[0].savings) == (ars("100"), ars("-100"))
     assert (flow[-1].income, flow[-1].savings) == (ars("900"), ars("900"))
 
 

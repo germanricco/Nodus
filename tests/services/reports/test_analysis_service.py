@@ -151,7 +151,9 @@ class TestTrends:
         assert [(t.category.id, t.total, t.count) for t in trends.categories] == [
             (vivienda, ars("700"), 1)
         ]
-        assert trends.months[1].by_category[0].category.id == vivienda
+        # The chart starts in October, the first month with movements.
+        assert trends.months[0].month == Month(2026, 10)
+        assert trends.months[0].by_category[0].category.id == vivienda
 
     def test_income(self, services, history):
         trends = services.analysis.trends(SEP_NOV, Metric.INCOME)

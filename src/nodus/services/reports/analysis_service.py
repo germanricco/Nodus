@@ -174,7 +174,7 @@ class AnalysisService:
     def trends(self, period: Period, metric: Metric, today: date | None = None) -> Trends:
         converted = self._converted(period)
         movements = converted.movements
-        months = period.months()
+        months = period.from_month(self._transactions.first_month()).months()
         previous = self._converted(period.previous()).movements
         history = self._transactions.history_months(period, today)
         if metric is Metric.SAVINGS:
@@ -206,7 +206,9 @@ class AnalysisService:
         previous = self._converted(period.previous()).movements
         return CashFlowReport(
             period=period,
-            months=month_flows(converted.movements, period.months()),
+            months=month_flows(
+                converted.movements, period.from_month(self._transactions.first_month()).months()
+            ),
             current=flow_totals(converted.movements),
             previous=flow_totals(previous),
             unconverted=converted.unconverted,

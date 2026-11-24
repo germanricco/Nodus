@@ -169,8 +169,8 @@ class DashboardService:
         months = period.months()
         if len(months) == 1:
             months = [months[0].shifted(-i) for i in reversed(range(RECENT_MONTHS))]
-        converted = self._converted(Period.of_months(months[0], months[-1]))
-        return month_flows(converted.movements, months)
+        shown = Period.of_months(months[0], months[-1]).from_month(self._transactions.first_month())
+        return month_flows(self._converted(shown).movements, shown.months())
 
     def totals(self, criteria: TransactionFilter) -> FilteredTotals:
         """What the movements matching ``criteria`` add up to, transfers aside."""
