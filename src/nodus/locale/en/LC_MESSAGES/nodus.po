@@ -964,6 +964,26 @@ msgstr "Tags"
 msgid "Ajustes"
 msgstr "Settings"
 
+#: nodus/ui/navigation.py
+msgid "Abrir la cuenta"
+msgstr "Open the account"
+
+#: nodus/ui/navigation.py
+msgid "Abrir la categoría"
+msgstr "Open the category"
+
+#: nodus/ui/navigation.py
+msgid "Abrir el beneficiario"
+msgstr "Open the payee"
+
+#: nodus/ui/navigation.py
+msgid "Abrir la etiqueta"
+msgstr "Open the tag"
+
+#: nodus/ui/navigation.py
+msgid "Abrir la meta"
+msgstr "Open the goal"
+
 #: nodus/ui/pages/analysis/trends_view.py nodus/ui/period_selector.py
 msgid "Período anterior"
 msgstr "Previous period"
@@ -2415,20 +2435,12 @@ msgstr "At today's exchange rate, the way net worth counts it"
 msgid "Aporta a:"
 msgstr "Counts toward:"
 
-#: nodus/ui/pages/account_detail_page.py nodus/ui/pages/goals_page.py
-msgid "Abrir la meta"
-msgstr "Open the goal"
-
 #: nodus/ui/pages/accounts_page.py
 #, python-brace-format
 msgid "Rendimiento {amount}"
 msgstr "Return {amount}"
 
-#: nodus/ui/pages/accounts_page.py nodus/ui/pages/goal_detail_page.py
-msgid "Abrir la cuenta"
-msgstr "Open the account"
-
-#: nodus/ui/pages/accounts_page.py nodus/ui/pages/base/summary_page.py
+#: nodus/ui/pages/accounts_page.py nodus/ui/pages/base/summary_page.py nodus/ui/pages/budgets_page.py
 #: nodus/ui/pages/categories_page.py nodus/ui/pages/goals_page.py
 msgid "Abrir"
 msgstr "Open"
@@ -2600,10 +2612,6 @@ msgstr "Choose “{name}”"
 #: nodus/ui/pages/categories_page.py
 msgid "sistema"
 msgstr "system"
-
-#: nodus/ui/pages/categories_page.py nodus/ui/pages/category_detail_page.py
-msgid "Abrir la categoría"
-msgstr "Open the category"
 
 #: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
 #: nodus/ui/pages/categories_page.py
@@ -3030,6 +3038,11 @@ msgstr "The rest of the change comes from your transactions."
 msgid "Le pasa sus movimientos a otro y lo elimina"
 msgstr "Moves its transactions to another one and deletes it"
 
+#: nodus/ui/pages/base/summary_detail_page.py
+#, python-brace-format
+msgid "Total de los últimos {count} meses"
+msgstr "Total over the last {count} months"
+
 #: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
 msgid "Movimientos"
 msgstr "Transactions"
@@ -3037,6 +3050,11 @@ msgstr "Transactions"
 #: nodus/ui/pages/base/summary_detail_page.py
 msgid "Último movimiento"
 msgstr "Last transaction"
+
+#: nodus/ui/pages/base/summary_detail_page.py
+#, python-brace-format
+msgid "Movimientos en {count} meses"
+msgstr "Transactions in {count} months"
 
 #: nodus/ui/pages/base/summary_detail_page.py
 msgid "Todavía no tiene movimientos."
@@ -3814,12 +3832,12 @@ msgstr ""
 #: nodus/ui/text/help_texts.py
 msgid ""
 "El Inicio muestra tu patrimonio neto, los próximos pagos, en qué se fue el dinero y tus "
-"presupuestos. Arriba a la derecha eliges el período, y un clic en una categoría o en un pago te "
-"lleva a sus movimientos."
+"presupuestos. Arriba a la derecha eliges el período, y un clic en una categoría abre su página. "
+"Toda fila que lleva a otra página termina en «›»."
 msgstr ""
-"Home shows your net worth, the upcoming payments, where the money went and your budgets. At the "
-"top right you choose the period, and a click on a category or a payment takes you to its "
-"transactions."
+"Home shows your net worth, upcoming payments, where the money went and your budgets. Pick the "
+"period at the top right, and click a category to open its page. Every row that leads to another "
+"page ends in “›”."
 
 #: nodus/ui/text/help_texts.py
 msgid ""
@@ -3994,11 +4012,11 @@ msgstr ""
 
 #: nodus/ui/text/help_texts.py
 msgid ""
-"Muchas páginas te traen hasta acá ya filtrado: un clic en una categoría del Inicio, en una barra "
-"de Análisis o en «Ver movimientos» del menú de una fila."
+"Muchas páginas te traen hasta acá ya filtrado: un clic en una barra de un mes, o «Ver "
+"movimientos» del menú de una fila."
 msgstr ""
-"Many pages bring you here already filtered: a click on a category on Home, on a bar in Analysis "
-"or on “View transactions” in a row's menu."
+"Many pages bring you here already filtered: a click on a month's bar, or “View transactions” in a"
+" row's menu."
 
 #: nodus/ui/text/help_texts.py
 msgid "«Exportar» guarda lo que ves en un archivo CSV, que se abre en Excel o en cualquier planilla."
@@ -4236,8 +4254,10 @@ msgstr ""
 "“Net worth” follows what you have, from the end of one month to the next."
 
 #: nodus/ui/text/help_texts.py
-msgid "Un clic en cualquier barra o fila te lleva a los movimientos que la forman."
-msgstr "A click on any bar or row takes you to the transactions it's made of."
+msgid ""
+"Un clic en una barra te lleva a los movimientos de ese mes, y uno en una categoría, un "
+"beneficiario o una etiqueta abre su página."
+msgstr "Click a bar to see that month's transactions, or a category, payee or tag to open its page."
 
 #: nodus/ui/text/help_texts.py
 msgid "Categorías, beneficiarios y etiquetas"
@@ -4254,35 +4274,38 @@ msgstr ""
 #: nodus/ui/text/help_texts.py
 msgid ""
 "Categorías muestra cuánto sumó cada una en el período que elijas, de la más grande a la más "
-"chica, con una barra de cuánto pesa en el total. Un clic en una abre su página, con lo que sumó "
-"mes a mes, y «Unir con…» pasa sus movimientos a otra si tienes dos que son lo mismo; con sus "
-"casillas marcas varias y las unes o eliminas juntas. Cada una puede tener subcategorías, como "
-"Supermercado dentro de Comida, con «Agregar subcategoría» en su menú. Si eliminas una, sus "
-"movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de sistema: Nodus las "
-"usa, así que no se renombran ni se eliminan. Para el color, además de la paleta, el «+» abre una "
-"rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano después de la paleta, "
-"también para las etiquetas."
+"chica, con una barra de cuánto pesa en el total. Un doble clic en una abre su página, con lo que "
+"sumó en los últimos 12 meses y mes a mes, y «Unir con…» pasa sus movimientos a otra si tienes dos"
+" que son lo mismo; con sus casillas marcas varias y las unes o eliminas juntas. Cada una puede "
+"tener subcategorías, como Supermercado dentro de Comida, con «Agregar subcategoría» en su menú. "
+"Si eliminas una, sus movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de "
+"sistema: Nodus las usa, así que no se renombran ni se eliminan. Para el color, además de la "
+"paleta, el «+» abre una rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano "
+"después de la paleta, también para las etiquetas."
 msgstr ""
 "Categories shows how much each one added up to in the period you choose, from the largest down, "
-"with a bar of how much it weighs in the total. Clicking one opens its page, with what it added up"
-" to month by month, and “Merge with…” moves its transactions to another one if you have two that "
-"are the same; with their check boxes you choose several and merge or delete them together. Each "
-"one can have subcategories, such as Supermarket inside Food, with “Add subcategory” in its menu. "
-"If you delete one, its transactions move to “Other” and aren't lost. “Other” and “Refunds” belong"
-" to the system: Nodus uses them, so they can't be renamed or deleted. For the color, besides the "
-"palette, the “+” opens a color wheel with any other color, and the last ones you chose there stay"
-" at hand after the palette, for tags too."
+"with a bar of how much it weighs in the total. Double-clicking one opens its page, with what it "
+"added up to over the last 12 months and month by month, and “Merge with…” moves its transactions "
+"to another one if you have two that are the same; with their check boxes you choose several and "
+"merge or delete them together. Each one can have subcategories, such as Supermarket inside Food, "
+"with “Add subcategory” in its menu. If you delete one, its transactions move to “Other” and "
+"aren't lost. “Other” and “Refunds” belong to the system: Nodus uses them, so they can't be "
+"renamed or deleted. For the color, besides the palette, the “+” opens a color wheel with any "
+"other color, and the last ones you chose there stay at hand after the palette, for tags too."
 
 #: nodus/ui/text/help_texts.py
 msgid ""
-"Beneficiarios y Etiquetas muestran cuántos movimientos y cuánto dinero suma cada uno; un doble "
-"clic abre su página con todos sus movimientos. Si tienes repetidos, como «Coto» y «Coto Online», "
-"«Unir con…» los junta en uno, y el aviso que aparece abajo te deja deshacerlo."
+"Beneficiarios y Etiquetas muestran cuántos movimientos y cuánto dinero sumó cada uno en el "
+"período que elijas; un doble clic abre su página, con lo que sumó en los últimos 12 meses y todos"
+" sus movimientos. En estas tres páginas un clic elige, por eso abren con doble clic. Si tienes "
+"repetidos, como «Coto» y «Coto Online», «Unir con…» los junta en uno, y el aviso que aparece "
+"abajo te deja deshacerlo."
 msgstr ""
-"Payees and Tags show how many transactions and how much money each one adds up to; a double-click"
-" opens its page with all its transactions. If you have duplicates, such as “Walmart” and “Walmart"
-" Online”, “Merge with…” combines them into one, and the notice that appears at the bottom lets "
-"you undo it."
+"Payees and Tags show how many transactions and how much money each one added up to in the period "
+"you choose; a double-click opens its page, with what it added up to over the last 12 months and "
+"all its transactions. On these three pages a click chooses, which is why they open with a "
+"double-click. If you have duplicates, such as “Walmart” and “Walmart Online”, “Merge with…” "
+"combines them into one, and the notice that appears at the bottom lets you undo it."
 
 #: nodus/ui/text/help_texts.py
 msgid "Monedas y cotizaciones"
@@ -4705,10 +4728,6 @@ msgstr "{names} and {last} will be created"
 #: nodus/ui/widgets/inputs/tag_input.py
 msgid "Opcional · Enter para agregar"
 msgstr "Optional · Enter to add"
-
-#: nodus/ui/widgets/tables/category_line.py
-msgid "Ver sus transacciones"
-msgstr "View its transactions"
 
 #: nodus/ui/widgets/tables/charge_row.py
 msgid "Ya lo vi"

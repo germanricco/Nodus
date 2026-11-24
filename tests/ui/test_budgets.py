@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from factories import TODAY, ars, category_id, expense_draft, in_view
+from menus import run_action
 from PySide6.QtCore import Qt
 
 from nodus.models.budget import BudgetState
@@ -9,7 +10,7 @@ from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
-from nodus.ui.navigation import PageId, TransactionFocus
+from nodus.ui.navigation import PageId, RecordLink, TransactionFocus
 from nodus.ui.pages.budgets_page import BudgetsPage
 
 NOVEMBER = Month.of(TODAY)
@@ -149,15 +150,18 @@ class TestPage:
         assert page.rows == []
         assert services.budgets.limits_on(NOVEMBER.previous()) == {food: ars("300")}
 
-    def test_clicking_a_row_opens_its_transactions(self, qtbot, services, page):
+    def test_a_click_opens_the_category_and_its_menu_the_month(self, qtbot, services, page):
         food = expense("Supermercado y comida", services)
         services.budgets.set_limit(food, NOVEMBER, ars("300"))
         page.refresh(TODAY)
 
-        with qtbot.waitSignal(page.transactions_requested) as signal:
+        with qtbot.waitSignal(page.record_requested) as opened:
             qtbot.mouseClick(page.rows[0].line, Qt.MouseButton.LeftButton)
+        with qtbot.waitSignal(page.transactions_requested) as movements:
+            run_action(page.rows[0].actions(), "Ver movimientos")
 
-        assert signal.args == [TransactionFocus(Period.of_months(NOVEMBER), food)]
+        assert opened.args == [RecordLink.category(food)]
+        assert movements.args == [TransactionFocus(Period.of_months(NOVEMBER), food)]
 
 
 def test_page_is_in_the_sidebar(window):

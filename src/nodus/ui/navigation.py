@@ -1,4 +1,11 @@
-"""The application's main sections, and what other pages ask the transactions page to show."""
+"""The application's main sections, and where a click leads: a record to its page
+(``RecordLink``), a month or a total to the transactions page (``TransactionFocus``).
+
+One rule, as in Windows: where a click chooses rows (the lists of Categorías,
+Beneficiarios and Etiquetas, which merge or delete several at once), a double click opens
+the record; everywhere else a single click does, and the row shows it with the light, the
+hand and a «›» at its end (``open_cue``).
+"""
 
 from __future__ import annotations
 
@@ -52,6 +59,20 @@ class DetailId(Enum):
     def list_page(self) -> PageId:
         return self.value
 
+    @property
+    def open_text(self) -> str:
+        """What a row that leads to this page says under the mouse."""
+        return _(OPEN_TEXTS[self])
+
+
+OPEN_TEXTS = {
+    DetailId.ACCOUNT: N_("Abrir la cuenta"),
+    DetailId.CATEGORY: N_("Abrir la categoría"),
+    DetailId.PAYEE: N_("Abrir el beneficiario"),
+    DetailId.TAG: N_("Abrir la etiqueta"),
+    DetailId.GOAL: N_("Abrir la meta"),
+}
+
 
 @dataclass(frozen=True)
 class TransactionFocus:
@@ -63,6 +84,36 @@ class TransactionFocus:
     payee_id: int | None = None
     tag_id: int | None = None
     account_id: int | None = None
+
+
+@dataclass(frozen=True)
+class RecordLink:
+    """A click on something with a page of its own (an account, category, payee, tag or
+    goal), wherever it is shown: it leads to that page, where its movements are. Pages
+    ask for it with a ``record_requested`` signal; ``MainWindow`` opens it."""
+
+    detail: DetailId
+    item_id: int
+
+    @classmethod
+    def account(cls, account_id: int) -> RecordLink:
+        return cls(DetailId.ACCOUNT, account_id)
+
+    @classmethod
+    def category(cls, category_id: int) -> RecordLink:
+        return cls(DetailId.CATEGORY, category_id)
+
+    @classmethod
+    def payee(cls, payee_id: int) -> RecordLink:
+        return cls(DetailId.PAYEE, payee_id)
+
+    @classmethod
+    def tag(cls, tag_id: int) -> RecordLink:
+        return cls(DetailId.TAG, tag_id)
+
+    @classmethod
+    def goal(cls, goal_id: int) -> RecordLink:
+        return cls(DetailId.GOAL, goal_id)
 
 
 def history_period(first_on: date, last_on: date) -> Period:

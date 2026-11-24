@@ -29,6 +29,7 @@ class AnalysisPage(Page):
     (the last 12 months at first). Only the report on screen is computed."""
 
     transactions_requested = Signal(object)  # TransactionFocus
+    record_requested = Signal(object)  # RecordLink
     navigate_requested = Signal(object)  # PageId
 
     def __init__(
@@ -53,6 +54,7 @@ class AnalysisPage(Page):
         self._stack = QStackedWidget()
         for view in self.views:
             view.transactions_requested.connect(self.transactions_requested)
+            view.record_requested.connect(self.record_requested)
             scroll = scrolling(view, horizontal=False)
             scroll.setFrameShape(QScrollArea.Shape.NoFrame)
             self._stack.addWidget(scroll)

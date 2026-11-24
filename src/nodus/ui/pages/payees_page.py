@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from nodus.i18n import N_, _
+from nodus.models.period import Period
 from nodus.services.classification.payee_service import PayeeSummary
 from nodus.services.container import Services
 from nodus.services.sorting import name_sort_key
@@ -60,8 +61,8 @@ class PayeesPage(SummaryPage[PayeeSummary]):
         self._services = services
         self._event_bus = event_bus
 
-    def load_summaries(self) -> list[PayeeSummary]:
-        return self._services.payees.summaries()
+    def load_summaries(self, period: Period) -> list[PayeeSummary]:
+        return self._services.payees.summaries(period)
 
     def item_id(self, summary: PayeeSummary) -> int:
         return summary.payee.id

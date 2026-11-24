@@ -23,6 +23,7 @@ from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.classification.category_service import CategoryService
 from nodus.services.conversion import (
     ConvertedMovement,
+    PeriodTotals,
     convert_movements,
     converted_movements,
     period_filter,
@@ -67,20 +68,19 @@ class CategoryReport:
 
 @dataclass(frozen=True)
 class CategorySummary:
-    """A category over its whole history, for its own page; a top-level one adds up its
-    subcategories, listed in ``children``.
+    """A category for its own page; a top-level one adds up its subcategories, listed in
+    ``children``.
 
     Amounts are what was spent (or received) in pesos, so they read as the list of
-    categories does: ``net`` over the whole history, ``this_month`` in the current month,
-    ``average`` per month over the months of ``months`` since its first movement, and
-    ``months`` the last ``HISTORY_MONTHS`` months, oldest first. ``count`` is how many of
-    its own movements there are; ``unconverted`` those left out for lack of a rate.
+    categories does: ``totals`` over the last ``RECENT_MONTHS`` months, ``months`` each of
+    them, oldest first, ``this_month`` the current one and ``average`` per month over those
+    since its first movement. ``count`` is how many of its own movements there are over its
+    whole history.
     """
 
     category: Category
     count: int
-    net: Money
-    unconverted: int
+    totals: PeriodTotals
     first_on: date | None
     last_on: date | None
     this_month: Money
@@ -103,8 +103,6 @@ class CategoryReportService:
         self._transactions = transactions
         self._exchange_rates = exchange_rates
 
-    HISTORY_MONTHS = 12
-
     def report(self, period: Period) -> CategoryReport:
         converted = converted_movements(
             self._transactions, self._exchange_rates, period_filter(period)
@@ -116,8 +114,8 @@ class CategoryReportService:
         return CategoryReport(period, sections, converted.unconverted)
 
     def summary(self, category_id: int, today: date) -> CategorySummary:
-        """``category_id`` with its subcategories, over its whole history; NotFoundError
-        once it was deleted or merged."""
+        """``category_id`` with its subcategories, over the last ``RECENT_MONTHS``
+        months; NotFoundError once it was deleted or merged."""
         category = self._categories.get(category_id)
         children = next(
             (n.children for n in self._categories.category_tree(category.kind)
@@ -133,9 +131,12 @@ class CategoryReportService:
             self._transactions.list_transactions(TransactionFilter(is_transfer=False)),
         )
         mine = [m for m in everything.movements if m.category_id in ids and m.kind is category.kind]
-        unconverted = convert_movements(self._transactions, self._exchange_rates, own).unconverted
+        window = Period.recent(today)
+        recent = [t for t in own if window.contains(t.occurred_on)]
+        unconverted = convert_movements(
+            self._transactions, self._exchange_rates, recent
+        ).unconverted
         first_on = min((t.occurred_on for t in own), default=None)
-        window = Period.last_months(self.HISTORY_MONTHS, today)
         by_month: dict[Month, Money] = defaultdict(lambda: Money.zero(HOME_CURRENCY))
         for movement in mine:
             by_month[Month.of(movement.transaction.occurred_on)] += movement.amount
@@ -148,8 +149,9 @@ class CategoryReportService:
         return CategorySummary(
             category=category,
             count=len(own),
-            net=_sum(m.amount for m in mine),
-            unconverted=unconverted,
+            totals=PeriodTotals(
+                window, len(recent), _sum(by_month[m] for m in window.months()), unconverted
+            ),
             first_on=first_on,
             last_on=max((t.occurred_on for t in own), default=None),
             this_month=by_month[Month.of(today)],

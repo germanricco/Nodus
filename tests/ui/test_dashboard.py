@@ -13,6 +13,7 @@ from factories import (
     services_for,
     usd,
 )
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QScrollArea
 
 from nodus.database.database import Database
@@ -23,7 +24,7 @@ from nodus.models.transaction import TransactionType
 from nodus.services.transactions.transfer_service import TransferDraft
 from nodus.ui.actions import recurring as recurring_actions
 from nodus.ui.dialogs import restore_copy
-from nodus.ui.navigation import PageId, TransactionFocus
+from nodus.ui.navigation import DetailId, PageId, RecordLink
 from nodus.ui.pages.dashboard.dashboard_page import Shape
 from nodus.ui.pages.dashboard.latest_transactions_card import LatestTransactionRow
 from nodus.ui.shell import main_window
@@ -150,22 +151,18 @@ def record_this_month(services, pesos, amount="250", category="Supermercado y co
     )
 
 
-def test_clicking_a_category_opens_its_transactions_in_the_period(qtbot, window, services, pesos):
+def test_clicking_a_category_opens_its_page(qtbot, window, services, pesos):
     record_this_month(services, pesos)
     record_this_month(services, pesos, "100", "Transporte")
     page = dashboard(window)
     window.show_page(PageId.DASHBOARD)
-    period = Period.of_months(Month.of(date.today()))
 
-    page.expenses_card.rows[1].clicked.emit()  # Transporte, the second largest
+    # Transporte, the second largest.
+    qtbot.mouseClick(page.expenses_card.rows[1], Qt.MouseButton.LeftButton)
 
-    transactions = window.page(PageId.TRANSACTIONS)
-    assert window.current_page is transactions
-    assert transactions.period_selector.period() == period
-    assert transactions.category_filter.current_id() == category_id(
-        services, "Transporte", TransactionType.EXPENSE
-    )
-    assert transactions.model.rowCount() == 1
+    detail = window.detail(DetailId.CATEGORY)
+    assert window.current_page is detail
+    assert detail.item_id == category_id(services, "Transporte", TransactionType.EXPENSE)
 
 
 def test_clicking_a_donut_slice_and_a_comparison_row(qtbot, window, services, pesos):
@@ -174,14 +171,14 @@ def test_clicking_a_donut_slice_and_a_comparison_row(qtbot, window, services, pe
     window.show_page(PageId.DASHBOARD)
     supermarket = category_id(services, "Supermercado y comida", TransactionType.EXPENSE)
 
-    with qtbot.waitSignal(page.transactions_requested) as from_donut:
+    with qtbot.waitSignal(page.record_requested) as from_donut:
         page.expenses_card.donut.segment_clicked.emit(0)
     window.show_page(PageId.DASHBOARD)
-    with qtbot.waitSignal(page.transactions_requested) as from_comparison:
-        page.comparison_card.rows[0].clicked.emit()
+    with qtbot.waitSignal(page.record_requested) as from_comparison:
+        qtbot.mouseClick(page.comparison_card.rows[0], Qt.MouseButton.LeftButton)
 
-    assert from_donut.args[0].category_id == supermarket
-    assert from_comparison.args[0].category_id == supermarket
+    assert from_donut.args == [RecordLink.category(supermarket)]
+    assert from_comparison.args == [RecordLink.category(supermarket)]
 
 
 def test_new_transaction_updates_the_same_cards(qtbot, window, services, event_bus, pesos):
@@ -409,9 +406,9 @@ def test_budgets_card_lists_the_closest_to_their_limit(qtbot, window, services, 
     assert len(card.rows) == 4
     assert card.rows[0].budget.category.name == "Ocio"
 
-    with qtbot.waitSignal(page.transactions_requested) as signal:
-        card.rows[0].clicked.emit()
-    assert signal.args == [TransactionFocus(Period.of_months(month), leisure)]
+    with qtbot.waitSignal(page.record_requested) as signal:
+        qtbot.mouseClick(card.rows[0].line, Qt.MouseButton.LeftButton)
+    assert signal.args == [RecordLink.category(leisure)]
 
     card.see_all_button.click()
     assert window.current_page is window.page(PageId.BUDGETS)

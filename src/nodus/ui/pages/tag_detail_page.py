@@ -28,7 +28,7 @@ class TagDetailPage(SummaryDetailPage[TagSummary]):
         super().__init__(DetailId.TAG, services, event_bus, theme_manager)
 
     def load_summary(self, item_id: int) -> TagSummary:
-        return self._services.tags.summary(item_id)
+        return self._services.tags.summary(item_id, self.recent())
 
     def name(self, summary: TagSummary) -> str:
         return summary.tag.name

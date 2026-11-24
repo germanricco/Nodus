@@ -17,6 +17,8 @@ from nodus.ui.pages.payees_page import NO_PAYEES_TEXT, PayeesPage
 
 EXPENSE = TransactionType.EXPENSE
 
+OCTOBER_NOVEMBER = Period.of_months(Month(2026, 10), Month(2026, 11))
+
 
 @pytest.fixture
 def page(qtbot, services, event_bus, theme_manager) -> PayeesPage:
@@ -24,6 +26,7 @@ def page(qtbot, services, event_bus, theme_manager) -> PayeesPage:
     qtbot.addWidget(payees)
     in_view(payees, event_bus, theme_manager)
     payees.show()
+    payees.period_selector.set_period(OCTOBER_NOVEMBER)  # every movement of ``populated``
     payees.refresh()
     return payees
 
@@ -61,6 +64,16 @@ def test_lists_most_used_first_with_totals(services, page, populated):
     assert column(page, NAME) == ["Coto", "Empresa", "Kiosco"]
     assert column(page, COUNT) == ["3", "1", "0"]
     assert column(page, TOTAL) == ["-$ 350,00", "$ 1.000,00", "—"]
+
+
+def test_the_period_narrows_the_movements_and_totals_as_in_categories(page, populated):
+    page.period_selector.set_period(Period.of_months(Month(2026, 11)))
+
+    # Coto's movements are all in October; the menu still reaches them.
+    assert column(page, NAME) == ["Empresa", "Coto", "Kiosco"]
+    assert column(page, COUNT) == ["1", "0", "0"]
+    assert column(page, TOTAL) == ["$ 1.000,00", "—", "—"]
+    assert actions_of(page, "Coto")[1].enabled
 
 
 def test_sorts_by_any_column(page, populated):

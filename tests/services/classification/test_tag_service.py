@@ -7,6 +7,7 @@ import pytest
 from factories import ars, eur, expense_draft, income_draft, usd
 
 from nodus.models.palette import PALETTE
+from nodus.models.period import Month, Period
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import ValidationError
 
@@ -117,15 +118,22 @@ def test_summaries_add_up_in_pesos(services, pesos, dollars, euros):
     )
     services.tags.create("Sin uso")
 
-    viaje, sin_uso = services.tags.summaries()
+    autumn = Period.of_months(Month(2026, 10), Month(2026, 11))
+    viaje, sin_uso = services.tags.summaries(autumn)
 
-    assert (viaje.tag.name, viaje.count, viaje.net, viaje.unconverted) == (
+    totals = viaje.totals
+    assert (viaje.tag.name, viaje.count, totals.net, totals.unconverted) == (
         "Viaje", 4, ars("-14000"), 1,
     )  # fmt: skip
     assert (viaje.first_on, viaje.last_on) == (date(2026, 10, 1), date(2026, 11, 3))
-    assert (sin_uso.count, sin_uso.net, sin_uso.first_on) == (0, ars("0"), None)
-    assert services.tags.summary(viaje.tag.id) == viaje
-    assert services.tags.summary(sin_uso.tag.id) == sin_uso
+    assert (sin_uso.count, sin_uso.totals.net, sin_uso.first_on) == (0, ars("0"), None)
+    assert services.tags.summary(viaje.tag.id, autumn) == viaje
+    assert services.tags.summary(sin_uso.tag.id, autumn) == sin_uso
+    # November alone leaves out October's euros, but not from the whole history.
+    (in_november, _unused) = services.tags.summaries(Period.of_months(Month(2026, 11)))
+    assert (in_november.count, in_november.totals.count, in_november.totals.unconverted) == (
+        4, 3, 0,
+    )  # fmt: skip
 
 
 def test_filter_by_tag(services, pesos):

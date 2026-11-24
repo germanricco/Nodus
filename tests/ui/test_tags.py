@@ -18,6 +18,8 @@ from nodus.ui.pages.base.transaction_list_view import totals_text
 from nodus.ui.pages.tags_page import NO_TAGS_TEXT, TagsPage
 from nodus.ui.widgets.tables.transaction_table import AMOUNT, TAGS
 
+OCTOBER_NOVEMBER = Period.of_months(Month(2026, 10), Month(2026, 11))
+
 
 @pytest.fixture
 def page(qtbot, services, event_bus, theme_manager) -> TagsPage:
@@ -25,6 +27,7 @@ def page(qtbot, services, event_bus, theme_manager) -> TagsPage:
     qtbot.addWidget(tags)
     in_view(tags, event_bus, theme_manager)
     tags.show()
+    tags.period_selector.set_period(OCTOBER_NOVEMBER)  # every movement of ``populated``
     tags.refresh()
     return tags
 

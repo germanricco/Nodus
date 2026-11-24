@@ -15,7 +15,7 @@ from nodus.models.currency import Currency
 from nodus.models.period import Month, Period, format_month
 from nodus.models.transaction import TransactionType
 from nodus.services.reports.dashboard_service import MonthFlow
-from nodus.ui.navigation import PageId, TransactionFocus
+from nodus.ui.navigation import DetailId, PageId, RecordLink, TransactionFocus
 from nodus.ui.pages.analysis.analysis_page import AnalysisPage
 from nodus.ui.pages.analysis.cash_flow_view import CashFlowView, months_to_list
 from nodus.ui.pages.analysis.net_worth_view import NetWorthView
@@ -123,9 +123,9 @@ def test_tags_card_shows_only_with_tagged_movements(qtbot, services, pesos, fill
 
     assert not view.tags_card.isHidden()
     assert row_texts(view._tag_rows) == ["Viaje"]
-    with qtbot.waitSignal(filled.transactions_requested) as from_tag:
-        view._tag_rows.itemAt(0).widget().clicked.emit()
-    assert from_tag.args == [TransactionFocus(SEP_NOV, tag_id=services.tags.find("Viaje").id)]
+    with qtbot.waitSignal(filled.record_requested) as from_tag:
+        qtbot.mouseClick(view._tag_rows.itemAt(0).widget(), Qt.MouseButton.LeftButton)
+    assert from_tag.args == [RecordLink.tag(services.tags.find("Viaje").id)]
 
 
 def test_empty_period_says_so(page):
@@ -135,7 +135,7 @@ def test_empty_period_says_so(page):
     assert not view.empty_label.isHidden()
 
 
-def test_bar_and_rows_lead_to_transactions(qtbot, filled, services):
+def test_a_bar_leads_to_its_month_and_a_row_to_its_page(qtbot, filled, services):
     page = filled
     view = trends_view(page)
     servicios = category_id(services, "Servicios", EXPENSE)
@@ -144,9 +144,12 @@ def test_bar_and_rows_lead_to_transactions(qtbot, filled, services):
         view.chart.clicked.emit(1, servicios)
     assert from_bar.args == [TransactionFocus(Period.of_months(Month(2026, 10)), servicios)]
 
-    with qtbot.waitSignal(page.transactions_requested) as from_payee:
-        view._payee_rows.itemAt(0).widget().clicked.emit()
-    assert from_payee.args == [TransactionFocus(SEP_NOV, payee_id=services.payees.find("Coto").id)]
+    with qtbot.waitSignal(page.record_requested) as from_payee:
+        qtbot.mouseClick(view._payee_rows.itemAt(0).widget(), Qt.MouseButton.LeftButton)
+    assert from_payee.args == [RecordLink.payee(services.payees.find("Coto").id)]
+    with qtbot.waitSignal(page.record_requested) as from_category:
+        qtbot.mouseClick(view._category_rows.itemAt(0).widget(), Qt.MouseButton.LeftButton)
+    assert from_category.args[0].detail is DetailId.CATEGORY
 
 
 def test_window_opens_transactions_filtered(window, services, movements):

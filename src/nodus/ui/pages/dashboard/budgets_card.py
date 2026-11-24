@@ -26,7 +26,7 @@ class BudgetsCard(Card):
     """The budgets closest to their limit in a month, for a glance; the rest are on the
     budgets page. Hidden when the month has no budgets."""
 
-    category_clicked = Signal(object)  # category id
+    record_requested = Signal(object)  # RecordLink
     see_all_requested = Signal()
 
     def __init__(self, services: Services, theme_manager: ThemeManager) -> None:
@@ -54,6 +54,6 @@ class BudgetsCard(Card):
         for budget in budgets.budgets[:BUDGETS_COUNT]:
             row = BudgetRow(budget, theme, shown.get(budget.category.id))
             row.line.add(muted_label(spent_of_limit(budget, compact=True)))
-            row.clicked.connect(lambda c=budget.category.id: self.category_clicked.emit(c))
+            row.opened.connect(self.record_requested)
             self._rows.addWidget(row)
             self.rows.append(row)

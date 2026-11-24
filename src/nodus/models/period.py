@@ -116,6 +116,11 @@ class Month:
         return self.shifted(-1)
 
 
+# What the page of a category, a payee or a tag adds up: the last year, ending with the
+# current month, so it is never almost empty in January and matches the bar of each month.
+RECENT_MONTHS = 12
+
+
 @dataclass(frozen=True)
 class Period:
     """A range of days, both ends included: what the dashboard and the transaction list show.
@@ -140,6 +145,11 @@ class Period:
         """The last ``count`` months, the current one included."""
         current = Month.of(today)
         return cls.of_months(current.shifted(1 - count), current)
+
+    @classmethod
+    def recent(cls, today: date) -> Period:
+        """The last ``RECENT_MONTHS`` months, what a record's page adds up."""
+        return cls.last_months(RECENT_MONTHS, today)
 
     @classmethod
     def year(cls, year: int) -> Period:

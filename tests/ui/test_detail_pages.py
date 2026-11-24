@@ -20,7 +20,7 @@ from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.ui.dialogs import confirm as confirm_dialog
 from nodus.ui.dialogs.transaction_dialog import INCOME_MODE, TransactionDialog, TransactionStart
-from nodus.ui.navigation import DetailId, PageId
+from nodus.ui.navigation import DetailId, PageId, RecordLink
 from nodus.ui.pages.accounts_page import AccountRow
 from nodus.ui.pages.categories_page import CategoryRow
 from nodus.ui.widgets.tables.transaction_table import CATEGORY
@@ -51,7 +51,7 @@ class TestAccountDetail:
         window.sidebar.refresh_accounts()
         window.show_page(PageId.DASHBOARD)
 
-        window.sidebar.account_requested.emit(pesos.id)
+        window.sidebar.record_requested.emit(RecordLink.account(pesos.id))
         detail = window.detail(DetailId.ACCOUNT)
         assert window.current_page is detail
         detail.back_button.click()

@@ -47,6 +47,7 @@ class AnalysisView(QWidget):
     """A report: shows a period and asks for the transactions behind its figures."""
 
     transactions_requested = Signal(object)  # TransactionFocus
+    record_requested = Signal(object)  # RecordLink
     # What the report shows, in a line under its tab: marked with N_(), shown with _().
     DESCRIPTION = ""
 

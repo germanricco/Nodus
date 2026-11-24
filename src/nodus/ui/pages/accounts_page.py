@@ -24,7 +24,7 @@ from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import PageId, history_focus
+from nodus.ui.navigation import DetailId, PageId, history_focus
 from nodus.ui.pages.base.net_worth_card import NetWorthCard
 from nodus.ui.pages.base.page import Page
 from nodus.ui.text.formatting import signed
@@ -37,7 +37,13 @@ from nodus.ui.widgets.empty_state import EmptyState, empty_page_card
 from nodus.ui.widgets.money_label import MoneyLabel, masked, total_text
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.reorderable_list import ReorderableList
-from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.tables.row_actions import (
+    Effect,
+    MoreButton,
+    RowAction,
+    install_row_actions,
+    open_cue,
+)
 
 # The lists of the groups' cards, which take each other's accounts.
 ACCOUNTS_FAMILY = "accounts"
@@ -99,9 +105,8 @@ class AccountRow(QWidget):
 
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
-        chevron = muted_label("›")
-        layout.addWidget(chevron)
-        install_row_actions(self, self.actions, open_on_click=_("Abrir la cuenta"))
+        layout.addWidget(open_cue())
+        install_row_actions(self, self.actions, open_on_click=DetailId.ACCOUNT.open_text)
 
     @property
     def can_update_value(self) -> bool:

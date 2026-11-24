@@ -20,7 +20,7 @@ from nodus.services.planning.goal_service import GoalContribution
 from nodus.ui.actions.goals import delete_goal, toggle_goal_archived
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import DetailId
+from nodus.ui.navigation import DetailId, RecordLink
 from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.theme.design import Chart, Space
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -32,7 +32,7 @@ from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.money_label import amount_text, month_change_text
 from nodus.ui.widgets.style import clear_layout, make_hoverable, muted_label
-from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
+from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, open_cue
 
 HISTORY_MONTHS = 12
 
@@ -65,9 +65,10 @@ class ContributionRow(QWidget):
         self.counted_label = QLabel("—" if counted is None else amount_text(counted, hidden))
         self.counted_label.setObjectName("RowAmount")
         layout.addWidget(self.counted_label)
+        layout.addWidget(open_cue())
         make_hoverable(self)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip(_("Abrir la cuenta"))
+        self.setToolTip(DetailId.ACCOUNT.open_text)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         super().mouseReleaseEvent(event)
@@ -85,7 +86,7 @@ class GoalDetailPage(DetailPage):
     ``today`` is fixed by tests; otherwise the real date is used.
     """
 
-    account_requested = Signal(int)  # account id
+    record_requested = Signal(object)  # RecordLink
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -242,7 +243,9 @@ class GoalDetailPage(DetailPage):
         for contribution in contributions:
             row = ContributionRow(contribution, self._hidden)
             account_id = contribution.account.id
-            row.clicked.connect(lambda i=account_id: self.account_requested.emit(i))
+            row.clicked.connect(
+                lambda i=account_id: self.record_requested.emit(RecordLink.account(i))
+            )
             self._account_rows.addWidget(row)
             self.account_rows.append(row)
 

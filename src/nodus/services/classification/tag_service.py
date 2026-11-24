@@ -12,14 +12,14 @@ from typing import Any
 from nodus.database.database import Database
 from nodus.database.repositories.tag_repository import TagRepository
 from nodus.i18n import N_, _
-from nodus.models.money import Money
+from nodus.models.period import Period
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.undo_service import UndoService
 from nodus.services.classification.named_records import NamedRecordService
-from nodus.services.conversion import net_in_pesos
+from nodus.services.conversion import PeriodTotals, period_totals
 from nodus.services.errors import clean_name, require_free_name
 from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transactions.transaction_service import TransactionService
@@ -27,15 +27,14 @@ from nodus.services.transactions.transaction_service import TransactionService
 
 @dataclass(frozen=True)
 class TagSummary:
-    """A tag with its transactions added up, for the tags page. ``net`` is income minus
-    expenses in pesos, as for payees; ``unconverted`` counts the dollar movements left out
-    for lack of a rate. ``first_on`` and ``last_on`` are the dates of its first and latest
+    """A tag with its transactions added up, for its row and its page: ``totals`` those
+    of a period, counted as for payees, and ``count`` how many it has over its whole
+    history. ``first_on`` and ``last_on`` are the dates of its first and latest
     transactions (None while it has none)."""
 
     tag: Tag
     count: int
-    net: Money
-    unconverted: int
+    totals: PeriodTotals
     first_on: date | None
     last_on: date | None
 
@@ -137,30 +136,33 @@ class TagService(NamedRecordService[Tag]):
             self._tags.link(transaction_ids, row["id"])
         self._tags.unlink(set().union(*tagged) - target_had, target.id)
 
-    def summaries(self) -> list[TagSummary]:
-        """Every tag with its totals, the most used first."""
+    def summaries(self, period: Period) -> list[TagSummary]:
+        """Every tag with its totals in ``period``, the most used there first."""
         transactions = self._transactions.list_transactions(TransactionFilter(is_transfer=False))
         tags_by_transaction = self._tags.tags_for(t.id for t in transactions)
         by_tag: dict[int, list[Transaction]] = defaultdict(list)
         for transaction in transactions:
             for tag in tags_by_transaction.get(transaction.id, []):
                 by_tag[tag.id].append(transaction)
-        summaries = [self._summary(tag, by_tag[tag.id]) for tag in self._tags.list()]
-        return sorted(summaries, key=lambda s: (-s.count, name_sort_key(s.tag.name)))
+        summaries = [self._summary(tag, by_tag[tag.id], period) for tag in self._tags.list()]
+        return sorted(summaries, key=lambda s: (-s.totals.count, name_sort_key(s.tag.name)))
 
-    def summary(self, tag_id: int) -> TagSummary:
-        """One tag with its totals, for its own page."""
+    def summary(self, tag_id: int, period: Period) -> TagSummary:
+        """One tag with its totals in ``period``, for its own page."""
         tag = self.get(tag_id)
         tagged = self._transactions.list_transactions(
             TransactionFilter(tag_id=tag_id, is_transfer=False)
         )
-        return self._summary(tag, tagged)
+        return self._summary(tag, tagged, period)
 
-    def _summary(self, tag: Tag, tagged: list[Transaction]) -> TagSummary:
-        net, unconverted = net_in_pesos(tagged, self._exchange_rates)
+    def _summary(self, tag: Tag, tagged: list[Transaction], period: Period) -> TagSummary:
         dates = [t.occurred_on for t in tagged]
         return TagSummary(
-            tag, len(tagged), net, unconverted, min(dates, default=None), max(dates, default=None)
+            tag,
+            len(tagged),
+            period_totals(tagged, period, self._exchange_rates),
+            min(dates, default=None),
+            max(dates, default=None),
         )
 
     def _checked(self, tag: Tag) -> Tag:

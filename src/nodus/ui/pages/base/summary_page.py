@@ -1,8 +1,10 @@
-"""A page listing named items (payees, tags) with how many movements each has and their net
-total, searchable and sortable, with the actions to create, edit, merge and delete them."""
+"""A page listing named items (payees, tags) with how many movements each had in a period
+and their net total, searchable and sortable, with the actions to create, edit, merge and
+delete them."""
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Generic, Protocol, TypeVar
 
 from PySide6.QtCore import (
@@ -17,11 +19,13 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QLineEdit
 
 from nodus.i18n import N_, _
-from nodus.models.money import Money
 from nodus.models.names import normalize_name
+from nodus.models.period import Month, Period
+from nodus.services.conversion import PeriodTotals
 from nodus.services.sorting import name_sort_key
 from nodus.ui.navigation import TransactionFocus
 from nodus.ui.pages.base.page import Page
+from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.text.labels import unconverted_note
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme import Theme
@@ -44,18 +48,19 @@ _ModelIndex = QModelIndex | QPersistentModelIndex
 
 
 class Summary(Protocol):
-    """What a row needs: its movements counted and added up in pesos."""
+    """What a row needs: its movements in the period, counted and added up in pesos, and
+    how many it has over its whole history."""
 
     count: int
-    net: Money
-    unconverted: int
+    totals: PeriodTotals
 
 
 S = TypeVar("S", bound=Summary)
 
 
 class SummaryTableModel(QAbstractTableModel, Generic[S]):
-    """Name, movements and net total of each summary, totals colored with the theme.
+    """Name, movements and net total in the period of each summary, totals colored with
+    the theme.
 
     Subclasses give the name and may add columns through ``extra_text``, ``extra_sort``
     and ``decoration``.
@@ -116,10 +121,11 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
             return self._sort_value(summary, column)
         if role == Qt.ItemDataRole.DecorationRole:
             return self.decoration(summary, column)
+        totals = summary.totals
         if role == Qt.ItemDataRole.ForegroundRole and column == TOTAL:
-            return QColor(self._theme.amount_color(summary.net))
-        if role == Qt.ItemDataRole.ToolTipRole and column == TOTAL and summary.unconverted:
-            return unconverted_note(summary.unconverted)
+            return QColor(self._theme.amount_color(totals.net))
+        if role == Qt.ItemDataRole.ToolTipRole and column == TOTAL and totals.unconverted:
+            return unconverted_note(totals.unconverted)
         if role == Qt.ItemDataRole.TextAlignmentRole and column in (COUNT, TOTAL):
             return RIGHT_ALIGNED
         return None
@@ -128,25 +134,27 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
         if column == NAME:
             return self.name(summary)
         if column == COUNT:
-            return str(summary.count)
+            return str(summary.totals.count)
         if column == TOTAL:
-            return summary.net.format() if summary.count else "—"
+            return summary.totals.net.format() if summary.totals.count else "—"
         return self.extra_text(summary, column)
 
     def _sort_value(self, summary: S, column: int) -> object:
         if column == NAME:
             return name_sort_key(self.name(summary))
         if column == COUNT:
-            return summary.count
+            return summary.totals.count
         if column == TOTAL:
-            return summary.net.cents
+            return summary.totals.net.cents
         return self.extra_sort(summary, column)
 
 
 class SummaryPage(Page, Generic[S]):
-    """Every item with its movements, sortable by any column, with a search that ignores
-    case and accents. A double click opens the item's page; its «⋯» or a right
-    click offers every action, and several rows can be chosen to merge or delete them.
+    """Every item with its movements in a period, which starts on the current month as in
+    Categorías, sortable by any column, with a search that ignores case and accents.
+    Rows are chosen here, so a double click opens the item's page, as in Categorías; its
+    «⋯» or a right click offers every action, and several rows can be chosen to merge or
+    delete them.
 
     Subclasses load the summaries and carry out the actions.
     """
@@ -171,6 +179,8 @@ class SummaryPage(Page, Generic[S]):
         self._noun = noun
         self._summaries: list[S] = []
 
+        self.period_selector = PeriodSelector(Period.of_months(Month.of(date.today())))
+        self.add_header_widget(self.period_selector)
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText(_("Buscar {noun}…").format(noun=_(noun)))
         self.search_input.setClearButtonEnabled(True)
@@ -201,13 +211,15 @@ class SummaryPage(Page, Generic[S]):
         card.body.addWidget(self.empty_state, stretch=1)
         self.content_layout.addWidget(card, stretch=1)
 
+        self.period_selector.period_changed.connect(lambda _period: self.refresh())
         self.search_input.textChanged.connect(self._show_matches)
         self.create_button.clicked.connect(self.create_item)
         theme_manager.theme_changed.connect(self.model.set_theme)
 
     # To implement
 
-    def load_summaries(self) -> list[S]:
+    def load_summaries(self, period: Period) -> list[S]:
+        """Every item with its totals in ``period``."""
         raise NotImplementedError
 
     def item_id(self, summary: S) -> int:
@@ -234,7 +246,7 @@ class SummaryPage(Page, Generic[S]):
     # Shared
 
     def refresh(self) -> None:
-        self._summaries = self.load_summaries()
+        self._summaries = self.load_summaries(self.period_selector.period())
         self._show_matches()
 
     def summary_at(self, row: int) -> S:

@@ -57,7 +57,7 @@ HELP_TOPICS = [
             N_(
                 "El Inicio muestra tu patrimonio neto, los próximos pagos, en qué se fue el dinero"
                 " y tus presupuestos. Arriba a la derecha eliges el período, y un clic en una"
-                " categoría o en un pago te lleva a sus movimientos."
+                " categoría abre su página. Toda fila que lleva a otra página termina en «›»."
             ),
             N_(
                 "Si quieres ver dónde está cada cosa, «Ver el recorrido», al pie de la lista de"
@@ -176,8 +176,8 @@ HELP_TOPICS = [
                 " beneficiario y las etiquetas. Al pie, Nodus suma lo que estás viendo."
             ),
             N_(
-                "Muchas páginas te traen hasta acá ya filtrado: un clic en una categoría del"
-                " Inicio, en una barra de Análisis o en «Ver movimientos» del menú de una fila."
+                "Muchas páginas te traen hasta acá ya filtrado: un clic en una barra de un mes,"
+                " o «Ver movimientos» del menú de una fila."
             ),
             N_(
                 "«Exportar» guarda lo que ves en un archivo CSV, que se abre en Excel o en"
@@ -371,7 +371,10 @@ HELP_TOPICS = [
                 "«Flujo de caja» compara ingresos, gastos, ahorro y tasa de ahorro con el período"
                 " anterior, y «Patrimonio neto» sigue lo que tienes, fin de mes tras fin de mes."
             ),
-            N_("Un clic en cualquier barra o fila te lleva a los movimientos que la forman."),
+            N_(
+                "Un clic en una barra te lleva a los movimientos de ese mes, y uno en una"
+                " categoría, un beneficiario o una etiqueta abre su página."
+            ),
         ),
         ("search", "budgets"),
     ),
@@ -387,8 +390,9 @@ HELP_TOPICS = [
         (
             N_(
                 "Categorías muestra cuánto sumó cada una en el período que elijas, de la más"
-                " grande a la más chica, con una barra de cuánto pesa en el total. Un clic en una"
-                " abre su página, con lo que sumó mes a mes, y «Unir con…» pasa sus movimientos a"
+                " grande a la más chica, con una barra de cuánto pesa en el total. Un doble clic"
+                " en una abre su página, con lo que sumó en los últimos 12 meses y mes a mes, y"
+                " «Unir con…» pasa sus movimientos a"
                 " otra si tienes dos que son lo mismo; con sus casillas marcas varias y las unes"
                 " o eliminas juntas. Cada una puede tener subcategorías,"
                 " como Supermercado dentro de"
@@ -400,8 +404,10 @@ HELP_TOPICS = [
                 " después de la paleta, también para las etiquetas."
             ),
             N_(
-                "Beneficiarios y Etiquetas muestran cuántos movimientos y cuánto dinero suma cada"
-                " uno; un doble clic abre su página con todos sus movimientos. Si tienes"
+                "Beneficiarios y Etiquetas muestran cuántos movimientos y cuánto dinero sumó cada"
+                " uno en el período que elijas; un doble clic abre su página, con lo que sumó en"
+                " los últimos 12 meses y todos sus movimientos. En estas tres páginas un clic"
+                " elige, por eso abren con doble clic. Si tienes"
                 " repetidos, como «Coto» y «Coto Online», «Unir con…» los junta en uno, y el"
                 " aviso que aparece abajo te deja deshacerlo."
             ),

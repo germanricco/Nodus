@@ -40,7 +40,12 @@ from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.money_label import amount_text
 from nodus.ui.widgets.style import RIGHT_ALIGNED, clear_layout, hint_label, muted_label
-from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.tables.row_actions import (
+    Effect,
+    MoreButton,
+    RowAction,
+    install_row_actions,
+)
 from nodus.ui.widgets.tables.selection_bar import SelectionBar
 from nodus.ui.widgets.tables.table import DELETE_KEY_HINT
 
@@ -138,7 +143,8 @@ class CategoryRow(QWidget):
 
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
-        install_row_actions(self, self.actions, open_on_click=_("Abrir la categoría"))
+        # Its box chooses it, so it opens with a double click, as the lists that are tables.
+        install_row_actions(self, self.actions)
 
     @staticmethod
     def _amount(figures: CategoryFigures, hidden: bool) -> QLabel:
@@ -152,7 +158,7 @@ class CategoryRow(QWidget):
         return label
 
     def actions(self) -> list[RowAction]:
-        """Its page (what a click opens), its movements, and editing, merging and
+        """Its page (what a double click opens), its movements, and editing, merging and
         deleting it; a system category («Otros», «Reembolsos») cannot change, so it only
         opens."""
         category = self.category

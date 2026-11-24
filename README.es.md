@@ -35,7 +35,7 @@ Nació para quien lleva sus cuentas en pesos y en dólares. Cada cuenta tiene su
 ## Qué puedes hacer
 
 ### Ver tu situación de un vistazo
-El Inicio, la primera página, responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio neto, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría te lleva a sus movimientos. Si alguien mira tu pantalla, el ojo de la barra superior oculta tus saldos y tu patrimonio neto, y el panel lateral se contrae a sus íconos cuando quieres más espacio.
+El Inicio, la primera página, responde las preguntas de siempre: cuánto tienes, cómo vienes y en qué se fue el dinero. Muestra la evolución de tu patrimonio neto, tus próximos pagos, los gastos por categoría comparados con el período anterior, el flujo de caja mes a mes y tus presupuestos. Eliges el período (este mes, los últimos 3, 6 o 12 meses, el año o cualquier rango de fechas) y un clic en una categoría abre su página. Toda fila que lleva a otra página termina en «›», y basta un clic. Si alguien mira tu pantalla, el ojo de la barra superior oculta tus saldos y tu patrimonio neto, y el panel lateral se contrae a sus íconos cuando quieres más espacio.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
@@ -71,7 +71,7 @@ Un mismo formulario sirve para gastos, ingresos y transferencias, y ya trae la �
 </picture>
 
 ### Saber a quién va tu dinero
-Cada gasto o ingreso puede decir a quién le pagaste o quién te pagó: el supermercado, la empresa de luz, tu empleador. Un clic en el campo muestra los que más usas últimamente, y unas letras bastan para elegir uno o escribir un nombre nuevo para sumarlo: las sugerencias ponen primero los que más usas y los de la categoría que ya elegiste. Después, Nodus completa la categoría que sueles usar con él. La página Beneficiarios muestra cuántos movimientos y cuánto dinero fue o vino de cada uno, así que una pregunta como «¿cuánto gasto en el supermercado?» se responde con un clic; un doble clic abre la página de cada uno, con todos sus movimientos. Los repetidos, como «Coto» y «Coto Online», se pueden unir en uno.
+Cada gasto o ingreso puede decir a quién le pagaste o quién te pagó: el supermercado, la empresa de luz, tu empleador. Un clic en el campo muestra los que más usas últimamente, y unas letras bastan para elegir uno o escribir un nombre nuevo para sumarlo: las sugerencias ponen primero los que más usas y los de la categoría que ya elegiste. Después, Nodus completa la categoría que sueles usar con él. La página Beneficiarios muestra cuántos movimientos y cuánto dinero fue o vino de cada uno en el período que elijas, así que una pregunta como «¿cuánto gasto en el supermercado?» se responde con un clic; un doble clic abre la página de cada uno, con lo que sumó en los últimos doce meses y todos sus movimientos. Los repetidos, como «Coto» y «Coto Online», se pueden unir en uno.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/payees-dark.png">
@@ -121,7 +121,7 @@ Un viaje, un fondo de emergencia, una notebook nueva: una meta apunta el saldo d
 </picture>
 
 ### Mirar el año completo
-La página Análisis toma distancia: por defecto, los últimos doce meses. Tendencias muestra tus gastos, ingresos o ahorro mes a mes, apilados por categoría y frente a tu promedio mensual, junto con en qué se fue el dinero por categoría, por beneficiario y por etiqueta. Flujo de caja pone lado a lado ingresos, gastos, ahorro y tasa de ahorro con los del período anterior, y Patrimonio neto sigue cómo creció lo que tienes, fin de mes tras fin de mes, en pesos o en dólares. Un clic en cualquier barra o fila te lleva a los movimientos que la forman.
+La página Análisis toma distancia: por defecto, los últimos doce meses. Tendencias muestra tus gastos, ingresos o ahorro mes a mes, apilados por categoría y frente a tu promedio mensual, junto con en qué se fue el dinero por categoría, por beneficiario y por etiqueta. Flujo de caja pone lado a lado ingresos, gastos, ahorro y tasa de ahorro con los del período anterior, y Patrimonio neto sigue cómo creció lo que tienes, fin de mes tras fin de mes, en pesos o en dólares. Un clic en una barra te lleva a los movimientos de ese mes, y uno en una categoría, un beneficiario o una etiqueta abre su página.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/analysis-trends-dark.png">

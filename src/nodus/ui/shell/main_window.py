@@ -34,7 +34,7 @@ from nodus.ui.dialogs.news_dialog import NewsDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog, TransactionStart
 from nodus.ui.dialogs.update_dialog import UpdateDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import DetailId, PageId, TransactionFocus
+from nodus.ui.navigation import DetailId, PageId, RecordLink, TransactionFocus
 from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.page import Page
 from nodus.ui.rate_updater import shared_rate_updater, updated_text
@@ -110,7 +110,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
 
         self.sidebar.page_requested.connect(self.show_page)
-        self.sidebar.account_requested.connect(lambda i: self.show_detail(DetailId.ACCOUNT, i))
+        self.sidebar.record_requested.connect(self.open_record)
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
         self.top_bar.help_requested.connect(self.toggle_help)
         QShortcut(QKeySequence(HELP.label), self, self.toggle_help)
@@ -434,13 +434,15 @@ class MainWindow(QMainWindow):
             ("new_transaction_requested", self.open_new_transaction),
             ("tour_requested", self.start_tour),
             ("help_requested", self.toggle_help),
-            ("account_requested", partial(self.show_detail, DetailId.ACCOUNT)),
-            ("category_requested", partial(self.show_detail, DetailId.CATEGORY)),
-            ("goal_requested", partial(self.show_detail, DetailId.GOAL)),
+            ("record_requested", self.open_record),
         ):
             signal = getattr(page, name, None)
             if signal is not None:
                 signal.connect(slot)
+
+    def open_record(self, link: RecordLink) -> None:
+        """The page of the record a click led to."""
+        self.show_detail(link.detail, link.item_id)
 
     def show_page(self, page_id: PageId) -> None:
         built = page_id in self._pages

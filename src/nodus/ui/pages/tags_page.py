@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from nodus.i18n import N_, _
+from nodus.models.period import Period
 from nodus.services.classification.tag_service import TagSummary
 from nodus.services.container import Services
 from nodus.ui.actions.tags import delete_tags
@@ -46,8 +47,8 @@ class TagsPage(SummaryPage[TagSummary]):
         self._services = services
         self._event_bus = event_bus
 
-    def load_summaries(self) -> list[TagSummary]:
-        return self._services.tags.summaries()
+    def load_summaries(self, period: Period) -> list[TagSummary]:
+        return self._services.tags.summaries(period)
 
     def item_id(self, summary: TagSummary) -> int:
         return summary.tag.id

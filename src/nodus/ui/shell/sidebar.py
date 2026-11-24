@@ -24,7 +24,7 @@ from nodus.models.account import Account
 from nodus.models.money import Money
 from nodus.services.container import Services
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import PageId
+from nodus.ui.navigation import PageId, RecordLink
 from nodus.ui.shell import tour
 from nodus.ui.shell.coach_marks import mark_target
 from nodus.ui.theme.design import ControlSize, IconSize, Layout, Space
@@ -111,7 +111,7 @@ class Sidebar(QFrame):
     """
 
     page_requested = Signal(object)  # PageId
-    account_requested = Signal(int)  # account id
+    record_requested = Signal(object)  # RecordLink
 
     WIDTH = Layout.SIDEBAR_WIDTH
     COLLAPSED_WIDTH = Layout.SIDEBAR_COLLAPSED_WIDTH
@@ -253,7 +253,9 @@ class Sidebar(QFrame):
         hidden = self._services.settings.amounts_hidden()
         for account in accounts:
             row = SidebarAccountRow(account.name, balances[account.id], hidden, indent)
-            row.clicked.connect(lambda a=account.id: self.account_requested.emit(a))
+            row.clicked.connect(
+                lambda a=account.id: self.record_requested.emit(RecordLink.account(a))
+            )
             self._accounts_layout.addWidget(row)
 
     def _build_logo(self) -> QWidget:

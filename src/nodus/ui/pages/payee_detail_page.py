@@ -29,7 +29,7 @@ class PayeeDetailPage(SummaryDetailPage[PayeeSummary]):
         self.list_view.table.setColumnHidden(PAYEE, True)
 
     def load_summary(self, item_id: int) -> PayeeSummary:
-        return self._services.payees.summary(item_id)
+        return self._services.payees.summary(item_id, self.recent())
 
     def name(self, summary: PayeeSummary) -> str:
         return summary.payee.name

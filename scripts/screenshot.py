@@ -31,7 +31,7 @@ from nodus.i18n import Language, _, install  # noqa: E402
 from nodus.models.currency import Currency  # noqa: E402
 from nodus.models.language_format import grouped  # noqa: E402
 from nodus.models.money import Money  # noqa: E402
-from nodus.models.period import Month  # noqa: E402
+from nodus.models.period import Month, Period  # noqa: E402
 from nodus.models.transaction import Transaction, TransactionType  # noqa: E402
 from nodus.models.transaction_filter import TransactionFilter  # noqa: E402
 from nodus.services.backups.recovery import RecoveryCopy  # noqa: E402
@@ -372,7 +372,7 @@ def capture_details(shots: Shots) -> None:
     shots.settle()
     shots.save(window, "card-detail")
     # The page of the most used payee.
-    payee = services.payees.summaries()[0].payee
+    payee = services.payees.summaries(Period.recent(date.today()))[0].payee
     window.show_detail(DetailId.PAYEE, payee.id)
     shots.settle()
     shots.save(window, "payee-detail")

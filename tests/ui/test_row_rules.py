@@ -43,7 +43,8 @@ def test_the_main_action_is_bold_in_the_menu(qtbot):
     assert menu.defaultAction().text() == "Editar"
 
 
-def test_a_click_on_a_category_opens_its_page_even_otros(qtbot, services, event_bus):
+def test_a_double_click_on_a_category_opens_its_page_even_otros(qtbot, services, event_bus):
+    """Its box chooses it, so a click alone opens nothing, as in Beneficiarios."""
     rows = category_rows(qtbot, services, event_bus)
     opened = []
     for row in (next(r for r in rows if not r.category.is_fixed),
@@ -51,10 +52,13 @@ def test_a_click_on_a_category_opens_its_page_even_otros(qtbot, services, event_
         row.open_requested.disconnect()  # the page would open it
         row.open_requested.connect(opened.append)
 
-        click_at(row, QPoint(4, row.height() // 2))
+        click_at(row, QPoint(row.width() // 2, row.height() // 2))
+        assert row.category not in opened
+        double_click(row)
 
         assert opened[-1] == row.category
         assert main_action(row.actions()) == "Abrir"
+        assert row.cursor().shape() != Qt.CursorShape.PointingHandCursor
 
 
 def test_a_charge_is_paid_with_a_double_click_and_a_paused_one_edited(services, pesos, qtbot):

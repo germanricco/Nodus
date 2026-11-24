@@ -21,7 +21,7 @@ from nodus.services.reports.dashboard_service import CategoryTotal
 from nodus.ui.dialogs.budget_dialog import BudgetDialog
 from nodus.ui.dialogs.confirm import delete_with_confirm
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import PageId, TransactionFocus
+from nodus.ui.navigation import PageId, RecordLink, TransactionFocus
 from nodus.ui.pages.base.page import Page
 from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.text.labels import days_left_text, unconverted_note
@@ -49,6 +49,7 @@ class BudgetPageRow(BudgetRow):
     """A budget row with the details the page has room for: how much is used, what is
     left and a menu to change or remove the limit."""
 
+    transactions_requested = Signal()
     edit_requested = Signal()
     remove_requested = Signal()
 
@@ -62,10 +63,17 @@ class BudgetPageRow(BudgetRow):
         self.line.hovered.disconnect(self.line.set_highlighted)
 
     def actions(self) -> list[RowAction]:
-        """Its movements first, as a click on the row; then changing or removing it."""
+        """Its category's page first, as a click on the row; its movements of the month;
+        then changing or removing it."""
         return [
             RowAction(
-                _("Ver movimientos"), self.clicked.emit, "list", default=True, effect=Effect.OPEN
+                _("Abrir"),
+                lambda: self.opened.emit(self.link),
+                default=True,
+                effect=Effect.OPEN,
+            ),
+            RowAction(
+                _("Ver movimientos"), self.transactions_requested.emit, "list", effect=Effect.OPEN
             ),
             RowAction(_("Cambiar límite"), self.edit_requested.emit, "pencil", effect=Effect.OPEN),
             RowAction(
@@ -83,6 +91,7 @@ class BudgetsPage(Page):
     and the spending of categories that have no budget."""
 
     transactions_requested = Signal(object)  # TransactionFocus
+    record_requested = Signal(object)  # RecordLink
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -192,7 +201,8 @@ class BudgetsPage(Page):
         for budget in month.budgets:
             row = BudgetPageRow(budget, theme, self._shown.get(budget.category.id))
             category = budget.category
-            row.clicked.connect(lambda c=category: self._show_transactions(c))
+            row.opened.connect(self.record_requested)
+            row.transactions_requested.connect(lambda c=category: self._show_transactions(c))
             row.edit_requested.connect(lambda c=category: self.open_budget_dialog(c))
             row.remove_requested.connect(lambda c=category: self.remove_budget(c))
             card.body.addWidget(row)
@@ -205,9 +215,10 @@ class BudgetsPage(Page):
         card.body.addWidget(hint)
         for total in totals:
             category = total.category
-            line = CategoryLine(category.color, category.name)
-            line.hovered.connect(line.set_highlighted)
-            line.clicked.connect(lambda c=category: self._show_transactions(c))
+            line = CategoryLine(
+                category.color, category.name, link=RecordLink.category(category.id)
+            )
+            line.opened.connect(self.record_requested)
             amount = amount_label(total.total)
             line.add(amount)
             button = QPushButton(_("Poner límite"))

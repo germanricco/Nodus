@@ -35,7 +35,7 @@ It was born for people who manage money in pesos and dollars at the same time. E
 ## What you can do
 
 ### See where you stand at a glance
-Home, the first page, answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to see its transactions. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
+Home, the first page, answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to open its page. Every row that leads to another page ends in “›”, and a click is all it takes. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/dashboard-dark.png">
@@ -71,7 +71,7 @@ One form covers expenses, income and transfers, and it starts on the account you
 </picture>
 
 ### Know who your money goes to
-Each expense or income can say who you paid or who paid you: the supermarket, the power company, your employer. Click the field to see the ones you use most lately, or type a few letters to pick one or a new name to add it: the suggestions put first the payees you use most, and those of the category you already chose. Nodus then fills in the category you usually use with it. The Payees page shows how many transactions and how much money went to or came from each one, so a question like "how much do I spend at the supermarket?" takes one click, and a double click opens its own page with every one of its transactions. Duplicates such as "Coto" and "Coto Online" can be merged into one.
+Each expense or income can say who you paid or who paid you: the supermarket, the power company, your employer. Click the field to see the ones you use most lately, or type a few letters to pick one or a new name to add it: the suggestions put first the payees you use most, and those of the category you already chose. Nodus then fills in the category you usually use with it. The Payees page shows how many transactions and how much money went to or came from each one in the period you choose, so a question like "how much do I spend at the supermarket?" takes one click, and a double click opens its own page, with what it added up to over the last twelve months and every one of its transactions. Duplicates such as "Coto" and "Coto Online" can be merged into one.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/payees-dark.png">
@@ -121,7 +121,7 @@ A trip, an emergency fund, a new laptop: a goal points the balance of your savin
 </picture>
 
 ### Look back over the year
-The Analysis page takes the long view, the last twelve months by default. Trends shows your spending, income or savings month by month, stacked by category against your monthly average, along with where the money went by category, by payee and by tag. Cash flow puts income, expenses, savings and your savings rate side by side with the previous period, and Net worth follows how what you own grew, month end by month end, in pesos or in dollars. Click any bar or row to see the transactions behind it.
+The Analysis page takes the long view, the last twelve months by default. Trends shows your spending, income or savings month by month, stacked by category against your monthly average, along with where the money went by category, by payee and by tag. Cash flow puts income, expenses, savings and your savings rate side by side with the previous period, and Net worth follows how what you own grew, month end by month end, in pesos or in dollars. Click a bar to see that month's transactions, or a category, payee or tag to open its page.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/analysis-trends-dark.png">

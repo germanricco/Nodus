@@ -22,16 +22,29 @@ from enum import Enum
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
 from PySide6.QtGui import QCursor, QIcon
-from PySide6.QtWidgets import QMenu, QPushButton, QWidget
+from PySide6.QtWidgets import QLabel, QMenu, QPushButton, QWidget
 
 from nodus.i18n import N_, _
 from nodus.ui.theme.design import ControlSize, IconSize, Popup
 from nodus.ui.theme.icons import icon as tinted_icon
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
-from nodus.ui.widgets.style import make_hoverable
+from nodus.ui.widgets.style import make_hoverable, set_style_property
 
 MORE_ACTIONS = N_("Más acciones")
+
+
+def open_cue() -> QLabel:
+    """The «›» that ends every row that opens a page, with the light under the mouse and
+    the hand: the three signs of a row that leads somewhere. Hidden, it keeps its room,
+    so the rows of a list line up whether they open or not."""
+    cue = QLabel("›")
+    cue.setObjectName("OpenCue")
+    set_style_property(cue, "muted", True)
+    policy = cue.sizePolicy()
+    policy.setRetainSizeWhenHidden(True)
+    cue.setSizePolicy(policy)
+    return cue
 
 
 class Effect(Enum):

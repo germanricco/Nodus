@@ -1,12 +1,15 @@
-"""The page about a payee or a tag: its key figures and every movement it has."""
+"""The page about a category, a payee or a tag: what it added up to in the last year,
+and every movement it has."""
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Generic
 
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.i18n import N_, _
+from nodus.models.period import RECENT_MONTHS, Period
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.errors import NotFoundError
@@ -26,12 +29,14 @@ from nodus.ui.widgets.money_label import masked
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
 
 NO_MOVEMENTS = "—"
+MOVEMENTS = N_("Movimientos")
 
 
 class SummaryDetailPage(DetailPage, Generic[S]):
-    """A payee or a tag at a glance: how many movements it has, what they add up to and
-    when the latest was, then every one of them over its whole history, with the same
-    menus and selection as Transacciones.
+    """A category, a payee or a tag at a glance: what its movements added up to in the
+    last ``RECENT_MONTHS`` months and how many they were, a stretch with a clear start and
+    end, and when the latest was; then every one of them over its whole history, with the
+    same menus and selection as Transacciones.
 
     «Editar» and «Unir con…» are in the header; deleting, the rare one, in its «⋯».
     Subclasses load the item and carry out the actions; ``CAPTIONS`` name the figures
@@ -52,6 +57,7 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self._event_bus = event_bus
         self._hidden = services.settings.amounts_hidden()
         self.summary: S | None = None
+        self.today: date | None = None  # fixed by tests; otherwise the real date
 
         self.edit_button = self.add_header_button(_("Editar"))
         self.edit_button.clicked.connect(lambda: self.edit_item(self.summary))
@@ -64,13 +70,14 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         # Keyed by the untranslated caption, which the code looks up; filled in this order.
         self.figure_labels: dict[str, QLabel] = {N_("Total"): QLabel()}
         # The total answers the page; the rest go in boxes under it.
-        self.content_layout.addWidget(HeroFigure(_("Total"), self.figure_labels["Total"]))
+        total_caption = _("Total de los últimos {count} meses").format(count=RECENT_MONTHS)
+        self.content_layout.addWidget(HeroFigure(total_caption, self.figure_labels["Total"]))
         self.figures = FigureRow()
-        for caption in (N_("Movimientos"), N_("Último movimiento"), *self.CAPTIONS):
+        for caption in (MOVEMENTS, N_("Último movimiento"), *self.CAPTIONS):
             label = QLabel()
             self.figure_labels[caption] = label
             badge = self.figure_badge(caption)
-            self.figures.add_tile(FigureTile(_(caption), label, badge, badge_beside=True))
+            self.figures.add_tile(FigureTile(self._caption(caption), label, badge, True))
         self.content_layout.addWidget(self.figures)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
@@ -78,10 +85,22 @@ class SummaryDetailPage(DetailPage, Generic[S]):
 
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 
+    @staticmethod
+    def _caption(caption: str) -> str:
+        """The movements are counted in the same months as the total."""
+        if caption == MOVEMENTS:
+            return _("Movimientos en {count} meses").format(count=RECENT_MONTHS)
+        return _(caption)
+
+    def recent(self) -> Period:
+        """The months the page adds up."""
+        return Period.recent(self.today or date.today())
+
     # To implement
 
     def load_summary(self, item_id: int) -> S:
-        """The item with its totals; NotFoundError once it was deleted or merged."""
+        """The item with its totals in ``recent()``; NotFoundError once it was deleted or
+        merged."""
         raise NotImplementedError
 
     def name(self, summary: S) -> str:
@@ -139,7 +158,7 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self.merge_button.setEnabled(self.has_others())
         values = [
             self._total_text(summary),
-            str(summary.count),
+            str(summary.totals.count),
             format_date(summary.last_on) if summary.last_on else NO_MOVEMENTS,
             *self.extra_figures(summary),
         ]
@@ -149,12 +168,13 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self.list_view.show_matching(self.criteria(summary))
 
     def _total_text(self, summary: S) -> str:
-        """Income minus expenses in pesos; the tooltip counts what lacks a rate."""
-        note = unconverted_note(summary.unconverted) if summary.unconverted else ""
+        """Its total in pesos; the tooltip counts what lacks a rate."""
+        totals = summary.totals
+        note = unconverted_note(totals.unconverted) if totals.unconverted else ""
         self.figure_labels["Total"].setToolTip(note)
-        if not summary.count:
+        if not totals.count:
             return NO_MOVEMENTS
-        return masked(summary.net) if self._hidden else summary.net.format()
+        return masked(totals.net) if self._hidden else totals.net.format()
 
     def more_actions(self) -> list[RowAction]:
         if self.summary is None:

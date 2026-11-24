@@ -5,6 +5,7 @@ import pytest
 from factories import TODAY, ars, category_id, eur, expense_draft, income_draft, usd
 
 from nodus.models.installment_plan import InstallmentPlan
+from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.classification.payee_service import PayeeService
@@ -278,23 +279,36 @@ class TestSummaries:
             income_draft(services, pesos.id, ars("100"), date(2026, 11, 2), payee_name="Coto")
         )
 
-        coto, unused = services.payees.summaries()
+        november = Period.of_months(Month(2026, 11))
+        coto, unused = services.payees.summaries(november)
 
         assert coto.payee.name == "Coto"
         assert coto.count == 4
-        assert coto.net == ars("-2400")
-        assert coto.unconverted == 1
+        assert (coto.totals.count, coto.totals.net, coto.totals.unconverted) == (
+            4, ars("-2400"), 1,
+        )  # fmt: skip
         assert coto.top_category.id == groceries
         assert (coto.first_on, coto.last_on) == (date(2026, 11, 1), date(2026, 11, 4))
-        assert (unused.count, unused.net, unused.top_category, unused.first_on) == (
+        assert (unused.count, unused.totals.net, unused.top_category, unused.first_on) == (
             0, ars("0"), None, None,
         )  # fmt: skip
-        assert services.payees.summary(coto.payee.id) == coto
-        assert services.payees.summary(unused.payee.id) == unused
+        assert services.payees.summary(coto.payee.id, november) == coto
+        assert services.payees.summary(unused.payee.id, november) == unused
+
+    def test_totals_count_the_period_and_the_count_the_whole_history(self, services, pesos):
+        for on in (date(2026, 10, 31), date(2026, 11, 1)):
+            services.transactions.create(
+                expense_draft(services, pesos.id, ars("100"), on, payee_name="Coto")
+            )
+
+        (coto,) = services.payees.summaries(Period.of_months(Month(2026, 11)))
+
+        assert (coto.count, coto.totals.count, coto.totals.net) == (2, 1, ars("-100"))
+        assert coto.first_on == date(2026, 10, 31)
 
     def test_summary_of_a_missing_payee(self, services):
         with pytest.raises(NotFoundError):
-            services.payees.summary(999)
+            services.payees.summary(999, Period.of_months(Month(2026, 11)))
 
 
 class TestSuggestionsByUse:

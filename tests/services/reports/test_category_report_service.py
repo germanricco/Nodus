@@ -101,22 +101,25 @@ def test_expenses_match_the_dashboard_ring(services, pesos, dollars, rent):
 
 
 class TestSummary:
-    """A category's own page: its whole history, with its subcategories."""
+    """A category's own page: its last twelve months, with its subcategories."""
 
-    def test_adds_up_its_history_and_its_subcategories(self, services, pesos, rent):
+    def test_adds_up_its_last_twelve_months_and_its_subcategories(self, services, pesos, rent):
         spend(services, pesos, ars("400"), "Alquiler")
         spend(services, pesos, ars("100"), "Vivienda", on=date(2026, 9, 10))
+        spend(services, pesos, ars("50"), "Vivienda", on=date(2025, 11, 30))  # 13 months back
         spend(services, pesos, ars("999"), "Ocio")
 
         summary = services.category_report.summary(
             category_id(services, "Vivienda", EXPENSE), TODAY
         )
 
-        assert summary.net == ars("500")
-        assert summary.count == 2
+        assert summary.totals.period == Period.of_months(Month(2025, 12), Month(2026, 11))
+        assert summary.totals.net == ars("500")
+        assert summary.totals.net == sum((total for _m, total in summary.months), ars("0"))
+        assert (summary.totals.count, summary.count) == (2, 3)
         assert summary.this_month == ars("400")
         assert [c.name for c in summary.children] == ["Alquiler"]
-        assert (summary.first_on, summary.last_on) == (date(2026, 9, 10), TODAY)
+        assert (summary.first_on, summary.last_on) == (date(2025, 11, 30), TODAY)
 
     def test_twelve_months_and_the_average_since_its_first_movement(self, services, pesos):
         spend(services, pesos, ars("300"), "Ocio", on=date(2026, 9, 1))
@@ -134,4 +137,4 @@ class TestSummary:
         summary = services.category_report.summary(category_id(services, "Ropa", EXPENSE), TODAY)
 
         assert (summary.count, summary.average, summary.first_on) == (0, None, None)
-        assert summary.net.is_zero
+        assert summary.totals.net.is_zero

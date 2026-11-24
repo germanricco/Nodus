@@ -22,7 +22,7 @@ from nodus.services.container import Services
 from nodus.ui.actions.goals import delete_goal, toggle_goal_archived
 from nodus.ui.dialogs.goal_dialog import GoalDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import PageId
+from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.pages.base.page import Page
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
@@ -32,7 +32,13 @@ from nodus.ui.widgets.charts.chart_base import shown_fractions
 from nodus.ui.widgets.charts.goal_bar import GoalBar, goal_pill, goal_sentence, saved_of_target
 from nodus.ui.widgets.empty_state import empty_page_card
 from nodus.ui.widgets.style import clear_layout, muted_label
-from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction, install_row_actions
+from nodus.ui.widgets.tables.row_actions import (
+    Effect,
+    MoreButton,
+    RowAction,
+    install_row_actions,
+    open_cue,
+)
 
 EMPTY_TITLE = N_("Todavía no hay metas")
 EMPTY_TEXT = N_(
@@ -91,6 +97,7 @@ class GoalRow(QWidget):
         top.addWidget(self.pill)
         self.more_button = MoreButton(self.actions)
         top.addWidget(self.more_button)
+        top.addWidget(open_cue())
         layout.addLayout(top)
 
         self.bar = GoalBar(theme, progress, start)
@@ -106,7 +113,7 @@ class GoalRow(QWidget):
             bottom.addWidget(self.rate_button)
         layout.addLayout(bottom)
 
-        install_row_actions(self, self.actions, open_on_click=_("Abrir la meta"))
+        install_row_actions(self, self.actions, open_on_click=DetailId.GOAL.open_text)
 
     def actions(self) -> list[RowAction]:
         goal = self.goal

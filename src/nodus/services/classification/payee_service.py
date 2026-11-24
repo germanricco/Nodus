@@ -12,15 +12,15 @@ from nodus.database.database import Database
 from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.i18n import N_, _
 from nodus.models.category import Category
-from nodus.models.money import Money
 from nodus.models.payee import Payee, PayeeUsage
+from nodus.models.period import Period
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
 from nodus.services.app.undo_service import UndoService
 from nodus.services.classification.category_service import CategoryService
 from nodus.services.classification.named_records import NamedRecordService
-from nodus.services.conversion import net_in_pesos
+from nodus.services.conversion import PeriodTotals, period_totals
 from nodus.services.errors import clean_name, require_free_name
 from nodus.services.sorting import name_sort_key, rank_matches
 from nodus.services.transactions.transaction_service import TransactionService
@@ -28,18 +28,17 @@ from nodus.services.transactions.transaction_service import TransactionService
 
 @dataclass(frozen=True)
 class PayeeSummary:
-    """A payee with its transactions added up, for the payees page.
+    """A payee with its transactions added up, for its row and its page.
 
-    ``net`` is income minus expenses in pesos, with dollars converted at the rate of their
-    day; those without a rate yet are left out and counted in ``unconverted``.
-    ``top_category`` is the one used most with this payee, and ``first_on`` and
-    ``last_on`` the dates of its first and latest transactions (None while it has none).
+    ``totals`` are those of a period (income minus expenses in pesos, dollars at the rate
+    of their day); ``count`` is how many it has over its whole history. ``top_category``
+    is the one used most with this payee, and ``first_on`` and ``last_on`` the dates of its
+    first and latest transactions (None while it has none).
     """
 
     payee: Payee
     count: int
-    net: Money
-    unconverted: int
+    totals: PeriodTotals
     top_category: Category | None
     first_on: date | None
     last_on: date | None
@@ -188,8 +187,8 @@ class PayeeService(NamedRecordService[Payee]):
         )
         return latest[0].category_id if latest else None
 
-    def summaries(self) -> list[PayeeSummary]:
-        """Every payee with its totals, the most used first."""
+    def summaries(self, period: Period) -> list[PayeeSummary]:
+        """Every payee with its totals in ``period``, the most used there first."""
         by_payee: dict[int, list[Transaction]] = defaultdict(list)
         for transaction in self._transactions.list_transactions(
             TransactionFilter(is_transfer=False)
@@ -197,28 +196,32 @@ class PayeeService(NamedRecordService[Payee]):
             if transaction.payee_id is not None:
                 by_payee[transaction.payee_id].append(transaction)
         categories = {c.id: c for c in self._categories.list_categories()}
-        summaries = [self._summary(p, by_payee[p.id], categories) for p in self._payees.list()]
-        return sorted(summaries, key=lambda s: (-s.count, name_sort_key(s.payee.name)))
+        summaries = [
+            self._summary(p, by_payee[p.id], categories, period) for p in self._payees.list()
+        ]
+        return sorted(summaries, key=lambda s: (-s.totals.count, name_sort_key(s.payee.name)))
 
-    def summary(self, payee_id: int) -> PayeeSummary:
-        """One payee with its totals, for its own page."""
+    def summary(self, payee_id: int, period: Period) -> PayeeSummary:
+        """One payee with its totals in ``period``, for its own page."""
         payee = self.get(payee_id)
         transactions = self._transactions.list_transactions(
             TransactionFilter(payee_id=payee_id, is_transfer=False)
         )
         categories = {c.id: c for c in self._categories.list_categories()}
-        return self._summary(payee, transactions, categories)
+        return self._summary(payee, transactions, categories, period)
 
     def _summary(
-        self, payee: Payee, transactions: list[Transaction], categories: dict[int, Category]
+        self,
+        payee: Payee,
+        transactions: list[Transaction],
+        categories: dict[int, Category],
+        period: Period,
     ) -> PayeeSummary:
-        net, unconverted = net_in_pesos(transactions, self._exchange_rates)
         usage = Counter(t.category_id for t in transactions).most_common(1)
         return PayeeSummary(
             payee=payee,
             count=len(transactions),
-            net=net,
-            unconverted=unconverted,
+            totals=period_totals(transactions, period, self._exchange_rates),
             top_category=categories[usage[0][0]] if usage else None,
             first_on=min((t.occurred_on for t in transactions), default=None),
             last_on=max((t.occurred_on for t in transactions), default=None),

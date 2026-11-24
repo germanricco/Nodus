@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget
 
@@ -19,7 +17,7 @@ from nodus.ui.actions.categories import delete_categories
 from nodus.ui.dialogs.category_dialog import CategoryDialog, MergeCategoryDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import DetailId, TransactionFocus
+from nodus.ui.navigation import DetailId, RecordLink, TransactionFocus
 from nodus.ui.pages.base.summary_detail_page import NO_MOVEMENTS, SummaryDetailPage
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
@@ -36,9 +34,10 @@ HAS_SUBCATEGORIES_TEXT = N_("Para unirla, primero une o elimina sus subcategorí
 
 
 class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
-    """A category with this month and its monthly average, a bar per month of the last
-    year (a click opens that month's movements) and links to its subcategories or to the
-    category it sits in. Amounts read as in Categorías: what was spent, or received.
+    """A category with this month and its monthly average, a bar per month of the same
+    year its total adds up (a click opens that month's movements) and links to its
+    subcategories or to the category it sits in. Amounts read as in Categorías: what was
+    spent, or received.
 
     «Otros» and «Reembolsos» belong to Nodus, so their page only shows them.
     """
@@ -46,13 +45,12 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
     CAPTIONS = (THIS_MONTH, N_("Promedio por mes"))
 
     transactions_requested = Signal(object)  # TransactionFocus
-    category_requested = Signal(int)  # category id
+    record_requested = Signal(object)  # RecordLink
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
         super().__init__(DetailId.CATEGORY, services, event_bus, theme_manager)
-        self.today: date | None = None  # fixed by tests; otherwise the real date
         self.related_line = LinkLine()
         self.chart = StackedBarChart(
             theme_manager.theme, lambda cents: format_compact(cents, HOME_CURRENCY)
@@ -67,7 +65,7 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
         self.content_layout.insertWidget(at + 1, chart_card)
 
     def load_summary(self, item_id: int) -> CategorySummary:
-        return self._services.category_report.summary(item_id, self.today or date.today())
+        return self._services.category_report.summary(item_id, self.recent().end)
 
     def name(self, summary: CategorySummary) -> str:
         return summary.category.name
@@ -165,7 +163,9 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
             label,
             [
                 Link(
-                    c.name, _("Abrir la categoría"), lambda i=c.id: self.category_requested.emit(i)
+                    c.name,
+                    DetailId.CATEGORY.open_text,
+                    lambda i=c.id: self.record_requested.emit(RecordLink.category(i)),
                 )
                 for c in related
             ],

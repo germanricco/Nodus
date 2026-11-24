@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.i18n import _
-from nodus.models.period import Month, Period
+from nodus.models.period import Month
 from nodus.models.recurring_charge import RecurringCharge
 from nodus.services.container import Services
 from nodus.ui.actions.recurring import pay_charge, skip_charge, toggle_seen
@@ -73,6 +73,7 @@ class DashboardPage(Page):
 
     navigate_requested = Signal(object)  # PageId
     transactions_requested = Signal(object)  # TransactionFocus
+    record_requested = Signal(object)  # RecordLink
     budgets_requested = Signal(object)  # Month
 
     def __init__(
@@ -118,22 +119,14 @@ class DashboardPage(Page):
         )
         self.flow_card = CashFlowCard(theme_manager)
         self.budgets_card = BudgetsCard(services, theme_manager)
-        self.budgets_card.category_clicked.connect(
-            lambda category_id: self.transactions_requested.emit(
-                TransactionFocus(Period.of_months(self._budgets_month()), category_id)
-            )
-        )
+        self.budgets_card.record_requested.connect(self.record_requested)
         self.budgets_card.see_all_requested.connect(
             lambda: self.budgets_requested.emit(self._budgets_month())
         )
         self.expenses_card = ExpensesCard(theme_manager)
         self.comparison_card = ComparisonCard()
         for card in (self.expenses_card, self.comparison_card):
-            card.category_clicked.connect(
-                lambda category_id: self.transactions_requested.emit(
-                    TransactionFocus(self.period_selector.period(), category_id)
-                )
-            )
+            card.record_requested.connect(self.record_requested)
 
         grid_page = QWidget()
         self._grid = QGridLayout(grid_page)

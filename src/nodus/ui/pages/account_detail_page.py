@@ -30,7 +30,7 @@ from nodus.ui.actions.recurring import pay_charge, skip_charge, toggle_seen
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.dialogs.value_adjustment_dialog import ValueAdjustmentDialog
 from nodus.ui.event_bus import EventBus
-from nodus.ui.navigation import DetailId
+from nodus.ui.navigation import DetailId, RecordLink
 from nodus.ui.pages.base.detail_page import DetailPage
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
 from nodus.ui.text.formatting import signed
@@ -74,7 +74,7 @@ class AccountDetailPage(DetailPage):
     The actions are in the header; archiving and deleting, the rare ones, in its «⋯».
     """
 
-    goal_requested = Signal(int)  # goal id
+    record_requested = Signal(object)  # RecordLink
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
@@ -329,8 +329,8 @@ class AccountDetailPage(DetailPage):
             [
                 Link(
                     f"{goal.name} ({format_percent(percent)})",
-                    _("Abrir la meta"),
-                    lambda i=goal.id: self.goal_requested.emit(i),
+                    DetailId.GOAL.open_text,
+                    lambda i=goal.id: self.record_requested.emit(RecordLink.goal(i)),
                 )
                 for goal, percent in goals
             ],

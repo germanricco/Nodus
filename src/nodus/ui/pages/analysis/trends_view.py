@@ -10,7 +10,7 @@ from nodus.models.period import Period, format_month
 from nodus.services.container import Services
 from nodus.services.reports.analysis_service import Metric, MonthTrend, Trends
 from nodus.services.reports.dashboard_service import CategoryTotal
-from nodus.ui.navigation import TransactionFocus
+from nodus.ui.navigation import RecordLink, TransactionFocus
 from nodus.ui.pages.analysis.common import VERSUS_PREVIOUS_TEXT, AnalysisView, chart_card, rows_card
 from nodus.ui.text.formatting import percent
 from nodus.ui.text.labels import movements_text, unconverted_note
@@ -175,14 +175,12 @@ class TrendsView(AnalysisView):
         if not trends.categories:
             self._category_rows.addWidget(EmptyState(_(NO_MOVEMENTS_TEXT), compact=True))
         for total in trends.categories:
-            row = CategoryLine(total.category.color, total.category.name)
+            category = total.category
+            link = RecordLink.category(category.id)
+            row = CategoryLine(category.color, category.name, link=link)
             row.add(muted_label(percent(total.total, trends.total)))
             row.add(amount_label(total.total))
-            row.clicked.connect(
-                lambda category_id=total.category.id: self.transactions_requested.emit(
-                    TransactionFocus(self._period, category_id=category_id)
-                )
-            )
+            row.opened.connect(self.record_requested)
             self._category_rows.addWidget(row)
 
     def _fill_payees(self, trends: Trends) -> None:
@@ -194,29 +192,23 @@ class TrendsView(AnalysisView):
         for total in named + without:
             name = total.payee.name if total.payee else _(NO_PAYEE_LABEL)
             color = self._theme.accent if total.payee else self._theme.border
-            row = CategoryLine(color, name, movements_text(total.count),
-                               clickable=total.payee is not None)  # fmt: skip
+            link = RecordLink.payee(total.payee.id) if total.payee else None
+            row = CategoryLine(color, name, movements_text(total.count), link)
             row.add(muted_label(percent(total.total, trends.total)))
             row.add(amount_label(total.total))
-            if total.payee is not None:
-                row.clicked.connect(
-                    lambda payee_id=total.payee.id: self.transactions_requested.emit(
-                        TransactionFocus(self._period, payee_id=payee_id)
-                    )
-                )
+            row.opened.connect(self.record_requested)
             self._payee_rows.addWidget(row)
 
     def _fill_tags(self, trends: Trends) -> None:
         clear_layout(self._tag_rows)
         for total in trends.tags:
-            row = CategoryLine(total.tag.color, total.tag.name, movements_text(total.count))
+            tag = total.tag
+            row = CategoryLine(
+                tag.color, tag.name, movements_text(total.count), RecordLink.tag(tag.id)
+            )
             row.add(muted_label(percent(total.total, trends.total)))
             row.add(amount_label(total.total))
-            row.clicked.connect(
-                lambda tag_id=total.tag.id: self.transactions_requested.emit(
-                    TransactionFocus(self._period, tag_id=tag_id)
-                )
-            )
+            row.opened.connect(self.record_requested)
             self._tag_rows.addWidget(row)
 
     def _set_theme(self, theme: Theme) -> None:

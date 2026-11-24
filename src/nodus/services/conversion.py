@@ -129,6 +129,27 @@ def net_in_pesos(
     return net, unconverted
 
 
+@dataclass(frozen=True)
+class PeriodTotals:
+    """What a payee, a tag or a category added up in ``period``: how many movements, and
+    income minus expenses in pesos (for a category, what was spent or received), leaving
+    out the ``unconverted`` that lack a rate."""
+
+    period: Period
+    count: int
+    net: Money
+    unconverted: int
+
+
+def period_totals(
+    transactions: list[Transaction], period: Period, exchange_rates: ExchangeRateService
+) -> PeriodTotals:
+    """The movements of ``transactions`` in ``period``, counted and added up in pesos."""
+    inside = [t for t in transactions if period.contains(t.occurred_on)]
+    net, unconverted = net_in_pesos(inside, exchange_rates)
+    return PeriodTotals(period, len(inside), net, unconverted)
+
+
 def positive_totals(totals: dict[int, Money]) -> list[tuple[int, Money]]:
     """The ``totals`` above zero, largest first. A category whose refunds outweigh its
     spending in a period has nothing to show for it."""

@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QBoxLayout, QVBoxLayout, QWidget
 from nodus.i18n import N_, _
 from nodus.models.money import Money
 from nodus.services.reports.dashboard_service import CategoryTotal, PeriodSummary
+from nodus.ui.navigation import RecordLink
 from nodus.ui.text.formatting import percent
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -26,10 +27,10 @@ class ExpensesCard(Card):
     """Where the money went: an interactive ring with its legend.
 
     Hovering a slice or a legend row highlights both; clicking either emits
-    ``category_clicked`` with the category's id.
+    ``record_requested`` with the category's page.
     """
 
-    category_clicked = Signal(int)
+    record_requested = Signal(object)  # RecordLink
 
     def __init__(self, theme_manager: ThemeManager) -> None:
         super().__init__()
@@ -77,12 +78,13 @@ class ExpensesCard(Card):
         clear_layout(self._legend)
         self.rows = []
         for index, (category_id, name, color, total) in enumerate(items):
-            row = CategoryLine(color, name, clickable=category_id is not None)
+            link = RecordLink.category(category_id) if category_id is not None else None
+            row = CategoryLine(color, name, link=link)
             row.add(muted_label(percent(total, summary.expenses)))
             amount = amount_label(total)
             row.add(amount)
             row.hovered.connect(lambda on, i=index: self._hover_row(i, on))
-            row.clicked.connect(lambda i=index: self._click_item(i))
+            row.opened.connect(self.record_requested)
             self._legend.addWidget(row)
             self.rows.append(row)
 
@@ -139,4 +141,4 @@ class ExpensesCard(Card):
     def _click_item(self, index: int) -> None:
         category_id = self._category_ids[index] if index < len(self._category_ids) else None
         if category_id is not None:
-            self.category_clicked.emit(category_id)
+            self.record_requested.emit(RecordLink.category(category_id))
