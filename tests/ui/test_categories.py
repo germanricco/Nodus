@@ -4,7 +4,7 @@ import pytest
 from factories import ars, category_id, expense_draft, in_view, light_theme
 from menus import run_action, texts
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QLabel
+from PySide6.QtWidgets import QApplication, QFrame, QLabel
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
@@ -177,6 +177,26 @@ class TestCategoriesPage:
         run_action(row_named(page, "Ocio").actions(), "Eliminar")
 
         assert "Ocio" in [c.name for c in services.categories.list_categories(EXPENSE)]
+
+
+def test_each_card_shows_its_total_under_its_title(services, pesos, page):
+    """As the caption and value of a figure tile, never loose at the right edge."""
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("400"), date.today(),
+                      category_id=category_id(services, "Ocio", EXPENSE))
+    )  # fmt: skip
+    page.resize(1000, 800)
+    page.show()
+    page.refresh()
+    QApplication.processEvents()  # what a shown page adds is shown by a queued call
+
+    shown = [label for label in page.findChildren(QLabel) if label.isVisibleTo(page)]
+    title = next(t for t in shown if t.objectName() == "CardTitle" and t.text() == "GASTOS")
+    total = next(v for v in shown if v.objectName() == "StatValue" and v.text() == "$ 400,00")
+    assert total.parentWidget() is title.parentWidget()
+    assert total.geometry().left() == title.geometry().left()
+    assert total.geometry().top() > title.geometry().bottom()
+    assert total.accessibleName() == "Total de gastos: $ 400,00"
 
 
 class TestFoldingSubcategories:

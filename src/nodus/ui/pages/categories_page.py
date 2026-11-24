@@ -33,7 +33,7 @@ from nodus.ui.text.labels import unconverted_note
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.card import Card, card_header
+from nodus.ui.widgets.card import Card, card_title
 from nodus.ui.widgets.charts.chart_base import shown_fractions
 from nodus.ui.widgets.charts.share_bar import ShareBar
 from nodus.ui.widgets.color_dot import ColorDot
@@ -397,14 +397,24 @@ class CategoriesPage(Page):
         starts: dict[int, float],
         searching: bool,
     ) -> Card:
-        """A card with a group per category: the category, then its subcategories, which
-        it may fold. A thin line goes between groups, never inside one, so each category
-        reads as one block with what it holds."""
+        """A card with its total under its title, as the caption and value of a figure
+        tile, then a group per category: the category and its subcategories, which it may
+        fold. A thin line goes between groups, never inside one, so each category reads as
+        one block with what it holds."""
         card = Card()
-        header = card_header(card, _(SECTION_TITLES[section.kind]))
+        heading = QVBoxLayout()
+        heading.setSpacing(Space.XXS)
+        heading.addWidget(card_title(_(SECTION_TITLES[section.kind])))
         total = QLabel(amount_text(section.total, hidden))
-        total.setObjectName("RowTitle")
-        header.addWidget(total)
+        total.setObjectName("StatValue")
+        total.setAccessibleName(
+            _("Total de {kind}: {amount}").format(
+                kind=_(SECTION_TITLES[section.kind]).lower(), amount=total.text()
+            )
+        )
+        heading.addWidget(total)
+        card.body.addLayout(heading)
+        card.body.addSpacing(Space.S)
         # A search shows the subcategories it found, even in a folded category.
         folded_ids = set() if searching else self._services.settings.folded_categories()
         for position, figures in enumerate(categories):

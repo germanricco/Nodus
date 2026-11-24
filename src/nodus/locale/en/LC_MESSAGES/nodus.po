@@ -2646,6 +2646,11 @@ msgstr "Keeps one and moves the others' movements to it"
 msgid "Borrar búsqueda"
 msgstr "Clear search"
 
+#: nodus/ui/pages/categories_page.py
+#, python-brace-format
+msgid "Total de {kind}: {amount}"
+msgstr "Total {kind}: {amount}"
+
 #: nodus/ui/pages/category_detail_page.py
 msgid "Este mes"
 msgstr "This month"
