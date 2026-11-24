@@ -67,6 +67,20 @@ class CategoryReport:
 
 
 @dataclass(frozen=True)
+class CategoryPart:
+    """What one piece of a category added up to in the months of its page: one of its
+    subcategories, or the category itself for the movements that sit in no subcategory
+    (``is_own``). ``months`` follow those of ``CategorySummary.months``; ``count`` is how
+    many movements it had in them."""
+
+    category: Category
+    is_own: bool
+    total: Money
+    count: int
+    months: tuple[Money, ...]
+
+
+@dataclass(frozen=True)
 class CategorySummary:
     """A category for its own page; a top-level one adds up its subcategories, listed in
     ``children``.
@@ -75,7 +89,8 @@ class CategorySummary:
     categories does: ``totals`` over the last ``RECENT_MONTHS`` months, ``months`` each of
     them, oldest first, ``this_month`` the current one and ``average`` per month over those
     since its first movement. ``count`` is how many of its own movements there are over its
-    whole history.
+    whole history. ``parts`` split a category with subcategories into them, the largest
+    first, so its page goes from the whole to each piece; empty without subcategories.
     """
 
     category: Category
@@ -87,6 +102,7 @@ class CategorySummary:
     average: Money | None
     months: list[tuple[Month, Money]]
     children: list[Category]
+    parts: list[CategoryPart]
 
 
 class CategoryReportService:
@@ -158,7 +174,40 @@ class CategoryReportService:
             average=average,
             months=[(month, by_month[month]) for month in window.months()],
             children=list(children),
+            parts=self._parts(category, children, mine, window) if children else [],
         )
+
+    @staticmethod
+    def _parts(
+        category: Category,
+        children: list[Category],
+        movements: list[ConvertedMovement],
+        window: Period,
+    ) -> list[CategoryPart]:
+        """``category`` split into its subcategories and what sits in none of them, over
+        the months of ``window``; a piece with nothing in them is left out."""
+        months = window.months()
+        amounts: dict[int, dict[Month, Money]] = defaultdict(
+            lambda: defaultdict(lambda: Money.zero(HOME_CURRENCY))
+        )
+        counts: Counter[int] = Counter()
+        for movement in movements:
+            day = movement.transaction.occurred_on
+            if window.contains(day):
+                amounts[movement.category_id][Month.of(day)] += movement.amount
+                counts[movement.category_id] += 1
+        parts = [
+            CategoryPart(
+                piece,
+                piece.id == category.id,
+                _sum(amounts[piece.id][m] for m in months),
+                counts[piece.id],
+                tuple(amounts[piece.id][m] for m in months),
+            )
+            for piece in (category, *children)
+            if counts[piece.id]
+        ]
+        return sorted(parts, key=lambda part: -part.total.cents)
 
     def _section(
         self,

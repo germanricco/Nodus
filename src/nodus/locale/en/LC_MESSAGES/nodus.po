@@ -2656,6 +2656,10 @@ msgid "Este mes"
 msgstr "This month"
 
 #: nodus/ui/pages/category_detail_page.py
+msgid "Sin subcategoría"
+msgstr "No subcategory"
+
+#: nodus/ui/pages/category_detail_page.py
 msgid "Para unirla, primero une o elimina sus subcategorías."
 msgstr "To merge it, first merge or delete its subcategories."
 
@@ -2667,6 +2671,10 @@ msgstr "Monthly average"
 #: nodus/ui/pages/category_detail_page.py
 msgid "Mes a mes"
 msgstr "Month by month"
+
+#: nodus/ui/pages/category_detail_page.py
+msgid "Por subcategoría"
+msgstr "By subcategory"
 
 #: nodus/ui/pages/category_detail_page.py nodus/ui/pages/dashboard/comparison_card.py
 msgid "Nueva"
@@ -2680,9 +2688,14 @@ msgstr "Moves its transactions to another one and deletes it"
 msgid "Dentro de:"
 msgstr "Inside:"
 
+#: nodus/ui/pages/analysis/trends_view.py nodus/ui/pages/category_detail_page.py
+#, python-brace-format
+msgid "Total {amount}"
+msgstr "Total {amount}"
+
 #: nodus/ui/pages/category_detail_page.py
-msgid "Subcategorías:"
-msgstr "Subcategories:"
+msgid "Sin movimientos en estos meses."
+msgstr "No transactions in these months."
 
 #: nodus/ui/pages/category_detail_page.py
 #, python-brace-format
@@ -3009,11 +3022,6 @@ msgstr "No data"
 #, python-brace-format
 msgid "Ahorro {amount}"
 msgstr "Savings {amount}"
-
-#: nodus/ui/pages/analysis/trends_view.py
-#, python-brace-format
-msgid "Total {amount}"
-msgstr "Total {amount}"
 
 #: nodus/ui/pages/base/detail_page.py
 #, python-brace-format
@@ -4287,24 +4295,26 @@ msgstr ""
 msgid ""
 "Categorías muestra cuánto sumó cada una en el período que elijas, de la más grande a la más "
 "chica, con una barra de cuánto pesa en el total. Un doble clic en una abre su página, con lo que "
-"sumó en los últimos 12 meses y mes a mes, y «Unir con…» pasa sus movimientos a otra si tienes dos"
-" que son lo mismo; con sus casillas marcas varias y las unes o eliminas juntas. Cada una puede "
-"tener subcategorías, como Supermercado dentro de Comida, con «Agregar subcategoría» en su menú; "
-"la flecha a su izquierda las oculta y las vuelve a mostrar, y Nodus lo recuerda. Si eliminas una,"
-" sus movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de sistema: Nodus "
-"las usa, así que no se renombran ni se eliminan. Para el color, además de la paleta, el «+» abre "
-"una rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano después de la paleta, "
+"sumó en los últimos 12 meses y mes a mes, y si tiene subcategorías, cada barra y una lista te "
+"muestran cuánto puso cada una, y «Unir con…» pasa sus movimientos a otra si tienes dos que son lo"
+" mismo; con sus casillas marcas varias y las unes o eliminas juntas. Cada una puede tener "
+"subcategorías, como Supermercado dentro de Comida, con «Agregar subcategoría» en su menú; la "
+"flecha a su izquierda las oculta y las vuelve a mostrar, y Nodus lo recuerda. Si eliminas una, "
+"sus movimientos pasan a «Otros» y no se pierden. «Otros» y «Reembolsos» son de sistema: Nodus las"
+" usa, así que no se renombran ni se eliminan. Para el color, además de la paleta, el «+» abre una"
+" rueda con cualquier otro, y los últimos que elegiste ahí quedan a mano después de la paleta, "
 "también para las etiquetas."
 msgstr ""
 "Categories shows how much each one added up to in the period you choose, from the largest down, "
 "with a bar of how much it weighs in the total. Double-clicking one opens its page, with what it "
-"added up to over the last 12 months and month by month, and “Merge with…” moves its transactions "
-"to another one if you have two that are the same; with their check boxes you choose several and "
-"merge or delete them together. Each one can have subcategories, such as Supermarket inside Food, "
-"with “Add subcategory” in its menu; the arrow on its left hides them and shows them again, and "
-"Nodus remembers it. If you delete one, its transactions move to “Other” and aren't lost. “Other” "
-"and “Refunds” belong to the system: Nodus uses them, so they can't be renamed or deleted. For the"
-" color, besides the palette, the “+” opens a color wheel with any other color, and the last ones "
+"added up to over the last 12 months and month by month, and if it has subcategories, each bar and "
+"a list show how much each one put in; “Merge with…” moves its transactions to another one if you "
+"have two that are the same, and with their check boxes you choose several and merge or delete "
+"them together. Each one can have subcategories, such as Supermarket inside Food, with “Add "
+"subcategory” in its menu; the arrow on its left hides them and shows them again, and Nodus "
+"remembers it. If you delete one, its transactions move to “Other” and aren't lost. “Other” and "
+"“Refunds” belong to the system: Nodus uses them, so they can't be renamed or deleted. For the "
+"color, besides the palette, the “+” opens a color wheel with any other color, and the last ones "
 "you chose there stay at hand after the palette, for tags too."
 
 #: nodus/ui/text/help_texts.py

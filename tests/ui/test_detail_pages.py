@@ -23,6 +23,7 @@ from nodus.ui.dialogs.transaction_dialog import INCOME_MODE, TransactionDialog, 
 from nodus.ui.navigation import DetailId, PageId, RecordLink
 from nodus.ui.pages.accounts_page import AccountRow
 from nodus.ui.pages.categories_page import CategoryRow
+from nodus.ui.widgets.color_dot import ColorDot
 from nodus.ui.widgets.tables.transaction_table import CATEGORY
 
 EXPENSE, INCOME = TransactionType.EXPENSE, TransactionType.INCOME
@@ -249,10 +250,36 @@ class TestCategoryDetail:
         assert figures["Este mes"] == "$ 500,00"
         assert figures["Movimientos"] == "2"
         assert len(detail.chart.bars()) == 12
-        assert [link.text() for link in detail.related_line.links] == ["Alquiler"]
+        # Its subcategories are in «Por subcategoría», with their amounts, not in a line.
+        assert detail.related_line.isHidden()
         # Its movements may be in a subcategory, so the list says which.
         assert not detail.list_view.table.isColumnHidden(CATEGORY)
         assert detail.list_view.model.rowCount() == 2
+
+    def test_from_the_whole_to_each_subcategory(self, qtbot, window, vivienda):
+        """Each bar stacked by subcategory, and a card with what each one added up to; one
+        opens its page, what sits in no subcategory opens nothing."""
+        detail = self.open(window, vivienda.id)
+
+        november = detail.chart.bars()[-1]
+        assert [segment.value for segment in november.segments] == [40000, 10000]
+        assert november.tooltip_lines == (
+            "Total $ 500,00", "Alquiler $ 400,00", "Sin subcategoría $ 100,00",
+        )  # fmt: skip
+        assert detail.parts_card.isVisibleTo(detail)
+        lines = detail.part_lines
+        assert [line.name for line in lines] == ["Alquiler", "Sin subcategoría"]
+        assert lines[0].link is not None and lines[1].link is None
+        # Each piece in its own color, also in the box of its row.
+        colors = {segment.color for segment in november.segments}
+        assert len(colors) == 2
+        assert {line.findChild(ColorDot).color() for line in lines} == colors
+
+        qtbot.mouseClick(lines[0], Qt.MouseButton.LeftButton)
+        assert detail.title_label.text() == "Alquiler"
+        # A subcategory has no pieces of its own.
+        assert not detail.parts_card.isVisibleTo(detail)
+        assert len(detail.chart.bars()[-1].segments) == 1
 
     def test_a_subcategory_links_to_its_parent(self, services, window, vivienda):
         alquiler = next(c for c in services.categories.list_categories(EXPENSE)

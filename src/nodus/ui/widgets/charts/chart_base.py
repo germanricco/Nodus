@@ -83,6 +83,29 @@ def with_alpha(color: str, alpha: float) -> QColor:
     return result
 
 
+def distinct_colors(colors: list[str]) -> list[str]:
+    """``colors`` with each repeat turned into a lighter or darker shade of it, so the
+    pieces of one chart never look alike: a subcategory often takes its category's color.
+    The first of each color stays as it is, so it matches its dot everywhere else."""
+    seen: dict[str, int] = {}
+    result = []
+    for color in colors:
+        key = QColor(color).name()
+        repeat = seen.get(key, 0)
+        seen[key] = repeat + 1
+        if not repeat:
+            result.append(color)
+            continue
+        step = 100 + SHADE_STEP * ((repeat + 1) // 2)
+        shade = QColor(color).lighter(step) if repeat % 2 else QColor(color).darker(step)
+        result.append(shade.name())
+    return result
+
+
+# How far each repeat of a color moves away from it, in Qt's lighter/darker percent.
+SHADE_STEP = 30
+
+
 def format_compact(cents: float, currency: Currency) -> str:
     """Short axis labels: "$ 2,9 M", "US$ 15 k", "$ 950" ("$2.9M", "US$15K" in English)."""
     amount = cents / 100

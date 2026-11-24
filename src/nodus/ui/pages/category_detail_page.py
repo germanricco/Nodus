@@ -3,41 +3,50 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from nodus.i18n import N_, _
 from nodus.models.currency import HOME_CURRENCY
+from nodus.models.money import Money
 from nodus.models.period import Month, Period, format_month
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.conversion import relative_change
-from nodus.services.reports.category_report_service import CategorySummary
+from nodus.services.reports.category_report_service import CategoryPart, CategorySummary
 from nodus.ui.actions.categories import delete_categories
 from nodus.ui.dialogs.category_dialog import CategoryDialog, MergeCategoryDialog
 from nodus.ui.dialogs.transaction_dialog import TransactionStart
 from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId, RecordLink, TransactionFocus
 from nodus.ui.pages.base.summary_detail_page import NO_MOVEMENTS, SummaryDetailPage
+from nodus.ui.text.formatting import percent
+from nodus.ui.text.labels import movements_text
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
-from nodus.ui.widgets.charts.chart_base import format_compact
+from nodus.ui.widgets.charts.chart_base import distinct_colors, format_compact
 from nodus.ui.widgets.charts.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
 from nodus.ui.widgets.link_line import Link, LinkLine
 from nodus.ui.widgets.money_label import amount_text
+from nodus.ui.widgets.style import amount_label, clear_layout, muted_label
+from nodus.ui.widgets.tables.category_line import CategoryLine
 from nodus.ui.widgets.tables.row_actions import Effect, RowAction
 from nodus.ui.widgets.tables.transaction_table import CATEGORY
 
 THIS_MONTH = N_("Este mes")
+OWN_PART_TEXT = N_("Sin subcategoría")
+TOOLTIP_PARTS = 4  # the largest pieces a month's box names
 HAS_SUBCATEGORIES_TEXT = N_("Para unirla, primero une o elimina sus subcategorías.")
 
 
 class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
-    """A category with this month and its monthly average, a bar per month of the same
-    year its total adds up (a click opens that month's movements) and links to its
-    subcategories or to the category it sits in. Amounts read as in Categorías: what was
-    spent, or received.
+    """A category from the whole to each piece: its total, this month and its monthly
+    average; a bar per month of the same year its total adds up (a click opens that
+    month's movements); with subcategories, each bar stacked by them and a card with
+    what each one added up to, which opens its page; then its movements. A subcategory
+    links to the category it sits in. Amounts read as in Categorías: what was spent, or
+    received.
 
     «Otros» and «Reembolsos» belong to Nodus, so their page only shows them.
     """
@@ -60,9 +69,16 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
         chart_card = Card()
         card_header(chart_card, _("Mes a mes"))
         chart_card.body.addWidget(self.chart)
+        self.parts_card = Card()
+        card_header(self.parts_card, _("Por subcategoría"))
+        self._part_rows = QVBoxLayout()
+        self._part_rows.setSpacing(0)
+        self.parts_card.body.addLayout(self._part_rows)
+        self.part_lines: list[CategoryLine] = []
         at = self.content_layout.indexOf(self.list_view)
         self.content_layout.insertWidget(at, self.related_line)
         self.content_layout.insertWidget(at + 1, chart_card)
+        self.content_layout.insertWidget(at + 2, self.parts_card)
 
     def load_summary(self, item_id: int) -> CategorySummary:
         return self._services.category_report.summary(item_id, self.recent().end)
@@ -148,17 +164,19 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
         # A parent's movements may be in any of its subcategories, so its rows say which.
         self.list_view.table.setColumnHidden(CATEGORY, not summary.children)
         self._show_related(summary)
-        self._show_months(summary)
+        colors = self._part_colors(summary)
+        self._show_months(summary, colors)
+        self._show_parts(summary, colors)
         self._show_change(summary)
 
     def _show_related(self, summary: CategorySummary) -> None:
-        """Its subcategories, or the category it sits in, each a link to its page."""
+        """The category a subcategory sits in, as a link to its page; a category's own
+        subcategories are in «Por subcategoría», with their amounts."""
         category = summary.category
-        if category.is_subcategory:
-            parent = self._services.categories.get(category.parent_id)
-            label, related = _("Dentro de:"), [parent]
-        else:
-            label, related = _("Subcategorías:"), summary.children
+        related = (
+            [self._services.categories.get(category.parent_id)] if category.is_subcategory else []
+        )
+        label = _("Dentro de:")
         self.related_line.set_links(
             label,
             [
@@ -171,21 +189,84 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
             ],
         )
 
-    def _show_months(self, summary: CategorySummary) -> None:
-        color = summary.category.color
+    @staticmethod
+    def _part_colors(summary: CategorySummary) -> dict[int, str]:
+        """The color of each piece, told apart even when a subcategory has its
+        category's."""
+        pieces = [part.category for part in summary.parts]
+        return dict(
+            zip((c.id for c in pieces), distinct_colors([c.color for c in pieces]), strict=True)
+        )
+
+    def _show_months(self, summary: CategorySummary, colors: dict[int, str]) -> None:
+        """A bar per month: in one piece, or stacked by subcategory, the largest at the
+        bottom, with the month's largest pieces in its box."""
         self.chart.set_bars(
             [
-                StackedBar(
-                    month.short_name,
-                    (StackSegment(summary.category.id, color, total.cents),),
-                    format_month(month),
-                    (amount_text(total, self._hidden),),
-                    month,
-                )
-                for month, total in summary.months
+                self._bar(summary, index, month, total, colors)
+                for index, (month, total) in enumerate(summary.months)
             ],
             summary.average.cents if summary.average is not None else None,
         )
+
+    def _bar(
+        self,
+        summary: CategorySummary,
+        index: int,
+        month: Month,
+        total: Money,
+        colors: dict[int, str],
+    ) -> StackedBar:
+        total_text = amount_text(total, self._hidden)
+        if not summary.parts:
+            segment = StackSegment(summary.category.id, summary.category.color, total.cents)
+            return StackedBar(
+                month.short_name, (segment,), format_month(month), (total_text,), month
+            )
+        pieces = [(part, part.months[index]) for part in summary.parts]
+        segments = tuple(
+            StackSegment(part.category.id, colors[part.category.id], amount.cents)
+            for part, amount in pieces
+            if not amount.is_zero
+        )
+        largest = sorted(
+            (piece for piece in pieces if not piece[1].is_zero), key=lambda p: -p[1].cents
+        )[:TOOLTIP_PARTS]
+        lines = [_("Total {amount}").format(amount=total_text)] + [
+            f"{self._part_name(part)} {amount_text(amount, self._hidden)}"
+            for part, amount in largest
+        ]
+        return StackedBar(month.short_name, segments, format_month(month), tuple(lines), month)
+
+    @staticmethod
+    def _part_name(part: CategoryPart) -> str:
+        return _(OWN_PART_TEXT) if part.is_own else part.category.name
+
+    def _show_parts(self, summary: CategorySummary, colors: dict[int, str]) -> None:
+        """What each subcategory added up to in these months, and its share; one opens its
+        page. What sits in no subcategory has a row of its own, which opens nothing."""
+        self.parts_card.setVisible(bool(summary.children))
+        clear_layout(self._part_rows)
+        self.part_lines = []
+        if not summary.children:
+            return
+        if not summary.parts:
+            self._part_rows.addWidget(muted_label(_("Sin movimientos en estos meses.")))
+        for part in summary.parts:
+            link = None if part.is_own else RecordLink.category(part.category.id)
+            line = CategoryLine(
+                colors[part.category.id],
+                self._part_name(part),
+                movements_text(part.count),
+                link,
+            )
+            line.add(muted_label(percent(part.total, summary.totals.net)))
+            amount = amount_label(part.total)
+            amount.setText(amount_text(part.total, self._hidden))
+            line.add(amount)
+            line.opened.connect(self.record_requested)
+            self._part_rows.addWidget(line)
+            self.part_lines.append(line)
 
     def _show_change(self, summary: CategorySummary) -> None:
         """This month against the one before, as Inicio compares each category: more
@@ -203,11 +284,14 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
         # The badge widens its tile, which may need a row of its own now.
         self.figures.relayout()
 
-    def _month_clicked(self, index: int, _key: object) -> None:
+    def _month_clicked(self, index: int, key: object) -> None:
         summary = self.summary
         if summary is None:
             return
         month: Month = summary.months[index][0]
+        # A subcategory's piece opens its movements; the rest, the whole category's.
+        child_ids = {child.id for child in summary.children}
+        category_id = key if key in child_ids else summary.category.id
         self.transactions_requested.emit(
-            TransactionFocus(Period.of_months(month), category_id=summary.category.id)
+            TransactionFocus(Period.of_months(month), category_id=category_id)
         )

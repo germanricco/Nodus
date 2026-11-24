@@ -8,7 +8,7 @@ from nodus.models.currency import Currency
 from nodus.ui.theme.theme import LIGHT
 from nodus.ui.widgets.change_badge import ChangeBadge, format_change
 from nodus.ui.widgets.charts.bar_chart import BarChart, BarGroup
-from nodus.ui.widgets.charts.chart_base import format_compact, resample
+from nodus.ui.widgets.charts.chart_base import distinct_colors, format_compact, resample
 from nodus.ui.widgets.charts.line_chart import (
     LineChart,
     LinePoint,
@@ -418,3 +418,11 @@ def test_format_compact_in_english(english, cents, currency, text):
 def test_format_change_in_english(english):
     assert format_change(-0.095) == "↘ 9.5%"
     assert format_change(-0.05, "pp") == "↘ 5 pp"
+
+
+def test_a_repeated_color_turns_into_a_shade_of_it():
+    """A subcategory often keeps its category's color; in one chart they must differ."""
+    colors = distinct_colors(["#e67e22", "#2980b9", "#E67E22", "#e67e22"])
+
+    assert colors[:2] == ["#e67e22", "#2980b9"]
+    assert len(set(colors)) == 4

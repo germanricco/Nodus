@@ -133,6 +133,26 @@ class TestSummary:
         # September to November: three months of history, not twelve.
         assert summary.average == ars("200")
 
+    def test_split_into_its_subcategories_the_largest_first(self, services, pesos, rent):
+        spend(services, pesos, ars("400"), "Alquiler")
+        spend(services, pesos, ars("100"), "Vivienda", on=date(2026, 10, 10))
+        spend(services, pesos, ars("50"), "Vivienda", on=date(2025, 11, 30))  # 13 months back
+
+        summary = services.category_report.summary(
+            category_id(services, "Vivienda", EXPENSE), TODAY
+        )
+
+        alquiler, own = summary.parts
+        assert (alquiler.category.name, alquiler.is_own, alquiler.total, alquiler.count) == (
+            "Alquiler", False, ars("400"), 1,
+        )  # fmt: skip
+        assert (own.category.name, own.is_own, own.total) == ("Vivienda", True, ars("100"))
+        assert (own.months[-2], own.months[-1]) == (ars("100"), ars("0"))
+        assert sum((p.total for p in summary.parts), ars("0")) == summary.totals.net
+        # A subcategory, or a category without any, is not split.
+        alone = services.category_report.summary(category_id(services, "Ocio", EXPENSE), TODAY)
+        assert alone.parts == []
+
     def test_a_category_without_movements(self, services):
         summary = services.category_report.summary(category_id(services, "Ropa", EXPENSE), TODAY)
 
