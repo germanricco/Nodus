@@ -81,8 +81,9 @@ class TrendsView(AnalysisView):
 
         self.categories_card, self._category_rows = rows_card(_("Por categoría"))
         self.payees_card, self._payee_rows = rows_card(_("Por beneficiario"))
-        # Side by side while both fit, one under the other in a narrow window.
-        self.breakdown = CardGrid()
+        # Side by side while both fit, sharing the whole width; one under the other in a
+        # narrow window.
+        self.breakdown = CardGrid(most_columns=2)
         self.breakdown.set_cards([self.categories_card, self.payees_card])
         layout.addWidget(self.breakdown)
         self.tags_card, self._tag_rows = rows_card(_("Por etiqueta"))
@@ -175,7 +176,8 @@ class TrendsView(AnalysisView):
         for total in trends.categories:
             category = total.category
             link = RecordLink.category(category.id)
-            row = CategoryLine(category.color, category.name, link=link)
+            # With its movements under it, as the payees beside it: the rows line up.
+            row = CategoryLine(category.color, category.name, movements_text(total.count), link)
             row.add(muted_label(percent(total.total, trends.total)))
             row.add(amount_label(total.total))
             row.opened.connect(self.record_requested)

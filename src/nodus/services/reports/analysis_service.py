@@ -230,10 +230,15 @@ class AnalysisService:
     ) -> list[CategoryTotal]:
         """Totals by top-level category, subcategories included, largest first."""
         totals: dict[int, Money] = defaultdict(lambda: Money.zero(HOME_CURRENCY))
+        counts: dict[int, int] = defaultdict(int)
         for movement in movements:
             category = categories[movement.category_id]
-            totals[category.parent_id or category.id] += movement.amount
-        return [CategoryTotal(categories[i], total) for i, total in positive_totals(totals)]
+            top = category.parent_id or category.id
+            totals[top] += movement.amount
+            counts[top] += 1
+        return [
+            CategoryTotal(categories[i], total, counts[i]) for i, total in positive_totals(totals)
+        ]
 
     def _by_payee(self, movements: list[ConvertedMovement]) -> list[PayeeTotal]:
         payees = {p.id: p for p in self._payees.list_payees()}

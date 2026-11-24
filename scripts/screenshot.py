@@ -195,6 +195,7 @@ def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) ->
 # Tall enough for every dashboard card at once.
 FULL_DASHBOARD_HEIGHT = 1500
 FULL_SETTINGS_HEIGHT = 1500
+FULL_HD_WIDTH = 1920
 
 
 # Turns of the event loop before each capture, so the layout has settled.
@@ -421,7 +422,16 @@ def capture_settings_and_analysis(shots: Shots) -> None:
         shots.settle()
         shots.save(window, f"analysis-{name}")
     analysis.tabs.set_index(0)
-    window.resize(window.width(), shots.height)
+    # On a full HD screen: every report fills the width, the breakdowns included.
+    wide = window.width()
+    window.resize(FULL_HD_WIDTH, FULL_DASHBOARD_HEIGHT)
+    for index, name in enumerate(ANALYSIS_TABS):
+        analysis.tabs.set_index(index)
+        shots.settle()
+        shots.settle()
+        shots.save(window, f"analysis-{name}-full-hd")
+    analysis.tabs.set_index(0)
+    window.resize(wide, shots.height)
 
 
 def capture_narrow_pages(shots: Shots) -> None:

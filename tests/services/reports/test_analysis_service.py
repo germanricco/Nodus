@@ -117,9 +117,9 @@ class TestTrends:
     def test_categories_and_payees_largest_first(self, services, history):
         trends = services.analysis.trends(SEP_NOV, Metric.EXPENSES)
 
-        assert [(t.category.name, t.total) for t in trends.categories] == [
-            ("Supermercado y comida", ars("1500")),
-            ("Servicios", ars("100")),
+        assert [(t.category.name, t.total, t.count) for t in trends.categories] == [
+            ("Supermercado y comida", ars("1500"), 3),
+            ("Servicios", ars("100"), 1),
         ]
         assert [(p.payee.name if p.payee else None, p.total, p.count) for p in trends.payees] == [
             ("Día", ars("1000"), 1),
@@ -148,7 +148,9 @@ class TestTrends:
 
         trends = services.analysis.trends(SEP_NOV, Metric.EXPENSES)
 
-        assert [(t.category.id, t.total) for t in trends.categories] == [(vivienda, ars("700"))]
+        assert [(t.category.id, t.total, t.count) for t in trends.categories] == [
+            (vivienda, ars("700"), 1)
+        ]
         assert trends.months[1].by_category[0].category.id == vivienda
 
     def test_income(self, services, history):

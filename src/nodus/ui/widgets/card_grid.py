@@ -3,6 +3,8 @@
 The columns come from the width alone, never from the page or from how many cards
 there are, so every card of every grid is as wide at the same window width: a lone card
 takes one column, not the whole row (plan 029a, 5.1). Lists of many items stay lists.
+A grid of a fixed set of cards that read together (Análisis's breakdowns) caps its
+columns at their number instead, so they share the whole width.
 """
 
 from __future__ import annotations
@@ -15,11 +17,11 @@ from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.card import Card
 
 
-def grid_columns(width: int) -> int:
+def grid_columns(width: int, most: int = Layout.GRID_MAX_COLUMNS) -> int:
     """How many cards go in each row of a grid ``width`` pixels wide: as many as fit at
-    their minimum width, at most ``Layout.GRID_MAX_COLUMNS``."""
+    their minimum width, at most ``most``."""
     fits = (width + CardGrid.SPACING) // (Layout.GRID_CARD_MIN_WIDTH + CardGrid.SPACING)
-    return min(Layout.GRID_MAX_COLUMNS, max(1, fits))
+    return min(most, max(1, fits))
 
 
 class CardGrid(QWidget):
@@ -29,8 +31,11 @@ class CardGrid(QWidget):
 
     SPACING = Space.L  # the same gap as between the cards of a page
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(
+        self, parent: QWidget | None = None, most_columns: int = Layout.GRID_MAX_COLUMNS
+    ) -> None:
         super().__init__(parent)
+        self._most_columns = most_columns
         self._layout = QGridLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(self.SPACING)
@@ -61,7 +66,7 @@ class CardGrid(QWidget):
         return self._columns
 
     def relayout(self) -> None:
-        columns = grid_columns(self.width())
+        columns = grid_columns(self.width(), self._most_columns)
         if columns == self._columns:
             return
         self._columns = columns

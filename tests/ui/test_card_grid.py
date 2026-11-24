@@ -19,6 +19,18 @@ def test_never_more_than_the_maximum():
     assert grid_columns(10_000) == Layout.GRID_MAX_COLUMNS
 
 
+def test_a_set_of_cards_that_read_together_shares_the_whole_width(qtbot):
+    grid = CardGrid(most_columns=2)
+    qtbot.addWidget(grid)
+    cards = [Card("Por categoría"), Card("Por beneficiario")]
+    grid.set_cards(cards)
+    grid.show()
+    grid.resize(1600, 400)
+
+    qtbot.waitUntil(lambda: grid.columns() == 2)
+    assert cards[1].geometry().right() == grid.width() - 1
+
+
 @pytest.fixture
 def grid(qtbot) -> CardGrid:
     grid = CardGrid()

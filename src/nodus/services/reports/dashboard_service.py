@@ -47,10 +47,12 @@ class FilteredTotals(FlowFigures):
 
 @dataclass(frozen=True)
 class CategoryTotal:
-    """What was spent in a top-level category, its subcategories included."""
+    """What was spent in a top-level category, its subcategories included, and in how
+    many movements (counted only where they are shown, as in Análisis)."""
 
     category: Category
     total: Money
+    count: int = 0
 
 
 @dataclass(frozen=True)
