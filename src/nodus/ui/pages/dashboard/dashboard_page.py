@@ -9,7 +9,6 @@ from pathlib import Path
 from PySide6.QtCore import QCoreApplication, QEvent, QObject, QTimer, Signal
 from PySide6.QtWidgets import (
     QGridLayout,
-    QHBoxLayout,
     QLabel,
     QPushButton,
     QStackedWidget,
@@ -42,6 +41,7 @@ from nodus.ui.shell.coach_marks import mark_target
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
+from nodus.ui.widgets.flow_layout import FlowLayout
 from nodus.ui.widgets.style import muted_label, scrolling, secondary_button
 
 # The columns of the wide grid; narrower, the cards take two.
@@ -332,12 +332,13 @@ class DashboardPage(Page):
         self.bring_data_button = secondary_button(
             _("Traer mis datos de otra computadora"), self._bring_data
         )
-        buttons = QHBoxLayout()
-        buttons.addWidget(self.create_account_button)
-        buttons.addWidget(self.bring_data_button)
-        buttons.addStretch()
+        # In lines, so a narrow window puts the second under the first instead of cutting it.
+        buttons = QWidget()
+        flow = FlowLayout(buttons, h_spacing=Space.S, v_spacing=Space.S)
+        flow.addWidget(self.create_account_button)
+        flow.addWidget(self.bring_data_button)
         card.body.addWidget(title)
         card.body.addWidget(text)
         card.body.addSpacing(Space.S)
-        card.body.addLayout(buttons)
+        card.body.addWidget(buttons)
         return card

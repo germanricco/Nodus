@@ -53,3 +53,14 @@ def test_every_detail_page_fits(narrow, detail):
     settle()
 
     assert overflows(narrow.detail(detail)) == []
+
+
+@pytest.mark.parametrize("page_id", list(PageId), ids=lambda p: p.name)
+def test_every_page_fits_before_there_is_anything(window, page_id):
+    """The first look, with nothing yet: welcome and empty states fit too."""
+    window.resize(window.minimumWidth(), 900)
+    window.show_page(page_id)
+    window.show_help()
+    settle()
+
+    assert overflows(window.page(page_id)) == []

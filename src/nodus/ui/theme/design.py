@@ -270,6 +270,7 @@ class Layout:
     MOVEMENT_AMOUNT_WIDTH = 150
     NARROW_LIST_WIDTH = 900
     PALETTE_WIDTH = 560  # Ctrl+K's
+    SETTING_TITLE_MIN_WIDTH = 140  # a setting's title beside its controls, or they go under
     PALETTE_ROWS = 9  # Ctrl+K shows that many results before scrolling
     PALETTE_TOP = 72  # under the top bar
     # What a table keeps for its name or movement before it drops its other columns.

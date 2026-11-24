@@ -62,7 +62,17 @@ class FlowLayout(QLayout):
         self._arrange(rect, move=True)
 
     def sizeHint(self) -> QSize:  # noqa: N802
-        return self.minimumSize()
+        """Everything in one line, which is what it would like."""
+        items = self._visible_items()
+        if not items:
+            return self.minimumSize()
+        hints = [item.sizeHint() for item in items]
+        width = sum(hint.width() for hint in hints) + self._h_spacing * (len(hints) - 1)
+        margins: QMargins = self.contentsMargins()
+        return QSize(
+            width + margins.left() + margins.right(),
+            max(hint.height() for hint in hints) + margins.top() + margins.bottom(),
+        )
 
     def minimumSize(self) -> QSize:  # noqa: N802
         """As narrow as the widest single item: anything wider wraps."""
