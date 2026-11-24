@@ -4,6 +4,7 @@ import pytest
 from factories import TODAY, ars, category_id, expense_draft, in_view
 from menus import run_action
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QScrollArea
 
 from nodus.models.budget import BudgetState
 from nodus.models.period import Month, Period
@@ -113,11 +114,73 @@ class TestPage:
         assert over.budget.category.name == "Ocio"
         assert over.budget.state is BudgetState.OVER
         assert over.pill.text() == "Excedido en $ 50,00"
-        assert ok.usage_label.text() == "20 % usado · $ 200,00 de $ 1.000,00"
         assert ok.pill.text() == "Quedan $ 800,00"
-        assert page.limit_label.text() == "$ 1.100,00"
-        assert page.remaining_label.text() == "$ 750,00"
+        assert ok.pill.toolTip() == "20 % usado · $ 200,00 de $ 1.000,00"
         assert [line.name for line in page.unbudgeted_rows] == ["Transporte"]
+
+    def test_the_header_answers_how_much_is_left(self, qtbot, services, event_bus, pesos, page):
+        """What is left of all the limits, how much a day for the 26 days to go (the 5th
+        included), the month's bar and, as they happen, what was passed and what no
+        budget sees, which leads down to it."""
+        food, leisure = expense("Supermercado y comida", services), expense("Ocio", services)
+        services.budgets.set_limit(food, NOVEMBER, ars("1000"))
+        services.budgets.set_limit(leisure, NOVEMBER, ars("100"))
+        spend(services, pesos.id, "200", food)
+        spend(services, pesos.id, "150", leisure)
+        spend(services, pesos.id, "50", expense("Transporte", services))
+
+        event_bus.budgets_changed.emit()
+
+        assert page.remaining_label.text() == "$ 750,00"
+        assert page.per_day_label.text() == "Unos $ 28,84 por día"
+        assert page.share_label.text() == "32 % de $ 1.100,00"
+        assert page.total_bar.fraction == pytest.approx(350 / 1100)
+        assert page.over_label.text() == "Ocio se pasó $ 50,00"
+        assert page.unbudgeted_link.text() == "Transporte gastó $ 50,00 sin presupuesto ›"
+        assert page.over_label.isVisibleTo(page) and page.unbudgeted_link.isVisibleTo(page)
+
+    def test_the_warning_leads_down_to_the_categories_without_a_budget(
+        self, qtbot, services, event_bus, pesos, page
+    ):
+        services.budgets.set_limit(expense("Supermercado y comida", services), NOVEMBER, ars("1"))
+        for name in ("Transporte", "Salud", "Ocio", "Ropa", "Vivienda", "Educación"):
+            spend(services, pesos.id, "50", expense(name, services))
+        event_bus.budgets_changed.emit()
+        page.resize(900, 300)
+        page.show()
+        qtbot.waitExposed(page)
+        scroll = next(
+            a for a in page.findChildren(QScrollArea) if a.isAncestorOf(page.unbudgeted_card)
+        )
+        qtbot.waitUntil(lambda: scroll.verticalScrollBar().maximum() > 0)
+
+        page.unbudgeted_link.click()
+
+        assert scroll.verticalScrollBar().value() > 0
+        assert page.unbudgeted_card.property("attention") is True
+        qtbot.waitUntil(lambda: page.unbudgeted_card.property("attention") is False, timeout=3000)
+        assert page.unbudgeted_link.text().endswith(" y 4 más gastaron $ 300,00 sin presupuesto ›")
+
+    def test_the_header_says_only_what_happens(self, services, event_bus, pesos, page):
+        """Nothing passed and nothing outside a budget: no warnings."""
+        food = expense("Supermercado y comida", services)
+        services.budgets.set_limit(food, NOVEMBER, ars("1000"))
+        spend(services, pesos.id, "200", food)
+
+        event_bus.budgets_changed.emit()
+
+        assert not page.over_label.isVisibleTo(page)
+        assert not page.unbudgeted_link.isVisibleTo(page)
+
+    def test_past_the_limits_the_header_says_by_how_much(self, services, event_bus, pesos, page):
+        food = expense("Supermercado y comida", services)
+        services.budgets.set_limit(food, NOVEMBER, ars("100"))
+        spend(services, pesos.id, "130", food)
+
+        event_bus.budgets_changed.emit()
+
+        assert page.remaining_label.text() == "-$ 30,00"
+        assert not page.per_day_label.isVisibleTo(page)
 
     def test_each_month_shows_its_own_limit(self, services, event_bus, page):
         food = expense("Supermercado y comida", services)
@@ -162,6 +225,24 @@ class TestPage:
 
         assert opened.args == [RecordLink.category(food)]
         assert movements.args == [TransactionFocus(Period.of_months(NOVEMBER), food)]
+
+    def test_the_name_and_the_bar_open_alike_with_one_click(self, qtbot, services, page):
+        """The whole row is one target: a click on the name or on the bar opens the
+        category, once."""
+        food = expense("Supermercado y comida", services)
+        services.budgets.set_limit(food, NOVEMBER, ars("300"))
+        page.refresh(TODAY)
+        row = page.rows[0]
+        opened = []
+        page.record_requested.connect(opened.append)
+
+        qtbot.mouseClick(row.line, Qt.MouseButton.LeftButton)
+        assert len(opened) == 1  # once, though the line and the row both see the click
+        qtbot.wait(QApplication.doubleClickInterval() + 50)  # two clicks, not a double one
+        qtbot.mouseClick(row.bar, Qt.MouseButton.LeftButton)
+
+        assert opened == [RecordLink.category(food), RecordLink.category(food)]
+        assert row.cursor().shape() == Qt.CursorShape.PointingHandCursor
 
 
 def test_page_is_in_the_sidebar(window):

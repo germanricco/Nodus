@@ -116,6 +116,11 @@ QMainWindow, #ContentArea, #PageStack {
     border-radius: $radius_xl;
 }
 
+/* A card a link on the same page led to, for a moment (widgets/style.py, bring_into_view). */
+#Card[attention="true"] {
+    border-color: $accent;  /* the same width, so nothing around it moves */
+}
+
 /* The guided tour's bubble (widgets/coach_marks.py), a card raised over the page. */
 #CoachBubble {
     background: $surface;

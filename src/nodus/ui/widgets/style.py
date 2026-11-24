@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-from PySide6.QtCore import QEasingCurve, QObject, QPoint, Qt, QVariantAnimation
+from PySide6.QtCore import QEasingCurve, QObject, QPoint, Qt, QTimer, QVariantAnimation
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QFrame,
@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.models.money import Money
-from nodus.ui.theme.design import Elevation, Line, Opacity, Popup
+from nodus.ui.theme.design import Dwell, Elevation, Line, Opacity, Popup
 from nodus.ui.theme.theme import Theme
 
 # Figures line up at their right edge, centered in their row.
@@ -29,6 +29,22 @@ def set_style_property(widget: QWidget, name: str, value: object) -> None:
     """
     widget.setProperty(name, value)
     _repolish(widget)
+
+
+def bring_into_view(widget: QWidget) -> None:
+    """Scrolls the page so ``widget`` (a card) starts at the top, as far as the page
+    scrolls, and lights its border up for a moment: a link to a card on the same page
+    always shows where it led, even when the card was already in view."""
+    area = next(
+        (a for a in widget.window().findChildren(QScrollArea) if a.isAncestorOf(widget)), None
+    )
+    if area is not None:
+        top = widget.mapTo(area.widget(), QPoint(0, 0)).y()
+        area.verticalScrollBar().setValue(top)  # clamped to how far the page scrolls
+    set_style_property(widget, "attention", True)
+    QTimer.singleShot(
+        Dwell.ATTENTION, widget, lambda: set_style_property(widget, "attention", False)
+    )
 
 
 def make_hoverable(widget: QWidget) -> None:

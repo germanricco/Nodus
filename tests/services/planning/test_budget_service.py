@@ -163,3 +163,36 @@ def test_deleting_a_category_deletes_its_limits(services):
     services.categories.delete(category.id)
 
     assert services.budgets.limits_on(NOVEMBER) == {}
+
+
+def expense(services, name: str) -> int:
+    return category_id(services, name, TransactionType.EXPENSE)
+
+
+def test_a_month_adds_up_its_budgets_and_splits_what_is_left_by_day(services, pesos):
+    """What is left over the days to go, today included and rounded down; the budgets
+    passed and all that was spent without a budget."""
+    groceries, leisure = food(services), expense(services, "Ocio")
+    services.budgets.set_limit(groceries, NOVEMBER, ars("1000"))
+    services.budgets.set_limit(leisure, NOVEMBER, ars("100"))
+    spend(services, pesos.id, ars("200"), category_id=groceries)
+    spend(services, pesos.id, ars("150"), category_id=leisure)
+    spend(services, pesos.id, ars("50"), category_id=expense(services, "Transporte"))
+    spend(services, pesos.id, ars("25"), category_id=expense(services, "Salud"))
+
+    month = services.budgets.month_budgets(NOVEMBER, date(2026, 11, 28))
+
+    assert (month.total.limit, month.total.spent) == (ars("1100"), ars("350"))
+    assert month.days_left == 3
+    assert month.per_day == ars("250")
+    assert [b.category.name for b in month.over] == ["Ocio"]
+    assert month.unbudgeted_spent == ars("75")
+
+
+def test_a_month_gone_by_has_no_day_left_to_split(services, pesos):
+    services.budgets.set_limit(food(services), NOVEMBER, ars("1000"))
+
+    month = services.budgets.month_budgets(NOVEMBER, date(2026, 12, 2))
+
+    assert month.days_left == 0
+    assert month.per_day is None

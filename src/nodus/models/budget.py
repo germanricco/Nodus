@@ -34,6 +34,16 @@ def month_elapsed(month: Month, today: date) -> float:
     return today.day / month.end.day
 
 
+def days_left(month: Month, today: date) -> int:
+    """The days of ``month`` still to spend in on ``today``, today included: all of a
+    future month, none of a past one."""
+    if month < Month.of(today):
+        return 0
+    if month > Month.of(today):
+        return month.end.day
+    return month.end.day - today.day + 1
+
+
 def used_percent_label(used: float) -> str:
     """The share of the limit spent, as people read it: "<1 %" for a token amount, and
     never "100 %" while some money is left."""
@@ -45,15 +55,11 @@ def used_percent_label(used: float) -> str:
     return format_percent(percent)
 
 
-@dataclass(frozen=True)
-class Budget:
-    """A category's limit for one month and what was spent in it, both in pesos.
+class LimitProgress:
+    """A limit and what was spent against it in a month, in pesos: a category's budget
+    or all of a month's together. ``elapsed`` is the part of the month gone by, which
+    tells whether the spending runs ahead of the calendar."""
 
-    ``elapsed`` is the part of the month gone by, which tells whether the spending runs
-    ahead of the calendar.
-    """
-
-    category: Category
     limit: Money
     spent: Money
     elapsed: float
@@ -76,3 +82,22 @@ class Budget:
         if self.used > max(PACE_FLOOR, self.elapsed):
             return BudgetState.AHEAD
         return BudgetState.ON_TRACK
+
+
+@dataclass(frozen=True)
+class Budget(LimitProgress):
+    """A category's limit for one month and what was spent in it."""
+
+    category: Category
+    limit: Money
+    spent: Money
+    elapsed: float
+
+
+@dataclass(frozen=True)
+class MonthLimit(LimitProgress):
+    """All the budgets of a month together: their limits and their spending added up."""
+
+    limit: Money
+    spent: Money
+    elapsed: float

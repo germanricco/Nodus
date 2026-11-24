@@ -323,6 +323,11 @@ HELP_TOPICS = [
                 " elegirlo, Nodus te sugiere tu promedio de los últimos meses."
             ),
             N_(
+                "Arriba ves cuánto te queda para gastar entre todos tus presupuestos, y cuánto es"
+                " por día hasta fin de mes. Si gastaste en categorías sin límite, te lo dice,"
+                " porque eso no sale de lo que te queda; un clic te lleva a ellas."
+            ),
+            N_(
                 "La barra se pone amarilla cuando gastas más rápido de lo que avanza el mes, y roja"
                 " cuando te pasas. Un límite vale desde ese mes en adelante, hasta que lo cambies o"
                 " lo quites."

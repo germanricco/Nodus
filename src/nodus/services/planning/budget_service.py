@@ -9,7 +9,7 @@ from datetime import date
 from nodus.database.database import Database
 from nodus.database.repositories.budget_repository import BudgetRepository
 from nodus.i18n import _
-from nodus.models.budget import Budget, BudgetState, month_elapsed
+from nodus.models.budget import Budget, BudgetState, MonthLimit, days_left, month_elapsed
 from nodus.models.category import Category
 from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
@@ -41,7 +41,8 @@ class MonthBudgets:
 
     ``budgets`` go from the most to the least used. ``unbudgeted`` is the spending in
     categories without a limit, the largest first. ``unconverted`` counts expenses in another
-    currency left out for lack of an exchange rate, as on the dashboard.
+    currency left out for lack of an exchange rate, as on the dashboard. ``days_left``
+    counts the days still to spend in, today included (``models.budget.days_left``).
     """
 
     month: Month
@@ -49,18 +50,47 @@ class MonthBudgets:
     unbudgeted: list[CategoryTotal]
     unconverted: int
     elapsed: float
+    days_left: int
+
+    @property
+    def total(self) -> MonthLimit:
+        """All the budgets together: what the page's question («how much can I still
+        spend?») is answered from."""
+        zero = Money.zero(HOME_CURRENCY)
+        limit = sum((b.limit for b in self.budgets), zero)
+        spent = sum((b.spent for b in self.budgets), zero)
+        return MonthLimit(limit, spent, self.elapsed)
 
     @property
     def limit(self) -> Money:
-        return sum((b.limit for b in self.budgets), Money.zero(HOME_CURRENCY))
+        return self.total.limit
 
     @property
     def spent(self) -> Money:
-        return sum((b.spent for b in self.budgets), Money.zero(HOME_CURRENCY))
+        return self.total.spent
 
     @property
     def remaining(self) -> Money:
-        return self.limit - self.spent
+        return self.total.remaining
+
+    @property
+    def per_day(self) -> Money | None:
+        """What is left split over the days to go, rounded down so that spending it
+        every day never passes the limit; None when nothing is left or no day is."""
+        remaining = self.remaining
+        if self.days_left == 0 or remaining.cents <= 0:
+            return None
+        return Money(remaining.cents // self.days_left, remaining.currency)
+
+    @property
+    def over(self) -> list[Budget]:
+        """The budgets passed, the most used first."""
+        return [b for b in self.budgets if b.state is BudgetState.OVER]
+
+    @property
+    def unbudgeted_spent(self) -> Money:
+        """All that was spent in categories without a limit, which the limits do not see."""
+        return sum((t.total for t in self.unbudgeted), Money.zero(HOME_CURRENCY))
 
 
 class BudgetService:
@@ -123,12 +153,13 @@ class BudgetService:
             key=lambda b: (-b.used, b.category.name.casefold()),
         )
         unbudgeted = [t for t in summary.expenses_by_category if t.category.id not in limits]
-        return MonthBudgets(month, budgets, unbudgeted, summary.unconverted, elapsed)
+        return MonthBudgets(
+            month, budgets, unbudgeted, summary.unconverted, elapsed, days_left(month, today)
+        )
 
     def over_limit(self, today: date) -> list[Budget]:
         """The budgets already passed in the current month."""
-        budgets = self.month_budgets(Month.of(today), today).budgets
-        return [b for b in budgets if b.state is BudgetState.OVER]
+        return self.month_budgets(Month.of(today), today).over
 
     def suggestion(self, category_id: int, month: Month) -> BudgetSuggestion | None:
         """The average spending of the ``SUGGESTION_MONTHS`` months before ``month``,

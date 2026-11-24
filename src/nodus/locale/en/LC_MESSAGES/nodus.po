@@ -2528,6 +2528,37 @@ msgstr ""
 "know when you go over."
 
 #: nodus/ui/pages/budgets_page.py
+msgid "Te pasaste en"
+msgstr "Over by"
+
+#: nodus/ui/pages/budgets_page.py
+msgid "Te sobraron"
+msgstr "Left over"
+
+#: nodus/ui/pages/budgets_page.py
+msgid "Te quedan para gastar"
+msgstr "Left to spend"
+
+#: nodus/ui/pages/budgets_page.py
+#, python-brace-format
+msgid "{name} se pasó {amount}"
+msgstr "{name} went over by {amount}"
+
+#: nodus/ui/pages/budgets_page.py
+#, python-brace-format
+msgid "{count} presupuesto excedido: {names}"
+msgid_plural "{count} presupuestos excedidos: {names}"
+msgstr[0] "{count} budget over its limit: {names}"
+msgstr[1] "{count} budgets over their limit: {names}"
+
+#: nodus/ui/pages/budgets_page.py
+#, python-brace-format
+msgid "{names} gastó {amount} sin presupuesto"
+msgid_plural "{names} gastaron {amount} sin presupuesto"
+msgstr[0] "{names} spent {amount} without a budget"
+msgstr[1] "{names} spent {amount} without a budget"
+
+#: nodus/ui/pages/budgets_page.py
 msgid "Quitar presupuesto"
 msgstr "Remove budget"
 
@@ -2537,20 +2568,13 @@ msgid "«{name}» deja de tener presupuesto desde {month}. Los meses anteriores 
 msgstr "“{name}” has no budget from {month} on. Earlier months keep their limit."
 
 #: nodus/ui/pages/budgets_page.py
-msgid "Presupuestado"
-msgstr "Budgeted"
+#, python-brace-format
+msgid "Unos {amount} por día"
+msgstr "About {amount} a day"
 
 #: nodus/ui/pages/budgets_page.py
-msgid "Gastado"
-msgstr "Spent"
-
-#: nodus/ui/pages/budgets_page.py
-msgid "Excedido en"
-msgstr "Over by"
-
-#: nodus/ui/pages/budgets_page.py
-msgid "Quedan"
-msgstr "Left"
+msgid "Ver las categorías sin presupuesto"
+msgstr "See the categories without a budget"
 
 #: nodus/ui/pages/budgets_page.py
 #, python-brace-format
@@ -4216,6 +4240,16 @@ msgstr ""
 
 #: nodus/ui/text/help_texts.py
 msgid ""
+"Arriba ves cuánto te queda para gastar entre todos tus presupuestos, y cuánto es por día hasta "
+"fin de mes. Si gastaste en categorías sin límite, te lo dice, porque eso no sale de lo que te "
+"queda; un clic te lleva a ellas."
+msgstr ""
+"At the top you see how much you have left to spend across all your budgets, and how much that is "
+"per day until the end of the month. If you spent in categories without a limit, it tells you, "
+"because that doesn't come out of what you have left; a click takes you to them."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
 "La barra se pone amarilla cuando gastas más rápido de lo que avanza el mes, y roja cuando te "
 "pasas. Un límite vale desde ese mes en adelante, hasta que lo cambies o lo quites."
 msgstr ""
@@ -4580,6 +4614,15 @@ msgstr[0] "{count} transaction in another currency without an exchange rate isn'
 msgstr[1] "{count} transactions in another currency without an exchange rate aren't included."
 
 #: nodus/ui/text/labels.py
+msgid " y "
+msgstr " and "
+
+#: nodus/ui/text/labels.py
+#, python-brace-format
+msgid "{names} y {count} más"
+msgstr "{names} and {count} more"
+
+#: nodus/ui/text/labels.py
 msgid "Último día"
 msgstr "Last day"
 
@@ -4619,6 +4662,11 @@ msgstr "Record the payment"
 #, python-brace-format
 msgid "{spent} de {limit}"
 msgstr "{spent} of {limit}"
+
+#: nodus/ui/widgets/charts/budget_bar.py
+#, python-brace-format
+msgid "{percent} de {limit}"
+msgstr "{percent} of {limit}"
 
 #: nodus/ui/widgets/charts/budget_bar.py
 #, python-brace-format

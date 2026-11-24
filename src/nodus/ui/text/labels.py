@@ -105,6 +105,18 @@ def unconverted_note(count: int) -> str:
     ).format(count=count)
 
 
+# Names listed in a sentence before the rest are counted: "Vivienda, Ocio y 3 más".
+LISTED_NAMES = 2
+
+
+def names_text(names: list[str]) -> str:
+    """ "Vivienda", "Vivienda y Ocio", or "Vivienda, Ocio y 3 más" past ``LISTED_NAMES``."""
+    if len(names) <= LISTED_NAMES:
+        return _(" y ").join(names)
+    shown = ", ".join(names[:LISTED_NAMES])
+    return _("{names} y {count} más").format(names=shown, count=len(names) - LISTED_NAMES)
+
+
 def days_left_text(month: Month, today: date) -> str | None:
     """ "24 días restantes" while ``month`` is the current one; None for any other."""
     if Month.of(today) != month:

@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.i18n import _
-from nodus.models.budget import Budget, BudgetState, used_percent_label
+from nodus.models.budget import Budget, BudgetState, LimitProgress, used_percent_label
 from nodus.models.language_format import format_percent
 from nodus.ui.theme.design import ControlSize, Line, Opacity
 from nodus.ui.theme.theme import Theme
@@ -39,6 +39,13 @@ def spent_of_limit(budget: Budget, compact: bool = False) -> str:
     else:
         spent, limit = budget.spent.format(), budget.limit.format()
     return _("{spent} de {limit}").format(spent=spent, limit=limit)
+
+
+def share_of_limit(progress: LimitProgress) -> str:
+    """ "36 % de $ 580.000,00": how much of the limit went, beside the month's bar."""
+    return _("{percent} de {limit}").format(
+        percent=used_percent_label(progress.used), limit=progress.limit.format()
+    )
 
 
 def usage_text(budget: Budget) -> str:
@@ -77,7 +84,8 @@ def paint_progress(
 
 
 class BudgetBar(ProgressStrip):
-    """The spent part of the limit fills the bar in the budget's state color.
+    """A category's budget, or a whole month's (any ``LimitProgress``): the spent part
+    of the limit fills the bar in the budget's state color.
 
     Over the limit the whole bar turns pale red and the stretch past the limit, at the
     end, is solid red, so the size of the excess reads at a glance. In the current month a
@@ -90,7 +98,7 @@ class BudgetBar(ProgressStrip):
     def __init__(
         self,
         theme: Theme,
-        budget: Budget,
+        budget: LimitProgress,
         start: float | None = None,
         parent: QWidget | None = None,
     ) -> None:

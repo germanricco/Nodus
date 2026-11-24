@@ -167,6 +167,7 @@ class Dwell:
 
     TOAST = 6000
     TOAST_ACTION = 8000  # with «Deshacer», time to read it and decide
+    ATTENTION = 1200  # a card a link led to keeps its accent border, to be found
 
 
 class Easing:
