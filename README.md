@@ -35,14 +35,14 @@ It was born for people who manage money in pesos and dollars at the same time. E
 ## What you can do
 
 ### See where you stand at a glance
-Home, the first page, answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, cash flow month by month and your budgets, and last spending by category, each with a bar for its share and against the previous period. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to open its page. Every row that leads to another page ends in “›”, and a click is all it takes. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
+Home, the first page, answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, cash flow month by month and your budgets, and last spending by category, each with a bar and the percentage of its share, and against the previous period. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to open its page. Every row that leads to another page ends in “›”, and a click is all it takes. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/dashboard-dark.png">
   <img src="docs/images/en/dashboard-light.png" alt="Home: net worth, upcoming payments and spending by category">
 </picture>
 
-The first time, after your first account, Nodus offers a one-minute guided tour that points at each part of the window; you can take it again from Settings. For anything else, F1 or the “?” in the top bar opens Help beside the window, on the page you are on: friendly answers on what each part is for and how to use it, from installments and refunds to goals and backups, with the page it talks about lit up in the sidebar, and every keyboard shortcut, grouped by where it works: Ctrl+K takes you to any page, account or category by typing a few letters of its name, Ctrl+N records a transaction from any page, Ctrl+F searches, Ctrl+1 to Ctrl+9 jump to the pages of the sidebar and Alt+← goes back to the previous page, as in a browser.
+The first time, after your first account, Nodus offers a one-minute guided tour that points at each part of the window; you can take it again from Settings. For anything else, F1 or the “?” in the top bar opens Help beside the window, on the page you are on: friendly answers on what each part is for and how to use it, from installments and refunds to goals and backups, with the page it talks about lit up in the sidebar, and every keyboard shortcut, grouped by where it works: Ctrl+K takes you to any page, account or category by typing a few letters of its name, Ctrl+N records a transaction from any page, Ctrl+F searches, Ctrl+1 to Ctrl+9 jump to the pages of the sidebar, Alt+← goes back to the previous page, as in a browser, and Ctrl+H hides the amounts. Nodus works entirely from the keyboard: Tab reaches every button and every row of a list, Enter opens it and the Menu key opens its “⋯”. Every button that only shows an icon tells a screen reader what it does, and everything you click is at least 24 pixels, as the WCAG accessibility standard asks.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/tour-dark.png">
@@ -64,6 +64,8 @@ Add every place where you keep money, from your bank, cash and virtual wallets l
 
 ### Record and find your transactions
 One form covers expenses, income and transfers, and it starts on the account you used last. Each transaction reads the way you think of it: who you paid and what it was, in which category, and how much, with its initial in its category's color so you spot it at a glance, and dates, categories and amounts always in the same column. A click on a column's title sorts the list, which filters by period, account, category, payee, tag, type or text; at the top it says what you are looking at and how much came in and went out, and whatever you see exports to a file that opens in Excel. Each filter list ends with a shortcut to edit its accounts, categories, payees or tags. Every row in Nodus has a “⋯” menu, also opened with a right click, with everything you can do with it, such as “Duplicate” a transaction to record again what repeats, dated today (Ctrl+K also offers “Repeat the last expense”); tick several transactions to edit their category, payee, note or tags at once, or to delete them together, and several payees or tags to merge or delete them. What you do is confirmed by a short notice at the bottom right, and what changes a lot of data in one click, such as a group edit, merging, or skipping or paying a charge, can be undone from that notice or with Ctrl+Z. Deleting still asks first, and a form with changes asks before closing without saving.
+
+The Categories page shows how much each category added up to in the period you pick, from the largest to the smallest, with a bar and the percentage of its weight in your spending or your income. Each category forms a group with its subcategories, which folds with a click, and a double click opens its page: how much it added up to over the last year, this month and on average, a bar per month split by subcategory, and all its transactions. Two categories that are the same thing merge into one, and the notice offers to undo it.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/transactions-dark.png">
@@ -105,7 +107,7 @@ Purchases in installments are just as easy. When you record an expense, say it i
 </picture>
 
 ### Put a limit on your spending
-Set a monthly budget for the categories you want to watch and see how much you have spent and how much is left. The bar turns amber when you spend faster than the month goes by and red when you go over, early enough to slow down. To choose a limit, Nodus suggests your average of the last few months.
+Set a monthly budget for the categories you want to watch, and the page answers what matters first: how much you have left across all of them, how much that is per day until the month ends, and a bar of the month with a mark for today. Below, it tells you if a budget went over and how much you spent in categories without a limit, and each row says how much you have spent and how much is left. The bar turns amber when you spend faster than the month goes by and red when you go over, early enough to slow down. To choose a limit, Nodus suggests your average of the last few months.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/budgets-dark.png">
