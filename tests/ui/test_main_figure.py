@@ -4,9 +4,13 @@ it are all alike (plan 029a, 5.2)."""
 from datetime import date
 
 from demo_data import load_demo_data
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QApplication, QLabel, QScrollArea
 
 from nodus.ui.navigation import DetailId, PageId
+from nodus.ui.pages.base.transaction_list_view import TransactionListView
+from nodus.ui.theme.design import Chart, Layout
+from nodus.ui.widgets.charts.line_chart import LineChart
+from nodus.ui.widgets.charts.stacked_bar_chart import StackedBarChart
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.hero_figure import HeroFigure
@@ -70,3 +74,29 @@ def test_every_box_sits_in_a_row_that_wraps(window, services):
         for tile in page.findChildren(FigureTile):
             assert isinstance(tile.parentWidget(), FigureRow), (detail, tile.caption)
 
+
+def test_in_a_short_window_a_record_page_scrolls_instead_of_squeezing(window, services):
+    """The page of an account, a category, a payee, a tag or a goal keeps the height of
+    its chart and of its movements in the shortest window: the page scrolls, as the lists
+    do, so nothing is squeezed out of shape."""
+    load_demo_data(services, date.today())
+    window._event_bus.emit_all()
+    window.resize(window.minimumSize())
+    housing = next(c for c in services.categories.list_categories() if c.name == "Vivienda")
+    visits = [
+        (DetailId.ACCOUNT, services.accounts.list_accounts()[0].id),
+        (DetailId.CATEGORY, housing.id),
+        (DetailId.PAYEE, services.payees.list_payees()[0].id),
+        (DetailId.TAG, services.tags.list_tags()[0].id),
+        (DetailId.GOAL, services.goals.list_goals()[0].id),
+    ]
+    for visit in visits:
+        window.show_detail(*visit)
+        QApplication.processEvents()
+        page = window.current_page
+        hero = shown(page, HeroFigure)[0]
+        assert any(area.isAncestorOf(hero) for area in page.findChildren(QScrollArea)), visit
+        for chart in shown(page, LineChart) + shown(page, StackedBarChart):
+            assert chart.height() == Chart.DETAIL_HEIGHT, visit
+        for movements in shown(page, TransactionListView):
+            assert movements.height() >= Layout.DETAIL_LIST_MIN_HEIGHT, visit

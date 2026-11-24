@@ -22,6 +22,7 @@ from nodus.ui.navigation import DetailId, RecordLink, TransactionFocus
 from nodus.ui.pages.base.summary_detail_page import NO_MOVEMENTS, SummaryDetailPage
 from nodus.ui.text.formatting import percent
 from nodus.ui.text.labels import movements_text
+from nodus.ui.theme.design import Chart
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
@@ -64,6 +65,7 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
         self.chart = StackedBarChart(
             theme_manager.theme, lambda cents: format_compact(cents, HOME_CURRENCY)
         )
+        self.chart.setFixedHeight(Chart.DETAIL_HEIGHT)
         self.chart.clicked.connect(self._month_clicked)
         theme_manager.theme_changed.connect(self.chart.set_theme)
         chart_card = Card()
@@ -75,10 +77,10 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
         self._part_rows.setSpacing(0)
         self.parts_card.body.addLayout(self._part_rows)
         self.part_lines: list[CategoryLine] = []
-        at = self.content_layout.indexOf(self.list_view)
-        self.content_layout.insertWidget(at, self.related_line)
-        self.content_layout.insertWidget(at + 1, chart_card)
-        self.content_layout.insertWidget(at + 2, self.parts_card)
+        at = self.body.indexOf(self.list_view)
+        self.body.insertWidget(at, self.related_line)
+        self.body.insertWidget(at + 1, chart_card)
+        self.body.insertWidget(at + 2, self.parts_card)
 
     def load_summary(self, item_id: int) -> CategorySummary:
         return self._services.category_report.summary(item_id, self.recent().end)

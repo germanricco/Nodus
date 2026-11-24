@@ -172,7 +172,7 @@ class AccountDetailPage(DetailPage):
             theme_manager.theme,
             *money_formats(self._currency, lambda: self._hidden, lambda: self._daily),
         )
-        self.chart.setFixedHeight(Chart.ACCOUNT_HEIGHT)
+        self.chart.setFixedHeight(Chart.DETAIL_HEIGHT)
         chart_card.body.addWidget(self.chart)
         theme_manager.theme_changed.connect(self.chart.set_theme)
         return chart_card

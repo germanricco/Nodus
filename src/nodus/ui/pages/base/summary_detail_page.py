@@ -21,6 +21,7 @@ from nodus.ui.pages.base.summary_page import S
 from nodus.ui.pages.base.transaction_list_view import TransactionListView
 from nodus.ui.text.formatting import format_date
 from nodus.ui.text.labels import unconverted_note
+from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
@@ -67,21 +68,25 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         self.more_button = MoreButton(self.more_actions)
         self.add_header_widget(self.more_button)
 
+        # The page scrolls, as an account's: in a short window every card keeps its height
+        # and the movements keep room below them, instead of all of them being squeezed.
+        self.body = self.scrolling_body()
         # Keyed by the untranslated caption, which the code looks up; filled in this order.
         self.figure_labels: dict[str, QLabel] = {N_("Total"): QLabel()}
         # The total answers the page; the rest go in boxes under it.
         total_caption = _("Total de los últimos {count} meses").format(count=RECENT_MONTHS)
-        self.content_layout.addWidget(HeroFigure(total_caption, self.figure_labels["Total"]))
+        self.body.addWidget(HeroFigure(total_caption, self.figure_labels["Total"]))
         self.figures = FigureRow()
         for caption in (MOVEMENTS, N_("Último movimiento"), *self.CAPTIONS):
             label = QLabel()
             self.figure_labels[caption] = label
             badge = self.figure_badge(caption)
             self.figures.add_tile(FigureTile(self._caption(caption), label, badge, True))
-        self.content_layout.addWidget(self.figures)
+        self.body.addWidget(self.figures)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
-        self.content_layout.addWidget(self.list_view, stretch=1)
+        self.list_view.setMinimumHeight(Layout.DETAIL_LIST_MIN_HEIGHT)
+        self.body.addWidget(self.list_view, stretch=1)
 
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)
 

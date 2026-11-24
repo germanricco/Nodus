@@ -109,7 +109,9 @@ class GoalDetailPage(DetailPage):
         self.remaining_label = QLabel()
         self.needed_label = QLabel()
         self.pace_label, self.pace_note = QLabel(), muted_label("")
-        self.content_layout.addWidget(HeroFigure(_("Ahorrado"), self.saved_label, self.change_note))
+        # The page scrolls, as an account's: in a short window the cards keep their height.
+        self.body = self.scrolling_body()
+        self.body.addWidget(HeroFigure(_("Ahorrado"), self.saved_label, self.change_note))
         for tile in (
             FigureTile(_("Objetivo"), self.target_label, self.target_note),
             FigureTile(_("Falta"), self.remaining_label),
@@ -117,11 +119,11 @@ class GoalDetailPage(DetailPage):
             FigureTile(_("Ritmo por mes"), self.pace_label, self.pace_note),
         ):
             self.figures.add_tile(tile)
-        self.content_layout.addWidget(self.figures)
+        self.body.addWidget(self.figures)
 
         self._status = QHBoxLayout()
         self._status.setSpacing(Space.S)
-        self.content_layout.addLayout(self._status)
+        self.body.addLayout(self._status)
         self.pill: QLabel | None = None
 
         chart_card = Card(_("Lo ahorrado en el tiempo"))
@@ -129,17 +131,17 @@ class GoalDetailPage(DetailPage):
             theme_manager.theme,
             *money_formats(lambda: self.goal.currency if self.goal else None, lambda: self._hidden),
         )
-        self.chart.setFixedHeight(Chart.ACCOUNT_HEIGHT)
+        self.chart.setFixedHeight(Chart.DETAIL_HEIGHT)
         chart_card.body.addWidget(self.chart)
         theme_manager.theme_changed.connect(self.chart.set_theme)
-        self.content_layout.addWidget(chart_card)
+        self.body.addWidget(chart_card)
 
         self.accounts_card = Card(_("Cuentas"))
         self._account_rows = QVBoxLayout()
         self._account_rows.setSpacing(0)
         self.accounts_card.body.addLayout(self._account_rows)
-        self.content_layout.addWidget(self.accounts_card)
-        self.content_layout.addStretch(1)  # the cards keep their height; the rest is blank
+        self.body.addWidget(self.accounts_card)
+        self.body.addStretch(1)  # the cards keep their height; the rest is blank
         self.account_rows: list[ContributionRow] = []
 
         event_bus.amounts_hidden_changed.connect(self._set_amounts_hidden)

@@ -256,7 +256,9 @@ class Chart:
     STACKED_BAR_MAX_WIDTH = 34
     LINE_SIZE = (480, 220)
     LINE_MIN_HEIGHT = 180
-    ACCOUNT_HEIGHT = 200  # an account's balance over time
+    # The chart of a record's page (an account's balance, a goal's savings, a category's
+    # months): fixed, so in a short window the page scrolls instead of squeezing it.
+    DETAIL_HEIGHT = 220
     DONUT_SIZE = 240
     DONUT_MIN_SIZE = 200
     DONUT_THICKNESS = 26
