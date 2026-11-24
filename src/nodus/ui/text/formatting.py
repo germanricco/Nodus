@@ -13,6 +13,12 @@ def sign(negative: bool) -> str:
     return "-" if negative else "+"
 
 
+def unbroken(text: str) -> str:
+    """``text`` with no-break spaces, for an amount in a line that wraps: «$ 180.000,00»
+    stays whole instead of leaving its symbol at the end of a line."""
+    return text.replace(" ", " ")
+
+
 def masked(money: Money) -> str:
     """ "$ ••••": only the currency of an amount the user chose to hide."""
     return with_symbol(money.currency.symbol, "••••")

@@ -2170,8 +2170,8 @@ msgstr "It's no longer a refund"
 
 #: nodus/ui/dialogs/refund_picker.py
 #, python-brace-format
-msgid "{description} · {date} · {amount} (queda {remaining})"
-msgstr "{description} · {date} · {amount} ({remaining} left)"
+msgid "{date} · {amount} · queda {remaining}"
+msgstr "{date} · {amount} · {remaining} left"
 
 #: nodus/ui/dialogs/restore_copy.py
 msgid "Restaurar copia"

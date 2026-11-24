@@ -89,7 +89,8 @@ def test_linking_a_refund_from_the_dialog(monkeypatch, qtbot, services, event_bu
     dialog.refund_input.choose()
 
     assert "Zapatillas" in dialog.refund_input.summary_label.text()
-    assert "queda $ 1.000,00" in dialog.refund_input.summary_label.text()
+    # Its figures on a line of their own, with no amount split between two lines.
+    assert dialog.refund_input.detail_label.text().endswith("queda $ 1.000,00")
     qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
     assert services.refunds.summary(shoes.id).refunded == ars("400")
 
@@ -115,7 +116,7 @@ def test_editing_keeps_or_removes_the_link(qtbot, services, event_bus, pesos, sh
     dialog = transaction_dialog(qtbot, services, event_bus, devolucion)
 
     assert dialog.refund_input.expense_id() == shoes.id
-    assert "queda $ 1.000,00" in dialog.refund_input.summary_label.text()  # its own 400 aside
+    assert dialog.refund_input.detail_label.text().endswith("queda $ 1.000,00")  # its own 400 aside
     qtbot.mouseClick(dialog.refund_input.unlink_button, Qt.MouseButton.LeftButton)
     qtbot.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
 
@@ -258,3 +259,34 @@ class TestRefundWithExtra:
         assert not dialog.result()
         assert "$ 600,00" in dialog.findChild(QLabel, FIELD_ERROR).text()
         assert len(services.refunds.summary(shoes.id).refunds) == 1
+
+
+def visible_rows(dialog) -> list[str]:
+    """The labels of the rows the form shows, top to bottom ("" for a line under a field)."""
+    form = dialog.form
+    rows = []
+    for row in range(form.rowCount()):
+        field = form.itemAt(row, form.ItemRole.FieldRole).widget()
+        if form.isRowVisible(field):
+            label = form.labelForField(field)
+            rows.append(label.text() if label else "")
+    return rows
+
+
+def test_each_line_goes_under_the_field_it_follows(
+    monkeypatch, qtbot, services, event_bus, pesos, shoes
+):
+    """The form is filled top to bottom: the expense a refund pays back right under the
+    category that makes it one, and how much of an expense came back under its amount."""
+    choose_in_picker(monkeypatch, shoes)
+    dialog = transaction_dialog(qtbot, services, event_bus)
+    dialog.mode_input.set_index(INCOME_MODE)
+    pick_category(dialog, category_id(services, "Reembolsos", INCOME))
+    rows = visible_rows(dialog)
+    assert rows[rows.index("Categoría") + 1] == "Reembolso de"
+
+    refund(services, pesos, shoes)
+    edited = transaction_dialog(qtbot, services, event_bus, shoes)
+    rows = visible_rows(edited)
+    assert edited.refunded_hint.text().startswith("Reembolsado")
+    assert rows[rows.index("Monto") + 1] == ""  # the line that says it

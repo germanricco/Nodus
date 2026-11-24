@@ -5,8 +5,16 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLayout, QLineEdit, QPushButton, QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QLayout,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from nodus.i18n import _
 from nodus.models.period import Period, format_date
@@ -15,11 +23,13 @@ from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.ui.dialogs.form_dialog import FormDialog
 from nodus.ui.period_selector import PeriodSelector
-from nodus.ui.theme.design import Layout
+from nodus.ui.text.formatting import unbroken
+from nodus.ui.theme.design import Layout, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_rows import TransactionListBuilder
 from nodus.ui.widgets.empty_state import EmptyState
 from nodus.ui.widgets.inputs.input_error import InputError
+from nodus.ui.widgets.style import hint_label
 from nodus.ui.widgets.tables.table import record_table
 from nodus.ui.widgets.tables.transaction_table import (
     MOVEMENT,
@@ -120,17 +130,25 @@ class RefundField(QWidget):
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(Space.S)
         self.link_button = QPushButton(_("Vincular a un gasto…"))
         self.link_button.setObjectName("SecondaryButton")
         self.link_button.setToolTip(_("Si este ingreso devuelve un gasto, lo resta de lo gastado"))
+        # The expense on two lines, its name and then its figures, so it reads at a glance
+        # and an amount never splits between them.
         self.summary_label = QLabel()
         self.summary_label.setWordWrap(True)
+        self.detail_label = hint_label()
+        summary = QVBoxLayout()
+        summary.setSpacing(Space.XXS)
+        summary.addWidget(self.summary_label)
+        summary.addWidget(self.detail_label)
         self.unlink_button = QPushButton(_("Quitar"))
         self.unlink_button.setObjectName("SecondaryButton")
         self.unlink_button.setToolTip(_("Deja de ser un reembolso"))
         layout.addWidget(self.link_button)
-        layout.addWidget(self.summary_label, stretch=1)
-        layout.addWidget(self.unlink_button)
+        layout.addLayout(summary, stretch=1)
+        layout.addWidget(self.unlink_button, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         self.link_button.clicked.connect(self.choose)
         self.unlink_button.clicked.connect(lambda: self.set_expense(None))
@@ -144,18 +162,19 @@ class RefundField(QWidget):
         linked = expense is not None
         self.link_button.setVisible(not linked)
         self.summary_label.setVisible(linked)
+        self.detail_label.setVisible(linked)
         self.unlink_button.setVisible(linked)
         if expense is not None:
             (item,) = TransactionListBuilder(self._services).build([expense])
             remaining = self._services.refunds.summary(
                 expense.id, ignore_id=self._refund_id
             ).remaining
-            self.summary_label.setText(
-                _("{description} · {date} · {amount} (queda {remaining})").format(
-                    description=item.description,
+            self.summary_label.setText(item.description)
+            self.detail_label.setText(
+                _("{date} · {amount} · queda {remaining}").format(
                     date=format_date(expense.occurred_on),
-                    amount=expense.amount.format(),
-                    remaining=remaining.format(),
+                    amount=unbroken(expense.amount.format()),
+                    remaining=unbroken(remaining.format()),
                 )
             )
         self.changed.emit()

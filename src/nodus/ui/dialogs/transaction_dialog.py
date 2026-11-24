@@ -163,15 +163,18 @@ class TransactionDialog(FormDialog):
         amount_layout.addLayout(amount_line)
         amount_layout.addWidget(self.installments_hint)
         self.form.addRow(_("Monto"), self.amount_row)
+        # Each line that follows from a field goes right under it, so the form is filled
+        # top to bottom: how much of an expense came back, under its amount, and the
+        # expense a refund pays back, under the category that makes it one.
+        self.form.addRow("", self.refunded_hint)
         self.form.addRow(_("Entra"), self.amount_in_input)
         self.form.addRow("", self.rate_hint)
         self.form.addRow(_("Beneficiario"), self.payee_input)
         self.form.addRow(_("Categoría"), self.category_input)
+        self.form.addRow(_("Reembolso de"), self.refund_input)
         self.form.addRow(_("Fecha"), self.date_input)
         self.form.addRow(_("Nota"), self.note_input)
         self.form.addRow(_("Etiquetas"), self.tag_input)
-        self.form.addRow(_("Reembolso de"), self.refund_input)
-        self.form.addRow("", self.refunded_hint)
 
         # The names the services give these fields in their errors.
         self.bind_field(self.account_input, "account_id", "from_account_id")
