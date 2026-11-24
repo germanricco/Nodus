@@ -32,6 +32,7 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Arreglo: al pasar de una página a otra, a veces quedaba un botón recuadrado sin haberlo elegido, como la flecha del mes anterior o «Tendencias» en Análisis. El recuadro ahora aparece solo cuando te movés con Tab.
 - En Análisis, «Por categoría» dice en cuántos movimientos se gastó en cada una, como «Por beneficiario» y «Por etiqueta». Las filas de las dos tarjetas de al lado quedan a la misma altura y ya no sobra espacio en una de ellas, y en una pantalla ancha las dos ocupan todo el ancho en lugar de dejar un hueco a la derecha.
 - En Etiquetas y Beneficiarios, una fila sin movimientos en el período elegido pero con movimientos en otros lo dice en gris («0 · 3 en total»), así una etiqueta recién puesta a un gasto de otro mes no parece sin usar.
+- Arreglo: en una ventana angosta, sobre todo con la Ayuda abierta, el encabezado de Transacciones, Presupuestos, Categorías, Beneficiarios y Etiquetas se cortaba. Ahora el período y la búsqueda pasan debajo del título cuando no entran a su lado, y un título largo, como el de una categoría, termina en «…».
 - Un clic en el título de Fecha, Movimiento, Categoría o Monto ordena Transacciones por esa columna, y otro clic invierte el orden.
 - Arriba de la lista, una línea dice qué estás viendo y cuánto suma: «Ocio · Noviembre 2026 · 2 movimientos · -$ 70.500,00». Si hay ingresos y gastos, dice cuánto entró, cuánto salió y el neto.
 - El menú «⋯» de un movimiento con beneficiario ofrece «Ver beneficiario», que abre su página.

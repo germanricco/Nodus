@@ -159,7 +159,7 @@ class SummaryDetailPage(DetailPage, Generic[S]):
             self.summary = None
             self.back_requested.emit()
             return
-        self.title_label.setText(self.name(summary))
+        self.set_title(self.name(summary))
         start = self.transaction_start(summary)
         self.list_view.empty_state.set_message(
             _("Todavía no tiene movimientos."),

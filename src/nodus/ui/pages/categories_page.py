@@ -262,12 +262,12 @@ class CategoriesPage(Page):
         self._chosen: dict[int, Category] = {}  # by id, in the order they were chosen
 
         self.period_selector = PeriodSelector(Period.of_months(Month.of(date.today())))
-        self.add_header_widget(self.period_selector)
+        self.add_header_filter(self.period_selector)
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText(_("Buscar categoría…"))
         self.search_input.setClearButtonEnabled(True)
         self.search_input.setMinimumWidth(Layout.SEARCH_WIDTH)
-        self.add_header_widget(self.search_input)
+        self.add_header_filter(self.search_input)
         self.create_button = self.add_header_button(_("Agregar categoría"), primary=True)
         self.create_button.clicked.connect(lambda: self.open_category_dialog())
 

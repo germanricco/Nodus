@@ -154,7 +154,7 @@ class GoalDetailPage(DetailPage):
             return
         today = self.today or date.today()
         progress = self._services.goals.progress(goal, today)
-        self.title_label.setText(goal.name)
+        self.set_title(goal.name)
         self._show_figures(goal, progress)
         self._show_status(goal, progress)
         points = [

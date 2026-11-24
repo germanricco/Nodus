@@ -135,7 +135,7 @@ class BudgetsPage(Page):
         self._event_bus = event_bus
         self._theme_manager = theme_manager
         self.month_selector = PeriodSelector(quick_choices=False)
-        self.add_header_widget(self.month_selector)
+        self.add_header_filter(self.month_selector)
         self.create_button = self.add_header_button(_("Agregar presupuesto"), primary=True)
         self.create_button.clicked.connect(lambda: self.open_budget_dialog())
 

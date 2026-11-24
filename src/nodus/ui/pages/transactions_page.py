@@ -64,7 +64,7 @@ class TransactionsPage(Page):
 
         # The period goes in the header, as on the dashboard, to leave the row to the filters.
         self.period_selector = PeriodSelector()
-        self.add_header_widget(self.period_selector)
+        self.add_header_filter(self.period_selector)
         self.export_button = self.add_header_button(_("Exportar"))
         self.export_button.setToolTip(_("Guarda en un archivo CSV los movimientos que se ven"))
         self.export_button.clicked.connect(self.export_shown)

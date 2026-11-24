@@ -435,13 +435,16 @@ def capture_settings_and_analysis(shots: Shots) -> None:
 
 
 def capture_narrow_pages(shots: Shots) -> None:
-    """The pages with rows of boxes in the narrowest window with Ayuda open, the least
-    room a page gets: the boxes go onto more rows instead of being squeezed side by side,
-    and the breakdown cards stack."""
+    """The pages with rows of boxes or a full header in the narrowest window with Ayuda
+    open, the least room a page gets: the boxes go onto more rows instead of being
+    squeezed side by side, the breakdown cards stack, and the period and search go under
+    the title."""
     window = shots.window
     wide = window.size()
     window.resize(window.minimumWidth(), FULL_DASHBOARD_HEIGHT)
-    for page_id in (PageId.DASHBOARD, PageId.BUDGETS, PageId.RECURRING):
+    # The pages whose header has a period or a search: they go under the title.
+    narrow = (PageId.DASHBOARD, PageId.TRANSACTIONS, PageId.BUDGETS, PageId.RECURRING)
+    for page_id in (*narrow, PageId.CATEGORIES, PageId.PAYEES, PageId.TAGS):
         window.show_page(page_id)
         window.show_help()
         shots.settle()

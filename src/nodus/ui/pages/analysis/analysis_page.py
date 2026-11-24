@@ -49,7 +49,7 @@ class AnalysisPage(Page):
             [_(view.DESCRIPTION) for view in self.views],
         )
         self.period_selector = PeriodSelector(Period.last_months(DEFAULT_MONTHS, date.today()))
-        self.add_header_widget(self.period_selector)
+        self.add_header_filter(self.period_selector)
 
         self._stack = QStackedWidget()
         for view in self.views:

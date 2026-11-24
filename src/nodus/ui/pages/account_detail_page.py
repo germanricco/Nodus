@@ -185,7 +185,7 @@ class AccountDetailPage(DetailPage):
             self.back_requested.emit()
             return
         today = self.today or date.today()
-        self.title_label.setText(account.name)
+        self.set_title(account.name)
         self.context_label.setText(self._context(account))
         self.value_button.setVisible(account.type.changes_value and not account.is_archived)
         self._show_figures(account, today)

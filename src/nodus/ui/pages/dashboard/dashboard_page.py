@@ -83,7 +83,7 @@ class DashboardPage(Page):
         self._event_bus = event_bus
         self._theme_manager = theme_manager
         self.period_selector = PeriodSelector()
-        self.add_header_widget(self.period_selector)
+        self.add_header_filter(self.period_selector)
         mark_target(self.period_selector, tour.PERIOD)
 
         self.net_worth_card = NetWorthCard(services, theme_manager)

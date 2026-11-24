@@ -200,12 +200,12 @@ class SummaryPage(Page, Generic[S]):
         self._summaries: list[S] = []
 
         self.period_selector = PeriodSelector(Period.of_months(Month.of(date.today())))
-        self.add_header_widget(self.period_selector)
+        self.add_header_filter(self.period_selector)
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText(_("Buscar {noun}…").format(noun=_(noun)))
         self.search_input.setClearButtonEnabled(True)
         self.search_input.setMinimumWidth(Layout.SEARCH_WIDTH)
-        self.add_header_widget(self.search_input)
+        self.add_header_filter(self.search_input)
         self.create_button = self.add_header_button(
             _("Agregar {noun}").format(noun=_(noun)), primary=True
         )

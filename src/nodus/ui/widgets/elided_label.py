@@ -18,6 +18,11 @@ class ElidedLabel(QLabel):
         self.setToolTip(text)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
 
+    def setText(self, text: str) -> None:  # noqa: N802
+        """Shows ``text``, whole in the tooltip."""
+        super().setText(text)
+        self.setToolTip(text)
+
     def minimumSizeHint(self) -> QSize:  # noqa: N802
         return QSize(0, super().minimumSizeHint().height())
 
