@@ -73,6 +73,18 @@ def test_lists_most_used_first_with_totals(page, populated):
     assert column(page, TOTAL) == ["-$ 500,00", "$ 1.000,00", "—"]
 
 
+def test_a_tag_used_only_in_other_periods_says_so(page, populated):
+    """«Viaje» has one movement in October and one in November: in November alone it
+    counts one; «Mudanza» has none anywhere and stays at 0."""
+    page.period_selector.set_period(Period.of_months(Month(2026, 9)))
+    page.refresh()
+
+    counts = dict(zip(column(page, NAME), column(page, COUNT), strict=True))
+    assert counts == {"Viaje": "0 · 2 en total", "Trabajo": "0 · 1 en total", "Mudanza": "0"}
+    row = column(page, NAME).index("Viaje")
+    assert page.proxy.index(row, COUNT).data(Qt.ItemDataRole.ToolTipRole)
+
+
 def test_see_transactions_spans_the_whole_history(qtbot, services, page, populated):
     page.refresh()
 

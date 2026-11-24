@@ -58,6 +58,16 @@ class Summary(Protocol):
 S = TypeVar("S", bound=Summary)
 
 
+# A row with nothing in the period but movements in others says so, so a tag just put
+# on an older movement does not read as unused.
+ONLY_ELSEWHERE_HINT = N_("Sus movimientos son de otros períodos. Ábrelo para ver toda su historia.")
+
+
+def only_elsewhere(summary: Summary) -> bool:
+    """Whether ``summary`` has movements, none of them in the period shown."""
+    return summary.totals.count == 0 and summary.count > 0
+
+
 class SummaryTableModel(QAbstractTableModel, Generic[S]):
     """Name, movements and net total in the period of each summary, totals colored with
     the theme.
@@ -129,6 +139,11 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
             return QColor(self._theme.amount_color(totals.net))
         if role == Qt.ItemDataRole.ToolTipRole and column == TOTAL and totals.unconverted:
             return unconverted_note(totals.unconverted)
+        if column == COUNT and only_elsewhere(summary):
+            if role == Qt.ItemDataRole.ForegroundRole:
+                return QColor(self._theme.text_muted)
+            if role == Qt.ItemDataRole.ToolTipRole:
+                return _(ONLY_ELSEWHERE_HINT)
         if role == Qt.ItemDataRole.TextAlignmentRole and column in (COUNT, TOTAL):
             return RIGHT_ALIGNED
         return None
@@ -137,6 +152,8 @@ class SummaryTableModel(QAbstractTableModel, Generic[S]):
         if column == NAME:
             return self.name(summary)
         if column == COUNT:
+            if only_elsewhere(summary):
+                return _("0 · {count} en total").format(count=summary.count)
             return str(summary.totals.count)
         if column == TOTAL:
             return summary.totals.net.format() if summary.totals.count else "—"

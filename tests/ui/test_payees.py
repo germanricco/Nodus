@@ -90,9 +90,9 @@ def test_each_name_has_its_initial_in_the_color_of_its_usual_category(services, 
 def test_the_period_narrows_the_movements_and_totals_as_in_categories(page, populated):
     page.period_selector.set_period(Period.of_months(Month(2026, 11)))
 
-    # Coto's movements are all in October; the menu still reaches them.
+    # Coto's movements are all in October: its row says so, and the menu reaches them.
     assert column(page, NAME) == ["Coto", "Kiosco"]
-    assert column(page, COUNT) == ["0", "0"]
+    assert column(page, COUNT) == ["0 · 3 en total", "0"]
     assert column(page, TOTAL) == ["—", "—"]
     assert actions_of(page, "Coto")[1].enabled
 

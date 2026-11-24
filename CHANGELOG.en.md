@@ -31,6 +31,7 @@ What each version brings, newest first. To update, click “Update” when Nodus
 - Every list has the same air: a one-line row is as tall in Tags, Categories or Home, and a two-line row (with an initial, a detail under it or a bar) as tall in Transactions, Payees, Accounts, Recurring or Budgets. Payees no longer looks cramped, and the sidebar's accounts sit a little further apart.
 - Fix: moving from one page to another sometimes left a button outlined that nobody had chosen, such as the previous month's arrow or “Trends” in Analysis. The outline now shows only when you move with Tab.
 - In Analysis, “By category” says in how many transactions each one was spent, as “By payee” and “By tag” do. The rows of the two cards side by side line up, neither is left with empty space, and on a wide screen both take the whole width instead of leaving a gap on the right.
+- In Tags and Payees, a row with no transactions in the chosen period but some in others says so in gray (“0 · 3 in total”), so a tag just put on an expense from another month doesn't look unused.
 - A click on the Date, Transaction, Category or Amount title sorts Transactions by that column, and another click turns the order around.
 - Above the list, a line says what you are looking at and what it adds up to: “Fun · November 2026 · 2 transactions · -$70,500.00”. With both income and spending, it says how much came in, how much went out and the net.
 - The “⋯” menu of a transaction with a payee offers “View payee”, which opens its page.

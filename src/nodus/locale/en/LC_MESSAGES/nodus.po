@@ -3109,9 +3109,18 @@ msgid "Todavía no tiene movimientos."
 msgstr "No transactions yet."
 
 #: nodus/ui/pages/base/summary_page.py
+msgid "Sus movimientos son de otros períodos. Ábrelo para ver toda su historia."
+msgstr "Its transactions are from other periods. Open it to see its whole history."
+
+#: nodus/ui/pages/base/summary_page.py
 #, python-brace-format
 msgid "Ordenar por {column}"
 msgstr "Sort by {column}"
+
+#: nodus/ui/pages/base/summary_page.py
+#, python-brace-format
+msgid "0 · {count} en total"
+msgstr "0 · {count} in total"
 
 #: nodus/ui/pages/base/summary_page.py
 #, python-brace-format
