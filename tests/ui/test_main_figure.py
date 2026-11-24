@@ -7,6 +7,7 @@ from demo_data import load_demo_data
 from PySide6.QtWidgets import QLabel
 
 from nodus.ui.navigation import DetailId, PageId
+from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.hero_figure import HeroFigure
 
@@ -53,3 +54,19 @@ def test_every_page_has_at_most_one_hero_figure(window, services):
         DetailId.PAYEE,
     } <= set(with_hero)
     assert PageId.ANALYSIS not in with_hero
+
+
+def test_every_box_sits_in_a_row_that_wraps(window, services):
+    """No page lines its boxes up in a fixed row: in a narrow window they would all be
+    squeezed side by side instead of going onto a second row."""
+    load_demo_data(services, date.today())
+    window._event_bus.emit_all()
+    for page_id in PageId:
+        window.show_page(page_id)
+        for tile in window.current_page.findChildren(FigureTile):
+            assert isinstance(tile.parentWidget(), FigureRow), (page_id, tile.caption)
+    for detail in DetailId:
+        page = window.detail(detail)
+        for tile in page.findChildren(FigureTile):
+            assert isinstance(tile.parentWidget(), FigureRow), (detail, tile.caption)
+

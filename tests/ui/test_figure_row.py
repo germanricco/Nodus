@@ -3,6 +3,7 @@
 import pytest
 from PySide6.QtWidgets import QLabel
 
+from nodus.ui.theme.design import Layout
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.figure_row import FigureRow, balanced_columns
 from nodus.ui.widgets.figure_tile import FigureTile
@@ -13,6 +14,11 @@ from nodus.ui.widgets.figure_tile import FigureTile
 )
 def test_rows_are_spread_evenly(count, fits, columns):
     assert balanced_columns(count, fits) == columns
+
+
+def room(tile: FigureTile) -> int:
+    """The width a tile asks for in its row: its figure's, or the comfortable minimum."""
+    return max(tile.sizeHint().width(), Layout.FIGURE_TILE_MIN_WIDTH)
 
 
 @pytest.fixture
@@ -26,12 +32,12 @@ def figures(qtbot) -> FigureRow:
 
 
 def test_wide_enough_they_share_one_row(figures, qtbot):
-    figures.resize(5 * figures.tiles[0].sizeHint().width() + 100, 100)
+    figures.resize(5 * room(figures.tiles[0]) + 100, 100)
     qtbot.waitUntil(lambda: figures.columns() == 5)
 
 
 def test_narrow_they_wrap_and_none_is_cut(figures, qtbot):
-    figures.resize(2 * figures.tiles[0].sizeHint().width() + 40, 100)
+    figures.resize(2 * room(figures.tiles[0]) + 40, 100)
 
     qtbot.waitUntil(lambda: figures.columns() == 2)
     figures.layout().activate()
@@ -40,7 +46,7 @@ def test_narrow_they_wrap_and_none_is_cut(figures, qtbot):
 
 
 def test_a_hidden_tile_takes_no_place(figures, qtbot):
-    figures.resize(5 * figures.tiles[0].sizeHint().width() + 100, 100)
+    figures.resize(5 * room(figures.tiles[0]) + 100, 100)
     figures.tiles[2].hide()
 
     figures.relayout()
@@ -72,3 +78,18 @@ def test_a_badge_beside_its_figure_wraps_the_row_rather_than_being_cut(qtbot):
     assert value.width() >= value.sizeHint().width()
     assert badge.width() >= badge.sizeHint().width()
     assert badge.geometry().left() > value.geometry().right()  # beside, not under
+
+
+def test_short_figures_still_wrap_before_their_boxes_get_cramped(qtbot):
+    """Three boxes whose figures would fit in very little room still each keep a
+    comfortable width: below it they go onto more rows."""
+    row = FigureRow()
+    qtbot.addWidget(row)
+    for caption in ("A", "B", "C"):
+        row.add_tile(FigureTile(caption, QLabel("1")))
+    row.show()
+
+    row.resize(3 * Layout.FIGURE_TILE_MIN_WIDTH + 2 * FigureRow.SPACING, 200)
+    assert row.columns() == 3
+    row.resize(3 * Layout.FIGURE_TILE_MIN_WIDTH, 200)
+    assert row.columns() == 2

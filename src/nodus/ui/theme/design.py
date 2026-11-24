@@ -238,6 +238,8 @@ class Layout:
     SHARE_AMOUNT_WIDTH = 150
     CHECK_COLUMN = 34  # a table's check boxes
     MORE_COLUMN = 32  # a table's «⋯»
+    # A figure tile: narrower, its caption and value feel cramped, so FigureRow wraps.
+    FIGURE_TILE_MIN_WIDTH = 160
     GRID_CARD_MIN_WIDTH = 360  # a card of CardGrid: its main figure, «de …» and a pill fit
     GRID_MAX_COLUMNS = 3  # with more, a card of CardGrid gets too small
 

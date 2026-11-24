@@ -8,7 +8,7 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QBoxLayout, QHBoxLayout, QLayout, QVBoxLayout, QWidget
 
-from nodus.ui.theme.design import Space
+from nodus.ui.theme.design import Layout, Space
 
 
 def balanced_columns(count: int, fits: int) -> int:
@@ -22,9 +22,10 @@ def balanced_columns(count: int, fits: int) -> int:
 
 
 class FigureRow(QWidget):
-    """The key figures of a page side by side, sharing the width. When the widest tile
-    would no longer fit its figure, the tiles go onto two or more rows instead of being
-    cut; tiles that are hidden take no place.
+    """The key figures of a page side by side, sharing the width. When a tile would get
+    narrower than ``Layout.FIGURE_TILE_MIN_WIDTH`` or than its figure, the tiles go onto
+    two or more rows instead of being squeezed or cut; tiles that are hidden take no
+    place. Every row of figure tiles in Nodus is one of these.
 
     Whoever shows or hides a tile, or changes its text, calls ``relayout``.
     """
@@ -83,10 +84,11 @@ class FigureRow(QWidget):
         return [tile for tile in self.tiles if not tile.isHidden()]
 
     def _fitting(self, shown: list[QWidget]) -> int:
-        """How many of the widest tile fit in the width there is."""
+        """How many of the widest tile fit in the width there is, none narrower than
+        ``Layout.FIGURE_TILE_MIN_WIDTH``."""
         if not shown:
             return 1
-        widest = max(tile.sizeHint().width() for tile in shown)
+        widest = max(Layout.FIGURE_TILE_MIN_WIDTH, *(tile.sizeHint().width() for tile in shown))
         return max(1, (self.width() + self.SPACING) // (widest + self.SPACING))
 
     def _placed(self) -> list[QWidget]:

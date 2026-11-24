@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout
+from PySide6.QtWidgets import QLabel, QVBoxLayout
 
 from nodus.i18n import N_, _
 from nodus.models.period import Month, Period, format_month
@@ -27,6 +27,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts.bar_chart import BarChart, flow_bar_groups
+from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 from nodus.ui.widgets.style import RIGHT_ALIGNED
@@ -127,8 +128,7 @@ class CashFlowView(AnalysisView):
         self.savings_badge = ChangeBadge(none_text=no_previous)
         self.rate_badge = ChangeBadge(none_text=no_previous, unit="pp")
         self.rate_badge.setToolTip(_("Diferencia en puntos porcentuales"))
-        tiles = QHBoxLayout()
-        tiles.setSpacing(Space.L)
+        tiles = self.figures = FigureRow()
         for caption, value, badge in (
             (_("Ingresos"), self.income_label, self.income_badge),
             (_("Gastos"), self.expenses_label, self.expenses_badge),
@@ -136,8 +136,8 @@ class CashFlowView(AnalysisView):
             (_("Tasa de ahorro"), self.rate_label, self.rate_badge),
         ):
             badge.setToolTip(badge.toolTip() or _(VERSUS_PREVIOUS_TEXT))
-            tiles.addWidget(FigureTile(caption, value, badge), stretch=1)
-        layout.addLayout(tiles)
+            tiles.add_tile(FigureTile(caption, value, badge))
+        layout.addWidget(tiles)
 
         self.chart = BarChart(theme_manager.theme)
         self.chart.setMinimumHeight(Chart.STACKED_MIN_HEIGHT)
@@ -171,6 +171,7 @@ class CashFlowView(AnalysisView):
         self.expenses_badge.set_change(report.expenses_change)
         self.savings_badge.set_change(report.savings_change)
         self.rate_badge.set_change(report.savings_rate_change)
+        self.figures.relayout()  # the figures and badges may need more room now
 
         has_data = not (current.income.is_zero and current.expenses.is_zero)
         self.chart.setVisible(has_data)

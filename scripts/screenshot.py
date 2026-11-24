@@ -423,6 +423,33 @@ def capture_settings_and_analysis(shots: Shots) -> None:
     window.resize(window.width(), shots.height)
 
 
+def capture_narrow_pages(shots: Shots) -> None:
+    """The pages with rows of boxes in the narrowest window with Ayuda open, the least
+    room a page gets: the boxes go onto more rows instead of being squeezed side by side,
+    and the breakdown cards stack."""
+    window = shots.window
+    wide = window.size()
+    window.resize(window.minimumWidth(), FULL_DASHBOARD_HEIGHT)
+    for page_id in (PageId.DASHBOARD, PageId.BUDGETS, PageId.RECURRING):
+        window.show_page(page_id)
+        window.show_help()
+        shots.settle()
+        shots.save(window, f"{page_id.name.lower()}-narrow")
+        window.help_panel.close_panel()
+    window.show_page(PageId.ANALYSIS)
+    analysis = window.page(PageId.ANALYSIS)
+    for index, name in enumerate(ANALYSIS_TABS[:2]):
+        analysis.tabs.set_index(index)
+        window.show_help()
+        shots.settle()
+        shots.settle()
+        shots.save(window, f"analysis-{name}-narrow")
+        window.help_panel.close_panel()
+    analysis.tabs.set_index(0)
+    window.resize(wide)
+    shots.settle()
+
+
 def capture_controls(shots: Shots) -> None:
     """The sidebar folded, amounts hidden and the category filter open."""
     window = shots.window
@@ -570,6 +597,7 @@ CAPTURES = [
     capture_details,
     capture_empty_searches,
     capture_settings_and_analysis,
+    capture_narrow_pages,
     capture_controls,
     capture_rows,
     capture_messages,

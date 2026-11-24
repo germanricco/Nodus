@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLabel
+from PySide6.QtWidgets import QLabel
 
 from nodus.i18n import N_, _
 from nodus.services.reports.dashboard_service import Comparison, MonthFlow
@@ -16,6 +16,7 @@ from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts.bar_chart import BarChart, flow_bar_groups
 from nodus.ui.widgets.charts.share_charts import ProportionBar, Segment
+from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 from nodus.ui.widgets.style import muted_label
@@ -45,15 +46,14 @@ class CashFlowCard(Card):
         self.income_label = AnimatedMoneyLabel(highlight_positive=True, compact_when_narrow=True)
         self.expenses_label = AnimatedMoneyLabel(compact_when_narrow=True)
         self.saved_label = QLabel()
-        tiles = QHBoxLayout()
-        tiles.setSpacing(Space.S)
+        tiles = self.figures = FigureRow()
         for caption, value in (
             (N_("Ingresos"), self.income_label),
             (N_("Gastos"), self.expenses_label),
             (N_("Ahorrado"), self.saved_label),
         ):
-            tiles.addWidget(FigureTile(_(caption), value), stretch=1)
-        self.body.addLayout(tiles)
+            tiles.add_tile(FigureTile(_(caption), value))
+        self.body.addWidget(tiles)
 
         self.unconverted_label = muted_label("")
         self.unconverted_label.setWordWrap(True)
@@ -81,6 +81,7 @@ class CashFlowCard(Card):
         self.income_label.set_money(summary.income)
         self.expenses_label.set_money(-summary.expenses)
         self.saved_label.setText(rate_text(summary.savings_rate))
+        self.figures.relayout()  # the figures may need more room now
         self.unconverted_label.setText(unconverted_note(summary.unconverted))
         self.unconverted_label.setVisible(bool(summary.unconverted))
         single_month = len(summary.period.months()) == 1

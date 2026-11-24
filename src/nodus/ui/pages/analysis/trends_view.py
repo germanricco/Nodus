@@ -17,10 +17,12 @@ from nodus.ui.text.labels import movements_text, unconverted_note
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
+from nodus.ui.widgets.card_grid import CardGrid
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts.chart_base import format_compact
 from nodus.ui.widgets.charts.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
 from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
+from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
@@ -67,12 +69,11 @@ class TrendsView(AnalysisView):
         self.average_label = QLabel()
         self.total_tile = FigureTile(_("Total"), self.total_label, self.change_badge)
         self.previous_tile = FigureTile(_("Período anterior"), self.previous_label)
-        tiles = QHBoxLayout()
-        tiles.setSpacing(Space.L)
+        self.figures = FigureRow()
         average_tile = FigureTile(_("Promedio mensual"), self.average_label)
         for tile in (self.total_tile, self.previous_tile, average_tile):
-            tiles.addWidget(tile, stretch=1)
-        layout.addLayout(tiles)
+            self.figures.add_tile(tile)
+        layout.addWidget(self.figures)
 
         self.chart = StackedBarChart(
             self._theme, lambda cents: format_compact(cents, HOME_CURRENCY)
@@ -83,11 +84,10 @@ class TrendsView(AnalysisView):
 
         self.categories_card, self._category_rows = rows_card(_("Por categoría"))
         self.payees_card, self._payee_rows = rows_card(_("Por beneficiario"))
-        breakdown = QHBoxLayout()
-        breakdown.setSpacing(Space.L)
-        breakdown.addWidget(self.categories_card, stretch=1)
-        breakdown.addWidget(self.payees_card, stretch=1)
-        layout.addLayout(breakdown)
+        # Side by side while both fit, one under the other in a narrow window.
+        self.breakdown = CardGrid()
+        self.breakdown.set_cards([self.categories_card, self.payees_card])
+        layout.addWidget(self.breakdown)
         self.tags_card, self._tag_rows = rows_card(_("Por etiqueta"))
         self.tags_card.setToolTip(_(TAGS_HINT))
         layout.addWidget(self.tags_card)
@@ -115,6 +115,7 @@ class TrendsView(AnalysisView):
             _("Sin datos") if trends.change is None else trends.previous_total.format()
         )
         self.average_label.setText(trends.average.format())
+        self.figures.relayout()  # the figures may need more room now
 
         has_data = any(not month.total.is_zero for month in trends.months)
         self.chart.setVisible(has_data)

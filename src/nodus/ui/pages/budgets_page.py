@@ -6,7 +6,6 @@ from datetime import date
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
-    QHBoxLayout,
     QLabel,
     QPushButton,
 )
@@ -25,13 +24,13 @@ from nodus.ui.navigation import PageId, RecordLink, TransactionFocus
 from nodus.ui.pages.base.page import Page
 from nodus.ui.period_selector import PeriodSelector
 from nodus.ui.text.labels import days_left_text, unconverted_note
-from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.charts.budget_bar import budget_pill, usage_text
 from nodus.ui.widgets.charts.chart_base import shown_fractions
 from nodus.ui.widgets.empty_state import empty_page_card
+from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.style import amount_label, clear_layout, hint_label, muted_label
 from nodus.ui.widgets.tables.budget_row import BudgetRow
@@ -175,15 +174,14 @@ class BudgetsPage(Page):
         self.limit_label = QLabel(month.limit.format())
         self.spent_label = QLabel(month.spent.format())
         self.remaining_label = QLabel((-month.remaining if over else month.remaining).format())
-        tiles = QHBoxLayout()
-        tiles.setSpacing(Space.S)
+        tiles = FigureRow()
         for caption, value in (
             (_("Presupuestado"), self.limit_label),
             (_("Gastado"), self.spent_label),
             (_("Excedido en") if over else _("Quedan"), self.remaining_label),
         ):
-            tiles.addWidget(FigureTile(caption, value), stretch=1)
-        card.body.addLayout(tiles)
+            tiles.add_tile(FigureTile(caption, value))
+        card.body.addWidget(tiles)
         if month.unconverted:
             note = hint_label(unconverted_note(month.unconverted))
             card.body.addWidget(note)

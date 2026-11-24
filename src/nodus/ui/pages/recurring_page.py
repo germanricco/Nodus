@@ -6,7 +6,6 @@ from datetime import date
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
-    QHBoxLayout,
     QLabel,
 )
 
@@ -30,6 +29,7 @@ from nodus.ui.transaction_rows import TransactionListBuilder, TransactionListIte
 from nodus.ui.widgets.card import Card
 from nodus.ui.widgets.change_badge import Tone, status_pill
 from nodus.ui.widgets.empty_state import empty_page_card
+from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.pay_button import PayButton
@@ -338,8 +338,7 @@ class RecurringPage(Page):
 
     def _summary_card(self, summary: RecurringSummary, today: date) -> Card:
         card = Card()
-        tiles = QHBoxLayout()
-        tiles.setSpacing(Space.L)
+        tiles = FigureRow()
         monthly, yearly = summary_text(summary)
         self.monthly_label = QLabel(monthly)
         self.yearly_label = QLabel(yearly)
@@ -356,8 +355,8 @@ class RecurringPage(Page):
             (_("Activos"), self.active_label),
             (_("Cuotas por mes"), self.installments_label),
         ):
-            tiles.addWidget(FigureTile(caption, value), stretch=1)
-        card.body.addLayout(tiles)
+            tiles.add_tile(FigureTile(caption, value))
+        card.body.addWidget(tiles)
         return card
 
     def _empty_state(self) -> Card:
