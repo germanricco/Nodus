@@ -780,3 +780,19 @@ class TestMovementRows:
 
 def plain(html: str) -> str:
     return QTextDocumentFragment.fromHtml(html).toPlainText()
+
+
+def test_filters_stay_while_the_app_is_open(window, services, pesos):
+    window.show_page(PageId.TRANSACTIONS)
+    page = window.page(PageId.TRANSACTIONS)
+    page.type_filter.setCurrentIndex(1)
+    page.account_filter.select(pesos.id)
+    page.search_input.setText("café")
+
+    window.show_page(PageId.ACCOUNTS)
+    services.accounts.create("Efectivo", AccountType.CASH, Currency.ARS, ars("0"))
+    window.show_page(PageId.TRANSACTIONS)
+
+    assert page.type_filter.currentIndex() == 1
+    assert page.account_filter.current_id() == pesos.id
+    assert page.search_input.text() == "café"

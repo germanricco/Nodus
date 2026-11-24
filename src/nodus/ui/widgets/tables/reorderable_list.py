@@ -6,13 +6,14 @@ from __future__ import annotations
 import weakref
 from collections.abc import Hashable
 
-from PySide6.QtCore import QByteArray, QMimeData, QPoint, QRect, QRectF, Qt, Signal
+from PySide6.QtCore import QByteArray, QEvent, QMimeData, QObject, QPoint, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import (
     QDrag,
     QDragEnterEvent,
     QDragLeaveEvent,
     QDragMoveEvent,
     QDropEvent,
+    QKeyEvent,
     QMouseEvent,
     QPainter,
     QPaintEvent,
@@ -31,6 +32,7 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.i18n import _
+from nodus.ui.shortcuts import MOVE_ROW_DOWN, MOVE_ROW_UP
 from nodus.ui.theme.design import Line, Opacity, Radius, Space
 from nodus.ui.widgets.style import set_style_property
 
@@ -123,6 +125,7 @@ class _ListRow(QWidget):
         super().__init__()
         self._owner = owner
         self.index = index
+        self.content = content
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(self.SPACING)
@@ -185,6 +188,7 @@ class ReorderableList(QWidget):
         self._keys.append(key)
         self._rows.append(row)
         self._layout.addWidget(row)
+        widget.installEventFilter(self)  # Alt+↑ and Alt+↓ move it
         if self._placeholder is not None:
             self._placeholder.hide()
 
@@ -216,6 +220,23 @@ class ReorderableList(QWidget):
             if y < row.geometry().center().y():
                 return index
         return len(self._rows)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802
+        """Alt+↑ and Alt+↓ on a row move it one place, as dragging it would."""
+        if event.type() != QEvent.Type.KeyPress or not isinstance(event, QKeyEvent):
+            return False
+        index = next((i for i, row in enumerate(self._rows) if row.content is watched), None)
+        if index is None:
+            return False
+        if MOVE_ROW_UP.matches(event):
+            if index > 0:
+                self.move(index, index - 1)
+            return True
+        if MOVE_ROW_DOWN.matches(event):
+            if index < len(self._rows) - 1:
+                self.move(index, index + 2)
+            return True
+        return False
 
     def move(self, source: int, target: int) -> None:
         """Moves row ``source`` to the gap ``target`` (0 is before the first row, the row

@@ -42,7 +42,7 @@ Home, the first page, answers the usual questions: how much you have, how the mo
   <img src="docs/images/en/dashboard-light.png" alt="Home: net worth, upcoming payments and spending by category">
 </picture>
 
-The first time, after your first account, Nodus offers a one-minute guided tour that points at each part of the window; you can take it again from Settings. For anything else, F1 or the “?” in the top bar opens Help beside the window, on the page you are on: friendly answers on what each part is for and how to use it, from installments and refunds to goals and backups, with the page it talks about lit up in the sidebar, and every keyboard shortcut, grouped by where it works.
+The first time, after your first account, Nodus offers a one-minute guided tour that points at each part of the window; you can take it again from Settings. For anything else, F1 or the “?” in the top bar opens Help beside the window, on the page you are on: friendly answers on what each part is for and how to use it, from installments and refunds to goals and backups, with the page it talks about lit up in the sidebar, and every keyboard shortcut, grouped by where it works: Ctrl+K takes you to any page, account or category by typing a few letters of its name, Ctrl+N records a transaction from any page, Ctrl+F searches, Ctrl+1 to Ctrl+9 jump to the pages of the sidebar and Alt+← goes back to the previous page, as in a browser.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/tour-dark.png">

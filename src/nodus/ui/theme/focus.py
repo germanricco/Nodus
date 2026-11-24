@@ -8,14 +8,20 @@ Qt also hands the focus to a button by itself: when the page holding it goes awa
 search field, a table, a record's page), the next page's first button gets it, and its
 ring lights up with no key pressed. Such a button lets the focus go again
 (``KeyboardOnly``).
+
+The style also makes every button and check box at least ``ControlSize.TARGET`` tall, so
+a link or a box is as easy to hit as the rest (WCAG 2.2, 2.5.8).
 """
 
 from __future__ import annotations
 
+from functools import partial
+
 from PySide6.QtCore import QEvent, QObject, Qt, QTimer
 from PySide6.QtGui import QFocusEvent
-from PySide6.QtWidgets import QApplication, QProxyStyle, QPushButton, QWidget
+from PySide6.QtWidgets import QAbstractButton, QApplication, QProxyStyle, QPushButton, QWidget
 
+from nodus.ui.theme.design import ControlSize
 from nodus.ui.theme.wheel import WheelGuard
 
 # How the person moves the focus: Tab, a shortcut, a menu closing back onto its button, or
@@ -67,6 +73,9 @@ class KeyboardFocusStyle(QProxyStyle):
             widget.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         if isinstance(widget, QPushButton) and widget.focusPolicy() == Qt.FocusPolicy.TabFocus:
             widget.installEventFilter(self._keyboard_only)
+        if isinstance(widget, QAbstractButton):
+            # Once the stylesheet gave it its padding, which comes after this.
+            QTimer.singleShot(0, widget, partial(_raise_to_target, widget))
         self._wheel.guard(widget)
 
 
@@ -81,3 +90,14 @@ def use_keyboard_focus_style(app: QApplication) -> None:
     if _style is None:
         _style = KeyboardFocusStyle("Fusion")
         app.setStyle(_style)
+
+
+def _raise_to_target(button: QAbstractButton) -> None:
+    """Only a button shorter than the target: a minimum replaces the natural height as the
+    least a layout leaves it, so a taller one would be squeezed down to it in a short
+    window instead of scrolling."""
+    if (
+        button.sizeHint().height() < ControlSize.TARGET <= button.maximumHeight()
+        and button.minimumHeight() < ControlSize.TARGET
+    ):
+        button.setMinimumHeight(ControlSize.TARGET)

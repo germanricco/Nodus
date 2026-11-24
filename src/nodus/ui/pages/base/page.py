@@ -1,7 +1,14 @@
 """Base class for the main sections."""
 
 from PySide6.QtCore import QEvent
-from PySide6.QtWidgets import QHBoxLayout, QPushButton, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
 from nodus.ui.theme.design import Layout, Space
 from nodus.ui.widgets.elided_label import ElidedLabel
@@ -127,6 +134,8 @@ class Page(QWidget):
         self.title_label = header.title_label
         self._header_widgets: list[QWidget] = []
         self._selection_bar: QWidget | None = None
+        # Its search, if it has one: where Ctrl+F leads (MainWindow.find).
+        self.search_input: QLineEdit | None = None
         layout.addWidget(header)
         self.content_layout = QVBoxLayout()
         self.content_layout.setSpacing(Space.L)

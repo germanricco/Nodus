@@ -76,6 +76,17 @@ class TestRecentColors:
         assert services.settings.recent_colors() == []
 
 
+class TestRecentCommands:
+    def test_the_latest_first_without_repeats_and_only_a_few(self, services):
+        keys = [f"page:{index}" for index in range(settings_service.RECENT_COMMANDS + 2)]
+        for key in [*keys, keys[0]]:
+            services.settings.add_recent_command(key)
+
+        recent = services.settings.recent_commands()
+        assert recent[0] == keys[0]
+        assert len(recent) == len(set(recent)) == settings_service.RECENT_COMMANDS
+
+
 @pytest.mark.parametrize(
     ("new_data", "language"), [(True, Language.ENGLISH), (False, Language.SPANISH)]
 )

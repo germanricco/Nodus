@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 from nodus.i18n import _
 from nodus.ui.shell import tour
 from nodus.ui.shell.coach_marks import mark_target
-from nodus.ui.shortcuts import HELP
+from nodus.ui.shortcuts import HELP, HIDE_AMOUNTS, NEW_TRANSACTION, with_keys
 from nodus.ui.theme.design import ControlSize, IconSize, Space
 from nodus.ui.theme.icons import icon
 from nodus.ui.theme.theme import Theme
@@ -32,6 +32,7 @@ class TopBar(QFrame):
         layout.setSpacing(Space.S)
 
         self._add_button = QPushButton(_("Agregar transacción"))
+        self._add_button.setToolTip(with_keys(_("Agregar transacción"), NEW_TRANSACTION.label))
         self._add_button.setObjectName("PrimaryButton")
         self._add_button.setIconSize(QSize(IconSize.L, IconSize.L))
         self._add_button.clicked.connect(self.add_transaction_requested)
@@ -57,7 +58,7 @@ class TopBar(QFrame):
         self.hide_amounts_button.clicked.connect(self.hide_amounts_toggled)
         mark_target(self.hide_amounts_button, tour.HIDE_AMOUNTS)
         self._amounts_hidden = False
-        self.help_button = self._icon_button(_("Ayuda ({key})").format(key=HELP.label))
+        self.help_button = self._icon_button(with_keys(_("Ayuda"), HELP.label))
         self.help_button.setAccessibleName(_("Ayuda"))
         self.help_button.clicked.connect(self.help_requested)
         mark_target(self.help_button, tour.HELP)
@@ -72,7 +73,9 @@ class TopBar(QFrame):
     def set_amounts_hidden(self, hidden: bool) -> None:
         """Shows the eye that would undo the current state."""
         self._amounts_hidden = hidden
-        self.hide_amounts_button.setToolTip(_("Mostrar montos") if hidden else _("Ocultar montos"))
+        what = _("Mostrar montos") if hidden else _("Ocultar montos")
+        self.hide_amounts_button.setToolTip(with_keys(what, HIDE_AMOUNTS.label))
+        self.hide_amounts_button.setAccessibleName(what)
         self._apply_theme(self._theme)
 
     def set_notification_count(self, count: int) -> None:
@@ -81,9 +84,11 @@ class TopBar(QFrame):
 
     @staticmethod
     def _icon_button(tooltip: str) -> QPushButton:
+        """A button with only an icon: its tooltip is also what a screen reader says."""
         button = QPushButton()
         button.setObjectName("IconButton")
         button.setToolTip(tooltip)
+        button.setAccessibleName(tooltip)
         button.setIconSize(QSize(IconSize.XL, IconSize.XL))
         button.setFixedSize(ControlSize.TOP_BAR_BUTTON, ControlSize.TOP_BAR_BUTTON)
         button.setCursor(Qt.CursorShape.PointingHandCursor)

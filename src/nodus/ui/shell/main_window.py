@@ -41,14 +41,33 @@ from nodus.ui.rate_updater import shared_rate_updater, updated_text
 from nodus.ui.refresh import refresh_on_changes
 from nodus.ui.restart import restart
 from nodus.ui.shell.coach_marks import CoachMarks
+from nodus.ui.shell.command_palette import (
+    ACTION,
+    Command,
+    CommandPalette,
+    page_commands,
+    record_commands,
+)
 from nodus.ui.shell.help_panel import HelpPanel
+from nodus.ui.shell.history import NavigationHistory, Place
 from nodus.ui.shell.notices import NOTICES
 from nodus.ui.shell.notification_panel import NotificationPanel
 from nodus.ui.shell.page_registry import DETAIL_OF_LIST, DETAIL_TYPES, PAGE_TYPES
 from nodus.ui.shell.sidebar import Sidebar
 from nodus.ui.shell.top_bar import TopBar
 from nodus.ui.shell.tour import TOUR_STEPS
-from nodus.ui.shortcuts import HELP, UNDO
+from nodus.ui.shortcuts import (
+    BACK,
+    COMMAND_PALETTE,
+    FORWARD,
+    HELP,
+    HIDE_AMOUNTS,
+    NEW_TRANSACTION,
+    SEARCH,
+    UNDO,
+    page_keys,
+    with_keys,
+)
 from nodus.ui.text.help_texts import HelpTopic, topic_for_page
 from nodus.ui.text.labels import TOUR_LABEL
 from nodus.ui.theme.design import Layout
@@ -113,8 +132,20 @@ class MainWindow(QMainWindow):
         self.sidebar.record_requested.connect(self.open_record)
         self.top_bar.add_transaction_requested.connect(self.open_new_transaction)
         self.top_bar.help_requested.connect(self.toggle_help)
-        QShortcut(QKeySequence(HELP.label), self, self.toggle_help)
-        QShortcut(QKeySequence(UNDO.label), self, self.undo_last)
+        self.history = NavigationHistory()
+        for shortcut, action in (
+            (HELP, self.toggle_help),
+            (UNDO, self.undo_last),
+            (NEW_TRANSACTION, self.open_new_transaction),
+            (SEARCH, self.find),
+            (HIDE_AMOUNTS, self.toggle_amounts_hidden),
+            (BACK, self.go_back),
+            (FORWARD, self.go_forward),
+            (COMMAND_PALETTE, self.open_palette),
+        ):
+            QShortcut(shortcut.sequence, self, action)
+        for page_id, keys in page_keys().items():
+            QShortcut(QKeySequence(keys), self, partial(self.show_page, page_id))
         self.top_bar.notifications_requested.connect(self.open_notifications)
         self.top_bar.feedback_requested.connect(lambda: open_url(feedback_url()))
         self.top_bar.set_amounts_hidden(services.settings.amounts_hidden())
@@ -418,6 +449,10 @@ class MainWindow(QMainWindow):
     def _build_page(self, page_id: PageId) -> Page:
         """A new page ``page_id`` (``PAGE_TYPES``) with its requests connected."""
         page = PAGE_TYPES[page_id](self._services, self._event_bus, self.theme_manager)
+        search = page.search_input
+        if search is not None:
+            what = search.toolTip() or search.placeholderText().rstrip("…")
+            search.setToolTip(with_keys(what, SEARCH.label))
         detail = DETAIL_OF_LIST.get(page_id)
         if detail is not None:
             page.detail_requested.connect(partial(self.show_detail, detail))
@@ -451,6 +486,7 @@ class MainWindow(QMainWindow):
             page.refresh()
         self._stack.setCurrentWidget(page)
         self.sidebar.select(page_id)
+        self.history.visit(Place(page_id))
         self._make_room_for_help_soon()
 
     def detail(self, detail_id: DetailId) -> DetailPage:
@@ -470,8 +506,70 @@ class MainWindow(QMainWindow):
         page.show_item(item_id)
         self._stack.setCurrentWidget(page)
         self.sidebar.select(detail_id.list_page)
+        self.history.visit(Place(detail_id, item_id))
         self._make_room_for_help_soon()
         page.setFocus()
+
+    def go_back(self) -> None:
+        """The page shown before this one (Alt+←)."""
+        self._go_to(self.history.back())
+
+    def go_forward(self) -> None:
+        """The page gone back from (Alt+→)."""
+        self._go_to(self.history.forward())
+
+    def _go_to(self, place: Place | None) -> None:
+        if place is None:
+            return
+        with self.history.moving():
+            if isinstance(place.page, DetailId) and place.item_id is not None:
+                self.show_detail(place.page, place.item_id)
+            elif isinstance(place.page, PageId):
+                self.show_page(place.page)
+
+    def open_palette(self) -> CommandPalette:
+        """Ctrl+K: the palette over the window, with the ones chosen last first."""
+        settings = self._services.settings
+        palette = CommandPalette(
+            [
+                *page_commands(self.show_page),
+                *self._action_commands(),
+                *record_commands(self._services, self.open_record),
+            ],
+            settings.recent_commands(),
+            self._run_command,
+            self,
+        )
+        palette.open_over(self)
+        return palette
+
+    def _action_commands(self) -> list[Command]:
+        """What the window does, with the keys that also do it."""
+        action = _(ACTION)
+        return [
+            Command("action:new", _("Agregar transacción"), action, self.open_new_transaction,
+                    NEW_TRANSACTION.label),
+            Command("action:find", _("Buscar en Transacciones"), action, self.find, SEARCH.label),
+            Command("action:amounts", _("Ocultar o mostrar los montos"), action,
+                    self.toggle_amounts_hidden, HIDE_AMOUNTS.label),
+            Command("action:help", _("Abrir la Ayuda"), action, self.show_help, HELP.label),
+            Command("action:tour", _("Ver el recorrido"), action, self.start_tour),
+        ]  # fmt: skip
+
+    def _run_command(self, command: Command) -> None:
+        self._services.settings.add_recent_command(command.key)
+        command.run()
+
+    def find(self) -> None:
+        """Ctrl+F: the search of the page, or of Transacciones where the page has none,
+        ready to type in."""
+        search = self.current_page.search_input
+        if search is None or not search.isVisibleTo(self.current_page):
+            self.show_page(PageId.TRANSACTIONS)
+            search = self.current_page.search_input
+        if search is not None:
+            search.setFocus(Qt.FocusReason.ShortcutFocusReason)
+            search.selectAll()
 
     def show_transactions(self, focus: TransactionFocus) -> None:
         """Opens the transactions page on what ``focus`` asks for."""

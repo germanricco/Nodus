@@ -47,7 +47,8 @@ HELP_TOPICS = [
         ),
         (
             N_(
-                "A la izquierda están las páginas y tus cuentas con su saldo. Arriba, «Agregar"
+                "A la izquierda están las páginas, que Ctrl + 1 a Ctrl + 9 abren en ese orden,"
+                " y tus cuentas con su saldo. Arriba, «Agregar"
                 " transacción» anota un movimiento desde cualquier página, el ojo oculta los"
                 " montos, la campana junta los avisos y el «?» abre esta ayuda. El número de la"
                 " campana cuenta los avisos que todavía no miraste, que llevan un punto: un clic"
@@ -174,7 +175,8 @@ HELP_TOPICS = [
             N_(
                 "Arriba eliges el período, y debajo filtras por cuenta, categoría, beneficiario,"
                 " etiqueta o tipo. «Buscar…» encuentra texto en la nota y en los nombres del"
-                " beneficiario y las etiquetas. Al pie, Nodus suma lo que estás viendo."
+                " beneficiario y las etiquetas, y Ctrl + F te lleva a él desde cualquier página"
+                " que no tenga su propio buscador. Al pie, Nodus suma lo que estás viendo."
             ),
             N_(
                 "Muchas páginas te traen hasta acá ya filtrado: un clic en una barra de un mes,"

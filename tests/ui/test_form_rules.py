@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 import pytest
 from factories import ars, category_id, charge_draft, expense_draft, light_theme
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QRect, Qt
 from PySide6.QtWidgets import QComboBox, QLineEdit, QWidget
 
 from nodus.models.period import Month
@@ -234,3 +234,37 @@ def test_the_amount_has_the_focus_on_opening(qtbot, services, event_bus, pesos):
     dialog.show()
 
     qtbot.waitUntil(dialog.amount_input.line_edit.hasFocus)
+
+
+def tab_stops(dialog: FormDialog) -> list[QWidget]:
+    """The widgets Tab visits in ``dialog``, in the order it visits them, once round."""
+    stops: list[QWidget] = []
+    widget = dialog.nextInFocusChain()
+    while widget is not dialog and widget not in stops:
+        takes_tab = widget.focusPolicy() & Qt.FocusPolicy.TabFocus
+        if takes_tab and widget.isVisible() and widget.isEnabled() and not widget.focusProxy():
+            stops.append(widget)
+        widget = widget.nextInFocusChain()
+    return stops
+
+
+def test_tab_follows_the_form_top_to_bottom_left_to_right(qtbot, opened):
+    def box(widget: QWidget) -> QRect:
+        return QRect(widget.mapTo(opened, widget.rect().topLeft()), widget.size())
+
+    def comes_after(before: QRect, after: QRect) -> bool:
+        """Below it, or on its line (their middles within each other) and to its right."""
+        same_line = before.top() <= after.center().y() <= before.bottom()
+        return after.x() > before.x() if same_line else after.top() > before.center().y()
+
+    stops = tab_stops(opened)
+    # Tab goes round: the visit starts wherever the round reaches the top left.
+    first = min(range(len(stops)), key=lambda i: (box(stops[i]).top(), box(stops[i]).left()))
+    stops = stops[first:] + stops[:first]
+
+    wrong = [
+        (type(a).__name__, type(b).__name__)
+        for a, b in zip(stops, stops[1:], strict=False)
+        if not comes_after(box(a), box(b))
+    ]
+    assert wrong == []

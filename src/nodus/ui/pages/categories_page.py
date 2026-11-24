@@ -166,7 +166,7 @@ class CategoryRow(QWidget):
         self.more_button = MoreButton(self.actions)
         layout.addWidget(self.more_button)
         # Its box chooses it, so it opens with a double click, as the lists that are tables.
-        install_row_actions(self, self.actions)
+        install_row_actions(self, self.actions, fold=self._fold if subcategories else None)
 
     def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802
         """A narrow row leaves its name the room of its bar, its percent and its
@@ -178,6 +178,12 @@ class CategoryRow(QWidget):
         self.percent_label.setFixedWidth(Layout.SHARE_PERCENT_WIDTH if wide else 0)
         if self.system_tag is not None:
             self.system_tag.setVisible(wide)
+
+    def _fold(self, folded: bool) -> None:
+        """Folds or unfolds from the keyboard, as its «▾» does."""
+        if folded != self.fold_button.folded:
+            self.fold_button.set_folded(folded)
+            self.fold_toggled.emit(self.category, folded)
 
     def set_folded(self, folded: bool) -> None:
         self.fold_button.set_folded(folded)

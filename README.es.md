@@ -42,7 +42,7 @@ El Inicio, la primera página, responde las preguntas de siempre: cuánto tienes
   <img src="docs/images/dashboard-light.png" alt="El Inicio: patrimonio neto, próximos pagos y gastos por categoría">
 </picture>
 
-La primera vez, después de tu primera cuenta, Nodus te ofrece un recorrido guiado de un minuto que señala cada parte de la ventana; puedes volver a verlo desde Ajustes. Para lo demás, F1 o el «?» de la barra superior abren la Ayuda al costado de la ventana, en el tema de la página donde estás: respuestas cercanas sobre para qué sirve cada parte y cómo se usa, desde las cuotas y los reembolsos hasta las metas y las copias, con la página de la que habla iluminada en el panel lateral, y todos los atajos de teclado, agrupados según dónde funcionan.
+La primera vez, después de tu primera cuenta, Nodus te ofrece un recorrido guiado de un minuto que señala cada parte de la ventana; puedes volver a verlo desde Ajustes. Para lo demás, F1 o el «?» de la barra superior abren la Ayuda al costado de la ventana, en el tema de la página donde estás: respuestas cercanas sobre para qué sirve cada parte y cómo se usa, desde las cuotas y los reembolsos hasta las metas y las copias, con la página de la que habla iluminada en el panel lateral, y todos los atajos de teclado, agrupados según dónde funcionan: Ctrl+K lleva a cualquier página, cuenta o categoría escribiendo unas letras de su nombre, Ctrl+N anota una transacción desde cualquier página, Ctrl+F busca, Ctrl+1 a Ctrl+9 saltan a las páginas de la barra lateral y Alt+← vuelve a la página anterior, como en un navegador.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/tour-dark.png">

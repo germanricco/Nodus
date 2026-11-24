@@ -100,7 +100,7 @@ def test_sidebar_collapses_to_icons_and_remembers_it(
 
     assert window.sidebar.width() == Sidebar.COLLAPSED_WIDTH
     assert button.text() == ""
-    assert button.toolTip() == PageId.BUDGETS.label
+    assert button.toolTip() == "Presupuestos (Ctrl+5)"
     assert "Banco" not in sidebar_texts(window)
     reopened = MainWindow(services, event_bus, theme_manager)
     qtbot.addWidget(reopened)
@@ -110,6 +110,19 @@ def test_sidebar_collapses_to_icons_and_remembers_it(
 
     assert button.text() == PageId.BUDGETS.label
     assert not services.settings.sidebar_collapsed()
+
+
+def test_collapsed_the_accounts_button_tells_the_balances(window, services, pesos):
+    window.sidebar.refresh_accounts()
+    window.sidebar.collapse_button.click()
+    button = window.sidebar.nav_button(PageId.ACCOUNTS)
+
+    assert button.toolTip() == "Cuentas (Ctrl+2)\n\nTotal: $ 100.000,00\nBanco: $ 100.000,00"
+
+    window.toggle_amounts_hidden()
+
+    assert "100.000" not in button.toolTip()
+    assert "Banco: $ ••••" in button.toolTip()
 
 
 def test_eye_hides_balances_and_net_worth_and_remembers_it(
@@ -128,10 +141,10 @@ def test_eye_hides_balances_and_net_worth_and_remembers_it(
     assert accounts.net_worth_card.total_label.text() == "$ ••••"
     window.show_page(PageId.DASHBOARD)
     assert window.page(PageId.DASHBOARD).net_worth_card.total_label.text() == "$ ••••"
-    assert window.top_bar.hide_amounts_button.toolTip() == "Mostrar montos"
+    assert window.top_bar.hide_amounts_button.toolTip() == "Mostrar montos (Ctrl+H)"
     reopened = MainWindow(services, event_bus, theme_manager)
     qtbot.addWidget(reopened)
-    assert reopened.top_bar.hide_amounts_button.toolTip() == "Mostrar montos"
+    assert reopened.top_bar.hide_amounts_button.toolTip() == "Mostrar montos (Ctrl+H)"
 
     window.top_bar.hide_amounts_button.click()
 

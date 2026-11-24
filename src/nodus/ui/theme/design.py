@@ -92,6 +92,7 @@ class ControlSize:
     Round and square controls give one side."""
 
     FIELD_HEIGHT = 24  # a field's text line, inside its padding
+    TARGET = 24  # the least a click target measures each way (WCAG 2.2, 2.5.8)
     DROP_DOWN_WIDTH = 24  # the arrow's box at the right end of a list
     AMOUNT_SYMBOL_WIDTH = 28  # «$» or «US$» before an amount
     SMALL_BUTTON = 28  # a row's «⋯» and pay buttons
@@ -105,8 +106,8 @@ class ControlSize:
     COLOR_SWATCH = 26
     COLOR_PREVIEW = 28  # the chosen color beside the wheel
     COLOR_WHEEL = 180
-    TOGGLE_WIDTH = 40
-    TOGGLE_HEIGHT = 22
+    TOGGLE_WIDTH = 44
+    TOGGLE_HEIGHT = 24
     PROGRESS_HEIGHT = 8  # a progress bar: an update's download, a budget
     DOT = 12  # a category's color beside its name
     DOT_SMALL = 10  # the same in a dense row, and a tag's chip
@@ -268,6 +269,9 @@ class Layout:
     MOVEMENT_CATEGORY_NARROW_WIDTH = 170  # in a list narrower than NARROW_LIST_WIDTH
     MOVEMENT_AMOUNT_WIDTH = 150
     NARROW_LIST_WIDTH = 900
+    PALETTE_WIDTH = 560  # Ctrl+K's
+    PALETTE_ROWS = 9  # Ctrl+K shows that many results before scrolling
+    PALETTE_TOP = 72  # under the top bar
     # What a table keeps for its name or movement before it drops its other columns.
     STRETCH_COLUMN_MIN = 120
     MORE_COLUMN = 32  # a table's «⋯»

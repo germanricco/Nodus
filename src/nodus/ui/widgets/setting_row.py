@@ -38,6 +38,9 @@ class SettingRow(QWidget):
         """Appends a control on the right and returns it, so it can be kept in one line."""
         # Centered at its height, so a detail in several lines does not stretch it.
         self._controls.addWidget(widget, alignment=Qt.AlignmentFlag.AlignVCenter)
+        # A control with no words of its own (a switch) is named by its row.
+        if not widget.accessibleName() and not getattr(widget, "text", lambda: "")():
+            widget.setAccessibleName(self.title.text())
         return widget
 
     def set_detail(self, text: str, error: bool = False) -> None:

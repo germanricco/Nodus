@@ -720,6 +720,7 @@ msgstr "Type"
 
 #: nodus/services/reports/export_service.py nodus/ui/dialogs/recurring_charge_dialog.py
 #: nodus/ui/dialogs/transaction_dialog.py nodus/ui/pages/transactions_page.py
+#: nodus/ui/shell/command_palette.py
 msgid "Cuenta"
 msgstr "Account"
 
@@ -727,13 +728,13 @@ msgstr "Account"
 #: nodus/ui/dialogs/bulk_edit_dialog.py nodus/ui/dialogs/category_dialog.py
 #: nodus/ui/dialogs/payee_dialogs.py nodus/ui/dialogs/recurring_charge_dialog.py
 #: nodus/ui/dialogs/transaction_dialog.py nodus/ui/pages/transactions_page.py
-#: nodus/ui/widgets/tables/transaction_table.py
+#: nodus/ui/shell/command_palette.py nodus/ui/widgets/tables/transaction_table.py
 msgid "Categoría"
 msgstr "Category"
 
 #: nodus/services/reports/export_service.py nodus/ui/dialogs/bulk_edit_dialog.py
 #: nodus/ui/dialogs/payee_dialogs.py nodus/ui/dialogs/transaction_dialog.py
-#: nodus/ui/pages/transactions_page.py
+#: nodus/ui/pages/transactions_page.py nodus/ui/shell/command_palette.py
 msgid "Beneficiario"
 msgstr "Payee"
 
@@ -1025,8 +1026,17 @@ msgid "En una cuenta, un beneficiario o una etiqueta"
 msgstr "In an account, a payee or a tag"
 
 #: nodus/ui/shortcuts.py
+msgid "En las filas, con el teclado"
+msgstr "On rows, with the keyboard"
+
+#: nodus/ui/shortcuts.py
 msgid "En el recorrido guiado"
 msgstr "In the guided tour"
+
+#: nodus/ui/shortcuts.py
+#, python-brace-format
+msgid "{action} ({keys})"
+msgstr "{action} ({keys})"
 
 #: nodus/ui/shortcuts.py
 msgid "Abre o cierra la Ayuda."
@@ -1035,6 +1045,34 @@ msgstr "Opens or closes Help."
 #: nodus/ui/shortcuts.py
 msgid "Deshace lo último."
 msgstr "Undoes the last change."
+
+#: nodus/ui/shortcuts.py
+msgid "Agrega una transacción."
+msgstr "Adds a transaction."
+
+#: nodus/ui/shortcuts.py
+msgid "Busca en la página."
+msgstr "Searches the page."
+
+#: nodus/ui/shortcuts.py
+msgid "Oculta o muestra montos."
+msgstr "Hides or shows amounts."
+
+#: nodus/ui/shortcuts.py
+msgid "Busca adónde ir."
+msgstr "Finds where to go."
+
+#: nodus/ui/shortcuts.py
+msgid "Va a una página."
+msgstr "Goes to a page."
+
+#: nodus/ui/shortcuts.py
+msgid "Vuelve a la página anterior."
+msgstr "Goes to the previous page."
+
+#: nodus/ui/shortcuts.py
+msgid "Va a la página siguiente."
+msgstr "Goes to the next page."
 
 #: nodus/ui/shortcuts.py
 msgid "Cierra la Ayuda."
@@ -1057,8 +1095,44 @@ msgid "Vuelve a la lista."
 msgstr "Goes back to the list."
 
 #: nodus/ui/shortcuts.py
-msgid "Avanza (también Enter)."
-msgstr "Goes forward (also Enter)."
+msgid "Abre o edita la fila."
+msgstr "Opens or edits the row."
+
+#: nodus/ui/shortcuts.py
+msgid "Menú"
+msgstr "Menu"
+
+#: nodus/ui/shortcuts.py
+msgid "Abre el menú de la fila."
+msgstr "Opens the row's menu."
+
+#: nodus/ui/shortcuts.py
+msgid "Va a la fila de arriba."
+msgstr "Goes to the row above."
+
+#: nodus/ui/shortcuts.py
+msgid "Va a la fila de abajo."
+msgstr "Goes to the row below."
+
+#: nodus/ui/shortcuts.py
+msgid "Pliega un grupo."
+msgstr "Folds a group."
+
+#: nodus/ui/shortcuts.py
+msgid "Despliega un grupo."
+msgstr "Unfolds a group."
+
+#: nodus/ui/shortcuts.py
+msgid "Sube la cuenta en su grupo."
+msgstr "Moves the account up."
+
+#: nodus/ui/shortcuts.py
+msgid "Baja la cuenta en su grupo."
+msgstr "Moves the account down."
+
+#: nodus/ui/shortcuts.py
+msgid "Avanza."
+msgstr "Goes forward."
 
 #: nodus/ui/shortcuts.py
 msgid "Retrocede."
@@ -1073,16 +1147,8 @@ msgid "Doble clic"
 msgstr "Double-click"
 
 #: nodus/ui/shortcuts.py
-msgid "Abre o edita la fila."
-msgstr "Opens or edits the row."
-
-#: nodus/ui/shortcuts.py
 msgid "Clic derecho"
 msgstr "Right-click"
-
-#: nodus/ui/shortcuts.py
-msgid "Abre el menú de la fila."
-msgstr "Opens the row's menu."
 
 #: nodus/ui/shortcuts.py
 msgid "clic"
@@ -1090,7 +1156,7 @@ msgstr "click"
 
 #: nodus/ui/shortcuts.py
 msgid "Suma o quita una fila."
-msgstr "Adds a row to the selection or removes it."
+msgstr "Adds or removes a row."
 
 #: nodus/ui/shortcuts.py
 msgid "Mayús"
@@ -1105,8 +1171,8 @@ msgid "Guarda."
 msgstr "Saves."
 
 #: nodus/ui/shortcuts.py
-msgid "Cierra; pregunta si cambiaste algo."
-msgstr "Closes; asks if you changed something."
+msgid "Cierra el formulario."
+msgstr "Closes the form."
 
 #: nodus/ui/transaction_rows.py
 #, python-brace-format
@@ -2160,6 +2226,7 @@ msgstr[0] "Merge {count} tag"
 msgstr[1] "Merge {count} tags"
 
 #: nodus/ui/dialogs/tag_dialogs.py nodus/ui/pages/transactions_page.py
+#: nodus/ui/shell/command_palette.py
 msgid "Etiqueta"
 msgstr "Tag"
 
@@ -2177,7 +2244,7 @@ msgstr "New transaction"
 
 #: nodus/ui/dialogs/transaction_dialog.py nodus/ui/pages/account_detail_page.py
 #: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/transactions_page.py
-#: nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
+#: nodus/ui/shell/main_window.py nodus/ui/shell/top_bar.py nodus/ui/shell/tour.py
 msgid "Agregar transacción"
 msgstr "Add transaction"
 
@@ -3601,6 +3668,26 @@ msgstr "{number} of {count}"
 msgid "Terminar"
 msgstr "Finish"
 
+#: nodus/ui/shell/command_palette.py
+msgid "Página"
+msgstr "Page"
+
+#: nodus/ui/shell/command_palette.py
+msgid "Acción"
+msgstr "Action"
+
+#: nodus/ui/shell/command_palette.py
+msgid "Meta"
+msgstr "Goal"
+
+#: nodus/ui/shell/command_palette.py
+msgid "Ir a…"
+msgstr "Go to…"
+
+#: nodus/ui/shell/command_palette.py
+msgid "Ir a una página, una cuenta, una categoría…"
+msgstr "Go to a page, an account, a category…"
+
 #: nodus/ui/shell/help_panel.py
 msgid "Atajos de teclado"
 msgstr "Keyboard shortcuts"
@@ -3645,6 +3732,22 @@ msgstr "Want me to show you how Nodus works? It takes a minute."
 #: nodus/ui/shell/main_window.py
 msgid "Ahora no"
 msgstr "Not now"
+
+#: nodus/ui/shell/main_window.py
+msgid "Buscar en Transacciones"
+msgstr "Search Transactions"
+
+#: nodus/ui/shell/main_window.py
+msgid "Ocultar o mostrar los montos"
+msgstr "Hide or show amounts"
+
+#: nodus/ui/shell/main_window.py
+msgid "Abrir la Ayuda"
+msgstr "Open Help"
+
+#: nodus/ui/shell/main_window.py nodus/ui/text/labels.py
+msgid "Ver el recorrido"
+msgstr "Take the tour"
 
 #: nodus/ui/shell/main_window.py
 msgid "Primero, una cuenta"
@@ -3730,10 +3833,10 @@ msgstr "Expand the panel"
 msgid "Contraer el panel"
 msgstr "Collapse the panel"
 
-#: nodus/ui/shell/top_bar.py
+#: nodus/ui/shell/sidebar.py
 #, python-brace-format
-msgid "Ayuda ({key})"
-msgstr "Help ({key})"
+msgid "Total: {amount}"
+msgstr "Total: {amount}"
 
 #: nodus/ui/shell/top_bar.py
 msgid "Mostrar montos"
@@ -3871,17 +3974,17 @@ msgstr ""
 
 #: nodus/ui/text/help_texts.py
 msgid ""
-"A la izquierda están las páginas y tus cuentas con su saldo. Arriba, «Agregar transacción» anota "
-"un movimiento desde cualquier página, el ojo oculta los montos, la campana junta los avisos y el "
-"«?» abre esta ayuda. El número de la campana cuenta los avisos que todavía no miraste, que llevan"
-" un punto: un clic en uno te lleva adonde está el problema y lo marca como visto. Con el clic "
-"derecho, algunos se pueden quitar."
+"A la izquierda están las páginas, que Ctrl + 1 a Ctrl + 9 abren en ese orden, y tus cuentas con "
+"su saldo. Arriba, «Agregar transacción» anota un movimiento desde cualquier página, el ojo oculta"
+" los montos, la campana junta los avisos y el «?» abre esta ayuda. El número de la campana cuenta"
+" los avisos que todavía no miraste, que llevan un punto: un clic en uno te lleva adonde está el "
+"problema y lo marca como visto. Con el clic derecho, algunos se pueden quitar."
 msgstr ""
-"On the left are the pages and your accounts with their balance. At the top, “Add transaction” "
-"records a transaction from any page, the eye hides the amounts, the bell gathers the "
-"notifications and the “?” opens this help. The number on the bell counts the notifications you "
-"haven't looked at yet, marked with a dot: a click on one takes you to where the problem is and "
-"marks it as seen. Some can be removed with a right-click."
+"On the left are the pages, which Ctrl + 1 to Ctrl + 9 open in that order, and your accounts with "
+"their balance. At the top, “Add transaction” records a transaction from any page, the eye hides "
+"the amounts, the bell gathers the notifications and the “?” opens this help. The number on the "
+"bell counts the notifications you haven't looked at yet, marked with a dot: a click on one takes "
+"you to where the problem is and marks it as seen. Some can be removed with a right-click."
 
 #: nodus/ui/text/help_texts.py
 msgid ""
@@ -4058,12 +4161,13 @@ msgstr ""
 #: nodus/ui/text/help_texts.py
 msgid ""
 "Arriba eliges el período, y debajo filtras por cuenta, categoría, beneficiario, etiqueta o tipo. "
-"«Buscar…» encuentra texto en la nota y en los nombres del beneficiario y las etiquetas. Al pie, "
-"Nodus suma lo que estás viendo."
+"«Buscar…» encuentra texto en la nota y en los nombres del beneficiario y las etiquetas, y Ctrl + "
+"F te lleva a él desde cualquier página que no tenga su propio buscador. Al pie, Nodus suma lo que"
+" estás viendo."
 msgstr ""
 "At the top you choose the period, and below you filter by account, category, payee, tag or type. "
-"“Search…” finds text in notes, payees and tags. At the bottom, Nodus adds up what you're looking "
-"at."
+"“Search…” finds text in notes, payees and tags, and Ctrl + F takes you to it from any page "
+"without a search of its own. At the bottom, Nodus adds up what you're looking at."
 
 #: nodus/ui/text/help_texts.py
 msgid ""
@@ -4556,10 +4660,6 @@ msgid "Sin cotización"
 msgstr "No exchange rate"
 
 #: nodus/ui/text/labels.py
-msgid "Ver el recorrido"
-msgstr "Take the tour"
-
-#: nodus/ui/text/labels.py
 msgid "Semanal"
 msgstr "Weekly"
 
@@ -4795,6 +4895,11 @@ msgstr "At this pace you'll get there in {month}."
 #, python-brace-format
 msgid "Promedio {amount}"
 msgstr "Average {amount}"
+
+#: nodus/ui/widgets/inputs/color.py
+#, python-brace-format
+msgid "Color {color}"
+msgstr "Color {color}"
 
 #: nodus/ui/widgets/inputs/color.py
 msgid "Otro color"

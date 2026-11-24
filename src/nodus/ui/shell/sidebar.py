@@ -27,12 +27,13 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import PageId, RecordLink
 from nodus.ui.shell import tour
 from nodus.ui.shell.coach_marks import mark_target
+from nodus.ui.shortcuts import page_keys, with_keys
 from nodus.ui.theme.design import ControlSize, IconSize, Layout, RowRole, Space
 from nodus.ui.theme.icons import icon, logo_pixmap
 from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.elided_label import ElidedLabel
-from nodus.ui.widgets.money_label import MoneyLabel, total_text
+from nodus.ui.widgets.money_label import MoneyLabel, amount_text, total_text
 from nodus.ui.widgets.section_toggle import SectionToggle
 from nodus.ui.widgets.style import (
     clear_layout,
@@ -148,6 +149,7 @@ class Sidebar(QFrame):
 
         self._theme = theme_manager.theme
         self._collapsed = False
+        self._balances_tip = ""
         self.set_collapsed(services.settings.sidebar_collapsed())
         self._apply_theme(theme_manager.theme)
         theme_manager.theme_changed.connect(self._apply_theme)
@@ -163,17 +165,29 @@ class Sidebar(QFrame):
         self.setFixedWidth(self.COLLAPSED_WIDTH if collapsed else self.WIDTH)
         for page_id, button in self._nav_buttons.items():
             button.setText("" if collapsed else page_id.label)
-            button.setToolTip(page_id.label if collapsed else "")
             set_style_property(button, "collapsed", collapsed)
+        self._show_nav_tooltips()
         for widget in (self._logo_name, self._accounts_title, self._footer):
             widget.setVisible(not collapsed)
         self._show_accounts_state()
         side = Space.XXS if collapsed else Space.S
         self._logo_row.setContentsMargins(side, Space.XS, side, Space.M)
-        self.collapse_button.setToolTip(
-            _("Expandir el panel") if collapsed else _("Contraer el panel")
-        )
+        what = _("Expandir el panel") if collapsed else _("Contraer el panel")
+        self.collapse_button.setToolTip(what)
+        self.collapse_button.setAccessibleName(what)
         self._apply_collapse_icon()
+
+    def _show_nav_tooltips(self) -> None:
+        """Each page's keys; collapsed, also its name, and on «Cuentas» the balances the
+        hidden list shows otherwise."""
+        keys = page_keys()
+        for page_id, button in self._nav_buttons.items():
+            # The name only when it is not written; the keys always, where there are any.
+            name = page_id.label if self._collapsed else ""
+            tip = with_keys(page_id.label, keys[page_id]) if page_id in keys else name
+            if self._collapsed and page_id is PageId.ACCOUNTS and self._balances_tip:
+                tip = f"{tip}\n\n{self._balances_tip}"
+            button.setToolTip(tip)
 
     def toggle_collapsed(self) -> None:
         self.set_collapsed(not self._collapsed)
@@ -236,6 +250,19 @@ class Sidebar(QFrame):
             if group.id not in folded:
                 self._add_account_rows(section.accounts, balances, indent=Space.M)
         self._accounts_layout.addStretch()
+        self._balances_tip = self._balances_text(accounts, balances)
+        self._show_nav_tooltips()
+
+    def _balances_text(self, accounts: list[Account], balances: dict[int, Money]) -> str:
+        """Every account with its balance, a line each, under what they add up to."""
+        if not accounts:
+            return ""
+        hidden = self._services.settings.amounts_hidden()
+        total = self._services.account_groups.total(accounts, balances, date.today())
+        text, _tooltip = total_text(total, hidden)
+        lines = [_("Total: {amount}").format(amount=text)]
+        lines += [f"{a.name}: {amount_text(balances[a.id], hidden)}" for a in accounts]
+        return "\n".join(lines)
 
     def toggle_group(self, group_id: int) -> None:
         """Folds a group under its name, or unfolds it; the choice is saved."""

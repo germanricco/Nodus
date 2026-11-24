@@ -723,6 +723,12 @@ QPushButton#PeriodButton::menu-indicator {
     height: $icon_s;
 }
 
+/* Ctrl+K's palette floats over the window as a menu does. */
+QDialog#CommandPalette {
+    border: $line_thin solid $border;
+    border-radius: $popup_radius;
+}
+
 QMenu {
     background: $surface;
     border: $line_thin solid $border;
@@ -986,4 +992,11 @@ QSlider::handle:horizontal {
     margin: -5px 0; /* geometry: centers the handle on the groove */
     background: $accent;
     border-radius: 8px; /* geometry: half its height */
+}
+
+/* A row the keyboard is on (row_actions.py): lit as under the mouse, with the focus ring
+   that buttons have. */
+[keyboardRow="true"]:focus {
+    background: $hover;
+    border: $line_thick solid $accent;
 }

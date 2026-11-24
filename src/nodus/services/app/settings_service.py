@@ -16,6 +16,7 @@ from nodus.models.palette import PALETTE
 
 # How many recent colors the picker offers: one row with the «+».
 RECENT_COLORS = 5
+RECENT_COMMANDS = 5
 
 
 class SettingsService:
@@ -48,6 +49,7 @@ class SettingsService:
     TOUR_OFFERED_KEY = "tour_offered"
     SEEN_NOTICES_KEY = "seen_notices"
     RECENT_COLORS_KEY = "recent_colors"
+    RECENT_COMMANDS_KEY = "recent_commands"
 
     def __init__(self, database: Database, settings: SettingsRepository) -> None:
         self._database = database
@@ -147,6 +149,15 @@ class SettingsService:
             return
         recent = [color, *(c for c in self.recent_colors() if c != color)]
         self._set_list(self.RECENT_COLORS_KEY, recent[:RECENT_COLORS])
+
+    def recent_commands(self) -> list[str]:
+        """The keys of what was chosen last in the Ctrl+K palette, the most recent first."""
+        return self._list(self.RECENT_COMMANDS_KEY)
+
+    def add_recent_command(self, key: str) -> None:
+        """Puts ``key`` first among the recent ones; keeps ``RECENT_COMMANDS``."""
+        recent = [key, *(k for k in self.recent_commands() if k != key)]
+        self._set_list(self.RECENT_COMMANDS_KEY, recent[:RECENT_COMMANDS])
 
     def seen_notices(self) -> set[str]:
         """The keys of what the user already saw in the notifications (``Notice.items``),

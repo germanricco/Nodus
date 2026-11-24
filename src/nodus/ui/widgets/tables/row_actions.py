@@ -9,6 +9,11 @@ A row's main action (``RowAction.default``) is bold in its menu and runs on a do
 click, as in Windows, so the double click and the menu never disagree. A row that leads
 somewhere (an account, a goal, a notification) runs it on a single click instead.
 
+With the keyboard (the ``ROWS`` group of ``shortcuts.py``), Tab reaches the row, ↑ and ↓
+move to the rows around it, Enter runs its main action and the Menu key or Mayús+F10
+opens its menu; a row that folds (a category with subcategories) folds with ← and
+unfolds with →.
+
 Every action declares what a click does (``Effect``), so none changes data by surprise:
 what changes it at once can be undone or reversed from the same menu, and what destroys
 it asks first.
@@ -20,11 +25,19 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 
-from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
-from PySide6.QtGui import QCursor, QIcon
-from PySide6.QtWidgets import QLabel, QMenu, QPushButton, QWidget
+from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt, QTimer
+from PySide6.QtGui import QCursor, QIcon, QKeyEvent
+from PySide6.QtWidgets import QLabel, QMenu, QPushButton, QScrollArea, QWidget
 
 from nodus.i18n import N_, _
+from nodus.ui.shortcuts import (
+    FOLD_ROW,
+    NEXT_ROW,
+    OPEN_ROW,
+    PREVIOUS_ROW,
+    ROW_MENU,
+    UNFOLD_ROW,
+)
 from nodus.ui.theme.design import ControlSize, IconSize, Popup
 from nodus.ui.theme.icons import icon as tinted_icon
 from nodus.ui.theme.icons import tinted_pixmap
@@ -148,22 +161,95 @@ def show_menu(parent: QWidget, actions: Sequence[RowAction], position: QPoint) -
 
 
 def install_row_actions(
-    widget: QWidget, actions_for: ActionsFor, open_on_click: str | None = None
+    widget: QWidget,
+    actions_for: ActionsFor,
+    open_on_click: str | None = None,
+    fold: Callable[[bool], None] | None = None,
 ) -> None:
     """What every row with actions does, the same on every page: it lights up under the
     mouse, a right click anywhere on it opens the menu of ``actions_for()`` and a double
-    click runs its main action.
+    click runs its main action. It answers the keyboard too (see the module).
 
     With ``open_on_click``, the tooltip that says where it leads ("Abrir la cuenta"), a
-    single click runs it instead, with the hand cursor."""
+    single click runs it instead, with the hand cursor. With ``fold``, ← calls it with
+    ``True`` and → with ``False``."""
     make_hoverable(widget)
     widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+    # Only from the keyboard, as buttons (theme/focus.py): a click leaves no ring.
+    widget.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+    widget.setProperty(KEYBOARD_ROW, True)
     if open_on_click:
         widget.setCursor(Qt.CursorShape.PointingHandCursor)
         widget.setToolTip(open_on_click)
-    handler = _RowHandler(widget, actions_for, bool(open_on_click))
+    handler = _RowHandler(widget, actions_for, bool(open_on_click), fold)
     widget.customContextMenuRequested.connect(handler.open_menu)
     widget.installEventFilter(handler)
+    # Its «⋯» opens the same menu: one stop of Tab per row is enough.
+    for more in widget.findChildren(MoreButton):
+        more.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+    _give_back_focus(widget)
+
+
+KEYBOARD_ROW = "keyboardRow"  # the property of a row that answers the keyboard
+
+
+def rows_beside(row: QWidget) -> list[QWidget]:
+    """The rows that answer the keyboard in ``row``'s window, shown, top to bottom."""
+    rows = [
+        widget
+        for widget in row.window().findChildren(QWidget)
+        if widget.property(KEYBOARD_ROW) and widget.isVisible()
+    ]
+
+    def place(widget: QWidget) -> tuple[int, int]:
+        corner = widget.mapToGlobal(QPoint())
+        return corner.y(), corner.x()
+
+    return sorted(rows, key=place)
+
+
+def row_identity(row: QWidget) -> str:
+    """What tells a row from the others in its list: its first text (a name)."""
+    for label in row.findChildren(QLabel):
+        if label.text():
+            return label.text()
+    return ""
+
+
+# The row the keyboard was on when its page rebuilt it, by its identity: a page refreshes
+# by building its rows again (after a change, a fold, a move), and the keyboard would be
+# thrown out of the list each time.
+_lost_row: list[str] = []
+
+
+def _keep_lost_row(identity: str) -> None:
+    _lost_row[:] = [identity]
+    # Only for the rebuild that follows, not for a row that shows up much later.
+    QTimer.singleShot(1000, _lost_row.clear)
+
+
+def _give_back_focus(row: QWidget) -> None:
+    """Gives the keyboard to a new row that replaces the one it was on."""
+    if _lost_row and _lost_row[0] == row_identity(row):
+        _lost_row.clear()
+        QTimer.singleShot(0, row, lambda: focus_row(row))
+
+
+def focus_row(row: QWidget) -> None:
+    """Moves the keyboard to ``row``, scrolled into view."""
+    parent = row.parentWidget()
+    while parent is not None and not isinstance(parent, QScrollArea):
+        parent = parent.parentWidget()
+    if parent is not None:
+        parent.ensureWidgetVisible(row)
+    row.setFocus(Qt.FocusReason.TabFocusReason)
+
+
+def spoken_name(row: QWidget) -> str:
+    """What a screen reader says for ``row``: its texts, left to right."""
+    labels = [label for label in row.findChildren(QLabel) if label.isVisible() and label.text()]
+    labels.sort(key=lambda label: (label.mapTo(row, QPoint()).x(), label.mapTo(row, QPoint()).y()))
+    return ", ".join(label.text() for label in labels if not label.text().startswith("<"))
 
 
 class _RowHandler(QObject):
@@ -174,11 +260,19 @@ class _RowHandler(QObject):
     The menu's signal goes to a slot of this object, not to a lambda or to the menu,
     which is deleted on close: Qt then crashes calling into it."""
 
-    def __init__(self, row: QWidget, actions_for: ActionsFor, open_on_click: bool) -> None:
+    def __init__(
+        self,
+        row: QWidget,
+        actions_for: ActionsFor,
+        open_on_click: bool,
+        fold: Callable[[bool], None] | None,
+    ) -> None:
         super().__init__(row)
         self._row = row
         self._actions_for = actions_for
         self._open_on_click = open_on_click
+        self._fold = fold
+        self._identity = ""
         self._after_double_click = False
 
     def actions_list(self) -> Sequence[RowAction]:
@@ -191,8 +285,34 @@ class _RowHandler(QObject):
     def release_hover(self) -> None:
         release_hover(self._row)
 
+    def _key(self, event: QKeyEvent) -> bool:
+        """Runs what a key asks of the row; whether it was one of the row's keys."""
+        if OPEN_ROW.matches(event):
+            run_default(self._actions_for())
+        elif ROW_MENU.matches(event):
+            self.open_menu(QPoint(self._row.width() // 2, self._row.height()))
+        elif PREVIOUS_ROW.matches(event) or NEXT_ROW.matches(event):
+            rows = rows_beside(self._row)
+            index = rows.index(self._row) + (-1 if PREVIOUS_ROW.matches(event) else 1)
+            if 0 <= index < len(rows):
+                focus_row(rows[index])
+        elif self._fold is not None and (FOLD_ROW.matches(event) or UNFOLD_ROW.matches(event)):
+            self._fold(FOLD_ROW.matches(event))
+        else:
+            return False
+        return True
+
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802
         kind = event.type()
+        if kind == QEvent.Type.KeyPress and isinstance(event, QKeyEvent):
+            return self._key(event)
+        if kind == QEvent.Type.FocusIn:
+            self._row.setAccessibleName(spoken_name(self._row))
+            self._identity = row_identity(self._row)
+        elif kind == QEvent.Type.Hide and self._row.hasFocus():
+            # Hidden, with the keyboard on it, by a rebuild of its page (Qt tells the
+            # hide before it moves the focus away).
+            _keep_lost_row(self._identity)
         if kind not in (QEvent.Type.MouseButtonDblClick, QEvent.Type.MouseButtonRelease):
             return False
         if event.button() != Qt.MouseButton.LeftButton:

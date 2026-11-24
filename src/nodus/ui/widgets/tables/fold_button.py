@@ -19,7 +19,7 @@ class FoldButton(QPushButton):
 
     fold_toggled = Signal(bool)  # folded
 
-    WIDTH = IconSize.L + 2 * 2  # narrow: on every row it keeps its place, even unused
+    WIDTH = ControlSize.TARGET  # narrow: on every row it keeps its place, even unused
 
     def __init__(self, name: str, folded: bool) -> None:
         super().__init__()

@@ -52,6 +52,7 @@ class ColorSwatch(QPushButton):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setProperty("color", color)
         self.setToolTip(color)
+        self.setAccessibleName(_("Color {color}").format(color=color))
 
     def paintEvent(self, _event: QPaintEvent) -> None:  # noqa: N802
         painter = QPainter(self)
@@ -118,6 +119,7 @@ class ColorPicker(QWidget):
         self.wheel_swatch.setFixedSize(self.SWATCH_SIZE, self.SWATCH_SIZE)
         self.wheel_swatch.setCursor(Qt.CursorShape.PointingHandCursor)
         self.wheel_swatch.setToolTip(_("Otro color"))
+        self.wheel_swatch.setAccessibleName(_("Otro color"))
         self.wheel_swatch.clicked.connect(self.open_wheel)
         self.wheel_popup: ColorWheelPopup | None = None
         for color in PALETTE:
@@ -157,3 +159,4 @@ class ColorPicker(QWidget):
         self._grid.addWidget(
             self.wheel_swatch, (index + 1) // self.COLUMNS, (index + 1) % self.COLUMNS
         )
+        QWidget.setTabOrder(swatch, self.wheel_swatch)  # and for Tab too

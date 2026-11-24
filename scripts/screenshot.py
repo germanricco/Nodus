@@ -61,7 +61,7 @@ from nodus.ui.text.help_texts import TOPICS_BY_KEY  # noqa: E402
 from nodus.ui.theme.design import set_reduced_motion  # noqa: E402
 from nodus.ui.theme.theme import ThemeMode  # noqa: E402
 from nodus.ui.theme.theme_manager import ThemeManager  # noqa: E402
-from nodus.ui.widgets.tables.row_actions import build_menu  # noqa: E402
+from nodus.ui.widgets.tables.row_actions import build_menu, focus_row  # noqa: E402
 from nodus.ui.widgets.tables.transaction_table import AMOUNT, DATE  # noqa: E402
 
 # Dialogs to capture, built over the demo data: name -> factory(services, event_bus, window).
@@ -510,6 +510,19 @@ def capture_rows(shots: Shots) -> None:
     row.repaint()
     shots.save(window, "accounts-hover")
     row.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, False)
+    # The ring Tab puts on a row; only an active window has a focus.
+    window.activateWindow()
+    focus_row(next(r for r in accounts.findChildren(AccountRow) if r.isVisible()))
+    shots.settle()
+    shots.save(window, "accounts-keyboard")
+    # Ctrl+K: what was chosen last, then what matches a few letters.
+    palette = window.open_palette()
+    shots.settle()
+    shots.save(palette, "palette")
+    palette.search_input.setText("ali")
+    shots.settle()
+    shots.save(palette, "palette-search")
+    palette.close()
     # Several transactions chosen: the selection bar takes the header.
     window.show_page(PageId.TRANSACTIONS)
     transactions = window.page(PageId.TRANSACTIONS)

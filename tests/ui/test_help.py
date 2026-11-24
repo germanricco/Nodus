@@ -4,7 +4,7 @@ and lights up in the sidebar the pages a topic talks about."""
 import pytest
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QApplication, QFrame, QLabel
 
 from nodus.ui.navigation import DetailId, PageId
 from nodus.ui.shell.help_panel import INDEX, SHORTCUTS_VIEW, topic_html
@@ -157,14 +157,15 @@ def test_the_tour_starts_from_help_and_the_help_makes_way(window, pesos):
 
 
 @pytest.mark.parametrize("shortcut", [s for s in SHORTCUTS if s.qt_keys], ids=lambda s: s.text)
-def test_a_shortcut_answers_its_keys_pressed_alone(shortcut):
+def test_a_shortcut_answers_its_keys_and_no_others(shortcut):
     def press(key, modifiers=Qt.KeyboardModifier.NoModifier):
         return QKeyEvent(QEvent.Type.KeyPress, key, modifiers)
 
+    own = shortcut.modifier
     for key in shortcut.qt_keys:
-        assert shortcut.matches(press(key))
-        assert shortcut.matches(press(key, Qt.KeyboardModifier.KeypadModifier))
-        assert not shortcut.matches(press(key, Qt.KeyboardModifier.ControlModifier))
+        assert shortcut.matches(press(key, own))
+        assert shortcut.matches(press(key, own | Qt.KeyboardModifier.KeypadModifier))
+        assert not shortcut.matches(press(key, own | Qt.KeyboardModifier.ControlModifier))
     assert not shortcut.matches(press(Qt.Key.Key_A))
 
 
@@ -184,3 +185,34 @@ def test_in_english_the_window_and_its_help_speak_english(english, window):
 
     assert panel.visible_topics() == ["installments"]
     assert PageId.BUDGETS.label == "Budgets"
+
+
+def shortcut_rows(window) -> tuple[list[QLabel], list[QLabel]]:
+    """What each shortcut does and its keys, as the help draws them."""
+    window.show()
+    window.show_help()
+    window.help_panel.shortcuts_button.click()
+    QApplication.processEvents()
+    box = window.help_panel.views.currentWidget()
+    texts = [
+        label
+        for group in box.findChildren(QFrame, "ShortcutGroup")
+        for label in group.findChildren(QLabel)
+        if label.wordWrap()
+    ]
+    return texts, box.findChildren(QLabel, "KeyCap")
+
+
+def one_line_each_and_keys_alike(window) -> None:
+    texts, caps = shortcut_rows(window)
+    line = texts[0].fontMetrics().lineSpacing()
+    assert [t.text() for t in texts if t.height() >= 2 * line] == []
+    assert len({cap.height() for cap in caps}) == 1
+
+
+def test_each_shortcut_says_it_in_one_line_with_keys_all_alike(window):
+    one_line_each_and_keys_alike(window)
+
+
+def test_in_english_too(english, window):
+    one_line_each_and_keys_alike(window)

@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSizePolicy,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -344,6 +345,8 @@ class HelpPanel(QFrame):
                 row.addWidget(plus)
             cap = QLabel(_(key))
             cap.setObjectName("KeyCap")
+            # Its own height, centered on its row, however many lines the text beside has.
+            cap.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
             row.addWidget(cap)
         return row
 
