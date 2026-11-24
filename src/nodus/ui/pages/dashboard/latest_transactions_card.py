@@ -4,15 +4,13 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QVBoxLayout
 
 from nodus.i18n import _
 from nodus.models.period import Period
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
-from nodus.ui.text.formatting import format_date
-from nodus.ui.theme.design import ControlSize, Space
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.transaction_rows import (
     TransactionListBuilder,
@@ -21,11 +19,10 @@ from nodus.ui.transaction_rows import (
     edit_text,
 )
 from nodus.ui.widgets.card import Card, card_header, see_all_link
-from nodus.ui.widgets.color_dot import ColorDot
-from nodus.ui.widgets.elided_label import ElidedLabel
 from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
-from nodus.ui.widgets.style import clear_layout, muted_label, set_style_property
-from nodus.ui.widgets.tables.row_actions import Effect, RowAction, install_row_actions
+from nodus.ui.widgets.style import clear_layout
+from nodus.ui.widgets.tables.row_actions import Effect, RowAction
+from nodus.ui.widgets.tables.transaction_table import CompactMovementRow, TransactionTableModel
 
 LATEST_COUNT = 6
 # With upcoming payments above it, the latest movements card gets shorter, so the right
@@ -33,70 +30,10 @@ LATEST_COUNT = 6
 LATEST_COUNT_BELOW_UPCOMING = 4
 
 
-class LatestTransactionRow(QWidget):
-    """A movement in the latest transactions card: what, where, how much and when. It
-    answers as a row of Transacciones: a double click edits it, a right click shows its
-    menu."""
-
-    edit_requested = Signal(object)  # TransactionListItem
-    delete_requested = Signal(object)  # TransactionListItem
-
-    def __init__(self, item: TransactionListItem, transfer_color: str) -> None:
-        super().__init__()
-        self.item = item
-        install_row_actions(self, self.actions)
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(Space.S, Space.XS, Space.S, Space.XS)
-        layout.setSpacing(Space.S)
-        layout.addWidget(
-            ColorDot(item.category_color or transfer_color, size=ControlSize.DOT_SMALL)
-        )
-        texts = QVBoxLayout()
-        texts.setSpacing(0)
-        title = ElidedLabel(item.description)
-        title.setObjectName("RowTitle")
-        subtitle = ElidedLabel(f"{item.category_name} · {item.account_text}")
-        set_style_property(subtitle, "muted", True)
-        texts.addWidget(title)
-        texts.addWidget(subtitle)
-        layout.addLayout(texts, stretch=1)
-        figures = QVBoxLayout()
-        figures.setSpacing(0)
-        # One amount, so the name keeps its room; a transfer between currencies tells
-        # what arrived under the mouse, and the accounts it went between below its name.
-        amount = QLabel(item.short_amount_text)
-        if item.short_amount_text != item.amount_text:
-            amount.setToolTip(item.amount_text)
-        amount.setAlignment(Qt.AlignmentFlag.AlignRight)
-        set_style_property(amount, "tone", item.tone)
-        day = muted_label(format_date(item.occurred_on))
-        day.setAlignment(Qt.AlignmentFlag.AlignRight)
-        figures.addWidget(amount)
-        figures.addWidget(day)
-        layout.addLayout(figures)
-
-    def actions(self) -> list[RowAction]:
-        """The same menu as its row in Transacciones."""
-        return [
-            RowAction(
-                edit_text(self.item.transaction),
-                lambda: self.edit_requested.emit(self.item),
-                "pencil",
-                default=True,
-                effect=Effect.OPEN,
-            ),
-            RowAction(
-                delete_text(self.item.transaction),
-                lambda: self.delete_requested.emit(self.item),
-                "trash",
-                destructive=True,
-                effect=Effect.CONFIRMED,
-            ),
-        ]
-
-
 class LatestTransactionsCard(Card):
-    """The period's most recent movements and a link to see them all."""
+    """The period's most recent movements and a link to see them all. Each row is drawn
+    as Transacciones draws it (``CompactMovementRow``), with the date under the amount,
+    and answers the same way: a double click edits it, a right click shows its menu."""
 
     see_all_requested = Signal()
     edit_requested = Signal(object)  # TransactionListItem
@@ -107,6 +44,8 @@ class LatestTransactionsCard(Card):
         self._services = services
         self._theme_manager = theme_manager
         self._builder = TransactionListBuilder(services)
+        self.model = TransactionTableModel(theme_manager.theme, date_under_amount=True)
+        theme_manager.theme_changed.connect(self.model.set_theme)
         header = card_header(self, _("Últimas transacciones"))
         self.see_all_button = see_all_link(header, _("Ver todas"), self.see_all_requested)
         self._rows = QVBoxLayout()
@@ -122,12 +61,37 @@ class LatestTransactionsCard(Card):
         transactions = self._services.transactions.list_transactions(
             TransactionFilter(start=period.start, end=end, limit=count * 2)
         )
-        items = self._builder.build(transactions)[:count]
-        if not items:
+        self.model.set_items(self._builder.build(transactions)[:count])
+        if not self.model.rowCount():
             self._rows.addWidget(EmptyState(_(NO_MOVEMENTS_TEXT), compact=True))
-        transfer_color = self._theme_manager.theme.text_muted
-        for item in items:
-            row = LatestTransactionRow(item, transfer_color)
-            row.edit_requested.connect(self.edit_requested)
-            row.delete_requested.connect(self.delete_requested)
-            self._rows.addWidget(row)
+        for row in range(self.model.rowCount()):
+            item = self.model.item(row)
+            self._rows.addWidget(
+                CompactMovementRow(self.model, row, lambda item=item: self.actions(item))
+            )
+
+    def rows(self) -> list[CompactMovementRow]:
+        return [
+            widget
+            for index in range(self._rows.count())
+            if isinstance(widget := self._rows.itemAt(index).widget(), CompactMovementRow)
+        ]
+
+    def actions(self, item: TransactionListItem) -> list[RowAction]:
+        """The same menu as its row in Transacciones."""
+        return [
+            RowAction(
+                edit_text(item.transaction),
+                lambda: self.edit_requested.emit(item),
+                "pencil",
+                default=True,
+                effect=Effect.OPEN,
+            ),
+            RowAction(
+                delete_text(item.transaction),
+                lambda: self.delete_requested.emit(item),
+                "trash",
+                destructive=True,
+                effect=Effect.CONFIRMED,
+            ),
+        ]

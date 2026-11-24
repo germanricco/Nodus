@@ -13,20 +13,19 @@ from nodus.ui.event_bus import EventBus
 from nodus.ui.navigation import DetailId
 from nodus.ui.pages.base.summary_detail_page import NO_MOVEMENTS, SummaryDetailPage
 from nodus.ui.theme.theme_manager import ThemeManager
-from nodus.ui.widgets.tables.transaction_table import PAYEE
+from nodus.ui.widgets.tables.transaction_table import Omit
 
 
 class PayeeDetailPage(SummaryDetailPage[PayeeSummary]):
     """A payee with the category used most with it; deleting keeps its movements."""
 
     CAPTIONS = (N_("Categoría habitual"),)
+    OMIT = Omit.PAYEE
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
         super().__init__(DetailId.PAYEE, services, event_bus, theme_manager)
-        # Every row would repeat the payee.
-        self.list_view.table.setColumnHidden(PAYEE, True)
 
     def load_summary(self, item_id: int) -> PayeeSummary:
         return self._services.payees.summary(item_id, self.recent())

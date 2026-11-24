@@ -6,6 +6,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Generic
 
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QLabel, QWidget
 
 from nodus.i18n import N_, _
@@ -28,6 +29,7 @@ from nodus.ui.widgets.figure_tile import FigureTile
 from nodus.ui.widgets.hero_figure import HeroFigure
 from nodus.ui.widgets.money_label import masked
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
+from nodus.ui.widgets.tables.transaction_table import Omit
 
 NO_MOVEMENTS = "—"
 MOVEMENTS = N_("Movimientos")
@@ -45,6 +47,9 @@ class SummaryDetailPage(DetailPage, Generic[S]):
     """
 
     CAPTIONS: tuple[str, ...] = ()
+    OMIT: Omit | None = None  # what every row of the list would repeat
+
+    record_requested = Signal(object)  # RecordLink
 
     def __init__(
         self,
@@ -84,7 +89,8 @@ class SummaryDetailPage(DetailPage, Generic[S]):
             self.figures.add_tile(FigureTile(self._caption(caption), label, badge, True))
         self.body.addWidget(self.figures)
 
-        self.list_view = TransactionListView(services, event_bus, theme_manager, self)
+        self.list_view = TransactionListView(services, event_bus, theme_manager, self, self.OMIT)
+        self.list_view.record_requested.connect(self.record_requested)
         self.list_view.setMinimumHeight(Layout.DETAIL_LIST_MIN_HEIGHT)
         self.body.addWidget(self.list_view, stretch=1)
 

@@ -27,7 +27,6 @@ from PySide6.QtGui import (
     QColor,
     QContextMenuEvent,
     QCursor,
-    QIcon,
     QKeyEvent,
     QMouseEvent,
     QPainter,
@@ -45,16 +44,24 @@ from PySide6.QtWidgets import (
 )
 
 from nodus.ui.shortcuts import CLEAR_SELECTION
-from nodus.ui.theme.design import IconSize, Layout, Line, Radius
+from nodus.ui.theme.design import IconSize, Layout, Line, Radius, Space
 from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
 from nodus.ui.widgets.tables.row_actions import RowAction, run_default, show_menu
-from nodus.ui.widgets.tables.table import configure_record_table, light_row
+from nodus.ui.widgets.tables.table import (
+    configure_record_table,
+    draw_cell_background,
+    light_row,
+)
 
 # Room for the check box at the start of a row and for the «⋯» at its end, in pixels.
 CHECK_GUTTER = Layout.CHECK_COLUMN
 MORE_GUTTER = Layout.MORE_COLUMN
 _BOX = IconSize.M  # as the check boxes of the stylesheet
+# A table sorted by its titles, which the stylesheet gives room for the sort arrow: its
+# titles' right padding is this much larger than other titles'.
+SORTABLE = "SortableTable"
+SORT_ARROW_ROOM = Space.XL - Space.S
 
 RowActionsFor = Callable[[int], Sequence[RowAction]]
 
@@ -90,9 +97,10 @@ def paint_check_box(painter: QPainter, area: QRect, state: Qt.CheckState) -> Non
     painter.restore()
 
 
-class _RowControlsDelegate(QStyledItemDelegate):
+class RowControlsDelegate(QStyledItemDelegate):
     """Paints cells as usual, making room for the check box in the first visible column
-    and for the «⋯» in the last one."""
+    and for the «⋯» in the last one. A table that draws its cells its own way overrides
+    ``paint_cell``."""
 
     def __init__(self, table: SelectableTable) -> None:
         super().__init__(table)
@@ -105,22 +113,11 @@ class _RowControlsDelegate(QStyledItemDelegate):
             option.state & QStyle.StateFlag.State_Selected
         ):
             light_row(painter, option)
-        first, last = self._table.edge_columns()
-        if index.column() not in (first, last):
-            super().paint(painter, option, index)
-            return
-        style = self._table.style()
         item = QStyleOptionViewItem(option)
         self.initStyleOption(item, index)
-        # The whole cell first (background, selection, bottom line), then its content
-        # within the room the controls leave.
-        blank = QStyleOptionViewItem(item)
-        blank.text = ""
-        blank.icon = QIcon()
-        blank.features &= ~QStyleOptionViewItem.ViewItemFeature.HasDecoration
-        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, blank, painter, self._table)
-        item.rect = self._table.content_rect(option.rect, index.column())
-        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, item, painter, self._table)
+        content = self._table.content_rect(option.rect, index.column())
+        self.paint_cell(painter, item, content, index)
+        first, last = self._table.edge_columns()
         if index.column() == first:
             checked = self._table.selectionModel().isRowSelected(index.row(), QModelIndex())
             state = Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
@@ -138,6 +135,21 @@ class _RowControlsDelegate(QStyledItemDelegate):
                 ),
                 pixmap,
             )
+
+    def paint_cell(
+        self,
+        painter: QPainter,
+        item: QStyleOptionViewItem,
+        content: QRect,
+        index: QModelIndex,
+    ) -> None:
+        """The cell's background over all of ``item.rect`` and its text and icon within
+        ``content``, the room the controls leave."""
+        style = self._table.style()
+        if content != item.rect:
+            draw_cell_background(painter, item, self._table)
+            item.rect = content
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, item, painter, self._table)
 
     def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex) -> QSize:  # noqa: N802
         size = super().sizeHint(option, index)
@@ -158,12 +170,15 @@ class _SelectionHeader(QHeaderView):
         self._table = table
 
     def paintSection(self, painter: QPainter, rect: QRect, logical_index: int) -> None:  # noqa: N802
-        first, last = self._table.edge_columns()
-        content = QRect(rect)
-        if logical_index == first:
-            content.setLeft(rect.left() + CHECK_GUTTER)
-        if logical_index == last:
-            content.setRight(rect.right() - MORE_GUTTER)
+        first = self._table.edge_columns()[0]
+        # The title starts and ends where the cells' text does, so it stands over it.
+        content = self._table.content_rect(rect, logical_index)
+        content.setLeft(content.left() + self._table.title_indent(logical_index))
+        last = self._table.edge_columns()[1]
+        if logical_index == last and self._table.objectName() == SORTABLE:
+            # The room the stylesheet keeps for the sort arrow comes out of the «⋯»'s,
+            # empty in the header, so a title at the right still ends where its cells do.
+            content.setRight(content.right() + SORT_ARROW_ROOM)
         if content == rect:
             super().paintSection(painter, rect, logical_index)
             return
@@ -222,20 +237,25 @@ class SelectableTable(QTableView):
         super().__init__(parent)
         self._actions_for = actions_for
         self.hovered_row = -1
+        self._title_indents: dict[int, int] = {}
         self.setHorizontalHeader(_SelectionHeader(self))
         configure_record_table(self, model, stretch_column)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.setItemDelegate(_RowControlsDelegate(self))
+        self.setItemDelegate(RowControlsDelegate(self))
 
         self.setMouseTracking(True)
         self.selectionModel().selectionChanged.connect(self._on_selection_changed)
         model.modelReset.connect(self._on_selection_changed)
 
     def setSortingEnabled(self, enable: bool) -> None:  # noqa: N802
-        """Sorting by a click on a column's title, with the hand over the titles. The
-        header this table puts in place of Qt's takes no clicks until told to, and its
-        sort arrow would then promise what a click does not do."""
+        """Sorting by a click on a column's title, with the hand over the titles and room
+        for the sort arrow (``#SortableTable``). The header this table puts in place of
+        Qt's takes no clicks until told to, and its sort arrow would then promise what a
+        click does not do."""
         super().setSortingEnabled(enable)
+        self.setObjectName(SORTABLE if enable else "")
+        self.style().unpolish(self)
+        self.style().polish(self)
         header = self.horizontalHeader()
         header.setSectionsClickable(enable)
         cursor = Qt.CursorShape.PointingHandCursor if enable else Qt.CursorShape.ArrowCursor
@@ -278,6 +298,15 @@ class SelectableTable(QTableView):
 
     def actions_for(self, row: int) -> Sequence[RowAction]:
         return self._actions_for(row)
+
+    def indent_title(self, column: int, pixels: int) -> None:
+        """Moves ``column``'s title ``pixels`` to the right, to stand over its cells' text
+        when they start with a mark, such as a category's dot."""
+        self._title_indents[column] = pixels
+        self.horizontalHeader().viewport().update()
+
+    def title_indent(self, column: int) -> int:
+        return self._title_indents.get(column, 0)
 
     # Geometry of the controls
 

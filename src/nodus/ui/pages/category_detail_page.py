@@ -54,7 +54,6 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
     CAPTIONS = (THIS_MONTH, N_("Promedio por mes"))
 
     transactions_requested = Signal(object)  # TransactionFocus
-    record_requested = Signal(object)  # RecordLink
 
     def __init__(
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager

@@ -111,6 +111,9 @@ class ControlSize:
     DOT = 12  # a category's color beside its name
     DOT_SMALL = 10  # the same in a dense row, and a tag's chip
     TABLE_ROW = 40  # a row of a table
+    TWO_LINE_ROW = 52  # a row of movements: what it was, and its details under it
+    FIRST_LINE = 20  # the heights of those two lines, the same in every column
+    SECOND_LINE = 18
     SCROLL_BAR_WIDTH = 10
     SCROLL_HANDLE_MIN_LENGTH = 24
     SLIDER_GROOVE = 6
@@ -239,6 +242,13 @@ class Layout:
     SHARE_PERCENT_WIDTH = 48
     SHARE_AMOUNT_WIDTH = 150
     CHECK_COLUMN = 34  # a table's check boxes
+    # The columns of a list of movements, the same on every row so dates, categories and
+    # amounts line up; only the movement itself stretches.
+    MOVEMENT_DATE_WIDTH = 52
+    MOVEMENT_CATEGORY_WIDTH = 200
+    MOVEMENT_CATEGORY_NARROW_WIDTH = 170  # in a list narrower than NARROW_LIST_WIDTH
+    MOVEMENT_AMOUNT_WIDTH = 150
+    NARROW_LIST_WIDTH = 900
     MORE_COLUMN = 32  # a table's «⋯»
     # A figure tile: narrower, its caption and value feel cramped, so FigureRow wraps.
     FIGURE_TILE_MIN_WIDTH = 160

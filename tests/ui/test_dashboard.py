@@ -26,12 +26,11 @@ from nodus.ui.actions import recurring as recurring_actions
 from nodus.ui.dialogs import restore_copy
 from nodus.ui.navigation import DetailId, PageId, RecordLink
 from nodus.ui.pages.dashboard.dashboard_page import Shape
-from nodus.ui.pages.dashboard.latest_transactions_card import LatestTransactionRow
 from nodus.ui.shell import main_window
 from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.text.formatting import percent
 from nodus.ui.widgets.change_badge import ChangeBadge
-from nodus.ui.widgets.elided_label import ElidedLabel
+from nodus.ui.widgets.tables.transaction_table import AMOUNT, MOVEMENT, CompactMovementRow
 
 
 def dashboard(window):
@@ -95,10 +94,15 @@ def test_a_transfer_between_currencies_shows_what_left(
     page = dashboard(window)
     page.refresh()
 
-    qtbot.waitUntil(lambda: "$ 243.100,00" in visible_texts(page))  # rows come next pass
-    (row,) = [r for r in page.findChildren(LatestTransactionRow) if r.isVisibleTo(page)]
-    (amount,) = [label for label in row.findChildren(QLabel) if label.text() == "$ 243.100,00"]
-    assert amount.toolTip() == "$ 243.100,00 → US$ 200,00"
+    qtbot.waitUntil(lambda: bool(latest_rows(page)))  # rows come next pass
+    (row,) = latest_rows(page)
+    amount = row.cells()[AMOUNT]
+    assert row.model.index(row.row, AMOUNT).data() == "$ 243.100,00"
+    assert row.tooltip_at(amount.center()) == "$ 243.100,00 → US$ 200,00"
+
+
+def latest_rows(page) -> list[CompactMovementRow]:
+    return [r for r in page.latest_card.rows() if r.isVisibleTo(page)]
 
 
 def test_shows_month_flow_and_latest_movements(qtbot, window, services, event_bus, pesos):
@@ -120,8 +124,7 @@ def test_shows_month_flow_and_latest_movements(qtbot, window, services, event_bu
     assert "$ 250,00" in texts  # the line of the only category
 
     def descriptions() -> list[str]:
-        rows = [r for r in page.findChildren(LatestTransactionRow) if r.isVisibleTo(page)]
-        return [label.text() for row in rows for label in row.findChildren(ElidedLabel)]
+        return [row.model.index(row.row, MOVEMENT).data() for row in latest_rows(page)]
 
     qtbot.waitUntil(lambda: {"Verdulería", "Sueldo"} <= set(descriptions()))
 

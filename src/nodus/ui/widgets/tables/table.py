@@ -5,13 +5,16 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QObject, Qt
-from PySide6.QtGui import QColor, QKeyEvent, QMouseEvent, QPainter
+from PySide6.QtGui import QColor, QIcon, QKeyEvent, QMouseEvent, QPainter
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QApplication,
     QHeaderView,
+    QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
     QTableView,
+    QWidget,
 )
 
 from nodus.i18n import N_
@@ -83,6 +86,19 @@ def fit_rows(table: QTableView) -> None:
     height = table.horizontalHeader().sizeHint().height() + rows
     table.setFixedHeight(height + 2 * table.frameWidth())
     table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+
+def draw_cell_background(
+    painter: QPainter, option: QStyleOptionViewItem, widget: QWidget | None
+) -> None:
+    """A cell without its text or icon: its background, selection and bottom line, for
+    delegates that draw what goes in it themselves."""
+    blank = QStyleOptionViewItem(option)
+    blank.text = ""
+    blank.icon = QIcon()
+    blank.features &= ~QStyleOptionViewItem.ViewItemFeature.HasDecoration
+    style = widget.style() if widget is not None else QApplication.style()
+    style.drawControl(QStyle.ControlElement.CE_ItemViewItem, blank, painter, widget)
 
 
 def light_row(painter: QPainter, option: QStyleOptionViewItem) -> None:

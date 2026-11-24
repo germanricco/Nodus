@@ -36,7 +36,7 @@ from nodus.ui.navigation import PageId
 from nodus.ui.pages.settings.general_card import THEME_MODES
 from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.theme.theme import ThemeMode
-from nodus.ui.widgets.tables.transaction_table import DESCRIPTION
+from nodus.ui.widgets.tables.transaction_table import MOVEMENT
 
 EXPENSE, INCOME = TransactionType.EXPENSE, TransactionType.INCOME
 FOOD = "Supermercado y comida"
@@ -196,7 +196,7 @@ def test_a_purchase_in_installments_and_its_deletion(journey, monkeypatch):
     assert sorted(t.amount for t in installments) == [ars("10000")] * 6
     assert journey.services.accounts.balance(banco.id) == ars("90000")  # the first, today
     transactions = journey.show(PageId.TRANSACTIONS)
-    assert any("1/6" in text for text in journey.column(transactions, DESCRIPTION))
+    assert any("1/6" in text for text in journey.column(transactions, MOVEMENT))
 
     monkeypatch.setattr(confirm_dialog, "confirm", lambda *_args: True)
     run_action(transactions.row_actions(0), "Eliminar compra")  # all six go

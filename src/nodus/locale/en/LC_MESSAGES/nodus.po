@@ -720,7 +720,6 @@ msgstr "Type"
 
 #: nodus/services/reports/export_service.py nodus/ui/dialogs/recurring_charge_dialog.py
 #: nodus/ui/dialogs/transaction_dialog.py nodus/ui/pages/transactions_page.py
-#: nodus/ui/widgets/tables/transaction_table.py
 msgid "Cuenta"
 msgstr "Account"
 
@@ -734,11 +733,11 @@ msgstr "Category"
 
 #: nodus/services/reports/export_service.py nodus/ui/dialogs/bulk_edit_dialog.py
 #: nodus/ui/dialogs/payee_dialogs.py nodus/ui/dialogs/transaction_dialog.py
-#: nodus/ui/pages/transactions_page.py nodus/ui/widgets/tables/transaction_table.py
+#: nodus/ui/pages/transactions_page.py
 msgid "Beneficiario"
 msgstr "Payee"
 
-#: nodus/services/reports/export_service.py nodus/ui/widgets/tables/transaction_table.py
+#: nodus/services/reports/export_service.py
 msgid "Descripción"
 msgstr "Description"
 
@@ -957,7 +956,6 @@ msgid "Beneficiarios"
 msgstr "Payees"
 
 #: nodus/ui/dialogs/transaction_dialog.py nodus/ui/navigation.py nodus/ui/pages/tags_page.py
-#: nodus/ui/widgets/tables/transaction_table.py
 msgid "Etiquetas"
 msgstr "Tags"
 
@@ -2945,6 +2943,11 @@ msgstr "No transactions with these filters."
 msgid "Sin transacciones en este período."
 msgstr "No transactions in this period."
 
+#: nodus/ui/pages/transactions_page.py
+#, python-brace-format
+msgid "«{text}»"
+msgstr "“{text}”"
+
 #: nodus/ui/pages/analysis/analysis_page.py
 msgid "Tendencias"
 msgstr "Trends"
@@ -3124,15 +3127,15 @@ msgstr "Add {noun}"
 msgid "Deja uno solo y le pasa los movimientos de los demás"
 msgstr "Keeps just one and moves the others' transactions to it"
 
-#: nodus/ui/pages/base/transaction_list_view.py nodus/ui/widgets/charts/bar_chart.py
+#: nodus/ui/pages/base/transaction_list_view.py
 #, python-brace-format
-msgid "Ingresos {amount}"
-msgstr "Income {amount}"
+msgid "Entró {amount}"
+msgstr "In {amount}"
 
-#: nodus/ui/pages/base/transaction_list_view.py nodus/ui/widgets/charts/bar_chart.py
+#: nodus/ui/pages/base/transaction_list_view.py
 #, python-brace-format
-msgid "Gastos {amount}"
-msgstr "Expenses {amount}"
+msgid "Salió {amount}"
+msgstr "Out {amount}"
 
 #: nodus/ui/pages/base/transaction_list_view.py
 #, python-brace-format
@@ -3146,6 +3149,10 @@ msgstr "Edit…"
 #: nodus/ui/pages/base/transaction_list_view.py
 msgid "Cambia la categoría, el beneficiario, la nota o las etiquetas"
 msgstr "Changes the category, payee, note or tags"
+
+#: nodus/ui/pages/base/transaction_list_view.py
+msgid "Ver beneficiario"
+msgstr "View payee"
 
 #: nodus/ui/pages/dashboard/budgets_card.py nodus/ui/pages/dashboard/upcoming_payments_card.py
 msgid "Ver todos"
@@ -4667,6 +4674,16 @@ msgstr "Show"
 msgid "Ocultar"
 msgstr "Hide"
 
+#: nodus/ui/widgets/charts/bar_chart.py
+#, python-brace-format
+msgid "Ingresos {amount}"
+msgstr "Income {amount}"
+
+#: nodus/ui/widgets/charts/bar_chart.py
+#, python-brace-format
+msgid "Gastos {amount}"
+msgstr "Expenses {amount}"
+
 #: nodus/ui/widgets/charts/budget_bar.py
 #, python-brace-format
 msgid "{spent} de {limit}"
@@ -4843,4 +4860,17 @@ msgstr "Clear selection (Esc)"
 #: nodus/ui/widgets/tables/table.py
 msgid "También con la tecla Supr"
 msgstr "Also with the Del key"
+
+#: nodus/ui/widgets/tables/transaction_table.py
+msgid "Movimiento"
+msgstr "Transaction"
+
+#: nodus/ui/widgets/tables/transaction_table.py
+msgid "Sin descripción"
+msgstr "No description"
+
+#: nodus/ui/widgets/tables/transaction_table.py
+#, python-brace-format
+msgid "Beneficiario: {name}"
+msgstr "Payee: {name}"
 

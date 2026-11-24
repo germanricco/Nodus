@@ -24,7 +24,7 @@ from nodus.ui.navigation import DetailId, PageId, RecordLink
 from nodus.ui.pages.accounts_page import AccountRow
 from nodus.ui.pages.categories_page import CategoryRow
 from nodus.ui.widgets.color_dot import ColorDot
-from nodus.ui.widgets.tables.transaction_table import CATEGORY
+from nodus.ui.widgets.tables.transaction_table import CATEGORY, MOVEMENT, SECOND_LINE_ROLE
 
 EXPENSE, INCOME = TransactionType.EXPENSE, TransactionType.INCOME
 
@@ -191,6 +191,24 @@ class TestPayeeDetail:
         assert services.payees.find("Coto") is None
         assert len(services.transactions.list_transactions(TransactionFilter())) == 1
         assert window.current_page is window.page(PageId.PAYEES)
+
+
+def test_a_detail_leaves_out_of_each_row_what_the_page_is_about(services, window, pesos):
+    services.transactions.create(
+        expense_draft(services, pesos.id, ars("100"), note="Compra", payee_name="Coto")
+    )
+    coto = services.payees.find("Coto")
+
+    window.show_detail(DetailId.PAYEE, coto.id)
+    payee_rows = window.detail(DetailId.PAYEE).list_view.model
+    assert payee_rows.index(0, MOVEMENT).data() == "Compra"
+    assert payee_rows.index(0, MOVEMENT).data(SECOND_LINE_ROLE) == "Banco"
+    assert "Ver beneficiario" not in texts(window.detail(DetailId.PAYEE).list_view.row_actions(0))
+
+    window.show_detail(DetailId.ACCOUNT, pesos.id)
+    account_rows = window.detail(DetailId.ACCOUNT).list_view.model
+    assert account_rows.index(0, MOVEMENT).data() == "Coto"
+    assert account_rows.index(0, MOVEMENT).data(SECOND_LINE_ROLE) == "Compra"
 
 
 class TestTagDetail:

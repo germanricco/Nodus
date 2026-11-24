@@ -9,11 +9,12 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from PySide6.QtCore import QRectF, Qt
+from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPixmap
 
 from nodus.ui.theme.contrast import TEXT_CONTRAST, blend, shade_to_contrast
-from nodus.ui.theme.design import ControlSize, Opacity, TextRole, role_font
+from nodus.ui.theme.design import ControlSize, IconSize, Opacity, TextRole, role_font
+from nodus.ui.theme.icons import tinted_pixmap
 from nodus.ui.theme.theme_manager import active_theme
 
 
@@ -26,15 +27,33 @@ def initial_pixmap(name: str, color: str, size: int = ControlSize.BADGE) -> QPix
     """``name``'s initial in a circle of ``color``: a soft fill and the letter in the
     shade of ``color`` that reads on it as text does. A pixmap, not an icon, so a table
     shows it at its own size beside the name."""
-    surface = active_theme().surface
+    return badge_pixmap(initial_of(name), color, size)
+
+
+def badge_pixmap(letter: str, color: str, size: int = ControlSize.BADGE) -> QPixmap:
+    """``letter`` in a circle of ``color``, as ``initial_pixmap`` draws an initial."""
+    return _cached(letter, "", color, active_theme().surface, size, _ratio())
+
+
+def icon_badge_pixmap(icon_name: str, color: str, size: int = ControlSize.BADGE) -> QPixmap:
+    """The icon ``icon_name`` where the initial would go, for a row that has no name of
+    its own to show, such as a transfer."""
+    return _cached("", icon_name, color, active_theme().surface, size, _ratio())
+
+
+def _ratio() -> float:
     screen = QGuiApplication.primaryScreen()
-    ratio = screen.devicePixelRatio() if screen else 1.0
-    return _pixmap(initial_of(name), color, surface, size, ratio)
+    return screen.devicePixelRatio() if screen else 1.0
 
 
 @lru_cache(maxsize=512)
-def _pixmap(letter: str, color: str, surface: str, size: int, ratio: float) -> QPixmap:
+def _cached(
+    letter: str, icon_name: str, color: str, surface: str, size: int, ratio: float
+) -> QPixmap:
+    """The soft circle with ``letter`` or ``icon_name`` in the shade of ``color`` that
+    reads on it as text does."""
     fill = blend(color, surface, Opacity.BADGE_FILL)
+    ink = shade_to_contrast(color, fill, TEXT_CONTRAST)
     pixmap = QPixmap(round(size * ratio), round(size * ratio))
     pixmap.setDevicePixelRatio(ratio)
     pixmap.fill(Qt.GlobalColor.transparent)
@@ -44,8 +63,13 @@ def _pixmap(letter: str, color: str, surface: str, size: int, ratio: float) -> Q
     painter.setPen(Qt.PenStyle.NoPen)
     painter.setBrush(QColor(fill))
     painter.drawEllipse(rect)
-    painter.setPen(QColor(shade_to_contrast(color, fill, TEXT_CONTRAST)))
-    painter.setFont(role_font(TextRole.LABEL))
-    painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, letter)
+    if icon_name:
+        glyph = tinted_pixmap(icon_name, ink, IconSize.M)
+        offset = (size - IconSize.M) / 2
+        painter.drawPixmap(QPointF(offset, offset), glyph)
+    else:
+        painter.setPen(QColor(ink))
+        painter.setFont(role_font(TextRole.LABEL))
+        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, letter)
     painter.end()
     return pixmap

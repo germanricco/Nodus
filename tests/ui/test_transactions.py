@@ -29,15 +29,27 @@ from nodus.ui.dialogs.transaction_dialog import (
     TRANSFER_MODE,
     TransactionDialog,
 )
-from nodus.ui.navigation import PageId
+from nodus.ui.navigation import PageId, RecordLink
 from nodus.ui.pages.accounts_page import AccountRow
 from nodus.ui.pages.base import transaction_list_view
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.shell import main_window as main_window_module
 from nodus.ui.theme.design import Layout
 from nodus.ui.theme.theme import LIGHT
+from nodus.ui.widgets.initial_badge import initial_of
 from nodus.ui.widgets.inputs.selectors import HEADING_ROLE, MANAGE_ROLE
-from nodus.ui.widgets.tables.transaction_table import ACCOUNT, AMOUNT, CATEGORY, PAYEE
+from nodus.ui.widgets.tables.transaction_table import (
+    AMOUNT,
+    BADGE,
+    CATEGORY,
+    DATE,
+    LINE_ROLE,
+    MARKER_ROLE,
+    MOVEMENT,
+    SECOND_LINE_ROLE,
+    TRANSFER_MARK,
+    Line,
+)
 
 EXPENSE = TransactionType.EXPENSE
 NOVEMBER = Month(2026, 11)
@@ -260,7 +272,8 @@ class TestTransactionsPage:
 
         page.refresh()
 
-        assert column(page, AMOUNT) == ["$ 121.550,00 → US$ 100,00", "-$ 2.500,00", "$ 900.000,00"]
+        assert column(page, AMOUNT) == ["$ 121.550,00", "-$ 2.500,00", "+$ 900.000,00"]
+        assert page.model.index(0, AMOUNT).data(SECOND_LINE_ROLE) == "→ US$ 100,00"
         assert column(page, CATEGORY)[0] == "Transferencia"
         assert page.model.item(0).account_text == "Banco → Ahorro"
 
@@ -364,7 +377,7 @@ class TestTransactionsPage:
 
         page.account_filter.select(dollars.id)
 
-        assert column(page, AMOUNT) == ["$ 121.550,00 → US$ 100,00"]
+        assert column(page, AMOUNT) == ["$ 121.550,00"]
 
     def test_delete_key_deletes_the_selected_row(
         self, qtbot, monkeypatch, services, event_bus, page, pesos, dollars
@@ -400,7 +413,8 @@ class TestTransactionsPage:
                 expense_draft(services, pesos.id, ars(amount), date(2026, 11, 3), payee_name=payee)
             )
         page.refresh()
-        assert sorted(column(page, PAYEE)) == ["", "Coto", "Verdulería"]
+        payees = [page.model.item(row).payee_name for row in range(page.model.rowCount())]
+        assert sorted(payees) == ["", "Coto", "Verdulería"]
 
         page.payee_filter.select(services.payees.find("Coto").id)
         assert column(page, AMOUNT) == ["-$ 100,00"]
@@ -414,10 +428,10 @@ class TestTransactionsPage:
         populate(services, pesos, dollars)
         page.refresh()
 
-        tooltip = page.model.index(0, ACCOUNT).data(Qt.ItemDataRole.ToolTipRole)
+        tooltip = page.model.index(0, MOVEMENT).data(Qt.ItemDataRole.ToolTipRole)
 
-        assert tooltip == "Banco → Ahorro"  # the transfer
-        assert page.model.index(0, AMOUNT).data(Qt.ItemDataRole.ToolTipRole) is None
+        assert tooltip.endswith("\nBanco → Ahorro")  # the transfer
+        assert page.model.index(1, AMOUNT).data(Qt.ItemDataRole.ToolTipRole) is None
 
     def test_row_menu_offers_what_the_row_allows(self, services, page, pesos, dollars):
         populate(services, pesos, dollars)
@@ -441,11 +455,11 @@ class TestTransactionsPage:
         assert page.selection_bar.count_label.text() == "2 seleccionadas"
         detail = page.selection_bar.detail_label.text()
         assert QTextDocumentFragment.fromHtml(detail).toPlainText() == (
-            "Ingresos $ 900.000,00 · Gastos $ 2.500,00 · Neto $ 897.500,00"
+            "Entró +$ 900.000,00 · Salió -$ 2.500,00 · Neto +$ 897.500,00"
         )
         theme = LIGHT
-        assert f'color:{theme.income}">$ 900.000,00' in detail
-        assert f'color:{theme.expense}">$ 2.500,00' in detail
+        assert f'color:{theme.income}">+$ 900.000,00' in detail
+        assert f'color:{theme.expense}">-$ 2.500,00' in detail
         assert page.delete_button.objectName() == "DangerButton"
         assert page.edit_button.isEnabled()
 
@@ -491,7 +505,7 @@ class TestTransactionsPage:
             "Se van a eliminar 2 transacciones. Las transferencias se eliminan con el"
             " movimiento de las dos cuentas."
         ]
-        assert column(page, AMOUNT) == ["$ 900.000,00"]
+        assert column(page, AMOUNT) == ["+$ 900.000,00"]
 
     def test_edits_several_at_once(self, qtbot, services, event_bus, page, pesos):
         expenses = [
@@ -646,3 +660,123 @@ def test_a_narrowed_filter_opens_its_list_as_wide_as_its_longest_name(qtbot, ser
     assert view.width() >= view.sizeHintForIndex(view.model().index(row, 0)).width()
     assert view.width() > combo.width()
     combo.hidePopup()
+
+
+class TestMovementRows:
+    """Each row reads what it was, of what kind and how much, in four fixed columns."""
+
+    def test_the_payee_goes_above_and_what_it_was_with_its_account_below(
+        self, services, page, pesos
+    ):
+        services.transactions.create(
+            expense_draft(
+                services, pesos.id, ars("100"), date(2026, 11, 3), note="Compra", payee_name="Coto"
+            )
+        )
+        services.transactions.create(
+            expense_draft(services, pesos.id, ars("50"), date(2026, 11, 2), note="Pan")
+        )
+        page.refresh()
+        model = page.model
+
+        assert model.index(0, MOVEMENT).data() == "Coto"
+        assert model.index(0, MOVEMENT).data(SECOND_LINE_ROLE) == "Compra · Banco"
+        assert model.index(0, BADGE).data() == "C"
+        # Without a payee, the description goes up and the account stays below.
+        assert model.index(1, MOVEMENT).data() == "Pan"
+        assert model.index(1, MOVEMENT).data(SECOND_LINE_ROLE) == "Banco"
+
+    def test_a_payee_reads_apart_from_a_note_and_the_category_is_not_repeated(
+        self, services, page, pesos
+    ):
+        for day, note, payee in [
+            (4, "Compra", "Coto"),
+            (3, "", "Coto"),
+            (2, "Pan", ""),
+            (1, "", ""),
+        ]:
+            services.transactions.create(
+                expense_draft(
+                    services,
+                    pesos.id,
+                    ars("10"),
+                    date(2026, 11, day),
+                    note=note,
+                    payee_name=payee,
+                )
+            )
+        page.refresh()
+        model = page.model
+
+        def row(index: int) -> tuple:
+            cell = model.index(index, MOVEMENT)
+            return cell.data(), cell.data(SECOND_LINE_ROLE), cell.data(LINE_ROLE)
+
+        assert row(0) == ("Coto", "Compra · Banco", Line.PAYEE)
+        assert row(1) == ("Coto", "Banco", Line.PAYEE)  # no category in the note's place
+        assert row(2) == ("Pan", "Banco", Line.NOTE)
+        assert row(3) == ("Sin descripción", "Banco", Line.BLANK)
+        assert model.index(3, BADGE).data() == initial_of(model.item(3).category_name)
+        # A tooltip or a screen reader names the payee as such.
+        tooltip = model.index(0, MOVEMENT).data(Qt.ItemDataRole.ToolTipRole)
+        assert tooltip == "Beneficiario: Coto\nCompra · Banco"
+
+    def test_a_transfer_shows_its_mark_and_both_accounts(self, services, page, pesos, dollars):
+        buy_dollars(services, pesos, dollars)
+        page.refresh()
+        model = page.model
+
+        assert model.index(0, BADGE).data() == TRANSFER_MARK
+        assert model.index(0, MOVEMENT).data(SECOND_LINE_ROLE) == "Banco → Ahorro"
+        assert model.index(0, CATEGORY).data(MARKER_ROLE) == TRANSFER_MARK
+
+    def test_a_click_on_a_title_sorts_and_the_order_survives_a_reload(
+        self, services, page, pesos, dollars
+    ):
+        populate(services, pesos, dollars)
+        page.refresh()
+
+        page.table.sortByColumn(AMOUNT, Qt.SortOrder.AscendingOrder)
+        assert column(page, AMOUNT) == ["-$ 2.500,00", "$ 121.550,00", "+$ 900.000,00"]
+
+        page.reload()
+        assert column(page, AMOUNT) == ["-$ 2.500,00", "$ 121.550,00", "+$ 900.000,00"]
+
+        page.table.sortByColumn(DATE, Qt.SortOrder.AscendingOrder)
+        assert column(page, DATE) == ["01/11", "02/11", "04/11"]
+
+    def test_the_initials_title_sorts_nothing(self, services, page, pesos, dollars):
+        populate(services, pesos, dollars)
+        page.refresh()
+
+        page.table.sortByColumn(BADGE, Qt.SortOrder.AscendingOrder)
+
+        assert page.table.horizontalHeader().sortIndicatorSection() == DATE
+        assert column(page, DATE) == ["04/11", "02/11", "01/11"]
+
+    def test_the_summary_names_the_filter_over_the_list(self, services, page, pesos, dollars):
+        populate(services, pesos, dollars)
+        page.refresh()
+        assert plain(page.summary_label.text()).startswith("Noviembre 2026 · 3 movimientos")
+
+        page.type_filter.setCurrentText("Gastos")
+
+        assert plain(page.summary_label.text()) == (
+            "Gastos · Noviembre 2026 · 1 movimiento · -$ 2.500,00"
+        )
+
+    def test_the_menu_opens_the_payee(self, services, page, pesos):
+        services.transactions.create(
+            expense_draft(services, pesos.id, ars("100"), date(2026, 11, 3), payee_name="Coto")
+        )
+        page.refresh()
+        opened = []
+        page.record_requested.connect(opened.append)
+
+        run_action(page.row_actions(0), "Ver beneficiario")
+
+        assert opened == [RecordLink.payee(services.payees.find("Coto").id)]
+
+
+def plain(html: str) -> str:
+    return QTextDocumentFragment.fromHtml(html).toPlainText()

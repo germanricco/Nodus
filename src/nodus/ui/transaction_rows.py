@@ -17,7 +17,6 @@ from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
 
 TRANSFER_LABEL = N_("Transferencia")
-REFUND_MARK = "↺"
 
 
 def refund_of_text(expense: Transaction, description: str) -> str:
@@ -68,6 +67,8 @@ class TransactionListItem:
     tags: tuple[Tag, ...] = ()
     upcoming: bool = False
     sent_text: str = ""  # a transfer between currencies: what left its account
+    received_text: str = ""  # and what arrived at the other
+    note: str = ""  # the note as written, with its installment; no category in its place
 
     @property
     def short_amount_text(self) -> str:
@@ -82,6 +83,11 @@ class TransactionListItem:
     @property
     def is_transfer(self) -> bool:
         return self.transaction.is_transfer
+
+    @property
+    def is_refund(self) -> bool:
+        """An income that pays back an expense."""
+        return self.transaction.refund_of_id is not None
 
 
 class TransactionListBuilder:
@@ -137,8 +143,10 @@ class TransactionListBuilder:
     def _regular_item(self, transaction: Transaction) -> TransactionListItem:
         category = self._categories[transaction.category_id]
         description = self.describe(transaction)
+        note = transaction.note
         if transaction.installment is not None:
             description += f" · {transaction.installment.label}"
+            note = " · ".join(part for part in (note, transaction.installment.label) if part)
         return TransactionListItem(
             transaction=transaction,
             description=description,
@@ -150,6 +158,7 @@ class TransactionListBuilder:
             tone="positive" if transaction.type is TransactionType.INCOME else "negative",
             refund_text=self._refund_text(transaction),
             tags=tuple(self._tags.get(transaction.id, [])),
+            note=note,
             upcoming=transaction.occurred_on > self._today,
         )
 
@@ -158,8 +167,10 @@ class TransactionListBuilder:
         outgoing, incoming = transfer.outgoing, transfer.incoming
         sent_text = outgoing.amount.format()
         amount_text = sent_text
+        received_text = ""
         if incoming.amount.currency is not outgoing.amount.currency:
-            amount_text += f" → {incoming.amount.format()}"
+            received_text = incoming.amount.format()
+            amount_text += f" → {received_text}"
         return TransactionListItem(
             transaction=outgoing,
             description=outgoing.note or _(TRANSFER_LABEL),
@@ -174,4 +185,5 @@ class TransactionListBuilder:
             tone="neutral",
             upcoming=outgoing.occurred_on > self._today,
             sent_text=sent_text,
+            received_text=received_text,
         )

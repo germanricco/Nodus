@@ -62,6 +62,7 @@ from nodus.ui.theme.design import set_reduced_motion  # noqa: E402
 from nodus.ui.theme.theme import ThemeMode  # noqa: E402
 from nodus.ui.theme.theme_manager import ThemeManager  # noqa: E402
 from nodus.ui.widgets.tables.row_actions import build_menu  # noqa: E402
+from nodus.ui.widgets.tables.transaction_table import AMOUNT, DATE  # noqa: E402
 
 # Dialogs to capture, built over the demo data: name -> factory(services, event_bus, window).
 DIALOGS = {
@@ -506,6 +507,11 @@ def capture_rows(shots: Shots) -> None:
     shots.save(window, "transactions-selection")
     transactions.table.clearSelection()
     transactions.table.hovered_row = -1
+    # Sorted by amount, with the sort arrow over a right-aligned title.
+    transactions.table.sortByColumn(AMOUNT, Qt.SortOrder.DescendingOrder)
+    shots.settle()
+    shots.save(window, "transactions-by-amount")
+    transactions.table.sortByColumn(DATE, Qt.SortOrder.DescendingOrder)
     # Two categories chosen in Categorías, to merge or delete them together.
     window.show_page(PageId.CATEGORIES)
     categories = window.page(PageId.CATEGORIES)

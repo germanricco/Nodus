@@ -63,11 +63,11 @@ Add every place where you keep money, from your bank, cash and virtual wallets l
 </picture>
 
 ### Record and find your transactions
-One form covers expenses, income and transfers, and it starts on the account you used last. The list filters by period, account, category, payee, tag, type or text, adds up at the foot the transactions it shows, and whatever you see exports to a file that opens in Excel. Each filter list ends with a shortcut to edit its accounts, categories, payees or tags. Every row in Nodus has a “⋯” menu, also opened with a right click, with everything you can do with it; tick several transactions to edit their category, payee, note or tags at once, or to delete them together, and several payees or tags to merge or delete them. What you do is confirmed by a short notice at the bottom right, and what changes a lot of data in one click, such as a group edit, merging, or skipping or paying a charge, can be undone from that notice or with Ctrl+Z. Deleting still asks first, and a form with changes asks before closing without saving.
+One form covers expenses, income and transfers, and it starts on the account you used last. Each transaction reads the way you think of it: who you paid and what it was, in which category, and how much, with its initial in its category's color so you spot it at a glance, and dates, categories and amounts always in the same column. A click on a column's title sorts the list, which filters by period, account, category, payee, tag, type or text; at the top it says what you are looking at and how much came in and went out, and whatever you see exports to a file that opens in Excel. Each filter list ends with a shortcut to edit its accounts, categories, payees or tags. Every row in Nodus has a “⋯” menu, also opened with a right click, with everything you can do with it; tick several transactions to edit their category, payee, note or tags at once, or to delete them together, and several payees or tags to merge or delete them. What you do is confirmed by a short notice at the bottom right, and what changes a lot of data in one click, such as a group edit, merging, or skipping or paying a charge, can be undone from that notice or with Ctrl+Z. Deleting still asks first, and a form with changes asks before closing without saving.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/transactions-dark.png">
-  <img src="docs/images/en/transactions-light.png" alt="The transactions list with its filters and the totals at the foot">
+  <img src="docs/images/en/transactions-light.png" alt="The transactions list with its filters and what it adds up to at the top">
 </picture>
 
 ### Know who your money goes to

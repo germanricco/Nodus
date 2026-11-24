@@ -51,6 +51,7 @@ class TransactionsPage(Page):
     """
 
     navigate_requested = Signal(object)  # PageId
+    record_requested = Signal(object)  # RecordLink
     new_transaction_requested = Signal()
 
     def __init__(
@@ -99,11 +100,12 @@ class TransactionsPage(Page):
         self.content_layout.addLayout(filters)
 
         self.list_view = TransactionListView(services, event_bus, theme_manager, self)
+        self.list_view.record_requested.connect(self.record_requested)
         self.content_layout.addWidget(self.list_view, stretch=1)
         # The list's parts, at hand as the page's own.
         view = self.list_view
         self.model, self.table, self.empty_state = view.model, view.table, view.empty_state
-        self.totals_label, self.selection_bar = view.totals_label, view.selection_bar
+        self.summary_label, self.selection_bar = view.summary_label, view.selection_bar
         self.edit_button, self.delete_button = view.edit_button, view.delete_button
         self.row_actions, self.selected_items = view.row_actions, view.selected_items
         self.delete_selected = view.delete_selected
@@ -138,7 +140,7 @@ class TransactionsPage(Page):
 
     def reload(self) -> None:
         """Lists the movements matching the current filters."""
-        self.list_view.show_matching(self.current_filter())
+        self.list_view.show_matching(self.current_filter(), self._caption())
         if self._has_filters():
             self.empty_state.set_message(
                 _("Sin transacciones con estos filtros."), _("Limpiar filtros"), self.clear_filters
@@ -208,6 +210,19 @@ class TransactionsPage(Page):
             export_filename(self.period_selector.period()),
             button=self.export_button,
         )
+
+    def _caption(self) -> str:
+        """What the list shows, leading its summary: the filters chosen and the
+        period, such as "Ocio · Noviembre 2026"."""
+        names = [
+            combo.currentText().strip()
+            for combo in self._filter_combos()
+            if combo.currentIndex() > 0
+        ]
+        text = self.search_input.text().strip()
+        if text:
+            names.append(_("«{text}»").format(text=text))
+        return " · ".join([*names, self.period_selector.period().label()])
 
     def _has_filters(self) -> bool:
         has_choice = any(combo.currentIndex() > 0 for combo in self._filter_combos())

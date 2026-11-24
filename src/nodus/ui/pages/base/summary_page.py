@@ -329,7 +329,6 @@ class SummaryPage(Page, Generic[S]):
 
     def _build_table(self) -> SelectableTable:
         table = SelectableTable(self.proxy, NAME, self.row_actions)
-        table.setObjectName("SortableTable")
         table.setSortingEnabled(True)
         table.sortByColumn(COUNT, Qt.SortOrder.DescendingOrder)
         bind_delete_key(table, self.delete_selected)

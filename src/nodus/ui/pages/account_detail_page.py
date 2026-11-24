@@ -49,7 +49,7 @@ from nodus.ui.widgets.money_label import MoneyLabel, amount_text, masked, month_
 from nodus.ui.widgets.style import clear_layout, muted_label
 from nodus.ui.widgets.tables.charge_row import UpcomingPaymentRow
 from nodus.ui.widgets.tables.row_actions import Effect, MoreButton, RowAction
-from nodus.ui.widgets.tables.transaction_table import ACCOUNT
+from nodus.ui.widgets.tables.transaction_table import Omit
 
 # How far back the balance chart looks: months, or None for the account's whole life.
 CHART_RANGES: tuple[tuple[int | None, str], ...] = (
@@ -103,9 +103,9 @@ class AccountDetailPage(DetailPage):
         body.addWidget(self._payments_card())
         body.addWidget(self._chart_card(services, theme_manager))
 
-        self.list_view = TransactionListView(services, event_bus, theme_manager, self)
         # Every row would repeat the account.
-        self.list_view.table.setColumnHidden(ACCOUNT, True)
+        self.list_view = TransactionListView(services, event_bus, theme_manager, self, Omit.ACCOUNT)
+        self.list_view.record_requested.connect(self.record_requested)
         self.list_view.setMinimumHeight(Layout.DETAIL_LIST_MIN_HEIGHT)
         body.addWidget(self.list_view, stretch=1)
 

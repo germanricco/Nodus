@@ -6,6 +6,7 @@ import pytest
 from factories import ars, expense_draft, in_view, income_draft
 from menus import run_action
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QTextDocumentFragment
 
 from nodus.models.period import Month, Period
 from nodus.models.transaction_filter import TransactionFilter
@@ -14,9 +15,10 @@ from nodus.ui.dialogs.category_dialog import CategoryDialog
 from nodus.ui.dialogs.tag_dialogs import MergeTagDialog, TagDialog
 from nodus.ui.navigation import PageId, TransactionFocus
 from nodus.ui.pages.base.summary_page import COUNT, NAME, TOTAL
-from nodus.ui.pages.base.transaction_list_view import totals_text
+from nodus.ui.pages.base.transaction_list_view import summary_html
 from nodus.ui.pages.tags_page import NO_TAGS_TEXT, TagsPage
-from nodus.ui.widgets.tables.transaction_table import AMOUNT, TAGS
+from nodus.ui.theme.theme import LIGHT
+from nodus.ui.widgets.tables.transaction_table import AMOUNT, CATEGORY, SECOND_LINE_ROLE
 
 OCTOBER_NOVEMBER = Period.of_months(Month(2026, 10), Month(2026, 11))
 
@@ -176,33 +178,27 @@ class TestTransactionsList:
         model = transactions.model
         amounts = [model.index(row, AMOUNT).data() for row in range(model.rowCount())]
         assert amounts == ["-$ 200,00", "-$ 300,00"]
-        assert model.index(0, TAGS).data() == "Viaje"
-        assert transactions.totals_label.text() == (
-            "2 movimientos · Ingresos $ 0,00 · Gastos $ 500,00 · Neto -$ 500,00"
+        assert model.index(0, CATEGORY).data(SECOND_LINE_ROLE) == "Viaje"
+        # All spending: one figure, after what the list is.
+        period = transactions.period_selector.period().label()
+        assert plain(transactions.summary_label.text()) == (
+            f"Viaje · {period} · 2 movimientos · -$ 500,00"
         )
 
         transactions.clear_filters()
-        assert transactions.totals_label.text().startswith("3 movimientos · Ingresos $ 1.000,00")
+        assert plain(transactions.summary_label.text()) == (
+            f"{period} · 3 movimientos · Entró +$ 1.000,00 · Salió -$ 500,00 · Neto +$ 500,00"
+        )
 
 
-def test_totals_text_without_income_or_expenses(services):
+def plain(html: str) -> str:
+    return QTextDocumentFragment.fromHtml(html).toPlainText()
+
+
+def test_summary_without_income_or_expenses_only_counts(services):
     totals = services.dashboard.totals(TransactionFilter())
 
-    assert totals_text(2, totals) == "2 movimientos"
-
-
-def test_tags_column_shows_only_when_a_row_has_tags(services, window, pesos):
-    services.transactions.create(expense_draft(services, pesos.id, ars("10"), date.today()))
-    window.show_page(PageId.TRANSACTIONS)
-    transactions = window.page(PageId.TRANSACTIONS)
-    assert transactions.table.isColumnHidden(TAGS)
-
-    services.transactions.create(
-        expense_draft(services, pesos.id, ars("20"), date.today(), tag_names=("Viaje",))
-    )
-    transactions.reload()
-
-    assert not transactions.table.isColumnHidden(TAGS)
+    assert plain(summary_html("", 2, totals, LIGHT)) == "2 movimientos"
 
 
 def test_a_custom_color_saved_on_a_tag_is_offered_to_categories(qtbot, services, event_bus):

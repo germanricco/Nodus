@@ -27,6 +27,10 @@ What each version brings, newest first. To update, click “Update” when Nodus
 - A click always leads to the same place: a category, payee or tag opens its page from Home, Analysis or Budgets (it used to open Transactions), and a month's bar opens its transactions. Every row that leads to another page lights up under the mouse, shows the hand and ends in “›”, as accounts do. In Categories, Payees and Tags, where a click chooses, a double click opens.
 - The page of a category, payee or tag says when its total is from: what it added up to over the last 12 months, and how many transactions it had in them. All its transactions are still below.
 - Payees and Tags have the same period picker as Categories: each list shows how much each one added up to in the period you choose, starting from the current month.
+- Transactions reads the way you think of a transaction: what it was, of what kind and how much. Each row has two lines: on top the payee, with the Payees icon so it isn't mistaken for a note, or the note when there is no payee, and below, in gray, the note and the account; with neither, it says “No description” instead of repeating the category; the category with its tags below; and the amount with its sign, in red or green. So nothing gets cut, and dates, categories and amounts always fall in the same column. The payee's initial, in its category's color, helps you find it; transfers and refunds carry their own icon. The same shows in Home's “Latest transactions” (with the date under the amount), on the page of an account, a category, a payee or a tag, which leave out of each row what the page already says, and when choosing a refund's expense.
+- A click on the Date, Transaction, Category or Amount title sorts Transactions by that column, and another click turns the order around.
+- Above the list, a line says what you are looking at and what it adds up to: “Fun · November 2026 · 2 transactions · -$70,500.00”. With both income and spending, it says how much came in, how much went out and the net.
+- The “⋯” menu of a transaction with a payee offers “View payee”, which opens its page.
 
 ## 1.11.0 — 2026-11-21
 

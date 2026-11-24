@@ -26,14 +26,11 @@ from nodus.ui.dialogs.transaction_dialog import (
     TransactionDialog,
 )
 from nodus.ui.navigation import DetailId
-from nodus.ui.pages.dashboard.latest_transactions_card import (
-    LatestTransactionRow,
-    LatestTransactionsCard,
-)
+from nodus.ui.pages.dashboard.latest_transactions_card import LatestTransactionsCard
 from nodus.ui.pages.recurring_page import RecurringPage
 from nodus.ui.pages.transactions_page import TransactionsPage
 from nodus.ui.text.formatting import format_date
-from nodus.ui.widgets.tables.transaction_table import AMOUNT, DATE, DESCRIPTION
+from nodus.ui.widgets.tables.transaction_table import AMOUNT, DATE, MOVEMENT
 
 # Not factories.TODAY: the form starts on the real day, and the installments count from it.
 TODAY = date.today()
@@ -429,12 +426,12 @@ def column(page, index: int, role=Qt.ItemDataRole.DisplayRole) -> list:
 
 
 def row_of(page, label: str) -> int:
-    return next(i for i, text in enumerate(column(page, DESCRIPTION)) if text.endswith(label))
+    return next(i for i, text in enumerate(column(page, MOVEMENT)) if text.endswith(label))
 
 
 class TestTransactionsList:
     def test_each_installment_says_which_it_is(self, heladera, page):
-        assert sorted(column(page, DESCRIPTION)) == sorted(f"Heladera · {n}/6" for n in range(1, 7))
+        assert sorted(column(page, MOVEMENT)) == sorted(f"Heladera · {n}/6" for n in range(1, 7))
 
     def test_those_still_to_come_are_dimmed_and_say_when(self, theme_manager, heladera, page):
         model = page.model
@@ -442,7 +439,7 @@ class TestTransactionsList:
         muted = theme_manager.theme.text_muted
         foreground = Qt.ItemDataRole.ForegroundRole
 
-        for index in (DATE, DESCRIPTION, AMOUNT):
+        for index in (DATE, MOVEMENT, AMOUNT):
             assert model.data(model.index(later_row, index), foreground).name() == muted
         assert model.data(model.index(today_row, AMOUNT), foreground).name() != muted
         second = model.item(later_row).occurred_on
@@ -527,7 +524,7 @@ class TestTransactionsList:
         )
         items = [page.model.item(row_of(page, "2/6")), page.model.item(row_of(page, "3/6"))]
         plain = page.model.item(
-            next(i for i, d in enumerate(column(page, DESCRIPTION)) if "/" not in d)
+            next(i for i, d in enumerate(column(page, MOVEMENT)) if "/" not in d)
         )
 
         transaction_actions.delete_transactions(
@@ -548,7 +545,7 @@ class TestDashboard:
 
         card.show_period(Period.of_months(month, month.shifted(6)))
 
-        rows = card.findChildren(LatestTransactionRow)
+        rows = card.rows()
         assert [row.item.transaction.installment.number for row in rows] == [1]
 
 

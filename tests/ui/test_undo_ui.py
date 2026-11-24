@@ -15,7 +15,7 @@ from nodus.ui.dialogs.payee_dialogs import MergePayeeDialog
 from nodus.ui.dialogs.recurring_charge_dialog import PayChargeDialog
 from nodus.ui.dialogs.tag_dialogs import MergeTagDialog
 from nodus.ui.navigation import PageId
-from nodus.ui.widgets.tables.transaction_table import DESCRIPTION
+from nodus.ui.widgets.tables.transaction_table import MOVEMENT
 
 
 @pytest.fixture
@@ -86,9 +86,7 @@ def test_paying_off_installments_offers_to_undo_it(services, window, pesos):
     page.refresh()
     model = page.model
     row = next(
-        i
-        for i in range(model.rowCount())
-        if model.data(model.index(i, DESCRIPTION)).endswith("2/6")
+        i for i in range(model.rowCount()) if model.data(model.index(i, MOVEMENT)).endswith("2/6")
     )
 
     run_action(page.list_view.row_actions(row), "Adelantar las cuotas que faltan")

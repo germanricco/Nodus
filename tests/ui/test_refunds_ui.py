@@ -23,7 +23,13 @@ from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog
 from nodus.ui.dialogs.refund_picker import RefundPickerDialog
 from nodus.ui.dialogs.transaction_dialog import EXPENSE_MODE, INCOME_MODE
 from nodus.ui.pages.transactions_page import TransactionsPage
-from nodus.ui.widgets.tables.transaction_table import DESCRIPTION
+from nodus.ui.widgets.tables.transaction_table import (
+    AMOUNT,
+    BADGE,
+    MOVEMENT,
+    REFUND_MARK,
+    SECOND_LINE_ROLE,
+)
 
 INCOME = TransactionType.INCOME
 
@@ -164,7 +170,7 @@ def page(qtbot, services, event_bus, theme_manager) -> TransactionsPage:
 
 def descriptions(page) -> list[str]:
     model = page.model
-    return [model.index(row, DESCRIPTION).data() for row in range(model.rowCount())]
+    return [model.index(row, MOVEMENT).data() for row in range(model.rowCount())]
 
 
 def test_list_marks_both_sides_and_filters_them(services, pesos, shoes, page):
@@ -172,18 +178,20 @@ def test_list_marks_both_sides_and_filters_them(services, pesos, shoes, page):
     services.transactions.create(expense_draft(services, pesos.id, ars("10"), TODAY, note="Pan"))
     page.reload()
 
-    assert sorted(descriptions(page)) == ["Pan", "↺ Devolución", "↺ Zapatillas"]
-    tooltips = {
-        page.model.index(row, DESCRIPTION).data(): page.model.index(row, DESCRIPTION).data(
-            Qt.ItemDataRole.ToolTipRole
-        )
-        for row in range(page.model.rowCount())
-    }
-    assert tooltips["↺ Zapatillas"] == "Reembolsado $ 400,00"
-    assert tooltips["↺ Devolución"].startswith("Reembolso de «Zapatillas» del")
+    assert sorted(descriptions(page)) == ["Devolución", "Pan", "Zapatillas"]
+    model = page.model
+    rows = {model.index(row, MOVEMENT).data(): row for row in range(model.rowCount())}
+    # The refund shows its mark where the initial goes; the expense, what came back of it.
+    assert model.index(rows["Devolución"], BADGE).data() == REFUND_MARK
+    assert model.index(rows["Zapatillas"], BADGE).data() == "Z"
+    assert model.index(rows["Zapatillas"], AMOUNT).data(SECOND_LINE_ROLE) == (
+        "Reembolsado $ 400,00"
+    )
+    tooltip = model.index(rows["Devolución"], MOVEMENT).data(Qt.ItemDataRole.ToolTipRole)
+    assert tooltip.startswith("Reembolso de «Zapatillas» del")
 
     page.type_filter.setCurrentText("Reembolsos")
-    assert sorted(descriptions(page)) == ["↺ Devolución", "↺ Zapatillas"]
+    assert sorted(descriptions(page)) == ["Devolución", "Zapatillas"]
 
 
 def test_deleting_a_refunded_expense_warns(monkeypatch, services, pesos, shoes, page):
@@ -191,7 +199,7 @@ def test_deleting_a_refunded_expense_warns(monkeypatch, services, pesos, shoes, 
     page.reload()
     asked = []
     monkeypatch.setattr(confirm_dialog, "confirm", lambda _parent, _title, text: asked.append(text))
-    row = descriptions(page).index("↺ Zapatillas")
+    row = descriptions(page).index("Zapatillas")
 
     page.table.selectRow(row)
     page.delete_selected()
