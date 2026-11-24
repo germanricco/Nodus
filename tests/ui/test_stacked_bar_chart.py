@@ -61,6 +61,21 @@ def test_average_line_widens_the_scale(qtbot):
     chart.grab()
 
 
+def test_the_average_label_sits_over_a_bar_that_stays_under_the_line(qtbot):
+    """No bar rises through it: the last month went over, so it moves to the one before."""
+    chart = make_chart(qtbot)
+    chart.set_bars([bar("Sep", (1, 100)), bar("Oct", (1, 150)), bar("Nov", (1, 300))], average=200)
+
+    assert chart._label_right(chart._values_at(1)) == pytest.approx(chart.slots()[1].right())
+
+
+def test_the_average_label_ends_at_the_edge_when_the_last_bar_is_under_it(qtbot):
+    chart = make_chart(qtbot)
+    chart.set_bars([bar("Oct", (1, 300)), bar("Nov", (1, 100))], average=200)
+
+    assert chart._label_right(chart._values_at(1)) == pytest.approx(chart.slots()[1].right())
+
+
 def test_pieces_resize_by_category_and_new_months_grow(qtbot):
     chart = make_chart(qtbot)
     chart.set_bars([bar("Oct", (1, 100), (2, 50))])

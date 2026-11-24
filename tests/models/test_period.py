@@ -12,6 +12,7 @@ from nodus.models.period import (
     format_month,
     format_month_in_sentence,
     format_time,
+    latest_until,
     qt_date_format,
 )
 
@@ -161,3 +162,12 @@ class TestFromMonth:
 
     def test_a_period_before_the_first_movement_stays_whole_to_say_so(self):
         assert self.YEAR.from_month(Month(2027, 3)) == self.YEAR
+
+
+def test_the_latest_day_that_already_came_leaves_out_what_is_still_to_come():
+    today = date(2026, 11, 24)
+    days = [date(2026, 10, 1), date(2026, 11, 24), date(2027, 2, 10)]  # the last, an installment
+
+    assert latest_until(days, today) == date(2026, 11, 24)
+    assert latest_until([date(2027, 2, 10)], today) is None
+    assert latest_until([], today) is None

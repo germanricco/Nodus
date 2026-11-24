@@ -12,7 +12,7 @@ from typing import Any
 from nodus.database.database import Database
 from nodus.database.repositories.tag_repository import TagRepository
 from nodus.i18n import N_, _
-from nodus.models.period import Period
+from nodus.models.period import Period, latest_until
 from nodus.models.tag import Tag
 from nodus.models.transaction import Transaction
 from nodus.models.transaction_filter import TransactionFilter
@@ -30,13 +30,15 @@ class TagSummary:
     """A tag with its transactions added up, for its row and its page: ``totals`` those
     of a period, counted as for payees, and ``count`` how many it has over its whole
     history. ``first_on`` and ``last_on`` are the dates of its first and latest
-    transactions (None while it has none)."""
+    transactions (None while it has none), ``latest_on`` the latest one up to today,
+    what «Último movimiento» shows: an installment still to come has not happened yet."""
 
     tag: Tag
     count: int
     totals: PeriodTotals
     first_on: date | None
     last_on: date | None
+    latest_on: date | None
 
 
 class TagService(NamedRecordService[Tag]):
@@ -163,6 +165,7 @@ class TagService(NamedRecordService[Tag]):
             period_totals(tagged, period, self._exchange_rates),
             min(dates, default=None),
             max(dates, default=None),
+            latest_until(dates, date.today()),
         )
 
     def _checked(self, tag: Tag) -> Tag:

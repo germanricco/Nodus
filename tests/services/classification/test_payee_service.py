@@ -411,6 +411,6 @@ def test_a_payee_without_a_usual_category_takes_its_side_from_its_total(amount, 
     """The usual category decides; without one, money in is income, and nothing or money
     out an expense."""
     totals = PeriodTotals(Period.of_months(Month(2026, 11)), 1, ars(amount), 0)
-    summary = PayeeSummary(Payee(1, "Alguien"), 1, totals, None, None, None)
+    summary = PayeeSummary(Payee(1, "Alguien"), 1, totals, None, None, None, None)
 
     assert summary.kind is kind

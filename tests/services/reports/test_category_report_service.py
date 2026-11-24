@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 from factories import TODAY, ars, category_id, expense_draft, income_draft, usd
 
+from nodus.models.installment_plan import InstallmentPlan
 from nodus.models.period import Month, Period
 from nodus.models.transaction import TransactionType
 
@@ -102,6 +103,18 @@ def test_expenses_match_the_dashboard_ring(services, pesos, dollars, rent):
 
 class TestSummary:
     """A category's own page: its last twelve months, with its subcategories."""
+
+    def test_its_latest_movement_is_one_that_already_happened(self, services, pesos):
+        """«Último movimiento» is not an installment still to come, though the span of
+        its movements (what «ver movimientos» opens) reaches it."""
+        draft = expense_draft(services, pesos.id, ars("3000"), TODAY, note="Heladera")
+        services.installments.create(draft, InstallmentPlan(None, 3, ars("3000"), TODAY))
+        food = category_id(services, "Supermercado y comida", EXPENSE)
+
+        summary = services.category_report.summary(food, TODAY)
+
+        assert summary.latest_on == TODAY
+        assert summary.last_on == date(2027, 1, 5)
 
     def test_adds_up_its_last_twelve_months_and_its_subcategories(self, services, pesos, rent):
         spend(services, pesos, ars("400"), "Alquiler")

@@ -169,7 +169,7 @@ class SummaryDetailPage(DetailPage, Generic[S]):
         values = [
             self._total_text(summary),
             str(summary.totals.count),
-            format_date(summary.last_on) if summary.last_on else NO_MOVEMENTS,
+            format_date(summary.latest_on) if summary.latest_on else NO_MOVEMENTS,
             *self.extra_figures(summary),
         ]
         for label, value in zip(self.figure_labels.values(), values, strict=True):

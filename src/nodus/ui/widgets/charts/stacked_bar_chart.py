@@ -197,18 +197,27 @@ class StackedBarChart(BarColumnsChart):
             self.paint_label(painter, slot, bar.label, selected=False)
         self.paint_baseline(painter, baseline)
         if self.average is not None and self._bars:
-            self._paint_average(painter, baseline - self.average * per_cent)
+            self._paint_average(painter, baseline - self.average * per_cent, all_values)
         self.paint_hover(painter)
         painter.end()
 
-    def _paint_average(self, painter: QPainter, y: float) -> None:
+    def _label_right(self, values: list[list[float]]) -> float:
+        """Where the average's label ends: over the last bar that stays under the line,
+        so no bar rises through it; at the right edge when every bar goes over."""
+        for slot, bar in reversed(list(zip(self.slots(), values, strict=True))):
+            if sum(v for v in bar if v > 0) <= self.average:
+                return slot.right()
+        return float(self.width())
+
+    def _paint_average(self, painter: QPainter, y: float, values: list[list[float]]) -> None:
         pen = QPen(QColor(self._theme.warning), Line.STROKE, Qt.PenStyle.DashLine)
         painter.setPen(pen)
         painter.drawLine(QPointF(self.LEFT, y), QPointF(self.width(), y))
-        # The label sits on a patch of the card's color, so it reads over a bar.
+        # The label sits on a patch of the card's color, so it still reads if it meets a bar.
         text = _("Promedio {amount}").format(amount=self._format_value(self.average))
         width = painter.fontMetrics().horizontalAdvance(text) + 12
-        box = QRectF(self.width() - width, y - 18, width, 16)
+        right = max(self._label_right(values), self.LEFT + width)
+        box = QRectF(right - width, y - 18, width, 16)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(self._theme.surface))
         painter.drawRoundedRect(box, Radius.S, Radius.S)

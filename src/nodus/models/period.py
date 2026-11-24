@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import calendar
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from enum import Enum
@@ -63,6 +64,12 @@ def format_month_in_sentence(month: Month) -> str:
     return language.month_in_sentence.format(
         month=name.lower() if language.lowercase_months else name, year=month.year
     )
+
+
+def latest_until(days: Iterable[date], today: date) -> date | None:
+    """The latest of ``days`` that is not after ``today``: an installment still to come
+    is not the last thing that happened."""
+    return max((day for day in days if day <= today), default=None)
 
 
 @dataclass(frozen=True, order=True)

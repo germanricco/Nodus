@@ -13,7 +13,7 @@ from nodus.database.repositories.payee_repository import PayeeRepository
 from nodus.i18n import N_, _
 from nodus.models.category import Category
 from nodus.models.payee import Payee, PayeeUsage
-from nodus.models.period import Period
+from nodus.models.period import Period, latest_until
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
@@ -33,7 +33,9 @@ class PayeeSummary:
     ``totals`` are those of a period (income minus expenses in pesos, dollars at the rate
     of their day); ``count`` is how many it has over its whole history. ``top_category``
     is the one used most with this payee, and ``first_on`` and ``last_on`` the dates of its
-    first and latest transactions (None while it has none).
+    first and latest transactions (None while it has none), ``latest_on`` the latest one
+    up to today, what «Último movimiento» shows: an installment still to come has not
+    happened yet.
     """
 
     payee: Payee
@@ -42,6 +44,7 @@ class PayeeSummary:
     top_category: Category | None
     first_on: date | None
     last_on: date | None
+    latest_on: date | None
 
     @property
     def kind(self) -> TransactionType:
@@ -235,6 +238,7 @@ class PayeeService(NamedRecordService[Payee]):
             top_category=categories[usage[0][0]] if usage else None,
             first_on=min((t.occurred_on for t in transactions), default=None),
             last_on=max((t.occurred_on for t in transactions), default=None),
+            latest_on=latest_until((t.occurred_on for t in transactions), date.today()),
         )
 
     def _checked(self, payee: Payee) -> Payee:

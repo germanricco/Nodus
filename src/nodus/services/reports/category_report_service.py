@@ -16,7 +16,7 @@ from datetime import date
 from nodus.models.category import Category
 from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
-from nodus.models.period import Month, Period
+from nodus.models.period import Month, Period, latest_until
 from nodus.models.transaction import TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
@@ -91,6 +91,8 @@ class CategorySummary:
     since its first movement. ``count`` is how many of its own movements there are over its
     whole history. ``parts`` split a category with subcategories into them, the largest
     first, so its page goes from the whole to each piece; empty without subcategories.
+    ``first_on`` and ``last_on`` span all its movements, future installments included;
+    ``latest_on`` is the latest one up to today, what «Último movimiento» shows.
     """
 
     category: Category
@@ -98,6 +100,7 @@ class CategorySummary:
     totals: PeriodTotals
     first_on: date | None
     last_on: date | None
+    latest_on: date | None
     this_month: Money
     average: Money | None
     months: list[tuple[Month, Money]]
@@ -171,6 +174,7 @@ class CategoryReportService:
             ),
             first_on=first_on,
             last_on=max((t.occurred_on for t in own), default=None),
+            latest_on=latest_until((t.occurred_on for t in own), today),
             this_month=by_month[Month.of(today)],
             average=average,
             months=[(month, by_month[month]) for month in charted.months()],
