@@ -16,6 +16,7 @@ from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.charts.bar_chart import BarChart, flow_bar_groups
+from nodus.ui.widgets.charts.chart_base import compact_pesos
 from nodus.ui.widgets.charts.share_charts import ProportionBar, Segment
 from nodus.ui.widgets.figure_row import FigureRow
 from nodus.ui.widgets.figure_tile import FigureTile
@@ -66,7 +67,7 @@ class CashFlowCard(Card):
         trend_title.setObjectName("StatCaption")
         self.body.addSpacing(Space.S)
         self.body.addWidget(trend_title)
-        self.chart = BarChart(theme)
+        self.chart = BarChart(theme, compact_pesos)
         self._months: list[Month] = []
         self.chart.clicked.connect(lambda index: self.month_requested.emit(self._months[index]))
         self.body.addWidget(self.chart, stretch=1)

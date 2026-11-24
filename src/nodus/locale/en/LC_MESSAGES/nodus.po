@@ -1760,7 +1760,6 @@ msgstr "To reach {target} by {month}, you need about {needed} a month."
 #: nodus/ui/dialogs/installment_fields.py nodus/ui/dialogs/transaction_dialog.py
 #: nodus/ui/pages/analysis/net_worth_view.py nodus/ui/pages/analysis/trends_view.py
 #: nodus/ui/pages/base/summary_detail_page.py nodus/ui/pages/base/summary_page.py
-#: nodus/ui/pages/dashboard/expenses_card.py
 msgid "Total"
 msgstr "Total"
 
@@ -2440,8 +2439,8 @@ msgstr "Counts toward:"
 msgid "Rendimiento {amount}"
 msgstr "Return {amount}"
 
-#: nodus/ui/pages/accounts_page.py nodus/ui/pages/base/summary_page.py nodus/ui/pages/budgets_page.py
-#: nodus/ui/pages/categories_page.py nodus/ui/pages/goals_page.py
+#: nodus/ui/pages/accounts_page.py nodus/ui/pages/base/summary_page.py
+#: nodus/ui/pages/categories_page.py nodus/ui/pages/goals_page.py nodus/ui/widgets/tables/budget_row.py
 msgid "Abrir"
 msgstr "Open"
 
@@ -2604,7 +2603,7 @@ msgstr "Set limit"
 msgid "Todavía no hay presupuestos"
 msgstr "No budgets yet"
 
-#: nodus/ui/pages/categories_page.py nodus/ui/pages/dashboard/expenses_card.py
+#: nodus/ui/pages/categories_page.py
 msgid "Sin gastos"
 msgstr "No expenses"
 
@@ -2700,7 +2699,7 @@ msgstr "Month by month"
 msgid "Por subcategoría"
 msgstr "By subcategory"
 
-#: nodus/ui/pages/category_detail_page.py nodus/ui/pages/dashboard/comparison_card.py
+#: nodus/ui/pages/category_detail_page.py nodus/ui/pages/dashboard/categories_card.py
 msgid "Nueva"
 msgstr "New"
 
@@ -3153,15 +3152,23 @@ msgstr "Savings compared with the previous period"
 msgid "MES A MES"
 msgstr "MONTH BY MONTH"
 
-#: nodus/ui/pages/dashboard/comparison_card.py
-msgid "Frente al período anterior"
-msgstr "Compared with the previous period"
+#: nodus/ui/pages/dashboard/categories_card.py
+msgid "Resto"
+msgstr "The rest"
 
-#: nodus/ui/pages/dashboard/comparison_card.py
+#: nodus/ui/pages/dashboard/categories_card.py
+msgid "Gastos por categoría"
+msgstr "Expenses by category"
+
+#: nodus/ui/pages/dashboard/categories_card.py
+msgid "Gastos frente al período anterior"
+msgstr "Expenses compared with the previous period"
+
+#: nodus/ui/pages/dashboard/categories_card.py
 msgid "Sin gastos en el período."
 msgstr "No expenses in this period."
 
-#: nodus/ui/pages/dashboard/comparison_card.py
+#: nodus/ui/pages/dashboard/categories_card.py
 #, python-brace-format
 msgid "Período anterior: {amount}"
 msgstr "Previous period: {amount}"
@@ -3181,22 +3188,6 @@ msgstr "Add my first account"
 #: nodus/ui/pages/dashboard/dashboard_page.py
 msgid "Traer mis datos de otra computadora"
 msgstr "Bring my data from another computer"
-
-#: nodus/ui/pages/dashboard/expenses_card.py
-msgid "Resto"
-msgstr "The rest"
-
-#: nodus/ui/pages/dashboard/expenses_card.py
-msgid "Gastos por categoría"
-msgstr "Expenses by category"
-
-#: nodus/ui/pages/dashboard/expenses_card.py
-msgid "Gastos frente al período anterior"
-msgstr "Expenses compared with the previous period"
-
-#: nodus/ui/pages/dashboard/expenses_card.py
-msgid "en el período"
-msgstr "in this period"
 
 #: nodus/ui/pages/dashboard/latest_transactions_card.py
 msgid "Últimas transacciones"
@@ -3875,14 +3866,14 @@ msgstr ""
 
 #: nodus/ui/text/help_texts.py
 msgid ""
-"El Inicio muestra tu patrimonio neto, los próximos pagos, en qué se fue el dinero y tus "
-"presupuestos. Arriba a la derecha eliges el período. Un clic en una categoría abre su página, y "
-"uno en un mes de «Flujo de caja», sus movimientos. Toda fila que lleva a otra página termina en "
-"«›»."
+"El Inicio muestra tu patrimonio neto, los próximos pagos, cómo viene el período, tus presupuestos"
+" y en qué se fue el dinero. Arriba a la derecha eliges el período. Un clic en una categoría abre "
+"su página, y uno en un mes de «Flujo de caja», sus movimientos. Toda fila que lleva a otra página"
+" termina en «›»."
 msgstr ""
-"Home shows your net worth, upcoming payments, where the money went and your budgets. Pick the "
-"period at the top right. Click a category to open its page, or a month of “Cash flow” to see its "
-"transactions. Every row that leads to another page ends in “›”."
+"Home shows your net worth, upcoming payments, how the period is going, your budgets and where the"
+" money went. Pick the period at the top right. Click a category to open its page, or a month of "
+"“Cash flow” to see its transactions. Every row that leads to another page ends in “›”."
 
 #: nodus/ui/text/help_texts.py
 msgid ""

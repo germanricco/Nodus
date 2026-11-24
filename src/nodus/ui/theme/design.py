@@ -228,13 +228,13 @@ class Layout:
     NUMBER_FIELD_WIDTH = 200  # a rate
     HEX_FIELD_WIDTH = 100
     DAY_FIELD_MIN_WIDTH = 90
-    LEGEND_MIN_WIDTH = 300  # a chart's legend beside it; with less room it goes below
     CHANGE_BADGE_MIN_WIDTH = 64
     LIST_MIN_CHARACTERS = 14  # how wide a selector is, in characters of its names
     LIST_INDENT = 18  # a subcategory in a list
     TREE_INDENT = 28  # a subcategory in Categorías, which has room for more
     # The columns of Categorías, the same on every row so the bars and amounts line up.
     SHARE_BAR_WIDTH = 160
+    SHARE_BAR_MIN_WIDTH = 80  # a bar that stretches with its card, at the least
     SHARE_PERCENT_WIDTH = 48
     SHARE_AMOUNT_WIDTH = 150
     CHECK_COLUMN = 34  # a table's check boxes
@@ -260,10 +260,6 @@ class Chart:
     # The chart of a record's page (an account's balance, a goal's savings, a category's
     # months): fixed, so in a short window the page scrolls instead of squeezing it.
     DETAIL_HEIGHT = 220
-    DONUT_SIZE = 240
-    DONUT_MIN_SIZE = 200
-    DONUT_THICKNESS = 26
-    DONUT_POP = 8  # how far the slice under the mouse grows
     PROPORTION_HEIGHT = 10  # the bar split between income and expenses
 
 

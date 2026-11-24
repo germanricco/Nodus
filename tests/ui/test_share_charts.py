@@ -2,13 +2,20 @@ from datetime import date
 
 import pytest
 from factories import ars
-from PySide6.QtCore import QPoint, QPointF, Qt
+from PySide6.QtCore import QPoint
 
 from nodus.models.currency import Currency
 from nodus.ui.theme.theme import LIGHT
 from nodus.ui.widgets.change_badge import ChangeBadge, format_change
 from nodus.ui.widgets.charts.bar_chart import BarChart, BarGroup
-from nodus.ui.widgets.charts.chart_base import distinct_colors, format_compact, resample
+from nodus.ui.widgets.charts.chart_base import (
+    compact_pesos,
+    distinct_colors,
+    format_compact,
+    nice_step,
+    resample,
+    value_axis,
+)
 from nodus.ui.widgets.charts.line_chart import (
     LineChart,
     LinePoint,
@@ -17,14 +24,7 @@ from nodus.ui.widgets.charts.line_chart import (
     height,
     value_range,
 )
-from nodus.ui.widgets.charts.share_charts import (
-    DonutChart,
-    ProportionBar,
-    Segment,
-    clockwise_angle,
-    index_at_angle,
-    segment_spans,
-)
+from nodus.ui.widgets.charts.share_charts import ProportionBar, Segment
 from nodus.ui.widgets.money_label import AnimatedMoneyLabel
 
 # Pure helpers
@@ -74,22 +74,6 @@ def test_axis_labels_go_at_a_regular_step_and_end_on_the_last_day(count, fit, in
 
 def test_change_directions_skip_unknown_values():
     assert change_directions([1, 2, 2, None, 1, 3]) == [0, 1, 0, 0, -1, 1]
-
-
-def test_segment_spans_start_at_twelve_and_leave_gaps():
-    assert segment_spans([1, 3]) == [(0, 90), (90, 270)]
-    assert segment_spans([1, 1], gap=2) == [(1, 178), (181, 178)]
-    assert segment_spans([0, 0]) == []
-
-
-def test_angles_go_clockwise_from_twelve():
-    center = QPointF(0, 0)
-    assert clockwise_angle(center, QPointF(0, -1)) == pytest.approx(0)
-    assert clockwise_angle(center, QPointF(1, 0)) == pytest.approx(90)
-    assert clockwise_angle(center, QPointF(-1, 0)) == pytest.approx(270)
-    spans = segment_spans([1, 3])
-    assert index_at_angle(spans, 45) == 0
-    assert index_at_angle(spans, 200) == 1
 
 
 @pytest.mark.parametrize(
@@ -258,7 +242,7 @@ def test_line_chart_of_another_period_morphs_by_position(qtbot):
 
 
 def test_hidden_chart_plays_its_transition_when_shown(qtbot, animations):
-    chart = BarChart(LIGHT)
+    chart = BarChart(LIGHT, compact_pesos)
     qtbot.addWidget(chart)
 
     chart.set_groups([BarGroup("Nov", 100, 40, "Noviembre", ("+$ 1",))])
@@ -269,14 +253,14 @@ def test_hidden_chart_plays_its_transition_when_shown(qtbot, animations):
 
 
 def test_bars_grow_from_zero_and_keep_place_on_update(qtbot):
-    chart = make(qtbot, BarChart(LIGHT))
+    chart = make(qtbot, BarChart(LIGHT, compact_pesos))
     chart.set_groups([BarGroup("Oct", 100, 60, "", ()), BarGroup("Nov", 0, 50, "", (), True)])
 
     chart.set_groups([BarGroup("Oct", 300, 80, "", ()), BarGroup("Nov", 40, 50, "", (), True)])
 
     assert chart._values_at(0.5) == [(200, 70), (20, 50)]
     assert chart.index_at(chart.width() * 0.75) == 1
-    qtbot.mouseMove(chart, QPoint(10, 50))
+    qtbot.mouseMove(chart, QPoint(int(chart.LEFT) + 10, 50))  # past the axis' values
     assert chart.hover_index == 0
     chart.grab()
 
@@ -284,7 +268,7 @@ def test_bars_grow_from_zero_and_keep_place_on_update(qtbot):
 def test_bars_follow_their_month_when_the_period_moves(qtbot):
     """Moving the period one month keeps the count of bars; each must still start from
     its own month, and the month that enters grows from the baseline."""
-    chart = make(qtbot, BarChart(LIGHT))
+    chart = make(qtbot, BarChart(LIGHT, compact_pesos))
     chart.set_groups([BarGroup("Oct", 100, 60, "", ()), BarGroup("Nov", 40, 20, "", ())])
 
     chart.set_groups([BarGroup("Nov", 40, 20, "", ()), BarGroup("Dic", 80, 10, "", ())])
@@ -293,67 +277,12 @@ def test_bars_follow_their_month_when_the_period_moves(qtbot):
 
 
 def test_bars_of_the_same_label_in_another_year_are_other_months(qtbot):
-    chart = make(qtbot, BarChart(LIGHT))
+    chart = make(qtbot, BarChart(LIGHT, compact_pesos))
     chart.set_groups([BarGroup("Nov", 100, 60, "", (), key=(2025, 11))])
 
     chart.set_groups([BarGroup("Nov", 40, 20, "", (), key=(2026, 11))])
 
     assert chart._values_at(0) == [(0, 0)]
-
-
-def make_donut(qtbot):
-    donut = make(qtbot, DonutChart(LIGHT), (260, 260))
-    donut.set_data(
-        [
-            Segment("#ff0000", 100, "a", "Vivienda", "$ 100", "25 %"),
-            Segment("#00ff00", 300, "b", "Ocio", "$ 300", "75 %"),
-        ],
-        "Total",
-        ars("400"),
-    )
-    return donut
-
-
-def test_donut_click_on_a_slice_emits_its_index(qtbot):
-    donut = make_donut(qtbot)
-    ring = donut._ring()
-    # Just right of 12 o'clock is the first slice; left of it, the second.
-    first = QPoint(int(ring.center().x()) + 10, int(ring.top()))
-    second = QPoint(int(ring.center().x()) - 10, int(ring.top()))
-
-    assert donut.index_at(QPointF(ring.center())) is None
-    with qtbot.waitSignal(donut.segment_clicked) as clicked:
-        qtbot.mouseClick(donut, Qt.MouseButton.LeftButton, pos=second)
-    assert clicked.args == [1]
-
-    qtbot.mouseMove(donut, first)
-    assert donut.hover_index == 0
-    donut.grab()
-
-
-def test_donut_slices_resize_by_key(qtbot):
-    donut = make_donut(qtbot)
-
-    donut.set_data(
-        [Segment("#00ff00", 100, "b"), Segment("#0000ff", 200, "c")], "Total", ars("300")
-    )
-    donut.progress = 0.5
-
-    drawn = {segment.key: value for segment, value in donut._drawn()}
-    assert drawn == {"b": 200, "c": 100, "a": 50}  # "a" shrinks away, "c" grows in
-
-
-def test_donut_slices_shrink_away_when_the_period_has_none(qtbot):
-    """Going to an empty period, the slices shrink over the empty ring; filling the whole
-    circle they kept the old picture until the last frame."""
-    donut = make_donut(qtbot)
-
-    donut.set_data([], "Total", None, "Sin gastos")
-    donut.progress = 0.5
-
-    covered = sum(span for _start, span in donut._spans(donut._drawn()))
-    assert covered == pytest.approx(180 - donut.GAP_DEGREES * 2)
-    donut.grab()
 
 
 def test_proportion_bar_slides_to_new_shares(qtbot):
@@ -426,3 +355,18 @@ def test_a_repeated_color_turns_into_a_shade_of_it():
 
     assert colors[:2] == ["#e67e22", "#2980b9"]
     assert len(set(colors)) == 4
+
+
+@pytest.mark.parametrize(
+    ("span", "step"), [(0.7, 1), (1.3, 2), (2.2, 2.5), (3, 5), (7, 10), (1_470_000, 2_000_000)]
+)
+def test_a_step_is_1_2_25_or_5_times_a_power_of_ten(span, step):
+    assert nice_step(span) == step
+
+
+def test_the_guides_of_a_bar_chart_are_round_and_cover_its_bars():
+    """About three round steps from zero past the highest bar, and below zero for a
+    negative stack."""
+    assert value_axis(0, 1_470_000) == [0, 500_000, 1_000_000, 1_500_000]
+    assert value_axis(-300, 900) == [-500, 0, 500, 1000]
+    assert value_axis(0, 0) == [0]

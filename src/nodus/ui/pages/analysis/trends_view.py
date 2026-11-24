@@ -5,7 +5,6 @@ from __future__ import annotations
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout
 
 from nodus.i18n import N_, _
-from nodus.models.currency import HOME_CURRENCY
 from nodus.models.period import Period, format_month
 from nodus.services.container import Services
 from nodus.services.reports.analysis_service import Metric, MonthTrend, Trends
@@ -19,7 +18,7 @@ from nodus.ui.theme.theme import Theme
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card_grid import CardGrid
 from nodus.ui.widgets.change_badge import ChangeBadge
-from nodus.ui.widgets.charts.chart_base import format_compact
+from nodus.ui.widgets.charts.chart_base import compact_pesos
 from nodus.ui.widgets.charts.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
 from nodus.ui.widgets.empty_state import NO_MOVEMENTS_TEXT, EmptyState
 from nodus.ui.widgets.figure_row import FigureRow
@@ -75,9 +74,7 @@ class TrendsView(AnalysisView):
             self.figures.add_tile(tile)
         layout.addWidget(self.figures)
 
-        self.chart = StackedBarChart(
-            self._theme, lambda cents: format_compact(cents, HOME_CURRENCY)
-        )
+        self.chart = StackedBarChart(self._theme, compact_pesos)
         self.chart.clicked.connect(self._bar_clicked)
         card, self.empty_label, self.unconverted_label = chart_card(_("Mes a mes"), self.chart)
         layout.addWidget(card)

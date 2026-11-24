@@ -192,7 +192,7 @@ def transfer_dialog(services: Services, event_bus: EventBus, window: QWidget) ->
 
 
 # Tall enough for every dashboard card at once.
-FULL_DASHBOARD_HEIGHT = 1180
+FULL_DASHBOARD_HEIGHT = 1500
 FULL_SETTINGS_HEIGHT = 1500
 
 

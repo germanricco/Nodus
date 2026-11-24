@@ -29,8 +29,7 @@ from nodus.ui.pages.base.net_worth_card import NetWorthCard
 from nodus.ui.pages.base.page import Page
 from nodus.ui.pages.dashboard.budgets_card import BudgetsCard
 from nodus.ui.pages.dashboard.cash_flow_card import CashFlowCard
-from nodus.ui.pages.dashboard.comparison_card import ComparisonCard
-from nodus.ui.pages.dashboard.expenses_card import ExpensesCard
+from nodus.ui.pages.dashboard.categories_card import CategoriesCard
 from nodus.ui.pages.dashboard.latest_transactions_card import (
     LATEST_COUNT,
     LATEST_COUNT_BELOW_UPCOMING,
@@ -62,8 +61,8 @@ Placement = tuple[QWidget, int, int, int, int]
 
 
 class DashboardPage(Page):
-    """Net worth with its trend, the period's cash flow, expenses by category and against
-    the previous period, and the latest movements. Without accounts it shows how to get
+    """Net worth with its trend, the latest movements, the period's cash flow and budgets,
+    and expenses by category against the previous period. Without accounts it shows how to get
     started instead.
 
     The cards are built once. When data changes while the dashboard is on screen (a
@@ -124,10 +123,8 @@ class DashboardPage(Page):
         self.budgets_card.see_all_requested.connect(
             lambda: self.budgets_requested.emit(self._budgets_month())
         )
-        self.expenses_card = ExpensesCard(theme_manager)
-        self.comparison_card = ComparisonCard()
-        for card in (self.expenses_card, self.comparison_card):
-            card.record_requested.connect(self.record_requested)
+        self.categories_card = CategoriesCard(theme_manager)
+        self.categories_card.record_requested.connect(self.record_requested)
 
         grid_page = QWidget()
         self._grid = QGridLayout(grid_page)
@@ -179,8 +176,7 @@ class DashboardPage(Page):
         )
         self.flow_card.show_data(comparison, dashboard.monthly_flow(period))
         self.budgets_card.show_month(self._budgets_month(), date.today())
-        self.expenses_card.show_data(comparison.current, comparison.expenses_change)
-        self.comparison_card.show_data(comparison)
+        self.categories_card.show_data(comparison)
         self._arrange()
 
     def _budgets_month(self) -> Month:
@@ -205,25 +201,21 @@ class DashboardPage(Page):
         """Places the cards for the available width.
 
         The top row is what matters at a glance: net worth, with upcoming payments and the
-        latest movements beside it. Below come expenses by category next to the comparison
-        with the previous period, which belong together, and last the month-by-month cash
-        flow, for a closer look, with the budgets beside it when there are any. In a narrow
-        window everything goes one card per row, except the top's side cards, and in a
-        narrower one those too. The widest shape where every card has room for its
-        minimum is chosen, so no card is ever cut; the page scrolls instead.
+        latest movements beside it. Then how the period goes, which answers «how much do I
+        have left?» without scrolling: the month-by-month cash flow, with the budgets
+        beside it when there are any. Last, where the money went, category by category
+        (plan 029a, 5.7). In a narrow window everything goes one card per row, except the
+        top's side cards, and in a narrower one those too. The widest shape where every
+        card has room for its minimum is chosen, so no card is ever cut; the page scrolls
+        instead.
         """
         upcoming = self.upcoming_card.isVisibleTo(self)
         budgets = self.budgets_card.isVisibleTo(self)
         width = self._scroll.viewport().width()
-        # Expenses take four of the six columns when wide, the full width otherwise.
-        expenses_width = self._span_width(width, 4)
-        self.expenses_card.set_legend_beside(self.expenses_card.fits_legend_beside(expenses_width))
         shape = next(
             (s for s in Shape if self._fits(self._placements(s, upcoming, budgets), width)),
             Shape.STACKED,
         )
-        if shape is not Shape.WIDE:
-            self.expenses_card.set_legend_beside(self.expenses_card.fits_legend_beside(width))
         layout = (shape, upcoming, budgets)
         if layout != self._layout:
             self._layout = layout
@@ -242,33 +234,26 @@ class DashboardPage(Page):
         six columns wide, two otherwise. Every shape is here, so a new card is placed in
         one function."""
         side = [self.upcoming_card, self.latest_card] if upcoming else [self.latest_card]
-        bottom = [self.flow_card, self.budgets_card] if budgets else [self.flow_card]
+        middle = [self.flow_card, self.budgets_card] if budgets else [self.flow_card]
         if shape is Shape.WIDE:
             return [
                 (self.net_worth_card, 0, 0, 2, 4),
                 *((card, row, 4, 2 // len(side), 2) for row, card in enumerate(side)),
-                (self.expenses_card, 2, 0, 1, 4),
-                (self.comparison_card, 2, 4, 1, 2),
                 *(
-                    [(self.flow_card, 3, 0, 1, 4), (self.budgets_card, 3, 4, 1, 2)]
+                    [(self.flow_card, 2, 0, 1, 4), (self.budgets_card, 2, 4, 1, 2)]
                     if budgets
-                    else [(self.flow_card, 3, 0, 1, GRID_COLUMNS)]
+                    else [(self.flow_card, 2, 0, 1, GRID_COLUMNS)]
                 ),
+                (self.categories_card, 3, 0, 1, GRID_COLUMNS),
             ]
         together = [side] if shape is Shape.NARROW else [[card] for card in side]
-        rows = [[self.net_worth_card], *together, [self.expenses_card], [self.comparison_card]]
-        rows += [[card] for card in bottom]
+        rows = [[self.net_worth_card], *together, *([card] for card in middle)]
+        rows += [[self.categories_card]]
         return [
             (card, row, column * 2 // len(cards), 1, 2 // len(cards))
             for row, cards in enumerate(rows)
             for column, card in enumerate(cards)
         ]
-
-    def _span_width(self, width: float, columns: int) -> float:
-        """How wide a card spanning ``columns`` of the six is, in a grid ``width`` wide."""
-        spacing = self._grid.spacing()
-        column = (width - (GRID_COLUMNS - 1) * spacing) / GRID_COLUMNS
-        return columns * column + (columns - 1) * spacing
 
     def _fits(self, placements: list[Placement], width: float) -> bool:
         """Whether a grid ``width`` wide has room for the minimum width of every card.
@@ -298,8 +283,7 @@ class DashboardPage(Page):
             self.latest_card,
             self.flow_card,
             self.budgets_card,
-            self.expenses_card,
-            self.comparison_card,
+            self.categories_card,
         ]
 
     def _remeasure(self) -> None:

@@ -30,6 +30,7 @@ from nodus.ui.pages.dashboard.latest_transactions_card import LatestTransactionR
 from nodus.ui.shell import main_window
 from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.text.formatting import percent
+from nodus.ui.widgets.change_badge import ChangeBadge
 from nodus.ui.widgets.elided_label import ElidedLabel
 
 
@@ -116,10 +117,13 @@ def test_shows_month_flow_and_latest_movements(qtbot, window, services, event_bu
     qtbot.waitUntil(lambda: {"$ 750,00", "$ 250,00"} <= set(visible_texts(page)))
     texts = visible_texts(page)
     assert "75 %" in texts
-    assert "$ 250,00" in texts  # the donut legend line of the only category
-    rows = [r for r in page.findChildren(LatestTransactionRow) if r.isVisibleTo(page)]
-    descriptions = [label.text() for row in rows for label in row.findChildren(ElidedLabel)]
-    assert "Verdulería" in descriptions and "Sueldo" in descriptions
+    assert "$ 250,00" in texts  # the line of the only category
+
+    def descriptions() -> list[str]:
+        rows = [r for r in page.findChildren(LatestTransactionRow) if r.isVisibleTo(page)]
+        return [label.text() for row in rows for label in row.findChildren(ElidedLabel)]
+
+    qtbot.waitUntil(lambda: {"Verdulería", "Sueldo"} <= set(descriptions()))
 
 
 def test_see_all_opens_transactions_on_the_same_period(qtbot, window, pesos):
@@ -158,43 +162,67 @@ def test_clicking_a_category_opens_its_page(qtbot, window, services, pesos):
     window.show_page(PageId.DASHBOARD)
 
     # Transporte, the second largest.
-    qtbot.mouseClick(page.expenses_card.rows[1], Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(page.categories_card.rows[1], Qt.MouseButton.LeftButton)
 
     detail = window.detail(DetailId.CATEGORY)
     assert window.current_page is detail
     assert detail.item_id == category_id(services, "Transporte", TransactionType.EXPENSE)
 
 
-def test_clicking_a_donut_slice_and_a_comparison_row(qtbot, window, services, pesos):
-    record_this_month(services, pesos)
+def test_categories_go_from_the_total_to_each_against_the_period_before(
+    qtbot, window, services, pesos
+):
+    """The total spent under the title, then the six that took the most, each with its
+    share, amount and change; the rest add up in one line that opens nothing."""
+    month_ago = date.today() - timedelta(days=31)
+    names = (
+        "Supermercado y comida",
+        "Vivienda",
+        "Servicios",
+        "Transporte",
+        "Salud",
+        "Educación",
+        "Ocio",
+        "Ropa",
+    )
+    for amount, name in zip(range(800, 0, -100), names, strict=True):
+        record_this_month(services, pesos, str(amount), name)
+    services.transactions.create(
+        expense_draft(
+            services,
+            pesos.id,
+            ars("400"),
+            on=month_ago,
+            category_id=category_id(services, "Supermercado y comida", TransactionType.EXPENSE),
+        )
+    )
     page = dashboard(window)
     window.show_page(PageId.DASHBOARD)
-    supermarket = category_id(services, "Supermercado y comida", TransactionType.EXPENSE)
+    card = page.categories_card
 
-    with qtbot.waitSignal(page.record_requested) as from_donut:
-        page.expenses_card.donut.segment_clicked.emit(0)
-    window.show_page(PageId.DASHBOARD)
-    with qtbot.waitSignal(page.record_requested) as from_comparison:
-        qtbot.mouseClick(page.comparison_card.rows[0], Qt.MouseButton.LeftButton)
-
-    assert from_donut.args == [RecordLink.category(supermarket)]
-    assert from_comparison.args == [RecordLink.category(supermarket)]
+    assert card.total_label.text() == "$ 3.600,00"
+    assert [row.name for row in card.rows] == [*names[:6], "Resto"]
+    first, rest = card.rows[0], card.rows[-1]
+    assert first.findChild(ChangeBadge).text() == "↗ 100 %"
+    assert card.bars[first.link.item_id].fraction == pytest.approx(800 / 3600)
+    assert rest.link is None
+    assert "$ 300,00" in [label.text() for label in rest.findChildren(QLabel)]  # 200 + 100
 
 
 def test_new_transaction_updates_the_same_cards(qtbot, window, services, event_bus, pesos):
     page = dashboard(window)
     window.show_page(PageId.DASHBOARD)
-    cards = (page.net_worth_card, page.flow_card, page.expenses_card, page.comparison_card)
+    cards = (page.net_worth_card, page.flow_card, page.categories_card)
     chart = page.net_worth_card.chart
 
     record_this_month(services, pesos, "30000")
     event_bus.transactions_changed.emit()
 
-    assert (page.net_worth_card, page.flow_card, page.expenses_card, page.comparison_card) == cards
+    assert (page.net_worth_card, page.flow_card, page.categories_card) == cards
     assert page.net_worth_card.chart is chart
     assert chart.points()[-1].value == ars("70000").cents
     assert page.flow_card.expenses_label.money() == ars("-30000")
-    assert page.expenses_card.donut.segments()[0].value == ars("30000").cents
+    assert page.categories_card.total_label.text() == "$ 30.000,00"
 
 
 def test_hidden_dashboard_waits_until_shown(qtbot, window, services, event_bus, pesos, monkeypatch):
@@ -292,14 +320,14 @@ def test_cards_rearrange_for_narrow_windows(qtbot, window, services, pesos):
     window.resize(1400, 900)
     page.refresh()
     qtbot.waitUntil(lambda: grid_cell(page, page.upcoming_card) == (0, 4, 1, 2))
-    # Expenses and the comparison with the previous period sit side by side.
-    assert grid_cell(page, page.expenses_card)[0] == grid_cell(page, page.comparison_card)[0]
+    # «How much is left?» comes before where the money went.
+    assert grid_cell(page, page.flow_card)[0] < grid_cell(page, page.categories_card)[0]
 
     window.resize(1100, 900)
     window.toggle_help()  # Ayuda beside it leaves the page too narrow for two columns
 
     qtbot.waitUntil(lambda: grid_cell(page, page.upcoming_card)[:2] == (1, 0))
-    assert grid_cell(page, page.comparison_card)[0] > grid_cell(page, page.expenses_card)[0]
+    assert grid_cell(page, page.categories_card)[0] > grid_cell(page, page.flow_card)[0]
 
 
 def test_opens_with_the_shape_of_its_window(qtbot, services, event_bus, theme_manager, pesos):
@@ -427,20 +455,6 @@ def test_cards_are_never_squeezed_when_the_theme_changes(qtbot, window, theme_ma
         return grid_page.height() >= page._grid.minimumSize().height()
 
     qtbot.waitUntil(fits)
-
-
-def test_expenses_legend_goes_beside_the_ring_when_it_fits(qtbot, window, pesos):
-    page = dashboard(window)
-    card = page.expenses_card
-    assert card.fits_legend_beside(700)
-    assert not card.fits_legend_beside(400)
-
-    window.resize(1400, 900)  # four of six columns are enough for both
-    page.refresh()
-    qtbot.waitUntil(lambda: card.legend_beside)
-
-    window.resize(1100, 900)  # four of six columns are not: the legend goes below
-    qtbot.waitUntil(lambda: not card.legend_beside)
 
 
 def test_many_currencies_never_push_the_cards_off_the_window(

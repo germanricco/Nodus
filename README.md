@@ -35,7 +35,7 @@ It was born for people who manage money in pesos and dollars at the same time. E
 ## What you can do
 
 ### See where you stand at a glance
-Home, the first page, answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, spending by category against the previous period, cash flow month by month and your budgets. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to open its page. Every row that leads to another page ends in “›”, and a click is all it takes. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
+Home, the first page, answers the usual questions: how much you have, how the month is going and where the money went. It shows how your net worth evolves, your upcoming payments, cash flow month by month and your budgets, and last spending by category, each with a bar for its share and against the previous period. Pick a period (this month, the last 3, 6 or 12 months, the year or any range of dates), and click a category to open its page. Every row that leads to another page ends in “›”, and a click is all it takes. If someone is looking over your shoulder, the eye in the top bar hides your balances and net worth, and the sidebar folds down to its icons when you want more room.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/en/dashboard-dark.png">

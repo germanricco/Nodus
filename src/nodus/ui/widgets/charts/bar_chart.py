@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable
 from dataclasses import dataclass
 
 from PySide6.QtCore import QRectF, QSize, Qt, Signal, SignalInstance
@@ -19,6 +19,7 @@ from nodus.ui.widgets.charts.chart_base import (
     lerp,
     rounded_bar_path,
     starting_values,
+    value_axis,
     with_alpha,
 )
 
@@ -60,8 +61,10 @@ class BarChart(BarColumnsChart):
     TOP = 8.0  # geometry
     GROUP_GAP_RATIO = 0.3  # geometry
 
-    def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
-        super().__init__(theme, parent)
+    def __init__(
+        self, theme: Theme, format_axis: Callable[[float], str], parent: QWidget | None = None
+    ) -> None:
+        super().__init__(theme, format_axis, parent)
         self._groups: list[BarGroup] = []
         # Where each bar begins the transition, in the order of ``_groups``.
         self._previous: list[tuple[float, float]] = []
@@ -106,7 +109,9 @@ class BarChart(BarColumnsChart):
         values = self._values_at(self.progress)
         top, baseline = self.TOP, self.height() - self.BOTTOM
         room = baseline - top
-        largest = max([v for pair in values for v in pair] + [1.0])
+        axis = value_axis(0.0, max([v for pair in values for v in pair] + [0.0]))
+        largest = axis[-1] or 1.0
+        self.paint_guides(painter, [(baseline - room * v / largest, v) for v in axis])
 
         for index, (slot, group, pair) in enumerate(
             zip(self.slots(), self._groups, values, strict=True)

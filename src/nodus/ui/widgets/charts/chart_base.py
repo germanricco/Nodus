@@ -7,7 +7,8 @@ it rebuilds its series.
 
 from __future__ import annotations
 
-from collections.abc import Hashable, Mapping, Sequence
+import math
+from collections.abc import Callable, Hashable, Mapping, Sequence
 from typing import Protocol, TypeVar
 
 from PySide6.QtCore import QEvent, QMetaMethod, QPointF, QRectF, Qt, SignalInstance
@@ -23,13 +24,15 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
-from nodus.models.currency import Currency
+from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.language_format import current_format, format_decimal, with_symbol
 from nodus.ui.theme.design import (
     Easing,
     Line,
     Motion,
+    Opacity,
     Radius,
+    Space,
     TextRole,
     Tooltip,
     motion_ms,
@@ -118,6 +121,11 @@ def format_compact(cents: float, currency: Currency) -> str:
             number = format_decimal(value, 1 if value < 10 else 0, drop_zero=True)
             return sign + with_symbol(currency.symbol, f"{number}{language.space}{suffix}")
     return sign + with_symbol(currency.symbol, f"{amount:.0f}")
+
+
+def compact_pesos(cents: float) -> str:
+    """An amount in pesos the short way, as the bar charts write their values."""
+    return format_compact(cents, HOME_CURRENCY)
 
 
 class AnimatedChart(QWidget):
@@ -298,6 +306,26 @@ class BarColumn(Protocol):
     def has_data(self) -> bool: ...
 
 
+def nice_step(span: float) -> float:
+    """The round step at least ``span`` long: 1, 2, 2.5 or 5 times a power of ten."""
+    if span <= 0:
+        return 1.0
+    magnitude = 10 ** math.floor(math.log10(span))
+    return next(f * magnitude for f in (1, 2, 2.5, 5, 10) if f * magnitude >= span)
+
+
+def value_axis(low: float, high: float) -> list[float]:
+    """The values of a bar chart's guides: round steps, about three of them, from zero or
+    below ``low`` to above ``high``, so the scale reads at a glance; the last is the top
+    of the chart and the first its bottom."""
+    low, high = min(low, 0.0), max(high, 0.0)
+    if high == low:
+        return [0.0]
+    step = nice_step((high - low) / 3)
+    first, last = math.floor(low / step), math.ceil(high / step)
+    return [i * step for i in range(first, last + 1)]
+
+
 class BarColumnsChart(ColumnHoverChart):
     """Bars in equal columns, a label under each and a baseline across: what the cash
     flow and the trend charts share. Subclasses give their columns, draw the bars and
@@ -306,16 +334,26 @@ class BarColumnsChart(ColumnHoverChart):
     A column opens something, as a row with «›» does, when it has bars and the page
     listens to its click: only then does it show the hand and take the click
     (``navigation.py``, the click rule).
+
+    On the left, the values of a few round guides (``value_axis``), written by
+    ``format_axis``, give the bars a scale.
     """
 
     BOTTOM = 22.0  # geometry: room for the labels under the axis
+    LEFT = 56.0  # geometry: room for the values of the guides
+
+    def __init__(
+        self, theme: Theme, format_axis: Callable[[float], str], parent: QWidget | None = None
+    ) -> None:
+        super().__init__(theme, parent)
+        self._format_axis = format_axis
 
     def columns(self) -> Sequence[BarColumn]:
         raise NotImplementedError
 
     def slots(self) -> list[QRectF]:
         """The column each bar group occupies, full height."""
-        return column_slots(len(self.columns()), self.width(), self.height())
+        return column_slots(len(self.columns()), self.width() - self.LEFT, self.height(), self.LEFT)
 
     def index_at(self, x: float) -> int | None:
         return slot_index(self.slots(), x)
@@ -350,7 +388,28 @@ class BarColumnsChart(ColumnHoverChart):
 
     def paint_baseline(self, painter: QPainter, y: float) -> None:
         painter.setPen(QPen(QColor(self._theme.border), Line.THIN))
-        painter.drawLine(QPointF(0, y), QPointF(self.width(), y))
+        painter.drawLine(QPointF(self.LEFT, y), QPointF(self.width(), y))
+
+    def paint_guides(self, painter: QPainter, guides: Sequence[tuple[float, float]]) -> None:
+        """A faint dashed line across the bars at each (height on screen, value), and the
+        value on the left; zero is the baseline's, which needs no line of its own."""
+        painter.setFont(role_font(TextRole.NOTE))
+        for y, value in guides:
+            if value:
+                painter.setPen(
+                    QPen(
+                        with_alpha(self._theme.border, Opacity.GRID),
+                        Line.THIN,
+                        Qt.PenStyle.DashLine,
+                    )
+                )
+                painter.drawLine(QPointF(self.LEFT, y), QPointF(self.width(), y))
+            painter.setPen(QColor(self._theme.text_muted))
+            painter.drawText(
+                QRectF(0, y - 9, self.LEFT - Space.S, 18),
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                self._format_axis(value),
+            )
 
     def paint_hover(self, painter: QPainter) -> None:
         """The tooltip of the column under the mouse, if any, at its middle."""
@@ -368,12 +427,13 @@ class BarColumnsChart(ColumnHoverChart):
         return index if self.opens(index) else None
 
 
-def column_slots(count: int, width: float, height: float) -> list[QRectF]:
-    """``count`` equal columns across a chart, full height: the place of each bar group."""
+def column_slots(count: int, width: float, height: float, left: float = 0.0) -> list[QRectF]:
+    """``count`` equal columns across ``width`` from ``left``, full height: the place of
+    each bar group."""
     if count == 0:
         return []
     column = width / count
-    return [QRectF(i * column, 0, column, height) for i in range(count)]
+    return [QRectF(left + i * column, 0, column, height) for i in range(count)]
 
 
 def slot_index(slots: list[QRectF], x: float) -> int | None:

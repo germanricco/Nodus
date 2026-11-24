@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from nodus.models.category import Category
 from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
-from nodus.models.period import Month, Period
+from nodus.models.period import RECENT_MONTHS, Month, Period
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.accounts.exchange_rate_service import ExchangeRateService
@@ -29,9 +29,6 @@ from nodus.services.conversion import (
     relative_change,
 )
 from nodus.services.transactions.transaction_service import TransactionService
-
-# A single month shows the trend of the months leading to it.
-TREND_MONTHS = 6
 
 
 @dataclass(frozen=True)
@@ -165,10 +162,11 @@ class DashboardService:
 
     def monthly_flow(self, period: Period) -> list[MonthFlow]:
         """Income and expenses of each month of ``period``; for a single month, of the
-        ``TREND_MONTHS`` months that end with it, so there is a trend to see."""
+        ``RECENT_MONTHS`` months that end with it, a year to see the trend in, as in
+        Análisis and on a record's page."""
         months = period.months()
         if len(months) == 1:
-            months = [months[0].shifted(-i) for i in reversed(range(TREND_MONTHS))]
+            months = [months[0].shifted(-i) for i in reversed(range(RECENT_MONTHS))]
         converted = self._converted(Period.of_months(months[0], months[-1]))
         return month_flows(converted.movements, months)
 

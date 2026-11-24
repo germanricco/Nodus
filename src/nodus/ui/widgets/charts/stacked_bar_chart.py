@@ -17,6 +17,7 @@ from nodus.ui.widgets.charts.chart_base import (
     lerp,
     rounded_bar_path,
     starting_values,
+    value_axis,
     with_alpha,
 )
 
@@ -73,7 +74,7 @@ class StackedBarChart(BarColumnsChart):
         format_value: Callable[[float], str],
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__(theme, parent)
+        super().__init__(theme, format_value, parent)
         self._format_value = format_value
         self._bars: list[StackedBar] = []
         self._previous: list[dict[int | None, float]] = []
@@ -118,12 +119,18 @@ class StackedBarChart(BarColumnsChart):
 
     # Geometry
 
-    def _scale(self, values: list[list[float]]) -> tuple[float, float]:
-        """The baseline's height on screen and the pixels per cent."""
+    def _axis(self, values: list[list[float]]) -> list[float]:
+        """The values of the guides, from the lowest stack (or zero) to the highest."""
         highest = max([sum(v for v in bar if v > 0) for bar in values] + [0.0])
         lowest = min([sum(v for v in bar if v < 0) for bar in values] + [0.0])
         if self.average is not None:
             highest, lowest = max(highest, self.average), min(lowest, self.average)
+        return value_axis(lowest, highest)
+
+    def _scale(self, values: list[list[float]]) -> tuple[float, float]:
+        """The baseline's height on screen and the pixels per cent."""
+        axis = self._axis(values)
+        highest, lowest = axis[-1], axis[0]
         span = (highest - lowest) or 1.0
         room = self.height() - self.TOP - self.BOTTOM
         per_cent = room / span
@@ -170,6 +177,7 @@ class StackedBarChart(BarColumnsChart):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         all_values = self._values_at(self.progress)
         baseline, per_cent = self._scale(all_values)
+        self.paint_guides(painter, [(baseline - v * per_cent, v) for v in self._axis(all_values)])
         for index, (slot, bar, values) in enumerate(
             zip(self.slots(), self._bars, all_values, strict=True)
         ):
@@ -196,7 +204,7 @@ class StackedBarChart(BarColumnsChart):
     def _paint_average(self, painter: QPainter, y: float) -> None:
         pen = QPen(QColor(self._theme.warning), Line.STROKE, Qt.PenStyle.DashLine)
         painter.setPen(pen)
-        painter.drawLine(QPointF(0, y), QPointF(self.width(), y))
+        painter.drawLine(QPointF(self.LEFT, y), QPointF(self.width(), y))
         # The label sits on a patch of the card's color, so it reads over a bar.
         text = _("Promedio {amount}").format(amount=self._format_value(self.average))
         width = painter.fontMetrics().horizontalAdvance(text) + 12

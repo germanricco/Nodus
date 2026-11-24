@@ -6,7 +6,6 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from nodus.i18n import N_, _
-from nodus.models.currency import HOME_CURRENCY
 from nodus.models.money import Money
 from nodus.models.period import Month, Period, format_month
 from nodus.models.transaction import TransactionType
@@ -26,7 +25,7 @@ from nodus.ui.theme.design import Chart
 from nodus.ui.theme.theme_manager import ThemeManager
 from nodus.ui.widgets.card import Card, card_header
 from nodus.ui.widgets.change_badge import ChangeBadge
-from nodus.ui.widgets.charts.chart_base import distinct_colors, format_compact
+from nodus.ui.widgets.charts.chart_base import compact_pesos, distinct_colors
 from nodus.ui.widgets.charts.stacked_bar_chart import StackedBar, StackedBarChart, StackSegment
 from nodus.ui.widgets.link_line import Link, LinkLine
 from nodus.ui.widgets.money_label import amount_text
@@ -62,9 +61,7 @@ class CategoryDetailPage(SummaryDetailPage[CategorySummary]):
     ) -> None:
         super().__init__(DetailId.CATEGORY, services, event_bus, theme_manager)
         self.related_line = LinkLine()
-        self.chart = StackedBarChart(
-            theme_manager.theme, lambda cents: format_compact(cents, HOME_CURRENCY)
-        )
+        self.chart = StackedBarChart(theme_manager.theme, compact_pesos)
         self.chart.setFixedHeight(Chart.DETAIL_HEIGHT)
         self.chart.clicked.connect(self._month_clicked)
         theme_manager.theme_changed.connect(self.chart.set_theme)

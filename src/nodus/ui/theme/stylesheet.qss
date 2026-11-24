@@ -931,8 +931,8 @@ QPushButton#PayButton:hover {
 }
 
 /* Rows that light up under the mouse, as the sidebar's items: list rows that open
-   something or have a menu (make_hoverable), and the Dashboard's category rows, which
-   also light up with their slice of the donut. */
+   something or have a menu (make_hoverable), and the rows of a category, payee or tag
+   that lead to its page (CategoryLine). */
 
 [hoverable="true"], QFrame#CategoryLine {
     border-radius: $radius_m;

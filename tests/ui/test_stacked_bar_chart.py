@@ -47,7 +47,8 @@ def test_negative_bars_hang_below_the_baseline(qtbot):
 
     assert rect.top() == pytest.approx(baseline)
     assert rect.height() == pytest.approx(100 * per_cent)
-    assert rect.bottom() == pytest.approx(HEIGHT - StackedBarChart.BOTTOM)
+    # The chart reaches down to its lowest guide, a round step past the bar.
+    assert rect.bottom() <= HEIGHT - StackedBarChart.BOTTOM
 
 
 def test_average_line_widens_the_scale(qtbot):

@@ -21,7 +21,6 @@ class CategoryLine(QFrame):
     With a ``link`` it leads to that record's page: it lights up under the mouse, shows
     the hand and ends in «›», and a click emits ``opened``. Without one it shows none of
     the three, but keeps the room of the «›» so a list of both kinds lines up.
-    ``set_highlighted`` lights it up from outside, as the donut does with its legend.
     """
 
     hovered = Signal(bool)
@@ -56,9 +55,10 @@ class CategoryLine(QFrame):
             self.setToolTip(link.detail.open_text)
             self.hovered.connect(self.set_highlighted)
 
-    def add(self, widget: QWidget) -> QWidget:
-        """Adds ``widget`` on the right, before the «›»."""
-        self._layout.insertWidget(self._layout.indexOf(self.cue), widget)
+    def add(self, widget: QWidget, stretch: int = 0) -> QWidget:
+        """Adds ``widget`` on the right, before the «›». With ``stretch`` 1 it shares the
+        room with the name in halves, so it starts at the same place on every row."""
+        self._layout.insertWidget(self._layout.indexOf(self.cue), widget, stretch)
         return widget
 
     def set_highlighted(self, highlighted: bool) -> None:
