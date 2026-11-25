@@ -11,6 +11,7 @@ import sys
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +31,12 @@ GITHUB_JSON = "application/vnd.github+json"
 # The installer runs without questions, keeps the choices of the previous installation
 # and opens Nodus again when it finishes (see [Run] in packaging/nodus.iss).
 INSTALLER_ARGUMENTS = ("/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/RELAUNCH=1")
+# While Nodus stays open, how often it looks again, for those who leave it open for days.
+CHECK_EVERY = timedelta(hours=6)
+# After a failed check (no internet, GitHub down), how long until the next try; GitHub's
+# own limit says when it lets us ask again, plus a margin for the clocks to differ.
+RETRY_AFTER_FAILURE = timedelta(minutes=30)
+RETRY_MARGIN = timedelta(minutes=1)
 
 
 @dataclass(frozen=True)
@@ -67,6 +74,38 @@ def _installer(version: str, assets: list[dict[str, Any]]) -> Installer | None:
         if asset.get("name") == installer_name(version) and digest.startswith("sha256:"):
             return Installer(asset["browser_download_url"], int(asset["size"]), digest[7:])
     return None
+
+
+@dataclass(frozen=True)
+class UpdateCheck:
+    """What a check found: a newer ``release``, or None if there is none. A check that
+    failed found nothing either, but says when to try again (``retry_in``), so a failure
+    is never taken for «up to date»."""
+
+    release: Release | None = None
+    retry_in: timedelta | None = None
+
+    @property
+    def failed(self) -> bool:
+        return self.retry_in is not None
+
+    @property
+    def next_in(self) -> timedelta:
+        """When to look again: sooner after a failure, every ``CHECK_EVERY`` otherwise."""
+        return self.retry_in if self.retry_in is not None else CHECK_EVERY
+
+
+def retry_delay(error: Exception, now: datetime | None = None) -> timedelta:
+    """How long to wait after ``error`` before checking again: until GitHub's limit
+    resets, when it says so (``X-RateLimit-Reset``, as it answers a connection shared
+    by many), otherwise ``RETRY_AFTER_FAILURE``; never less than ``RETRY_MARGIN``."""
+    headers = getattr(error, "headers", None)  # an HTTP error's; urllib stays unimported
+    reset = headers.get("X-RateLimit-Reset") if headers is not None else None
+    if reset is None or not str(reset).isdigit():
+        return RETRY_AFTER_FAILURE
+    now = now or datetime.now().astimezone()
+    until = datetime.fromtimestamp(int(reset)).astimezone() - now
+    return max(until, timedelta()) + RETRY_MARGIN
 
 
 class UpdateService:
@@ -110,11 +149,12 @@ class UpdateService:
         does; the AppImage, replaced in place, is reopened by Nodus (a restart)."""
         return self._appimage is None
 
-    def check(self) -> Release | None:
-        """The latest release if it is newer than the running version, otherwise None.
+    def check(self) -> UpdateCheck:
+        """The latest release if it is newer than the running version.
 
-        Any failure (no internet, GitHub down, an unexpected answer) also gives None:
-        the check is a courtesy and must never get in the way of using the app.
+        Any failure (no internet, GitHub down or limiting requests, an unexpected answer)
+        finds nothing and says when to try again: the check is a courtesy and must never
+        get in the way of using the app, but it must not give up on the first failure.
         """
         try:
             data = json.loads(self._fetch(LATEST_RELEASE_API))
@@ -126,10 +166,12 @@ class UpdateService:
             latest = Release(version, data["html_url"], notes, installer)
             is_newer = parse_version(latest.version) > parse_version(self.current_version)
         except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
-            logger.warning("Update check failed: %s", describe(error))
-            return None
+            retry_in = retry_delay(error)
+            minutes = round(retry_in.total_seconds() / 60)
+            logger.warning("Update check failed: %s; again in %d min", describe(error), minutes)
+            return UpdateCheck(retry_in=retry_in)
         logger.info("Update check: latest is %s", latest.version)
-        return latest if is_newer else None
+        return UpdateCheck(latest if is_newer else None)
 
     def can_install(self, release: Release) -> bool:
         """Whether ``release`` can be installed from Nodus, instead of from its page."""

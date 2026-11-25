@@ -3404,8 +3404,8 @@ msgid "Ver en GitHub"
 msgstr "View on GitHub"
 
 #: nodus/ui/pages/settings/about_card.py
-msgid "Buscar actualizaciones al iniciar"
-msgstr "Check for updates on startup"
+msgid "Buscar actualizaciones"
+msgstr "Check for updates"
 
 #: nodus/ui/pages/settings/about_card.py
 msgid "Consulta en GitHub cuál es la última versión publicada. No envía ningún dato tuyo."

@@ -26,7 +26,11 @@ from nodus.links import feedback_url
 from nodus.models.period import Month
 from nodus.services.app.notification_service import Notice
 from nodus.services.container import Services
-from nodus.services.external.update_service import Release
+from nodus.services.external.update_service import (
+    RETRY_AFTER_FAILURE,
+    Release,
+    UpdateCheck,
+)
 from nodus.ui.background import BackgroundCall
 from nodus.ui.browser import open_url
 from nodus.ui.dialogs.confirm import ask, tell
@@ -83,6 +87,7 @@ class MainWindow(QMainWindow):
         self, services: Services, event_bus: EventBus, theme_manager: ThemeManager
     ) -> None:
         super().__init__()
+        self._checking_updates = False
         self._services = services
         self._event_bus = event_bus
         self.setWindowTitle(APP_NAME)
@@ -210,14 +215,22 @@ class MainWindow(QMainWindow):
         undo(self, self._services, None, *self._event_bus.data_signals())
 
     def check_for_updates(self) -> None:
-        """Looks for a new version in the background, unless the user turned it off.
+        """Looks for a new version in the background, unless the user turned it off, and
+        again later on its own (``UpdateCheck.next_in``): soon after a failure, as when
+        GitHub limits a connection shared by many, and every few hours while Nodus stays
+        open. One check at a time.
 
         Called by the app once the window is open, not on construction, so tests and
         screenshots never reach the network."""
-        if not self._services.settings.check_updates():
+        if not self._services.settings.check_updates() or self._checking_updates:
             return
+        self._checking_updates = True
         self._update_check = BackgroundCall(self._services.updates.check, parent=self)
         self._update_check.done.connect(self._show_release)
+        # Something nobody expected went wrong (it is in the log): try again later too.
+        self._update_check.failed.connect(
+            lambda: self._show_release(UpdateCheck(retry_in=RETRY_AFTER_FAILURE))
+        )
         self._update_check.start()
 
     def update_exchange_rate(self) -> None:
@@ -350,9 +363,15 @@ class MainWindow(QMainWindow):
         self.tour.start()
         return self.tour
 
-    def _show_release(self, release: Release | None) -> None:
-        self._services.notifications.set_release(release)
-        self.refresh_notifications()
+    def _show_release(self, check: UpdateCheck) -> None:
+        """Shows what the check found, and plans the next one. A failed check leaves the
+        notice as it was: it found nothing, but a version found before still stands."""
+        self._checking_updates = False
+        if not check.failed:
+            self._services.notifications.set_release(check.release)
+            self.refresh_notifications()
+        milliseconds = int(check.next_in.total_seconds() * 1000)
+        QTimer.singleShot(milliseconds, self, self.check_for_updates)
 
     # Notifications
 

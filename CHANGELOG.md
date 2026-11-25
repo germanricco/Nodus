@@ -2,6 +2,10 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.12.1
+
+- Arreglo: si Nodus no podía consultar si había una versión nueva, por ejemplo porque GitHub estaba recibiendo demasiadas consultas desde tu conexión, no volvía a intentarlo hasta la próxima vez que lo abrieras, y el aviso de actualización no llegaba. Ahora lo vuelve a intentar solo un rato después y, mientras está abierto, se fija cada seis horas.
+
 ## 1.12.0 — 2026-11-25
 
 - Anotar una transacción es más rápido. El formulario se llena de arriba hacia abajo, con el monto más grande, y un monto puede ser una cuenta, como 1.500+2.300 o 36000/3: ves el resultado mientras escribes. Bajo la cuenta ves su saldo y cómo queda, y «Guardar y agregar otra» (Ctrl+Enter) deja el formulario listo para la siguiente. Para lo que se repite, «Duplicar» copia un movimiento y Ctrl+K ofrece «Repetir el último gasto».

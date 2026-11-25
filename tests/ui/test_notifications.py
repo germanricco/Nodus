@@ -12,6 +12,7 @@ from PySide6.QtTest import QTest
 from nodus.models.period import Month
 from nodus.models.transaction import TransactionType
 from nodus.services.app.notification_service import NoticeKind
+from nodus.services.external import update_service
 from nodus.services.external.update_service import UpdateService
 from nodus.ui import browser
 from nodus.ui.dialogs import external_backup
@@ -106,6 +107,69 @@ def test_no_check_when_turned_off(services, offline_window, requests):
 
     assert requests == []
     assert count(offline_window) == ""
+
+
+def window_with_answers(qtbot, services, event_bus, theme_manager, answers) -> MainWindow:
+    """A window whose update checks get ``answers`` in turn: bytes, or an error to raise.
+    Once they run out, every check gets the last one."""
+
+    def fetch(_url):
+        answer = answers.pop(0) if len(answers) > 1 else answers[0]
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    with_fake_updates = dataclasses.replace(services, updates=UpdateService("0.2.0", fetch))
+    window = MainWindow(with_fake_updates, event_bus, theme_manager)
+    qtbot.addWidget(window)
+    window.show()
+    return window
+
+
+def test_a_failed_check_tries_again_on_its_own(
+    qtbot, services, event_bus, theme_manager, monkeypatch
+):
+    """As when GitHub limits a connection shared by many: the first check fails, and
+    the next, without reopening Nodus, finds the new version."""
+    monkeypatch.setattr(update_service, "RETRY_AFTER_FAILURE", timedelta(0))
+    limited = OSError("HTTP Error 403: rate limit exceeded")
+    window = window_with_answers(qtbot, services, event_bus, theme_manager, [limited, NEWER])
+
+    window.check_for_updates()
+
+    qtbot.waitUntil(lambda: count(window) == "1")
+
+
+def test_a_failed_check_keeps_the_version_already_found(
+    qtbot, services, event_bus, theme_manager, monkeypatch
+):
+    monkeypatch.setattr(update_service, "CHECK_EVERY", timedelta(0))
+    checks = []
+    offline = OSError("sin conexión")
+    window = window_with_answers(qtbot, services, event_bus, theme_manager, [NEWER, offline])
+    real_show = window._show_release
+    monkeypatch.setattr(window, "_show_release", lambda c: (checks.append(c), real_show(c)))
+
+    window.check_for_updates()
+    qtbot.waitUntil(lambda: any(check.failed for check in checks))
+
+    assert count(window) == "1"
+    assert window.notices()[0].kind is NoticeKind.UPDATE
+
+
+def test_turning_the_check_off_stops_the_next_ones(
+    qtbot, services, event_bus, theme_manager, monkeypatch
+):
+    monkeypatch.setattr(update_service, "RETRY_AFTER_FAILURE", timedelta(0))
+    window = window_with_answers(
+        qtbot, services, event_bus, theme_manager, [OSError("sin conexión"), NEWER]
+    )
+    window.check_for_updates()
+    services.settings.set_check_updates(False)
+
+    qtbot.wait(200)
+
+    assert count(window) == ""
 
 
 def test_stale_rate_notice_leads_to_settings(qtbot, services, event_bus, offline_window, dollars):

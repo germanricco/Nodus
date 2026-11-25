@@ -32,7 +32,7 @@ class AboutCard(Card):
         )
         version_row.add(secondary_button(_("Ver en GitHub"), lambda: open_url(REPOSITORY_URL)))
         updates_row = SettingRow(
-            _("Buscar actualizaciones al iniciar"),
+            _("Buscar actualizaciones"),
             _("Consulta en GitHub cuál es la última versión publicada. No envía ningún dato tuyo."),
         )
         self.check_updates_input = updates_row.add(ToggleSwitch())

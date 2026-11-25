@@ -2,16 +2,22 @@ import hashlib
 import json
 import os
 import sys
+from datetime import datetime, timedelta
 
 import pytest
 
 from nodus.links import LATEST_RELEASE_API
 from nodus.services.errors import UpdateError
 from nodus.services.external.update_service import (
+    CHECK_EVERY,
     INSTALLER_ARGUMENTS,
+    RETRY_AFTER_FAILURE,
+    RETRY_MARGIN,
     Installer,
     Release,
+    UpdateCheck,
     UpdateService,
+    retry_delay,
 )
 
 RELEASE_PAGE = "https://github.com/germanricco/Nodus/releases/tag/v0.3.0"
@@ -32,35 +38,77 @@ def test_newer_release_is_reported():
         requested.append(url)
         return answer("v0.3.0")
 
-    assert UpdateService("0.2.0", fetch).check() == Release("0.3.0", RELEASE_PAGE)
+    check = UpdateService("0.2.0", fetch).check()
+
+    assert check == UpdateCheck(Release("0.3.0", RELEASE_PAGE))
+    assert (check.failed, check.next_in) == (False, CHECK_EVERY)
     assert requested == [LATEST_RELEASE_API]
 
 
 @pytest.mark.parametrize("tag", ["v0.2.0", "v0.1.1"])
 def test_same_or_older_release_is_not_reported(tag):
-    assert UpdateService("0.2.0", lambda _url: answer(tag)).check() is None
+    assert UpdateService("0.2.0", lambda _url: answer(tag)).check() == UpdateCheck()
 
 
 @pytest.mark.parametrize(
     "body",
     [b"not json", b"{}", b"[]", json.dumps({"tag_name": "beta", "html_url": "x"}).encode()],
 )
-def test_unexpected_answer_is_ignored(body):
-    assert UpdateService("0.2.0", lambda _url: body).check() is None
+def test_unexpected_answer_finds_nothing_and_tries_again_later(body):
+    check = UpdateService("0.2.0", lambda _url: body).check()
+
+    assert check == UpdateCheck(retry_in=RETRY_AFTER_FAILURE)
+    assert check.failed and check.next_in == RETRY_AFTER_FAILURE
 
 
-def test_network_error_is_ignored():
+def test_network_error_finds_nothing_and_tries_again_later():
     def fetch(_url):
         raise OSError("sin conexión")
 
-    assert UpdateService("0.2.0", fetch).check() is None
+    assert UpdateService("0.2.0", fetch).check() == UpdateCheck(retry_in=RETRY_AFTER_FAILURE)
+
+
+class RateLimitError(OSError):
+    """As urllib's HTTPError when GitHub limits a connection: it carries the headers."""
+
+    def __init__(self, headers: dict[str, str]) -> None:
+        super().__init__("HTTP Error 403: rate limit exceeded")
+        self.headers = headers
+
+
+def test_a_limited_connection_tries_again_when_github_lets_it():
+    now = datetime(2026, 11, 25, 8, 36).astimezone()
+    reset = int((now + timedelta(minutes=8)).timestamp())
+
+    delay = retry_delay(RateLimitError({"X-RateLimit-Reset": str(reset)}), now)
+
+    assert delay == timedelta(minutes=8) + RETRY_MARGIN
+
+
+def test_a_reset_already_past_or_unreadable_still_waits_a_little():
+    now = datetime(2026, 11, 25, 8, 36).astimezone()
+    past = int((now - timedelta(minutes=5)).timestamp())
+
+    assert retry_delay(RateLimitError({"X-RateLimit-Reset": str(past)}), now) == RETRY_MARGIN
+    assert retry_delay(RateLimitError({"X-RateLimit-Reset": "soon"}), now) == RETRY_AFTER_FAILURE
+
+
+def test_a_limited_check_says_when_to_try_again():
+    def fetch(_url):
+        reset = datetime.now().astimezone() + timedelta(minutes=10)
+        raise RateLimitError({"X-RateLimit-Reset": str(int(reset.timestamp()))})
+
+    check = UpdateService("0.2.0", fetch).check()
+
+    assert check.release is None
+    assert timedelta(minutes=10) <= check.retry_in <= timedelta(minutes=10) + RETRY_MARGIN
 
 
 def test_release_notes_come_without_the_repeated_subject_line():
     body = "Nodus 0.3.0\n\nNovedades:\n\n- Algo nuevo."
     data = {"tag_name": "v0.3.0", "html_url": RELEASE_PAGE, "body": body}
 
-    release = UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check()
+    release = UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check().release
 
     assert release.notes == "Novedades:\n\n- Algo nuevo."
 
@@ -69,13 +117,13 @@ def test_the_notes_come_in_the_language_nodus_is_in(english):
     body = "Nodus 1.10.0\n\n- Algo nuevo.\n\n---\n\n<!-- en -->\n\n- Something new."
     data = {"tag_name": "v1.10.0", "html_url": RELEASE_PAGE, "body": body}
 
-    release = UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check()
+    release = UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check().release
 
     assert release.notes == "- Something new."
 
 
 def test_release_without_notes_has_empty_notes():
-    assert UpdateService("0.2.0", lambda _url: answer("v0.3.0")).check().notes == ""
+    assert UpdateService("0.2.0", lambda _url: answer("v0.3.0")).check().release.notes == ""
 
 
 # Installing
@@ -99,7 +147,7 @@ def installer_asset(**changes) -> dict:
 
 def release_with(assets: list[dict]) -> Release:
     data = {"tag_name": "v0.3.0", "html_url": RELEASE_PAGE, "assets": assets}
-    return UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check()
+    return UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check().release
 
 
 def chunks(data: bytes, size: int = 1000):

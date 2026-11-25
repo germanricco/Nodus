@@ -2,6 +2,10 @@
 
 What each version brings, newest first. To update, click “Update” when Nodus tells you there's a new version: your data is kept. The versions before 1.10, when Nodus spoke only Spanish, are described in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.12.1
+
+- Fix: if Nodus could not check for a new version, for instance because GitHub was getting too many requests from your connection, it did not try again until the next time you opened it, and the update notice never came. Now it tries again on its own a while later and, while it stays open, checks every six hours.
+
 ## 1.12.0 — 2026-11-25
 
 - Recording a transaction is quicker. The form fills in from top to bottom, with a larger amount, and an amount can be a calculation, such as 1,500+2,300 or 36000/3: you see the result as you type. Under the account you see its balance and how it ends up, and “Save and add another” (Ctrl+Enter) leaves the form ready for the next one. For what repeats, “Duplicate” copies a transaction and Ctrl+K offers “Repeat the last expense”.
