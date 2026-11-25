@@ -405,7 +405,7 @@ def capture_details(shots: Shots) -> None:
     shots.settle()
     shots.save(window, "payee-detail")
     # The page of a category with a subcategory.
-    housing = next(c for c in services.categories.list_categories() if c.name == "Vivienda")
+    housing = next(c for c in services.categories.list_categories() if c.name == _("Vivienda"))
     window.show_detail(DetailId.CATEGORY, housing.id)
     shots.settle()
     shots.save(window, "category-detail")

@@ -2,7 +2,7 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
-## 1.12.0
+## 1.12.0 — 2026-11-25
 
 - Anotar una transacción es más rápido. El formulario se llena de arriba hacia abajo, con el monto más grande, y un monto puede ser una cuenta, como 1.500+2.300 o 36000/3: ves el resultado mientras escribes. Bajo la cuenta ves su saldo y cómo queda, y «Guardar y agregar otra» (Ctrl+Enter) deja el formulario listo para la siguiente. Para lo que se repite, «Duplicar» copia un movimiento y Ctrl+K ofrece «Repetir el último gasto».
 - Cada categoría tiene su página, como las cuentas: cuánto sumó en el último año, mes a mes y por subcategoría, con todos sus movimientos. Categorías muestra cuánto sumó cada una en el período que elijas, con sus subcategorías plegables y un buscador, y «Unir con…» junta dos categorías que son lo mismo.
