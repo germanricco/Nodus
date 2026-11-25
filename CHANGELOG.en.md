@@ -2,7 +2,7 @@
 
 What each version brings, newest first. To update, click “Update” when Nodus tells you there's a new version: your data is kept. The versions before 1.10, when Nodus spoke only Spanish, are described in [CHANGELOG.md](CHANGELOG.md).
 
-## 1.12.1
+## 1.12.1 — 2026-11-25
 
 - Fix: if Nodus could not check for a new version, for instance because GitHub was getting too many requests from your connection, it did not try again until the next time you opened it, and the update notice never came. Now it tries again on its own a while later and, while it stays open, checks every six hours.
 

@@ -589,8 +589,8 @@ def capture_messages(shots: Shots) -> None:
     # The notifications panel, with a new version announced and the last notice
     # already opened, gray and without its dot.
     window.show_page(PageId.DASHBOARD)
-    news = Release("9.9.0", "")
-    window._show_release(news)
+    services.notifications.set_release(Release("9.9.0", ""))
+    window.refresh_notifications()
     notices = window.notices()
     services.notifications.mark_seen(notices[-1])
     window.open_notifications()
@@ -598,7 +598,8 @@ def capture_messages(shots: Shots) -> None:
     shots.save(window.notification_panel, "notifications")
     window.notification_panel.hide()
     services.settings.set_seen_notices(set())
-    window._show_release(None)
+    services.notifications.set_release(None)
+    window.refresh_notifications()
     # Updating from Nodus, halfway through the download (never started: no network).
     size = 24_578_342
     release = Release("9.9.0", "", installer=Installer("", size, ""))
