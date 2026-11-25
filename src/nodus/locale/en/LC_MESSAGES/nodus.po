@@ -100,6 +100,15 @@ msgstr "Commas group thousands, three digits at a time: {example}."
 msgid "Los {currency} no llevan centavos."
 msgstr "{currency} have no cents."
 
+#: nodus/models/amount_parsing.py
+#, python-brace-format
+msgid "A la cuenta «{text}» le falta algo."
+msgstr "The calculation “{text}” is missing something."
+
+#: nodus/models/amount_parsing.py
+msgid "No se puede dividir por cero."
+msgstr "You can't divide by zero."
+
 #: nodus/models/category.py
 msgid "Otros"
 msgstr "Other"
@@ -1129,6 +1138,10 @@ msgstr "Moves the account up."
 #: nodus/ui/shortcuts.py
 msgid "Baja la cuenta en su grupo."
 msgstr "Moves the account down."
+
+#: nodus/ui/shortcuts.py
+msgid "Guarda y anota otra."
+msgstr "Saves, adds another."
 
 #: nodus/ui/shortcuts.py
 msgid "Avanza."
@@ -2255,6 +2268,21 @@ msgid "Agregar transferencia"
 msgstr "Add transfer"
 
 #: nodus/ui/dialogs/transaction_dialog.py
+#, python-brace-format
+msgid "Gasto agregado: {amount}."
+msgstr "Expense added: {amount}."
+
+#: nodus/ui/dialogs/transaction_dialog.py
+#, python-brace-format
+msgid "Ingreso agregado: {amount}."
+msgstr "Income added: {amount}."
+
+#: nodus/ui/dialogs/transaction_dialog.py
+#, python-brace-format
+msgid "Transferencia agregada: {amount}."
+msgstr "Transfer added: {amount}."
+
+#: nodus/ui/dialogs/transaction_dialog.py
 msgid "Primera cuota"
 msgstr "First installment"
 
@@ -2281,6 +2309,10 @@ msgid "Enter para agregar"
 msgstr "Enter to add"
 
 #: nodus/ui/dialogs/transaction_dialog.py
+msgid "Guardar y agregar otra"
+msgstr "Save and add another"
+
+#: nodus/ui/dialogs/transaction_dialog.py
 msgid "Hacia"
 msgstr "To"
 
@@ -2300,6 +2332,21 @@ msgstr "Installment"
 #: nodus/ui/dialogs/transaction_dialog.py
 msgid "Sale"
 msgstr "Sent"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+#, python-brace-format
+msgid "Saldo: {now}"
+msgstr "Balance: {now}"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+#, python-brace-format
+msgid "Saldo: {now} → quedará {after}"
+msgstr "Balance: {now} → will be {after}"
+
+#: nodus/ui/dialogs/transaction_dialog.py
+#, python-brace-format
+msgid "Saldo: {now} → {after}"
+msgstr "Balance: {now} → {after}"
 
 #: nodus/ui/dialogs/transaction_dialog.py
 #, python-brace-format
@@ -4159,13 +4206,15 @@ msgstr ""
 
 #: nodus/ui/text/help_texts.py
 msgid ""
-"El formulario ya trae la última cuenta que usaste. En «Beneficiario», unas letras bastan para "
-"elegir a quién le pagaste, y Nodus completa la categoría que sueles usar con él. Las etiquetas "
-"son opcionales y sirven para juntar lo que va junto, como los gastos de un viaje."
+"El formulario ya trae la última cuenta que usaste, y debajo su saldo de hoy y cómo queda con lo "
+"que anotas, para compararlo con el de tu banco. En «Beneficiario», unas letras bastan para elegir"
+" a quién le pagaste, y Nodus completa la categoría que sueles usar con él. Las etiquetas son "
+"opcionales y sirven para juntar lo que va junto, como los gastos de un viaje."
 msgstr ""
-"The form already has the last account you used. In “Payee”, a few letters are enough to choose "
-"who you paid, and Nodus fills in the category you usually use with them. Tags are optional and "
-"bring together what belongs together, such as the expenses of a trip."
+"The form already has the last account you used, and under it its balance today and how it ends up"
+" with what you enter, to compare with your bank's. In “Payee”, a few letters are enough to choose"
+" who you paid, and Nodus fills in the category you usually use with them. Tags are optional and "
+"bring together what goes together, such as the expenses of a trip."
 
 #: nodus/ui/text/help_texts.py
 msgid ""
@@ -4176,6 +4225,25 @@ msgstr ""
 "Amounts are written with a point for decimals and a comma for thousands, as in 1,234.56. If you "
 "type one that can be read two ways, such as 1.234,56, Nodus doesn't guess: it shows you how to "
 "write it."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Un monto también puede ser una cuenta, si sale de una: 1.500+2.300 para sumar un ticket, 36000/3 "
+"para dividir una cena o 8500*1,1 para sumar la propina. Debajo ves el resultado mientras "
+"escribes, y eso es lo que se guarda."
+msgstr ""
+"An amount can also be a calculation, when it comes from one: 1,500+2,300 to add up a receipt, "
+"36000/3 to split a dinner or 8500*1.1 to add the tip. You see the result below as you type, and "
+"that is what is saved."
+
+#: nodus/ui/text/help_texts.py
+msgid ""
+"Para anotar varias seguidas, como los comprobantes de un día, usa «Guardar y agregar otra» (Ctrl "
+"+ Enter): guarda y deja el formulario listo para la siguiente, con la misma cuenta y la misma "
+"fecha."
+msgstr ""
+"To enter several in a row, such as a day's receipts, use “Save and add another” (Ctrl + Enter): "
+"it saves and leaves the form ready for the next one, with the same account and the same date."
 
 #: nodus/ui/text/help_texts.py
 msgid ""
@@ -4961,6 +5029,11 @@ msgstr "At this pace you'll get there in {month}."
 #, python-brace-format
 msgid "Promedio {amount}"
 msgstr "Average {amount}"
+
+#: nodus/ui/widgets/inputs/amount_input.py
+#, python-brace-format
+msgid "= {amount}"
+msgstr "= {amount}"
 
 #: nodus/ui/widgets/inputs/color.py
 #, python-brace-format

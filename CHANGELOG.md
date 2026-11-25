@@ -21,6 +21,9 @@ Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, to
 - Un clic en el título de Fecha, Movimiento, Categoría o Monto ordena Transacciones por esa columna, y otro clic invierte el orden.
 - El formulario de una transacción se llena de arriba hacia abajo: al elegir la categoría «Reembolsos», el gasto que devuelve se elige justo debajo, y no al final, y al editar un gasto lo que ya te reembolsaron aparece bajo su monto. El gasto elegido se muestra en dos renglones, su nombre y después su fecha, su monto y lo que queda por devolver.
 - En el formulario de una transacción, el monto se ve más grande, porque es lo que siempre se escribe. La nota y las etiquetas quedan al final, a la vista bajo «Opcional», así se distingue lo que hace falta completar. El botón dice qué agrega: «Agregar gasto», «Agregar ingreso» o «Agregar transferencia».
+- Un monto puede ser una cuenta, como 1.500+2.300 para sumar un ticket o 36000/3 para dividir una cena: debajo ves el resultado mientras escribes, y eso es lo que se guarda. Funciona en todos los campos de monto.
+- Bajo la cuenta, el formulario de una transacción muestra su saldo de hoy y cómo queda con lo que anotas, para compararlo con el de tu banco; en una transferencia, el de las dos cuentas.
+- «Guardar y agregar otra» (Ctrl+Enter) guarda la transacción y deja el formulario listo para la siguiente, con la misma cuenta y la misma fecha, para anotar varias seguidas.
 - Arriba de la lista, una línea dice qué estás viendo y cuánto suma: «Ocio · Noviembre 2026 · 2 movimientos · -$ 70.500,00». Si hay ingresos y gastos, dice cuánto entró, cuánto salió y el neto.
 - El menú «⋯» de un movimiento con beneficiario ofrece «Ver beneficiario», que abre su página.
 - Lo que se repite sin ser un pago recurrente se anota más rápido: «Duplicar», en el menú «⋯» de cada movimiento, abre el formulario con una copia fechada hoy, y en Ctrl+K está «Repetir el último gasto».

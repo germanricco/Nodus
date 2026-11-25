@@ -128,6 +128,12 @@ MOVE_ROW_DOWN = Shortcut(
     (Qt.Key.Key_Down,),
     modifier=Qt.KeyboardModifier.AltModifier,
 )
+SAVE_AND_ADD_ANOTHER = Shortcut(
+    ("Ctrl", "Enter"),
+    N_("Guarda y anota otra."),
+    FORMS,
+    qt_sequence="Ctrl+Return",
+)
 TOUR_NEXT = Shortcut(
     ("→",),
     N_("Avanza."),
@@ -165,6 +171,7 @@ SHORTCUTS = [
     MOVE_ROW_DOWN,
     Shortcut(("Enter",), N_("Guarda."), FORMS),
     Shortcut(("Esc",), N_("Cierra el formulario."), FORMS),
+    SAVE_AND_ADD_ANOTHER,
     BACK_TO_LIST,
     TOUR_NEXT,
     Shortcut(("Enter",), TOUR_NEXT.text, TOUR),

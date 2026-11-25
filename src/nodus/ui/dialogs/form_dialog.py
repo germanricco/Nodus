@@ -119,9 +119,9 @@ class FormDialog(QDialog):
         self.error_label.hide()
         layout.addWidget(self.error_label)
 
-        buttons = QHBoxLayout()
+        buttons = self._buttons = QHBoxLayout()
         buttons.addStretch()
-        cancel = secondary_button(_("Cancelar"), self.reject)
+        cancel = self._cancel_button = secondary_button(_("Cancelar"), self.reject)
         self.save_button = QPushButton(action or _(SAVE_CHANGES))
         self.save_button.setObjectName("PrimaryButton")
         self.save_button.setDefault(True)
@@ -133,6 +133,45 @@ class FormDialog(QDialog):
     def add_above_form(self, widget: QWidget) -> None:
         """Places ``widget`` between the title and the form, e.g. a mode selector."""
         self._layout.insertWidget(1, widget)
+
+    def add_below_form(self, widget: QWidget) -> None:
+        """Places ``widget`` between the form and its foot, e.g. what was just saved."""
+        self._layout.insertWidget(self._layout.indexOf(self.error_label), widget)
+
+    def add_button(self, button: QPushButton) -> None:
+        """Adds ``button`` to the foot, between «Cancelar» and the main button, and in
+        that order for Tab too."""
+        self._buttons.insertWidget(self._buttons.indexOf(self.save_button), button)
+        self.setTabOrder(self._cancel_button, button)
+
+    def submit(self) -> bool:
+        """Checks the form and runs ``save``, showing what is missing or wrong under its
+        field; True when it saved. The main button closes the dialog after it."""
+        self.clear_errors()
+        missing = self.missing()
+        if missing:
+            for widget, message in missing.items():
+                self.show_field_error(widget, message)
+            _input(next(iter(missing))).setFocus()
+            return False
+        try:
+            self.save()
+        except ValidationError as error:
+            if isinstance(error, InputError):
+                widget: QWidget | None = error.widget
+            else:
+                widget = self._fields.get(error.field or "")
+            if widget is not None and self._is_shown(widget):
+                self.show_field_error(widget, str(error))
+                _input(widget).setFocus()
+            else:
+                self.show_error(str(error))
+            return False
+        return True
+
+    def remember_state(self) -> None:
+        """Counts what the fields hold now as unchanged: closing then asks nothing."""
+        self._shown_state = self._form_state()
 
     def bind_field(self, widget: QWidget, *names: str) -> None:
         """Shows the errors about ``names`` (as ``ValidationError.field`` says them) under
@@ -213,7 +252,7 @@ class FormDialog(QDialog):
         self._align_labels()
         super().showEvent(event)
         if self._shown_state is None:
-            self._shown_state = self._form_state()
+            self.remember_state()
             self._focus_first_field()
 
     def _focus_first_field(self) -> None:
@@ -269,27 +308,8 @@ class FormDialog(QDialog):
             label.setMinimumWidth(width)
 
     def _on_save(self) -> None:
-        self.clear_errors()
-        missing = self.missing()
-        if missing:
-            for widget, message in missing.items():
-                self.show_field_error(widget, message)
-            _input(next(iter(missing))).setFocus()
-            return
-        try:
-            self.save()
-        except ValidationError as error:
-            if isinstance(error, InputError):
-                widget: QWidget | None = error.widget
-            else:
-                widget = self._fields.get(error.field or "")
-            if widget is not None and self._is_shown(widget):
-                self.show_field_error(widget, str(error))
-                _input(widget).setFocus()
-            else:
-                self.show_error(str(error))
-            return
-        self.accept()
+        if self.submit():
+            self.accept()
 
     def _form_row(self, widget: QWidget) -> int:
         """The form row holding ``widget``, itself a field or inside one."""

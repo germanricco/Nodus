@@ -5,6 +5,8 @@ from factories import TODAY, ars, expense_draft, income_draft, usd
 
 from nodus.models.account import AccountType
 from nodus.models.currency import Currency
+from nodus.models.installment_plan import InstallmentPlan
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.errors import NotFoundError, ValidationError
 from nodus.services.transactions.transfer_service import TransferDraft
 
@@ -158,3 +160,31 @@ def test_accounts_already_named_alike_can_still_be_edited(services, database, pe
         )
     services.accounts.update(twin.id, pesos.name.lower(), AccountType.BANK, ars("10"))
     assert services.accounts.get(twin.id).initial_balance == ars("10")
+
+
+class TestBalancePreview:
+    """Today's balance and how it ends up with a movement being written in the form."""
+
+    def test_a_new_movement_adds_its_change(self, services, pesos):
+        preview = services.accounts.balance_preview(pesos.id, ars("-2500"))
+
+        assert (preview.now, preview.after) == (ars("100000"), ars("97500"))
+
+    def test_an_edited_purchase_takes_off_only_what_already_happened(self, services, pesos):
+        """Two of its three installments came off the balance already; the third is to
+        come. Saving it again for the same total leaves the account where all three put it."""
+        first = date.today() - timedelta(days=40)
+        draft = expense_draft(services, pesos.id, ars("3000"), first)
+        services.installments.create(draft, InstallmentPlan(None, 3, ars("3000"), first))
+        replaced = services.transactions.list_transactions(TransactionFilter())
+
+        preview = services.accounts.balance_preview(pesos.id, ars("-3000"), replaced)
+
+        assert (preview.now, preview.after) == (ars("98000"), ars("97000"))
+
+    def test_another_accounts_movements_are_not_taken_off(self, services, pesos, dollars):
+        other = services.transactions.create(expense_draft(services, dollars.id, usd("10")))
+
+        preview = services.accounts.balance_preview(pesos.id, ars("-100"), [other])
+
+        assert preview.after == ars("99900")

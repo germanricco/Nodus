@@ -115,6 +115,25 @@ class TestAmountField:
         field.line_edit.setText(text)
         return field.money()
 
+    @pytest.mark.parametrize(
+        ("text", "shown"),
+        [
+            ("1.500+2.300", "= $ 3.800,00"),
+            ("36000/3", "= $ 12.000,00"),
+            ("1500", None),  # a plain amount needs no result
+            ("1500+", None),  # nothing while it is being typed
+        ],
+    )
+    def test_a_calculation_shows_its_result_under_it(self, qtbot, text, shown):
+        """The result is what is saved; the text stays as typed, so it can be fixed."""
+        field = AmountInput(Currency.ARS)
+        qtbot.addWidget(field)
+        field.line_edit.setText(text)
+
+        label = field.result_label
+        assert (None if label.isHidden() else label.text()) == shown
+        assert field.line_edit.text() == text
+
 
 @pytest.fixture
 def world(services, pesos):

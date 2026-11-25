@@ -155,15 +155,26 @@ HELP_TOPICS = [
         ),
         (
             N_(
-                "El formulario ya trae la última cuenta que usaste. En «Beneficiario», unas letras"
-                " bastan para elegir a quién le pagaste, y Nodus completa la categoría que sueles"
-                " usar con él. Las etiquetas son opcionales y sirven para juntar lo que va junto,"
-                " como los gastos de un viaje."
+                "El formulario ya trae la última cuenta que usaste, y debajo su saldo de hoy y"
+                " cómo queda con lo que anotas, para compararlo con el de tu banco. En"
+                " «Beneficiario», unas letras bastan para elegir a quién le pagaste, y Nodus"
+                " completa la categoría que sueles usar con él. Las etiquetas son opcionales y"
+                " sirven para juntar lo que va junto, como los gastos de un viaje."
             ),
             N_(
                 "Los montos se escriben con coma para los decimales y punto para los miles, como"
                 " en 1.234,56. Si escribes uno que se puede leer de dos maneras, como 1,234.56,"
                 " Nodus no adivina: te muestra cómo escribirlo."
+            ),
+            N_(
+                "Un monto también puede ser una cuenta, si sale de una: 1.500+2.300 para sumar"
+                " un ticket, 36000/3 para dividir una cena o 8500*1,1 para sumar la propina."
+                " Debajo ves el resultado mientras escribes, y eso es lo que se guarda."
+            ),
+            N_(
+                "Para anotar varias seguidas, como los comprobantes de un día, usa «Guardar y"
+                " agregar otra» (Ctrl + Enter): guarda y deja el formulario listo para la"
+                " siguiente, con la misma cuenta y la misma fecha."
             ),
             N_(
                 "Para cambiar una transacción, haz doble clic en ella. Cada fila tiene su menú «⋯»,"

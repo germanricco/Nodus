@@ -81,6 +81,12 @@ DIALOGS = {
     "transaction-dialog-installments": lambda services, event_bus, window: installments_dialog(
         services, event_bus, window
     ),
+    "transaction-dialog-calculation": lambda services, event_bus, window: calculation_dialog(
+        services, event_bus, window
+    ),
+    "transaction-dialog-another": lambda services, event_bus, window: another_dialog(
+        services, event_bus, window
+    ),
     "transfer-dialog": lambda services, event_bus, window: transfer_dialog(
         services, event_bus, window
     ),
@@ -164,6 +170,26 @@ def installments_dialog(services: Services, event_bus: EventBus, window: QWidget
         t for t in services.transactions.list_transactions(TransactionFilter()) if t.installment
     )
     return TransactionDialog(services, event_bus, window.theme_manager, installment, parent=window)
+
+
+def calculation_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
+    """A dinner split in three, typed as a calculation, with its result under it."""
+    dialog = TransactionDialog(services, event_bus, window.theme_manager, parent=window)
+    dialog.amount_input.line_edit.setText("36.000/3")
+    return dialog
+
+
+def another_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:
+    """Right after «Guardar y agregar otra»: what was saved, and the form ready for the
+    next one with the same account and day."""
+    dialog = TransactionDialog(services, event_bus, window.theme_manager, parent=window)
+    dialog.account_input.select(services.accounts.list_accounts()[0].id)
+    dialog.amount_input.line_edit.setText("8.400")
+    dialog.payee_input.set_text("Coto")
+    expense_categories = services.categories.list_categories(TransactionType.EXPENSE)
+    dialog.category_input.select(expense_categories[0].id)
+    dialog.another_button.click()
+    return dialog
 
 
 def errors_dialog(services: Services, event_bus: EventBus, window: QWidget) -> QWidget:

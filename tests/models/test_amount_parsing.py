@@ -117,10 +117,49 @@ def test_the_spanish_messages_are_as_they_were():
     assert grouping_text() == "Los puntos separan los miles, de a tres cifras: 1.234.567."
 
 
-@pytest.mark.parametrize("text", ["abc", "", " ", "--5", "5-", "$100", ".", ",", "-", "1e5"])
+@pytest.mark.parametrize("text", ["abc", "", " ", "$100", ".", ",", "-", "1e5", "5+a"])
 def test_what_is_not_a_number_is_refused(text):
     with pytest.raises(AmountTextError, match="no es un monto válido"):
         parse_amount(text, Currency.ARS)
+
+
+@pytest.mark.parametrize(
+    ("text", "amount"),
+    [
+        ("1.500+2.300", "3800"),  # a ticket of several items
+        ("36000/3", "12000"),  # a dinner split in three
+        ("8500*1,1", "9350"),  # with the tip
+        ("8500 x 1,105", "9392.50"),  # a factor may have more decimals than an amount
+        ("(100+50)×2", "300"),
+        ("100÷4", "25"),
+        ("2+3*4", "14"),  # the usual precedence
+        ("-50+100", "50"),
+        ("3--2", "5"),  # minus a negative
+        ("1000/3", "333.33"),  # rounded to the cent, as every amount
+        ("12.50+1", "13.50"),  # each number read as a single amount is
+    ],
+)
+def test_a_calculation_gives_its_result(text, amount):
+    assert parse_amount(text, Currency.ARS) == Money.from_decimal(amount, Currency.ARS)
+
+
+@pytest.mark.parametrize("text", ["1500+", "5-", "--5", "()", "(1+2", "1+2)", "2(3)", "*5"])
+def test_a_calculation_with_something_missing_says_so(text):
+    with pytest.raises(AmountTextError, match="le falta algo"):
+        parse_amount(text, Currency.ARS)
+
+
+def test_a_calculation_refuses_to_divide_by_zero():
+    with pytest.raises(AmountTextError, match="dividir por cero"):
+        parse_amount("1000/(5-5)", Currency.ARS)
+
+
+def test_a_calculation_follows_the_amount_rules_for_its_numbers_and_its_result():
+    with pytest.raises(AmountTextError, match="de a tres cifras"):
+        parse_amount("1.23.4+1", Currency.ARS)
+    with pytest.raises(AmountTextError, match="demasiado grande"):
+        parse_amount(f"{MAX_UNITS}*2", Currency.ARS)
+    assert parse_amount("1000/3", Currency.CLP) == Money.from_decimal("333", Currency.CLP)
 
 
 def test_the_largest_amount_is_read_and_one_more_is_refused(typed):

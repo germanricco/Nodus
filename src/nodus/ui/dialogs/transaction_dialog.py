@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QShortcut, QShowEvent
 from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 
 from nodus.i18n import N_, _
 from nodus.models.account import Account
 from nodus.models.currency import HOME_CURRENCY, Currency
 from nodus.models.exchange_rate import ImpliedRate, implied_rate
+from nodus.models.money import Money
 from nodus.models.payee import Payee
 from nodus.models.transaction import Transaction, TransactionType
+from nodus.models.transaction_filter import TransactionFilter
 from nodus.services.container import Services
 from nodus.services.errors import ValidationError
 from nodus.services.transactions.transaction_service import TransactionDraft
@@ -27,10 +30,12 @@ from nodus.ui.dialogs.form_dialog import (
     TYPE_AMOUNT,
     FormDialog,
 )
-from nodus.ui.dialogs.installment_fields import InstallmentFields, ask_count
+from nodus.ui.dialogs.installment_fields import TOTAL, InstallmentFields, ask_count
 from nodus.ui.dialogs.refund_extra_dialog import RefundExtraDialog
 from nodus.ui.dialogs.refund_picker import RefundField
 from nodus.ui.event_bus import EventBus
+from nodus.ui.shortcuts import SAVE_AND_ADD_ANOTHER, with_keys
+from nodus.ui.text.formatting import unbroken
 from nodus.ui.text.labels import rate_text
 from nodus.ui.theme.design import Space
 from nodus.ui.theme.theme_manager import ThemeManager
@@ -40,13 +45,20 @@ from nodus.ui.widgets.inputs.payee_input import PayeeInput
 from nodus.ui.widgets.inputs.segmented import SegmentedControl
 from nodus.ui.widgets.inputs.selectors import AccountComboBox, CategoryComboBox
 from nodus.ui.widgets.inputs.tag_input import TagInput
-from nodus.ui.widgets.style import form_section, hint_label
+from nodus.ui.widgets.money_label import amount_text
+from nodus.ui.widgets.style import form_section, hint_label, secondary_button
 
 # Segment order of the mode selector.
 EXPENSE_MODE, INCOME_MODE, TRANSFER_MODE = range(3)
 MODE_LABELS = [N_("Gasto"), N_("Ingreso"), N_("Transferencia")]
 # What the main button of a new movement adds, by mode.
 ADD_LABELS = [N_("Agregar gasto"), N_("Agregar ingreso"), N_("Agregar transferencia")]
+# What «Guardar y agregar otra» says it saved, by mode.
+ADDED_LABELS = [
+    N_("Gasto agregado: {amount}."),
+    N_("Ingreso agregado: {amount}."),
+    N_("Transferencia agregada: {amount}."),
+]
 FIRST_INSTALLMENT_LABEL = N_("Primera cuota")
 _MODE_TYPES = {EXPENSE_MODE: TransactionType.EXPENSE, INCOME_MODE: TransactionType.INCOME}
 # The default income category for refunds.
@@ -107,8 +119,12 @@ class TransactionDialog(FormDialog):
         self._kept_category_id = (
             transaction.category_id if transaction and not transaction.is_transfer else None
         )
+        # What is being edited, whose effect on today's balance the preview leaves out.
+        self._replaced = self._movements_of(transaction) if transaction else []
         self._create_fields(services, theme_manager, transaction)
         self._lay_out()
+        if transaction is None:
+            self._add_another_button()
         self._connect()
         self._load_accounts()
         if transaction:
@@ -128,6 +144,9 @@ class TransactionDialog(FormDialog):
         self.account_input.set_placeholder(_(ACCOUNT_PLACEHOLDER))
         self.to_account_input = AccountComboBox()
         self.to_account_input.set_placeholder(_(ACCOUNT_PLACEHOLDER))
+        # Each account's balance today and how it ends up, at the moment of choosing it.
+        self.account_balance = hint_label()
+        self.to_account_balance = hint_label()
         # The amount stays where a payment is thought (account, installments, amount), but
         # it is the figure of the form, and the cursor starts in it.
         self.amount_input = AmountInput(HOME_CURRENCY, prominent=True)
@@ -152,9 +171,24 @@ class TransactionDialog(FormDialog):
         )
         self.refunded_hint = hint_label()
 
+    def _add_another_button(self) -> None:
+        """«Guardar y agregar otra» (Ctrl+Enter), for several movements in a row: it
+        saves, says so above the foot, and leaves the form ready for the next one."""
+        self.another_button = secondary_button(_("Guardar y agregar otra"), self._save_another)
+        self.another_button.setToolTip(
+            with_keys(_(SAVE_AND_ADD_ANOTHER.text), SAVE_AND_ADD_ANOTHER.label)
+        )
+        self.add_button(self.another_button)
+        QShortcut(SAVE_AND_ADD_ANOTHER.sequence, self, self._save_another)
+        self.added_label = hint_label()
+        self.added_label.hide()
+        self.add_below_form(self.added_label)
+
     def _lay_out(self) -> None:
-        self.form.addRow(_("Cuenta"), self.account_input)
-        self.form.addRow(_("Hacia"), self.to_account_input)
+        self.account_row = _with_line_under(self.account_input, self.account_balance)
+        self.to_account_row = _with_line_under(self.to_account_input, self.to_account_balance)
+        self.form.addRow(_("Cuenta"), self.account_row)
+        self.form.addRow(_("Hacia"), self.to_account_row)
         # How it is paid before how much: the amount then reads as the total or as one
         # installment, and what the installments come to is said once, under it.
         self.form.addRow(_("Cuotas"), self.installment_fields)
@@ -203,8 +237,20 @@ class TransactionDialog(FormDialog):
         self.category_input.currentIndexChanged.connect(self._update_refund_row)
         self.refund_input.changed.connect(self._update_refund_row)
         self.installment_fields.changed.connect(self._update_installments)
+        if self._transaction is None:
+            # What was saved stays said until the next one is begun.
+            self.amount_input.line_edit.textEdited.connect(self.added_label.hide)
         self.amount_input.line_edit.textChanged.connect(self._update_installments)
         self.date_input.dateChanged.connect(self._update_installments)
+        for signal in (
+            self.account_input.currentIndexChanged,
+            self.to_account_input.currentIndexChanged,
+            self.amount_input.line_edit.textChanged,
+            self.amount_in_input.line_edit.textChanged,
+            self.installment_fields.changed,
+            self.date_input.dateChanged,
+        ):
+            signal.connect(self._update_balances)
 
     def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
         """Sizes the dialog for its widest look, so it keeps its width while installments
@@ -218,8 +264,18 @@ class TransactionDialog(FormDialog):
         self.amount_row.setMinimumWidth(self.amount_row.sizeHint().width())
         switch.setHidden(hidden)
         self.form.labelForField(self.date_input).setText(_(FIRST_INSTALLMENT_LABEL))
+        if self._transaction is None:
+            # The main button as wide as its longest text, so no mode widens the foot.
+            shown = self.save_button.text()
+            widths = []
+            for label in ADD_LABELS:
+                self.save_button.setText(_(label))
+                widths.append(self.save_button.sizeHint().width())
+            self.save_button.setText(shown)
+            self.save_button.setMinimumWidth(max(widths))
         # The amount's label on the line of its larger text, as every label is on its field's.
-        taller = self.amount_input.sizeHint().height() - self.note_input.sizeHint().height()
+        amount_box = self.amount_input.line_edit
+        taller = amount_box.sizeHint().height() - self.note_input.sizeHint().height()
         half = taller // 2
         self.form.labelForField(self.amount_row).setContentsMargins(0, half, 0, 0)
         super().showEvent(event)  # gives every label the width of the longest
@@ -348,6 +404,15 @@ class TransactionDialog(FormDialog):
                 )
             )
 
+    def _movements_of(self, transaction: Transaction) -> list[Transaction]:
+        """What saving ``transaction`` replaces: both legs of a transfer, or every
+        installment of a purchase."""
+        if transaction.installment is not None:
+            plan_id = transaction.installment.plan_id
+            criteria = TransactionFilter(installment_plan_id=plan_id)
+            return self._services.transactions.list_transactions(criteria)
+        return self._legs(transaction)
+
     def _legs(self, transaction: Transaction) -> list[Transaction]:
         if not transaction.is_transfer:
             return [transaction]
@@ -360,8 +425,8 @@ class TransactionDialog(FormDialog):
         transfer = self.is_transfer_mode
         if self._transaction is None:
             self.save_button.setText(_(ADD_LABELS[self.mode_input.index()]))
-        self.form.labelForField(self.account_input).setText(_("Desde") if transfer else _("Cuenta"))
-        self.form.setRowVisible(self.to_account_input, transfer)
+        self.form.labelForField(self.account_row).setText(_("Desde") if transfer else _("Cuenta"))
+        self.form.setRowVisible(self.to_account_row, transfer)
         self.form.setRowVisible(self.payee_input, not transfer)
         self.form.setRowVisible(self.category_input, not transfer)
         self.form.setRowVisible(self.tag_input, not transfer)
@@ -381,6 +446,7 @@ class TransactionDialog(FormDialog):
         self._update_refund_row()
         self._update_currencies()
         self._update_installments()
+        self._update_balances()
 
     def _update_refund_row(self) -> None:
         """«Reembolso de» only for a refund: an income in the refunds category, or one
@@ -426,6 +492,85 @@ class TransactionDialog(FormDialog):
         hint = fields.hint_text(amount, self.date_input.day()) if in_installments else None
         self.installments_hint.setText(hint or "")
         self.installments_hint.setVisible(hint is not None)
+
+    def _update_balances(self) -> None:
+        """«Saldo: $ 848.460,85 → $ 823.560,85» under each account: today's balance, the
+        one the bank shows, and how it ends up with what is typed; «quedará» when part
+        of the movement is still to come."""
+        outgoing, incoming = self._balance_changes()
+        rows = (
+            (self.account_row, self.account_input, self.account_balance, outgoing),
+            (self.to_account_row, self.to_account_input, self.to_account_balance, incoming),
+        )
+        hidden = self._services.settings.amounts_hidden()
+        for row, field, label, change in rows:
+            account = field.current_account()
+            label.setVisible(account is not None and self.form.isRowVisible(row))
+            if account is None or label.isHidden():
+                continue
+            preview = self._services.accounts.balance_preview(
+                account.id, change or Money.zero(account.currency), self._replaced
+            )
+            now = unbroken(amount_text(preview.now, hidden))
+            after = unbroken(amount_text(preview.after, hidden))
+            if change is None or change.is_zero:
+                label.setText(_("Saldo: {now}").format(now=now))
+            elif self._still_to_come():
+                label.setText(_("Saldo: {now} → quedará {after}").format(now=now, after=after))
+            else:
+                label.setText(_("Saldo: {now} → {after}").format(now=now, after=after))
+
+    def _balance_changes(self) -> tuple[Money | None, Money | None]:
+        """What the typed movement does to its account and, in a transfer, to the one it
+        goes to: negative for what goes out. None while the amount is not one yet."""
+        try:
+            amount = self.amount_input.money()
+            if self.is_transfer_mode:
+                arrives = self.form.isRowVisible(self.amount_in_input)
+                return -amount, self.amount_in_input.money() if arrives else amount
+            if self.mode_input.index() == INCOME_MODE:
+                return amount, None
+            plan = self.installment_fields.plan_for(amount, self.date_input.day())
+        except ValidationError:
+            return None, None
+        return -(plan.total if plan else amount), None
+
+    def _still_to_come(self) -> bool:
+        """Whether part of the movement happens after today: its day, or the last
+        installment of a purchase."""
+        in_installments = (
+            self.mode_input.index() == EXPENSE_MODE and self.installment_fields.in_installments
+        )
+        return in_installments or self.date_input.day() > date.today()
+
+    def _save_another(self) -> None:
+        """Saves, and clears what changes from one movement to the next; the mode, the
+        account and the day stay, as in a card statement or a day's receipts."""
+        mode = self.mode_input.index()
+        amount = self.amount_input.money() if self.amount_input.line_edit.text() else None
+        if not self.submit():
+            return
+        hidden = self._services.settings.amounts_hidden()
+        shown = unbroken(amount_text(amount, hidden)) if amount else ""
+        self.added_label.setText(_(ADDED_LABELS[mode]).format(amount=shown))
+        self.added_label.show()
+        self._clear_for_another()
+        self.remember_state()
+        self.amount_input.line_edit.setFocus()
+
+    def _clear_for_another(self) -> None:
+        for field in (self.amount_input, self.amount_in_input):
+            field.line_edit.clear()
+        self.payee_input.set_text("")
+        self.category_input.setCurrentIndex(-1)
+        self._category_picked = False
+        self._kept_category_id = None
+        self.note_input.clear()
+        self.tag_input.set_names([])
+        self.refund_input.set_expense(None)
+        self.installment_fields.set_count(1)
+        self.installment_fields.amount_mode.set_index(TOTAL)
+        self._update_mode()
 
     def _suggest_category(self, payee: Payee) -> None:
         if self._category_picked or self.is_transfer_mode:
@@ -534,6 +679,18 @@ class TransactionDialog(FormDialog):
         else:
             self._services.transfers.create(draft)
             self._services.settings.set_last_account_id(source.id)
+
+
+def _with_line_under(field: QWidget, line: QWidget) -> QWidget:
+    """``field`` with ``line`` right under it, closer than the next row: what the line
+    says is about that field."""
+    row = QWidget()
+    layout = QVBoxLayout(row)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(Space.XS)
+    layout.addWidget(field)
+    layout.addWidget(line)
+    return row
 
 
 def _currencies_differ(first: Account | None, second: Account | None) -> bool:

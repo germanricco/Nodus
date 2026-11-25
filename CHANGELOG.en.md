@@ -21,6 +21,9 @@ What each version brings, newest first. To update, click “Update” when Nodus
 - A click on the Date, Transaction, Category or Amount title sorts Transactions by that column, and another click turns the order around.
 - The transaction form fills in from top to bottom: when you pick the “Refunds” category, the expense it pays back is chosen right below it, not at the end, and when you edit an expense, what was already refunded shows under its amount. The chosen expense takes two lines, its name and then its date, its amount and what is left to pay back.
 - In the transaction form, the amount looks larger, since it is what you always type. The note and the tags go last, in sight under “Optional”, so what needs filling in stands out. The button says what it adds: “Add expense”, “Add income” or “Add transfer”.
+- An amount can be a calculation, such as 1,500+2,300 to add up a receipt or 36000/3 to split a dinner: you see the result below as you type, and that is what is saved. It works in every amount field.
+- Under the account, the transaction form shows its balance today and how it ends up with what you enter, to compare with your bank's; in a transfer, both accounts'.
+- “Save and add another” (Ctrl+Enter) saves the transaction and leaves the form ready for the next one, with the same account and the same date, to enter several in a row.
 - Above the list, a line says what you are looking at and what it adds up to: “Fun · November 2026 · 2 transactions · -$70,500.00”. With both income and spending, it says how much came in, how much went out and the net.
 - The “⋯” menu of a transaction with a payee offers “View payee”, which opens its page.
 - What repeats without being a recurring payment is quicker to record: “Duplicate”, in each transaction’s “⋯” menu, opens the form with a copy dated today, and Ctrl+K has “Repeat the last expense”.

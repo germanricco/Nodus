@@ -9,6 +9,12 @@ without the user noticing.
 The rules are the same in every language, with its own separators (``language_format``):
 in Spanish the comma is decimal and the dot groups thousands, in English the other way
 round, so an amount is typed the way Nodus shows it.
+
+An amount can also be a calculation, as it often comes from one: «1.500+2.300», a dinner
+split in three, «36000/3», or a tip, «8500*1,1». Each number in it is read by the same
+rules, except that it may have more decimals (a factor like «1,105»); the result is
+rounded to the currency's cent as every amount is (``Money.from_decimal``). It is read
+by a small grammar of its own, never by ``eval``.
 """
 
 from __future__ import annotations
@@ -29,8 +35,16 @@ _DECIMAL_SEPARATOR = N_("Usa coma para los decimales: {example}.")
 _TOO_MANY_DECIMALS = N_("Un monto lleva hasta {decimals} decimales, como en {example}.")
 _GROUPING = N_("Los puntos separan los miles, de a tres cifras: {example}.")
 _WITHOUT_CENTS = N_("Los {currency} no llevan centavos.")
+_INCOMPLETE = N_("A la cuenta «{text}» le falta algo.")
+_DIVISION_BY_ZERO = N_("No se puede dividir por cero.")
 
 _CHARACTERS = re.compile(r"^-?[\d.,]+$")
+# What a calculation is made of: numbers, the four operations (also «x», «×» and «÷», as
+# people write them) and parentheses.
+_TOKEN = re.compile(r"[\d.,]+|[-+*/xX×÷()]")
+_OPERATIONS = "+-*/xX×÷()"
+_TIMES = frozenset("*xX×")
+_DIVIDED = frozenset("/÷")
 
 
 class AmountTextError(ValueError):
@@ -76,9 +90,13 @@ def parse_amount(text: str, currency: Currency) -> Money:
     Spanish), as many people type it. Raises ``AmountTextError`` when the text is not an
     amount or could mean more than one: a separator after the decimal one, more than two
     decimals, groups that are not of three, or cents in a currency without them.
+
+    A calculation (``is_calculation``) gives its result, or says what is missing in it.
     """
     shown = text.strip()
     cleaned = shown.replace(" ", "").replace("\N{NO-BREAK SPACE}", "")
+    if is_calculation(shown):
+        return _checked(_Calculation(cleaned, shown).value(), currency)
     if not _CHARACTERS.match(cleaned) or not any(c.isdigit() for c in cleaned):
         raise AmountTextError(_(_NOT_AN_AMOUNT).format(text=shown))
     sign = "-" if cleaned.startswith("-") else ""
@@ -86,11 +104,93 @@ def parse_amount(text: str, currency: Currency) -> Money:
     if len(decimals) > MAX_DECIMALS:
         raise AmountTextError(too_many_decimals_text())
     value = Decimal(f"{sign}{units or 0}.{decimals or 0}")
-    if abs(value) > MAX_UNITS:
-        raise AmountTextError(too_large_text())
     if not currency.decimals and value != value.to_integral_value():
         raise AmountTextError(without_cents_text(currency))
+    return _checked(value, currency)
+
+
+def is_calculation(text: str) -> bool:
+    """Whether ``text`` is a calculation, not a single amount: it has an operation or a
+    parenthesis besides a leading minus sign."""
+    rest = text.strip().removeprefix("-")
+    return any(c in _OPERATIONS for c in rest)
+
+
+def _checked(value: Decimal, currency: Currency) -> Money:
+    """``value`` as an amount of ``currency``, unless it is too large for one."""
+    if abs(value) > MAX_UNITS:
+        raise AmountTextError(too_large_text())
     return Money.from_decimal(value, currency)
+
+
+class _Calculation:
+    """Reads a calculation by its grammar, with the usual precedence:
+
+    sum     = product (("+" | "-") product)*
+    product = factor (("*" | "/") factor)*
+    factor  = "-" factor | "(" sum ")" | number
+    """
+
+    def __init__(self, cleaned: str, shown: str) -> None:
+        self._shown = shown
+        self._tokens: list[str] = _TOKEN.findall(cleaned)
+        if "".join(self._tokens) != cleaned:  # a character that is none of these
+            raise AmountTextError(_(_NOT_AN_AMOUNT).format(text=shown))
+        self._position = 0
+
+    def value(self) -> Decimal:
+        result = self._sum()
+        if self._position != len(self._tokens):  # a «)» with no «(», or «2(3)»
+            raise self._incomplete()
+        return result
+
+    def _sum(self) -> Decimal:
+        result = self._product()
+        while (token := self._peek()) in ("+", "-"):
+            self._take()
+            term = self._product()
+            result = result + term if token == "+" else result - term
+        return result
+
+    def _product(self) -> Decimal:
+        result = self._factor()
+        while (token := self._peek()) is not None and (token in _TIMES or token in _DIVIDED):
+            self._take()
+            factor = self._factor()
+            if token in _TIMES:
+                result *= factor
+            elif factor == 0:
+                raise AmountTextError(_(_DIVISION_BY_ZERO))
+            else:
+                result /= factor
+        return result
+
+    def _factor(self) -> Decimal:
+        token = self._take()
+        if token == "-":
+            if self._peek() == "-":  # «--5» is a slip, not a double negative
+                raise self._incomplete()
+            return -self._factor()
+        if token == "(":
+            result = self._sum()
+            if self._take() != ")":
+                raise self._incomplete()
+            return result
+        if token is None or not any(c.isdigit() for c in token):
+            raise self._incomplete()
+        units, decimals = _split(token)
+        return Decimal(f"{units or 0}.{decimals or 0}")
+
+    def _peek(self) -> str | None:
+        return self._tokens[self._position] if self._position < len(self._tokens) else None
+
+    def _take(self) -> str | None:
+        token = self._peek()
+        self._position += 1
+        return token
+
+    def _incomplete(self) -> AmountTextError:
+        return AmountTextError(_(_INCOMPLETE).format(text=self._shown))
 
 
 def _split(number: str) -> tuple[str, str]:

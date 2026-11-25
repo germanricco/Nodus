@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from factories import (
@@ -807,7 +807,11 @@ def test_filters_stay_while_the_app_is_open(window, services, pesos):
             ["Cuenta", "Cuotas", "Monto", "Beneficiario", "Categoría", "Fecha"],
             "Agregar gasto",
         ),
-        (INCOME_MODE, ["Cuenta", "Monto", "Beneficiario", "Categoría", "Fecha"], "Agregar ingreso"),
+        (
+            INCOME_MODE,
+            ["Cuenta", "Monto", "Beneficiario", "Categoría", "Fecha"],
+            "Agregar ingreso",
+        ),
         (TRANSFER_MODE, ["Desde", "Hacia", "Sale", "Fecha"], "Agregar transferencia"),
     ],
 )
@@ -830,3 +834,127 @@ def test_an_edited_movement_keeps_its_button(qtbot, services, event_bus, pesos):
     dialog = transaction_dialog(qtbot, services, event_bus, expense)
 
     assert dialog.save_button.text() == "Guardar cambios"
+
+
+class TestBalanceUnderTheAccount:
+    """Today's balance, the one the bank shows, and how it ends up with what is typed."""
+
+    def test_it_shows_how_the_account_ends_up(self, qtbot, services, event_bus, pesos):
+        dialog = transaction_dialog(qtbot, services, event_bus)
+        assert plain_text(dialog.account_balance) == "Saldo: $ 100.000,00"
+
+        dialog.amount_input.line_edit.setText("2.500")
+
+        assert plain_text(dialog.account_balance) == "Saldo: $ 100.000,00 → $ 97.500,00"
+        dialog.mode_input.set_index(INCOME_MODE)
+        assert plain_text(dialog.account_balance) == "Saldo: $ 100.000,00 → $ 102.500,00"
+
+    def test_what_is_still_to_come_says_so(self, qtbot, services, event_bus, pesos):
+        dialog = transaction_dialog(qtbot, services, event_bus)
+        dialog.amount_input.line_edit.setText("2.500")
+        dialog.date_input.set_day(date.today() + timedelta(days=3))
+
+        assert plain_text(dialog.account_balance) == ("Saldo: $ 100.000,00 → quedará $ 97.500,00")
+
+    def test_an_edited_movement_is_not_counted_twice(self, qtbot, services, event_bus, pesos):
+        expense = services.transactions.create(expense_draft(services, pesos.id, ars("1000")))
+        dialog = transaction_dialog(qtbot, services, event_bus, expense)
+
+        # Today's balance already has it: what changes is only the difference.
+        assert plain_text(dialog.account_balance) == "Saldo: $ 99.000,00 → $ 99.000,00"
+        dialog.amount_input.line_edit.setText("1.500")
+        assert plain_text(dialog.account_balance) == "Saldo: $ 99.000,00 → $ 98.500,00"
+
+    def test_a_transfer_shows_both_accounts(self, qtbot, services, event_bus, pesos, dollars):
+        dialog = transaction_dialog(qtbot, services, event_bus)
+        dialog.mode_input.set_index(TRANSFER_MODE)
+        dialog.account_input.select(pesos.id)
+        dialog.to_account_input.select(dollars.id)
+        dialog.amount_input.line_edit.setText("120.000")
+        dialog.amount_in_input.line_edit.setText("100")
+
+        assert plain_text(dialog.account_balance) == "Saldo: $ 100.000,00 → -$ 20.000,00"
+        assert plain_text(dialog.to_account_balance) == "Saldo: US$ 500,00 → US$ 600,00"
+
+    def test_hidden_amounts_stay_hidden(self, qtbot, services, event_bus, pesos):
+        services.settings.set_amounts_hidden(True)
+        dialog = transaction_dialog(qtbot, services, event_bus)
+
+        assert plain_text(dialog.account_balance) == "Saldo: $ ••••"
+
+
+def plain_text(label) -> str:
+    """A label's text with its no-break spaces as plain ones."""
+    return label.text().replace(" ", " ")
+
+
+class TestSaveAndAddAnother:
+    """«Guardar y agregar otra», for several movements in a row."""
+
+    def fill_expense(self, services, dialog, amount: str = "2.500") -> None:
+        dialog.amount_input.line_edit.setText(amount)
+        dialog.payee_input.set_text("Coto")
+        dialog.category_input.select(category_id(services, "Supermercado y comida", EXPENSE))
+        dialog.note_input.setText("Almuerzo")
+        dialog.tag_input.set_names(["Viaje"])
+
+    def test_it_saves_and_keeps_the_mode_the_account_and_the_day(
+        self, qtbot, services, event_bus, pesos
+    ):
+        dialog = transaction_dialog(qtbot, services, event_bus, show=True)
+        last_week = date.today() - timedelta(days=7)
+        dialog.date_input.set_day(last_week)
+        self.fill_expense(services, dialog)
+
+        qtbot.mouseClick(dialog.another_button, Qt.MouseButton.LeftButton)
+
+        (saved,) = services.transactions.list_transactions(TransactionFilter())
+        assert (saved.amount, saved.occurred_on, saved.note) == (ars("2500"), last_week, "Almuerzo")
+        assert dialog.isVisible()
+        assert plain_text(dialog.added_label) == "Gasto agregado: $ 2.500,00."
+        assert dialog.mode_input.index() == EXPENSE_MODE
+        assert dialog.account_input.current_id() == pesos.id
+        assert dialog.date_input.day() == last_week
+        assert dialog.amount_input.line_edit.text() == ""
+        assert dialog.payee_input.text() == ""
+        assert dialog.category_input.current_id() is None
+        assert (dialog.note_input.text(), dialog.tag_input.names()) == ("", ())
+        assert not dialog.has_changes()  # closing now asks nothing
+
+    def test_ctrl_enter_does_the_same(self, qtbot, services, event_bus, pesos):
+        dialog = transaction_dialog(qtbot, services, event_bus, show=True)
+        self.fill_expense(services, dialog)
+        dialog.activateWindow()
+        qtbot.waitUntil(dialog.isActiveWindow)
+
+        qtbot.keyClick(
+            dialog.amount_input.line_edit, Qt.Key.Key_Return, Qt.KeyboardModifier.ControlModifier
+        )
+
+        assert len(services.transactions.list_transactions(TransactionFilter())) == 1
+        assert dialog.isVisible()
+
+    def test_what_is_missing_keeps_it_unsaved(self, qtbot, services, event_bus, pesos):
+        dialog = transaction_dialog(qtbot, services, event_bus, show=True)
+        dialog.amount_input.line_edit.setText("2.500")
+
+        qtbot.mouseClick(dialog.another_button, Qt.MouseButton.LeftButton)
+
+        assert services.transactions.list_transactions(TransactionFilter()) == []
+        assert dialog.field_error(dialog.category_input)
+        assert dialog.amount_input.line_edit.text() == "2.500"  # nothing cleared
+
+    def test_the_next_one_hides_what_was_said(self, qtbot, services, event_bus, pesos):
+        dialog = transaction_dialog(qtbot, services, event_bus, show=True)
+        self.fill_expense(services, dialog)
+        qtbot.mouseClick(dialog.another_button, Qt.MouseButton.LeftButton)
+
+        qtbot.keyClicks(dialog.amount_input.line_edit, "1")
+
+        assert dialog.added_label.isHidden()
+
+    def test_an_edited_movement_does_not_offer_it(self, qtbot, services, event_bus, pesos):
+        expense = services.transactions.create(expense_draft(services, pesos.id, ars("100")))
+        dialog = transaction_dialog(qtbot, services, event_bus, expense)
+
+        assert not hasattr(dialog, "another_button")

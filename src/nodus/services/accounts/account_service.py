@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -15,6 +16,7 @@ from nodus.models.currency import Currency
 from nodus.models.money import Money
 from nodus.models.names import normalize_name
 from nodus.models.period import Period
+from nodus.models.transaction import Transaction
 from nodus.models.value_adjustment import ValueAdjustment
 from nodus.services.backups.backup_service import BackupService
 from nodus.services.errors import (
@@ -35,6 +37,15 @@ class ValueGain:
 
     amount: Money
     share: float | None
+
+
+@dataclass(frozen=True)
+class BalancePreview:
+    """An account's balance today and what it becomes with a movement being written, as
+    the form shows it before saving («Saldo: $ 848.460,85 → $ 823.560,85»)."""
+
+    now: Money
+    after: Money
 
 
 class AccountService:
@@ -174,6 +185,25 @@ class AccountService:
         """The account's balance at the end of ``on``, today if None (see ``balances``)."""
         account = self.get(account_id)
         return self.balances(on)[account.id]
+
+    def balance_preview(
+        self, account_id: int, change: Money, replaced: Iterable[Transaction] = ()
+    ) -> BalancePreview:
+        """Today's balance, the one the bank shows, and what it becomes with ``change``,
+        what a movement adds to it (negative for what it takes). ``replaced`` are the
+        movements being edited: what they already did to today's balance comes off first,
+        so a movement is never counted twice."""
+        now = self.balance(account_id)
+        today = date.today()
+        already = sum(
+            (
+                movement.signed_amount
+                for movement in replaced
+                if movement.account_id == account_id and movement.occurred_on <= today
+            ),
+            Money.zero(now.currency),
+        )
+        return BalancePreview(now, now - already + change)
 
     def adjust_value(
         self, account_id: int, value: Money, day: date, note: str = ""
