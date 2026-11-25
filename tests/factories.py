@@ -12,6 +12,7 @@ from nodus.models.money import Money
 from nodus.models.recurring_charge import Frequency
 from nodus.models.transaction import Transaction, TransactionType
 from nodus.services.container import Services
+from nodus.services.external.release_manifest import InstallerFile, ReleaseManifest
 from nodus.services.transactions.recurring_charge_service import RecurringChargeDraft
 from nodus.services.transactions.transaction_service import TransactionDraft
 from nodus.ui.dialogs.transaction_dialog import TransactionDialog
@@ -178,3 +179,11 @@ def in_view(page, event_bus: EventBus, theme_manager: ThemeManager | None = None
     if theme_manager is not None:
         theme_manager.theme_changed.connect(lambda _theme: page.request_refresh())
     return page
+
+
+def manifest_answer(
+    version: str, notes: str = "", installers: dict[str, InstallerFile] | None = None
+) -> bytes:
+    """What ``latest.json`` holds for a release of ``version``, as the update check
+    downloads it."""
+    return ReleaseManifest(version, notes, installers or {}).to_json().encode()

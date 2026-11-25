@@ -11,10 +11,24 @@ REPOSITORY_URL = f"https://github.com/{REPOSITORY}"
 # The page of the newest release, with its installer.
 DOWNLOAD_URL = f"{REPOSITORY_URL}/releases/latest"
 DONATE_URL = "https://cafecito.app/germanricco"
-# What Nodus asks for by itself: the newest version, and the exchange rates.
-LATEST_RELEASE_API = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
+# What Nodus asks for by itself: the newest version (``release_file_url``), and the
+# exchange rates.
 DOLARAPI_URL = "https://dolarapi.com/v1/dolares"
 QUOTES_URL = "https://dolarapi.com/v1/cotizaciones"
+
+
+def release_page(version: str) -> str:
+    """The page of the release of ``version``, with its notes and its installers."""
+    return f"{REPOSITORY_URL}/releases/tag/v{version}"
+
+
+def release_file_url(name: str, version: str | None = None) -> str:
+    """A file attached to the release of ``version``, or to the newest one if None: a
+    plain download, which GitHub does not limit as it limits its API."""
+    if version is None:
+        return f"{REPOSITORY_URL}/releases/latest/download/{name}"
+    return f"{REPOSITORY_URL}/releases/download/v{version}/{name}"
+
 
 # A Google Form, which asks for no account. Its "Versión" field comes filled in, so
 # every comment says which Nodus it is about. Each language has its own copy of the form,

@@ -143,16 +143,28 @@ jobs:
           path: release
           merge-multiple: true
 
+      - name: Take the release notes from the tag
+        run: |
+          # The checkout may hold a lightweight copy of the tag; fetch the annotated one.
+          git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+          git tag --list --format='%(contents)' "${GITHUB_REF_NAME}" > release-notes.md
+
+      - name: Write latest.json, from which Nodus learns of the new version
+        # Nodus reads it from the release page, not from GitHub's API, which answers only
+        # 60 requests an hour to a connection without an account. Fails if an installer
+        # is missing, before anything is published.
+        run: PYTHONPATH=src python3 scripts/release_manifest.py "${GITHUB_REF_NAME#v}" release-notes.md release
+
       - name: Show what will be published
-        run: ls -l release
+        run: |
+          ls -l release
+          cat release/latest.json
 
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # The checkout may hold a lightweight copy of the tag; fetch the annotated one.
-          git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
-          git tag --list --format='%(contents)' "${GITHUB_REF_NAME}" > release-notes.md
           gh release create "${GITHUB_REF_NAME}" release/Nodus-Setup-*.exe release/Nodus-*-x86_64.AppImage \
+            release/latest.json \
             --title "Nodus ${GITHUB_REF_NAME#v}" \
             --notes-file release-notes.md

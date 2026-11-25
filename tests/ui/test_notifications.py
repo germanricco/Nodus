@@ -1,10 +1,9 @@
 import dataclasses
-import json
 from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
-from factories import ars, category_id, charge_draft, data_since, expense_draft
+from factories import ars, category_id, charge_draft, data_since, expense_draft, manifest_answer
 from menus import main_action, run_action, texts
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtTest import QTest
@@ -20,7 +19,7 @@ from nodus.ui.navigation import PageId
 from nodus.ui.shell.main_window import MainWindow
 from nodus.ui.shell.notices import NOTICES
 
-NEWER = json.dumps({"tag_name": "v9.0.0", "html_url": "https://example.com/v9"}).encode()
+NEWER = manifest_answer("9.0.0")
 
 
 @pytest.fixture
@@ -86,7 +85,7 @@ def test_update_from_the_source_code_opens_the_release_page(qtbot, offline_windo
 
     open_row(offline_window.notification_panel.rows[0])
 
-    assert opened == ["https://example.com/v9"]
+    assert opened == ["https://github.com/germanricco/Nodus/releases/tag/v9.0.0"]
     assert not offline_window.notification_panel.isVisible()
 
 

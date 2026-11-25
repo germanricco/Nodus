@@ -1,8 +1,8 @@
 import dataclasses
-import json
 from datetime import date
 
 import pytest
+from factories import manifest_answer
 from menus import run_action, texts
 from PySide6.QtWidgets import QDialog, QPushButton
 
@@ -87,8 +87,8 @@ def test_window_shows_nothing_when_already_seen(qtbot, services, event_bus, them
 def test_update_notice_tells_what_the_release_brings(
     qtbot, services, event_bus, theme_manager, opened
 ):
-    answer = {"tag_name": "v9.0.0", "html_url": RELEASE.url, "body": "Nodus 9.0.0\n\n- Algo."}
-    updates = UpdateService("0.2.0", lambda _url: json.dumps(answer).encode())
+    answer = manifest_answer("9.0.0", "Nodus 9.0.0\n\n- Algo.")
+    updates = UpdateService("0.2.0", lambda _url: answer)
     window = MainWindow(dataclasses.replace(services, updates=updates), event_bus, theme_manager)
     qtbot.addWidget(window)
     window.show()
@@ -104,8 +104,7 @@ def test_update_notice_tells_what_the_release_brings(
 
 
 def test_update_notice_without_notes_has_no_news_button(qtbot, services, event_bus, theme_manager):
-    answer = {"tag_name": "v9.0.0", "html_url": RELEASE.url}
-    updates = UpdateService("0.2.0", lambda _url: json.dumps(answer).encode())
+    updates = UpdateService("0.2.0", lambda _url: manifest_answer("9.0.0"))
     window = MainWindow(dataclasses.replace(services, updates=updates), event_bus, theme_manager)
     qtbot.addWidget(window)
     window.show()

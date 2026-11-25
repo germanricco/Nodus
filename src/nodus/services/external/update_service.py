@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
 import os
 import shutil
@@ -13,21 +12,24 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 from nodus import APP_NAME, USER_AGENT, is_installed, program_path
 from nodus.config.logs import describe
 from nodus.i18n import _, current_language
-from nodus.links import LATEST_RELEASE_API
+from nodus.links import release_file_url, release_page
 from nodus.models.version import parse_version
 from nodus.services.app.changelog import notes_in
 from nodus.services.errors import UpdateError
 from nodus.services.external.http import Fetch, Stream, downloader, streamer
 from nodus.services.external.process import launch_detached
+from nodus.services.external.release_manifest import (
+    MANIFEST_NAME,
+    ReleaseManifest,
+    installer_names,
+)
 
 logger = logging.getLogger(__name__)
 
-GITHUB_JSON = "application/vnd.github+json"
 # The installer runs without questions, keeps the choices of the previous installation
 # and opens Nodus again when it finishes (see [Run] in packaging/nodus.iss).
 INSTALLER_ARGUMENTS = ("/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/RELAUNCH=1")
@@ -41,8 +43,8 @@ RETRY_MARGIN = timedelta(minutes=1)
 
 @dataclass(frozen=True)
 class Installer:
-    """What installs a release on this system, attached to it with the checksum GitHub
-    computed: the setup program on Windows, the AppImage itself on Linux."""
+    """What installs a release on this system, with the checksum its manifest gives:
+    the setup program on Windows, the AppImage itself on Linux."""
 
     url: str
     size: int
@@ -61,19 +63,23 @@ class Release:
 
 
 def installer_name(version: str) -> str:
-    """The name scripts/build.py gives the file of ``version`` on this system."""
-    if sys.platform == "win32":
-        return f"Nodus-Setup-{version}.exe"
-    return f"Nodus-{version}-x86_64.AppImage"
+    """The file that installs ``version`` on this system."""
+    names = installer_names(version)
+    return names["win32"] if sys.platform == "win32" else names["linux"]
 
 
-def _installer(version: str, assets: list[dict[str, Any]]) -> Installer | None:
-    """The release's installer, if attached with a SHA-256 to check the download against."""
-    for asset in assets:
-        digest = asset.get("digest") or ""
-        if asset.get("name") == installer_name(version) and digest.startswith("sha256:"):
-            return Installer(asset["browser_download_url"], int(asset["size"]), digest[7:])
-    return None
+def release_from(manifest: ReleaseManifest) -> Release:
+    """The release a manifest describes, with its notes in the language Nodus is in and
+    this system's installer, if the manifest lists it."""
+    version = manifest.version
+    # The notes open with the tag's subject line, which repeats the version.
+    body = manifest.notes.strip().removeprefix(f"Nodus {version}").strip()
+    name = installer_name(version)
+    file = manifest.installers.get(name)
+    installer = None
+    if file is not None:
+        installer = Installer(release_file_url(name, version), file.size, file.sha256)
+    return Release(version, release_page(version), notes_in(current_language(), body), installer)
 
 
 @dataclass(frozen=True)
@@ -109,11 +115,12 @@ def retry_delay(error: Exception, now: datetime | None = None) -> timedelta:
 
 
 class UpdateService:
-    """Asks GitHub for the latest release, downloads it and installs it: on Windows by
-    starting its installer, on Linux by putting the new AppImage in place of ``appimage``.
+    """Learns of the latest release from its ``latest.json`` (``release_manifest``),
+    downloads it and installs it: on Windows by starting its installer, on Linux by
+    putting the new AppImage in place of ``appimage``.
 
-    The check sends only the version number, nothing about the user or their data. The
-    installer is downloaded only when the user asks for it.
+    The check sends nothing about the user or their data, only Nodus's version in its
+    User-Agent. The installer is downloaded only when the user asks for it.
     """
 
     def __init__(
@@ -127,7 +134,7 @@ class UpdateService:
     ) -> None:
         self.current_version = current_version
         self._appimage = appimage
-        self._fetch = fetch or downloader(USER_AGENT, GITHUB_JSON)
+        self._fetch = fetch or downloader(USER_AGENT)
         self._stream = stream or streamer(USER_AGENT)
         self.downloads_dir = downloads_dir or Path(tempfile.gettempdir()) / APP_NAME / "updates"
         self._launch = launch
@@ -157,13 +164,8 @@ class UpdateService:
         get in the way of using the app, but it must not give up on the first failure.
         """
         try:
-            data = json.loads(self._fetch(LATEST_RELEASE_API))
-            version = data["tag_name"].removeprefix("v")
-            # The notes open with the tag's subject line, which repeats the version.
-            body = (data.get("body") or "").strip().removeprefix(f"Nodus {version}").strip()
-            notes = notes_in(current_language(), body)
-            installer = _installer(version, data.get("assets") or [])
-            latest = Release(version, data["html_url"], notes, installer)
+            manifest = ReleaseManifest.from_json(self._fetch(release_file_url(MANIFEST_NAME)))
+            latest = release_from(manifest)
             is_newer = parse_version(latest.version) > parse_version(self.current_version)
         except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
             retry_in = retry_delay(error)

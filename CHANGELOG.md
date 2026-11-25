@@ -2,6 +2,10 @@
 
 Lo que trae cada versión, de la más nueva a la más vieja. Para actualizar, toca «Actualizar» cuando Nodus avise que hay una versión nueva: tus datos se conservan.
 
+## 1.12.2
+
+- Arreglo: el aviso de una versión nueva llega aunque tu conexión a internet sea compartida con muchas personas, como pasa con muchos proveedores. Nodus ya no pregunta a un servicio de GitHub que limita las consultas por conexión: lee un pequeño archivo que acompaña a cada versión publicada.
+
 ## 1.12.1 — 2026-11-25
 
 - Arreglo: si Nodus no podía consultar si había una versión nueva, por ejemplo porque GitHub estaba recibiendo demasiadas consultas desde tu conexión, no volvía a intentarlo hasta la próxima vez que lo abrieras, y el aviso de actualización no llegaba. Ahora lo vuelve a intentar solo un rato después y, mientras está abierto, se fija cada seis horas.

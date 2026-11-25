@@ -5,9 +5,10 @@ import sys
 from datetime import datetime, timedelta
 
 import pytest
+from factories import manifest_answer
 
-from nodus.links import LATEST_RELEASE_API
 from nodus.services.errors import UpdateError
+from nodus.services.external.release_manifest import InstallerFile
 from nodus.services.external.update_service import (
     CHECK_EVERY,
     INSTALLER_ARGUMENTS,
@@ -27,35 +28,47 @@ RELEASE_PAGE = "https://github.com/germanricco/Nodus/releases/tag/v0.3.0"
 pytestmark = pytest.mark.usefixtures("as_on_windows")
 
 
-def answer(tag: str) -> bytes:
-    return json.dumps({"tag_name": tag, "html_url": RELEASE_PAGE}).encode()
+def checked(answer: bytes) -> UpdateCheck:
+    return UpdateService("0.2.0", lambda _url: answer).check()
 
 
-def test_newer_release_is_reported():
+def test_newer_release_is_reported_from_the_release_page_not_the_api():
+    """GitHub's API answers only 60 requests an hour to a connection without an
+    account; ``latest.json`` is a plain download from the release page."""
     requested = []
 
     def fetch(url):
         requested.append(url)
-        return answer("v0.3.0")
+        return manifest_answer("0.3.0")
 
     check = UpdateService("0.2.0", fetch).check()
 
     assert check == UpdateCheck(Release("0.3.0", RELEASE_PAGE))
     assert (check.failed, check.next_in) == (False, CHECK_EVERY)
-    assert requested == [LATEST_RELEASE_API]
+    assert requested == [
+        "https://github.com/germanricco/Nodus/releases/latest/download/latest.json"
+    ]
 
 
-@pytest.mark.parametrize("tag", ["v0.2.0", "v0.1.1"])
-def test_same_or_older_release_is_not_reported(tag):
-    assert UpdateService("0.2.0", lambda _url: answer(tag)).check() == UpdateCheck()
+@pytest.mark.parametrize("version", ["0.2.0", "0.1.1"])
+def test_same_or_older_release_is_not_reported(version):
+    assert checked(manifest_answer(version)) == UpdateCheck()
 
 
 @pytest.mark.parametrize(
     "body",
-    [b"not json", b"{}", b"[]", json.dumps({"tag_name": "beta", "html_url": "x"}).encode()],
+    [
+        b"not json",
+        b"{}",
+        b"[]",
+        b"<html>Not Found</html>",  # a release published without its latest.json
+        manifest_answer("beta"),
+        manifest_answer("0.3.0").replace(b'"format": 1', b'"format": 2'),
+        json.dumps({"format": 1, "version": "0.3.0", "notes": None, "installers": {}}).encode(),
+    ],
 )
 def test_unexpected_answer_finds_nothing_and_tries_again_later(body):
-    check = UpdateService("0.2.0", lambda _url: body).check()
+    check = checked(body)
 
     assert check == UpdateCheck(retry_in=RETRY_AFTER_FAILURE)
     assert check.failed and check.next_in == RETRY_AFTER_FAILURE
@@ -105,25 +118,23 @@ def test_a_limited_check_says_when_to_try_again():
 
 
 def test_release_notes_come_without_the_repeated_subject_line():
-    body = "Nodus 0.3.0\n\nNovedades:\n\n- Algo nuevo."
-    data = {"tag_name": "v0.3.0", "html_url": RELEASE_PAGE, "body": body}
+    notes = "Nodus 0.3.0\n\nNovedades:\n\n- Algo nuevo."
 
-    release = UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check().release
+    release = checked(manifest_answer("0.3.0", notes)).release
 
     assert release.notes == "Novedades:\n\n- Algo nuevo."
 
 
 def test_the_notes_come_in_the_language_nodus_is_in(english):
-    body = "Nodus 1.10.0\n\n- Algo nuevo.\n\n---\n\n<!-- en -->\n\n- Something new."
-    data = {"tag_name": "v1.10.0", "html_url": RELEASE_PAGE, "body": body}
+    notes = "Nodus 1.10.0\n\n- Algo nuevo.\n\n---\n\n<!-- en -->\n\n- Something new."
 
-    release = UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check().release
+    release = checked(manifest_answer("1.10.0", notes)).release
 
     assert release.notes == "- Something new."
 
 
 def test_release_without_notes_has_empty_notes():
-    assert UpdateService("0.2.0", lambda _url: answer("v0.3.0")).check().release.notes == ""
+    assert checked(manifest_answer("0.3.0")).release.notes == ""
 
 
 # Installing
@@ -135,19 +146,14 @@ INSTALLER_URL = (
 )
 
 
-def installer_asset(**changes) -> dict:
-    asset = {
-        "name": "Nodus-Setup-0.3.0.exe",
-        "size": len(INSTALLER_BYTES),
-        "digest": f"sha256:{hashlib.sha256(INSTALLER_BYTES).hexdigest()}",
-        "browser_download_url": INSTALLER_URL,
-    }
-    return asset | changes
+def installer_asset(content: bytes = INSTALLER_BYTES, name: str = "Nodus-Setup-0.3.0.exe"):
+    """An installer as ``latest.json`` lists it: its name, size and SHA-256."""
+    return {name: InstallerFile(len(content), hashlib.sha256(content).hexdigest())}
 
 
-def release_with(assets: list[dict]) -> Release:
-    data = {"tag_name": "v0.3.0", "html_url": RELEASE_PAGE, "assets": assets}
-    return UpdateService("0.2.0", lambda _url: json.dumps(data).encode()).check().release
+def release_with(assets: list[dict[str, InstallerFile]]) -> Release:
+    installers = {name: file for asset in assets for name, file in asset.items()}
+    return checked(manifest_answer("0.3.0", installers=installers)).release
 
 
 def chunks(data: bytes, size: int = 1000):
@@ -169,16 +175,10 @@ def test_release_carries_its_installer():
     )
 
 
-@pytest.mark.parametrize(
-    "asset",
-    [
-        installer_asset(name="Nodus-Setup-0.2.0.exe"),  # another version's installer
-        installer_asset(digest=None),  # nothing to check the download against
-        installer_asset(digest="md5:abc"),
-    ],
-)
-def test_installer_needs_the_right_name_and_a_sha256(asset):
-    assert release_with([asset]).installer is None
+def test_installer_needs_the_right_name():
+    other_version = installer_asset(name="Nodus-Setup-0.2.0.exe")
+
+    assert release_with([other_version]).installer is None
 
 
 def test_download_saves_the_checked_installer(tmp_path):
@@ -275,15 +275,8 @@ def test_clean_removes_downloaded_installers(tmp_path):
 APPIMAGE_BYTES = b"new appimage" * 1000
 
 
-def appimage_asset() -> dict:
-    return installer_asset(
-        name="Nodus-0.3.0-x86_64.AppImage",
-        size=len(APPIMAGE_BYTES),
-        digest=f"sha256:{hashlib.sha256(APPIMAGE_BYTES).hexdigest()}",
-        browser_download_url=INSTALLER_URL.replace(
-            "Nodus-Setup-0.3.0.exe", "Nodus-0.3.0-x86_64.AppImage"
-        ),
-    )
+def appimage_asset():
+    return installer_asset(APPIMAGE_BYTES, "Nodus-0.3.0-x86_64.AppImage")
 
 
 @pytest.fixture
@@ -313,7 +306,9 @@ def linux_updater(tmp_path, appimage) -> UpdateService:
 def test_on_linux_the_release_file_is_the_appimage(on_linux):
     release = release_with([installer_asset(), appimage_asset()])
 
-    assert release.installer.url.endswith("Nodus-0.3.0-x86_64.AppImage")
+    assert release.installer.url == INSTALLER_URL.replace(
+        "Nodus-Setup-0.3.0.exe", "Nodus-0.3.0-x86_64.AppImage"
+    )
     assert release.installer.size == len(APPIMAGE_BYTES)
 
 
